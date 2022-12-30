@@ -1,0 +1,1546 @@
+.xl-view-hidden {
+  display: none;
+}
+
+.xl-view-site-background {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+}
+
+.xl-view-wrappingtext {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+}
+
+.xl-view-site-debug {
+  top: 94%;
+  right: 6.5%;
+  width: 88.5%;
+  height: 3%;
+  text-align: right;
+  font-size: 75%;
+  color: #989898;
+  z-index: 99;
+}
+
+/* Container of all UI elements. This provides for overscan. Note that
+ * childen within elements that use this style class should align
+ * themselves on a percent grid of [100/(2*2*2*3*3)] x [100/(2*2*3*3)]
+ * for optimal pixel alignment.
+ * */
+.xl-view-site-browse_site,
+.xl-view-site-content_watch {
+  z-index: 20;
+  width: 90%;
+  height: 90%;
+  top: 5%;
+  left: 5%;
+}
+
+/* Pages */
+.xl-view-default-video-container,
+.xl-view-default-content_search,
+.xl-view-default-content_browsemore,
+.xl-view-default-content_settings,
+.xl-view-default-content_channel,
+.xl-view-default-content_language,
+.xl-view-default-content_about,
+.xl-view-default-login-container,
+.xl-view-default-content_geo {
+  left: 24%;
+  top: 1%;
+  width: 74%;
+  height: 95%;
+  z-index: 99;
+}
+
+/* Page content areas */
+.xl-view-default-videos,
+.xl-view-default-allsettings,
+.xl-view-default-alllanguages,
+.xl-view-default-allcountries,
+.xl-view-default-content_login,
+.xl-view-default-contentwindow,
+.xl-view-default-channelcontent,
+.xl-view-default-search,
+.xl-view-default-aboutcontent {
+  border: 4px solid #344D6D;
+  top: 8%;
+  background: black;
+  height: 92%;
+  width: 100%;
+  z-index: 99;
+}
+
+.xl-view-default-aboutdescription {
+  top: 10%;
+  left: 12%;
+  width: 77%;
+  height: 40%;
+}
+
+.xl-view-default-link1 {
+  color: #FFFF66;
+  text-decoration: underline;
+  top: 50%;
+  left: 12%;
+  width: 77%;
+  height: 5%;
+}
+
+.xl-view-default-link2 {
+  color: #FFFF66;
+  text-decoration: underline;
+  top: 60%;
+  left: 12%;
+  width: 77%;
+  height: 5%;
+}
+
+.xl-view-default-link3 {
+  color: #FFFF66;
+  text-decoration: underline;
+  top: 70%;
+  left: 12%;
+  width: 77%;
+  height: 5%;
+}
+
+.xl-view-default-link4 {
+  color: #FFFF66;
+  text-decoration: underline;
+  top: 80%;
+  left: 12%;
+  width: 77%;
+  height: 5%;
+}
+
+/* Left menu */
+.xl-view-default-browse-buttons {
+  top: 16%;
+  width: 24%;
+  height: 80%;
+  right: 75%;
+}
+
+.xl-view-menuitem {
+  right: 0px;
+  width: 91.666666%;
+  height: 9.5%;
+  text-align: left;
+  position: relative;
+  float: right;
+  clear: both;
+}
+
+.xl-view-submenuitem {
+  right: 0px;
+  width: 80.666666%;
+  height: 9.5%;
+  text-align: left;
+  position: relative;
+  float: right;
+  clear: both;
+}
+
+.xl-view-submenuitem-recommended-videos,
+.xl-view-submenuitem-featured-videos,
+.xl-view-menuitem-button,
+.xl-view-submenuitem-button {
+  height: 81.25%;
+  width: 100%;
+  right: 0px;
+  top: 0px;
+}
+
+.xl-view-default-title {
+  top: 5%;
+  left: 5%;
+}
+
+.xl-view-default-channeltitle {
+  top: 5%;
+  left: 2%;
+}
+
+.xl-view-default-prompt {
+  left: 10%;
+  top: 30%;
+}
+
+.xl-view-default-input {
+  height: 8%;
+  left: 10%;
+  top: 38%;
+  width: 80%;
+}
+
+.xl-view-default-inputbox {
+  width: 100%;
+  font-size: 100%;
+}
+
+.xl-view-default-searchbutton {
+  left: 75%;
+  top: 50%;
+  width: 15%;
+  height: 7%;
+  border: 3px solid #333333;
+}
+
+.xl-view-default-searchtabs {
+  top: 3%;
+  width: 30%;
+}
+
+.xl-view-default-today,
+.xl-view-default-channellist1 {
+  left: 0px;
+  width: 32%;
+  height: 100%;
+}
+
+.xl-view-default-thisweek,
+.xl-view-default-channellist2 {
+  left: 34%;
+  width: 32%;
+  height: 100%;
+}
+
+.xl-view-default-alltime,
+.xl-view-default-channellist3 {
+  left: 68%;
+  width: 32%;
+  height: 100%;
+}
+
+.xl-view-default-upbutton {
+  background:transparent url(http://s.ytimg.com/yt/img/syn/xl-paddlebg-vfl92884.png) repeat-x; 
+  border-color:#344D6D;
+  border-style:solid;
+  border-width:4px 4px 0;
+  top: 8%;
+  height:4%;
+  left:0;
+  width:100%;
+  z-index: 999;
+  background-color: #2c2c2c
+}
+
+.xl-view-default-popup {
+  font-size: 200%;
+  height: 40%;
+  left: 20%;
+  top: 28%;
+  width: 60%;
+}
+
+.xl-view-default-videolist {
+  width: 97.5%;
+  height: 16%;
+  border: 3px solid black;
+}
+
+
+.xl-view-default-videolist.index-1 {
+  left: 1%;
+  top: 5.5%;
+}
+
+
+.xl-view-default-videolist.index-2 {
+  left: 1%;
+  top: 23.5%;
+}
+
+
+.xl-view-default-videolist.index-3 {
+  left: 1%;
+  top: 41.5%;
+}
+
+
+.xl-view-default-videolist.index-4 {
+  left: 1%;
+  top: 59.5%;
+}
+
+.xl-view-default-videolist.index-5 {
+  left: 1%;
+  top: 77.5%;
+}
+
+.xl-view-default-downbutton {
+  background:transparent url(http://s.ytimg.com/yt/img/syn/xl-paddlebg-vfl92884.png) repeat-x; 
+  border-color:#000000 #344D6D #344D6D;
+  border-style:solid;
+  border-width:0 4px 4px;
+  bottom:-1.4%;
+  height:4%;
+  left:0;
+  width:100%;
+  z-index: 999;
+  background-color: #2c2c2c
+}
+
+.paddleover {
+  background: url(http://s.ytimg.com/yt/img/syn/xl-paddlebg_hover-vfl91176.png) repeat-x;
+  border: 4px solid #FFCC00;
+  background-color: #0c315f;
+}
+
+.paddleover .xl-view-button-paddlecontent{
+  display:none;
+}
+
+.paddleover .xl-view-button-paddlecontentover {
+  display:inline;
+}
+
+.xl-view-browsethumb-title {
+  left: 16.5%;
+  top: 15%;
+  width: 83%;
+  height: 40%;
+}
+
+.xl-view-relatedthumb-title {
+  left: 22.5%;
+  top: 15%;
+  width: 77%;
+  height: 37%;
+}
+
+
+.xl-view-relatedthumb {
+  font-size: 83%;
+  height: 16%;
+  left: 1%;
+  width: 97%;
+  border: 3px solid black;
+}
+
+.mouseover {
+  border: 3px solid #FFCC00;
+  background: #3F3F3F;
+}
+
+.playerover {
+  border: 1px solid #999999;
+}
+
+.xl-view-browsethumb-image,
+.xl-view-browsethumb-overlay,
+.xl-view-browsethumb-imagebox {
+  height: 89%;
+  left: 0.5%;
+  top: 5%;
+  width: 14%;
+}
+
+.xl-view-browsethumb-overlay {
+  z-index:9999;
+}
+
+.xl-view-relatedthumb-image,
+.xl-view-relatedthumb-overlay,
+.xl-view-relatedthumb-imagebox {
+  height: 89%;
+  left: 0.5%;
+  top: 5%;
+  width: 20%;
+}
+
+.xl-view-browsethumb-duration {
+  left: 33%;
+  color: #989898;
+  font-size: 75%;
+  top: 58%;
+  width: 13.5%;
+  height: 30%;
+}
+
+.xl-view-relatedthumb-duration {
+  left: 49.5%;
+  color: #989898;
+  top: 58%;
+  font-size: 85%;
+  width: 14.5%;
+  height: 30%;
+}
+
+.xl-view-browsethumb-views {
+  left: 46.5%;
+  top: 58%;
+  color: #989898;
+  font-size: 75%;
+  width: 20%;
+  height: 30%;
+}
+
+.xl-view-relatedthumb-views {
+  left: 64%;
+  top: 58%;
+  color: #989898;
+  font-size: 85%;
+  width: 35.5%;
+  height: 30%;
+}
+
+.xl-view-browsethumb-author {
+  left: 66.5%;
+  top: 58%;
+  color: #989898;
+  font-size: 75%;
+  width: 33%;
+  height: 30%;
+}
+
+.xl-view-default-rating {
+  height: 6%;
+  right: 6%;
+  top: 22%;
+  width: 35%;
+}
+
+.xl-view-watch-message {
+}
+
+.xl-view-default-views {
+  height:7%;
+  left:6%;
+  top:21.8%;
+  width:50%;
+}
+
+.xl-view-watch-favorite_button {
+  bottom: 2%;
+  left: 4.444444%;
+  width: 17.755555%;
+  height: 8.333333%;
+}
+
+.xl-view-watch-flag_button {
+  bottom: 2%;
+  left: 23.344444%;
+  width: 17.755555%;
+  height: 8.333333%;
+}
+
+.xl-view-watch-share_button {
+  bottom: 2%;
+  left: 42.244444%;
+  width: 17.755555%;
+  height: 8.333333%;
+}
+
+.xl-view-watch-moreinfo_button {
+  bottom: 2%;
+  left: 61.144444%;
+  width: 18.855555%;
+  height: 8.333333%;
+}
+
+.xl-view-watch-related_button {
+  bottom: 2%;
+  left: 81.144444%;
+  width: 18.855555%;
+  height: 8.333333%;
+}
+.xl-view-watch-goback_button{
+  background: url(http://s.ytimg.com/yt/img/syn/xl-paddlebg_vert-vfl91176.png) repeat-y;
+  border-style: solid;
+  border-width: 3px 2px 3px 3px;
+  border-color: black;
+  height: 85%;
+  top: 12.5%;
+  left: 0%;
+  width: 2%;
+  background-color: #2c2c2c;
+}
+
+.xl-view-default-goback_button {
+  background: url(http://s.ytimg.com/yt/img/syn/xl-paddlebg_vert-vfl91176.png) repeat-y;
+  border-style: solid;
+  border-width: 3px 2px 3px 3px;
+  border-color: black;
+  height: 79.5%;
+  top: 17%;
+  left: 0%;
+  width: 2%;
+  background-color: #2c2c2c;
+}
+
+.newhover {
+  background: url(http://s.ytimg.com/yt/img/syn/xl-paddlebg_vert-hover-vfl91176.png) repeat-y;
+  border: 3px solid #FFCC00;
+  background-color: #0c315f;
+}
+
+
+.newhover .xl-view-button-vicon{
+  display:none;
+}
+
+.newhover .xl-view-button-viconover {
+  display:inline;
+}
+
+
+.xl-view-default-gobackcontainer {
+  width:100%;
+  height: 100%;
+}
+
+.xl-view-player{
+  background-color: black;
+  font-size: 1px;
+}
+
+.xl-view-player-bridge {
+  z-index: 1;
+  min-width: 1px;
+  min-height: 1px;
+  top: 0px;
+  left: 0px;
+  width: 1px;
+  height: 1px;
+  background-color: black;
+}
+
+.xl-view-player-video {
+  z-index: 2;
+  min-width: 1px;
+  min-height: 1px;
+  top: 1px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+}
+
+.xl-view-site-player {
+  z-index: 99;
+  min-width: 1px;
+  min-height: 2px;
+  top: 17.5%;
+  left: 2%;
+  width: 1px;
+  height: 2px;
+}
+
+.xl-view-site-player.active {
+  height: 66.805555%;
+  left: 9%;
+  top: 16.5%;
+  width: 50%;
+  z-index: 99;
+}
+
+.xl-view-site-player.active.fullscreen {
+  top: 1px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-default-counter {
+  font-size:80%;
+  right:5%;
+  top:97%;
+  z-index:999;
+}
+
+.xl-view-default-message {
+  left: 5%;
+  text-align: center;
+  top: 8%;
+  width: 90%;
+  height: 10%;
+}
+
+.xl-view-default-usernameprompt {
+  right: 71%;
+  top: 22.5%;
+  width: 27%;
+  height: 8%;
+  text-align: right;
+}
+
+
+.xl-view-default-passwordprompt {
+  right: 71%;
+  top: 34%;
+  width: 27%;
+  height: 8%;
+  text-align: right;
+}
+
+
+.xl-view-default-username {
+  right: 19%;
+  position: absolute;
+  top: 21.5%;
+  width: 50%;
+  font-size: 100%;
+}
+
+.xl-view-default-password {
+  font-size: 100%;
+  right: 19%;
+  position: absolute;
+  top: 33.5%;	
+  width: 50%;
+}
+
+.xl-view-default-login-button {
+  right: 19%;
+  top: 45%;
+  width: 25%;
+  height: 7%;
+  border: 3px solid #333333;
+}
+
+.xl-view-related-item1 {
+  top: 6%;
+}
+
+.xl-view-related-item2 {
+  top: 23.4%;
+}
+
+.xl-view-related-item3 {
+  top: 41%;
+}
+
+.xl-view-related-item4 {
+  top: 58.5%;
+}
+
+.xl-view-related-item5 {
+  top: 76%;
+}
+
+.xl-view-relatedcontainer-upbutton {
+  background:transparent url(http://s.ytimg.com/yt/img/syn/xl-paddlebg-vfl92884.png) repeat-x; 
+  border-color:#344D6D;
+  border-width:4px 4px 0;
+  top:0;
+  height:4%;
+  left:0;
+  width:100%;
+  z-index:999;
+}
+
+.xl-view-relatedcontainer-downbutton {
+  background:transparent url(http://s.ytimg.com/yt/img/syn/xl-paddlebg-vfl92884.png) repeat-x; 
+  border-color:#344D6D;
+  border-width:0 4px 4px;
+  bottom:-2.5%;
+  height:4%;
+  left:0;
+  width:100%;
+  z-index:999;
+}
+
+.downhighlight {
+  background: url(http://s.ytimg.com/yt/img/syn/xl-paddlebg_hover-vfl91176.png) repeat-x;
+  border-width: 4px;
+  border-color: #FFCC00;
+}
+
+.downhighlight .xl-view-button-paddlecontent{
+  display:none;
+}
+
+.downhighlight .xl-view-button-paddlecontentover {
+  display:inline;
+}
+
+.xl-view-related-counter {
+
+}
+
+.xl-view-rating-star {
+  float: left;
+  height: 100%;
+  position: relative;
+  width: 19%;
+}
+
+.xl-view-browsethumb-rating {
+  height: 24%;
+  left: 16.5%;
+  top: 55%;
+  width: 15%;
+}
+
+.xl-view-relatedthumb-rating {
+  height: 30%;
+  left: 22.5%;
+  top: 55%;
+  width: 24%;
+}
+
+.xl-view-default-topratedtabs,
+.xl-view-default-mostviewedtabs,
+.xl-view-default-channeltabs {
+  height: 7%;
+  width: 68%;
+  top: 1%;
+}
+
+.xl-view-default-logo {
+  height:10.3%;
+  left:0;
+  top:2%;
+  width:24%;
+}
+
+.xl-view-watch-logo {
+  height:8.2222%;
+  left:0;
+  top:2%;
+  width:16.7778%;
+}
+
+.xl-view-watch-title {
+  font-size: 170%;
+  height: 8.333333%;
+  left: 17.5%;
+  top: 3%;
+  width: 82.5%;
+}
+
+.xl-view-watch-popup {
+  left: 69%;
+  z-index: 99;
+  top: 40%;
+  width: 23%;
+  height: 12%;
+  background: black;
+  border: 2px gray solid;
+}
+
+.xl-view-watch-infobutton_section {
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-watch-relatedbutton_section {
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-watch-relatedcontainer {
+  top:24%;
+  left: 61.144444%;
+  width: 38.5%;
+  height: 62.777777%;
+}
+
+.xl-view-relatedcontainer-related {
+  top: 0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
+  border: 4px solid #344d6d;
+}
+
+.xl-view-watch-info,
+.xl-view-watch-sharepopup,
+.xl-view-watch-flag,
+.xl-view-watch-infringe {
+  height: 62.777777%;
+  background:black;
+  left: 61.144444%;
+  top: 24%;
+  width: 38.5%;
+  border: 4px solid #344d6d;
+}
+
+.xl-view-popup-content {
+  height: 72%;
+  text-align: center;
+  top: 28%;
+  width: 100%;
+}
+
+.xl-view-popup-full_content {
+  height: 76%;
+  top: 5%;
+  left: 3%;
+  width: 94%;
+}
+
+.xl-view-popup-ok_button {
+   bottom: 5%;
+   height: 8%;
+   width: 20%;
+   left: 40%;
+}
+
+.xl-view-popup-dismiss {
+  bottom: 5%;
+  height: 30%;
+  left: 20%;
+  text-align: center;
+  width: 55%;
+}
+
+
+.xl-view-watch-loginpopup {
+  background: black none repeat scroll 0%;
+  border: 2px solid gray;
+  height: 40%;
+  left: 68%;
+  top: 30%;
+  width: 30%;
+}
+
+
+.xl-view-login-username_prompt {
+  left: 3%;
+  top: 3%;
+}
+
+.xl-view-login-username{
+  font-size: 100%;
+  height: 10%;
+  left: 5%;
+  position: absolute;
+  top: 15%;
+  width: 90%;
+  font-size: 80%;
+}
+
+.xl-view-login-password_prompt {
+  left: 3%;
+  top: 28%;
+}
+
+.xl-view-login-password {
+  font-size: 100%;
+  height: 30%;
+  left: 5%;
+  position: absolute;
+  top: 50%;
+  width: 90%;
+  font-size: 70%;
+}
+
+.xl-view-login-login_button {
+  bottom: 5%;
+  height: 15%;
+  left: 5%;
+  width: 25%;
+}
+
+.xl-view-login-cancel_button {
+  bottom: 5%;
+  height: 15%;
+  left: 70%;
+  width: 25%;
+}
+
+.xl-view-watchdialog-email_prompt {
+  left: 3%;
+  top: 3%;
+}
+
+.xl-view-watchdialog-emails{
+  height: 10%;
+  left: 5%;
+  position: absolute;
+  top: 13%;
+  width: 90%;
+  font-size: 80%;
+}
+
+.xl-view-watchdialog-message_prompt {
+  left: 3%;
+  top: 28%;
+}
+
+.xl-view-watchdialog-description {
+  font-size: 85%;
+  font-weight: bold;
+  left: 7%;
+  top: 3%;
+  width: 86%;
+  height: 13%;
+}
+
+.xl-view-watchdialog-reason1 {
+  font-size: 75%;
+  top: 16%;
+  left: 7%;
+  width: 86%;
+  height: 11%;
+}
+
+.xl-view-watchdialog-reason2 {
+  font-size: 75%;
+  top: 27%;
+  left: 7%;
+  width: 86%;
+  height: 11%;
+}
+
+.xl-view-watchdialog-reason3 {
+  font-size: 75%;
+  top: 38%;
+  left: 7%;
+  width: 86%;
+  height: 11%;
+}
+
+.xl-view-watchdialog-reason4 {
+  font-size: 75%;
+  top: 49%;
+  left: 7%;
+  width: 86%;
+  height: 11%;
+}
+
+.xl-view-watchdialog-reason5 {
+  font-size: 75%;
+  top: 60%;
+  left: 7%;
+  width: 86%;
+  height: 11%;
+}
+
+.xl-view-watchdialog-reason6 {
+  font-size: 75%;
+  top: 71%;
+  left: 7%;
+  width: 86%;
+  height: 11%;
+}
+
+.xl-view-watchdialog-title1 {
+  font-size: 75%;
+  font-weight: bold;
+  left: 7%;
+  top: 21%;
+  width: 86%;
+  height: 6%;
+}
+
+.xl-view-watchdialog-content1 {
+  font-size: 75%;
+  left: 7%;
+  top: 27%;
+  width: 86%;
+  height: 22%;
+}
+
+.xl-view-watchdialog-title2 {
+  font-size: 75%;
+  font-weight: bold;
+  left: 7%;
+  top: 54%;
+  width: 86%;
+  height: 6%;
+}
+
+.xl-view-watchdialog-content2 {
+  font-size: 75%;
+  left: 7%;
+  top: 60%;
+  width: 86%;
+  height: 22%;
+}
+
+.xl-view-watchdialog-message {
+  height: 10em;
+  left: 5%;
+  position: absolute;
+  top: 38%;
+  width: 90%;
+  font-size: 70%;
+}
+
+.xl-view-watchdialog-ok_button {
+  bottom: 5%;
+  height: 10%;
+  left: 5%;
+  width: 43%;
+}
+
+.xl-view-watchdialog-cancel_button {
+  bottom: 5%;
+  height: 10%;
+  left: 52%;
+  width: 43%;
+}
+
+.xl-view-default-uploadedbycontainer {
+  height:9%;
+  left:6%;
+  top:4%;
+  width:89%;
+}
+
+.xl-view-default-addedon {
+  left:6%;
+  top:15%;
+  width:90%;
+}
+
+.xl-view-default-info {
+  /* height needs to be a multiple of line height*/
+  height:10.8em;
+  left:6%;
+  line-height:1.2em;
+  top:33%;
+  width:89%;
+}
+
+.xl-view-checkbox_container-text {
+  height: 100%;
+  left: 11%;
+  top: 0px;
+  width: 89%;
+}
+
+.xl-view-checkbox_container {
+}
+
+.xl-view-checkbox_container.checkhover {
+  border: 3px solid #4A4d94;
+}
+	
+.xl-view-checkbox_container.disabled {
+  opacity: 0.5;
+}
+
+.xl-view-default-cont_playback {
+  top: 13%;
+  left: 12%;
+  width: 77%;
+  height: 15%;
+}
+
+.xl-view-default-racy {
+  top: 29%;
+  left: 12%;
+  width: 77%;
+  height: 15%;
+}
+
+.xl-view-default-quality {
+  top: 45%;
+  left: 12%;
+  width: 77%;
+  height: 15%;
+}
+
+.xl-view-default-language_button {
+  border: 3px solid #333333;
+  height: 8%;
+  left: 12%;
+  top: 68%;
+  width: 77%;
+}
+
+.xl-view-default-geo_button {
+  border: 3px solid #333333;
+  height: 8%;
+  left: 12%;
+  top: 79%;
+  width: 77%;
+}
+
+.xl-view-default-worldwide {
+  height: 6%;
+  left: 12%;
+  top: 20%;
+  width: 25%;
+  border: 3px solid black;
+  font-size: 87%;
+}
+
+.xl-view-default-countries {
+  height: 81.25%;
+  top: 15.75%;
+  width: 88%;
+  left: 12%;
+}
+
+.xl-view-feed {
+  background: transparent url(http://s.ytimg.com/yt/img/syn/xl-button-vfl92884.png) repeat-x scroll 0%;
+  border: 3px solid black;
+  height: 8%;
+  width: 42%;
+  float: left;
+  position: relative;
+}
+
+.xl-view-feedspacer {
+  border: 3px solid black;
+  background-color: black;
+  height: 8%;
+  width: 42%;
+  float: left;
+  position: relative;
+}
+
+.xl-view-country {
+  background: transparent url(http://s.ytimg.com/yt/img/syn/xl-button-vfl92884.png) repeat-x scroll 0%;
+  border: 3px solid black;
+  height: 8%;
+  width: 28%;
+  float: left;
+  position: relative;
+  margin:4px;
+}
+
+.xl-view-countrycurrent {
+  background: url(http://s.ytimg.com/yt/img/syn/xl-button-active-vfl92884.png) repeat-x scroll 0%;
+  border: 3px solid black;
+  height: 8%;
+  width: 28%;
+  float: left;
+  margin:4px;
+  position: relative;
+}
+
+.xl-view-countryspacer {
+  border: 3px solid black;
+  background-color: black;
+  height: 8%;
+  width: 28%;
+  margin:4px;
+  float: left;
+  position: relative;
+}
+
+.xl-view-default-languages {
+  height: 65%;
+  top: 30%;
+  width: 88%;
+  left: 12%;
+}
+
+.xl-view-language {
+  background: transparent url(http://s.ytimg.com/yt/img/syn/xl-button-vfl92884.png) repeat-x scroll 0%;
+  border: 3px solid black;
+  height: 10%;
+  width: 28%;
+  float: left;
+  margin: 4px;
+  position: relative;
+}
+
+.xl-view-languagecurrent {
+  background: url(http://s.ytimg.com/yt/img/syn/xl-button-active-vfl92884.png) repeat-x scroll 0%;
+  border: 3px solid black;
+  height: 10%;
+  width: 28%;
+  float: left;
+  margin: 4px;
+  position: relative;
+}
+
+.xl-view-languagespacer {
+  border: 3px solid black;
+  background-color: black;
+  height: 10%;
+  width: 28%;
+  float: left;
+  margin: 4px;
+  position: relative;
+}
+
+.xl-view-country-contentcenter,
+.xl-view-feed-contentcenter,
+.xl-view-language-contentcenter,
+.xl-view-countrycurrent-contentcenter,
+.xl-view-languagecurrent-contentcenter {
+  font-size: 80%;
+  text-align: center;
+  top: 20%;
+  height: 60%;
+  width: 100%;
+}
+
+.localehover {
+  border: 3px solid #FFCC00;
+}
+
+.xl-view-default-loggedinuser {
+  height: 8%;
+  left: 77%;
+  width: 23%;
+}
+
+.xl-view-loggedin-icon {
+  height: 60%;
+  left: 5%;
+  top: 14%;
+  width: 17%;
+}
+
+.xl-view-loggedin-text {
+  left: 25%;
+  top: 25%;
+  width: 55%;
+}
+
+.xl-view-default-button_gaia {
+  border: 4px solid #4A4D94;
+  height: 18%;
+  left: 30.6%;
+  top: 63%;
+  width: 50%;
+}
+
+.xl-view-gaialogin-image {
+  height: 54%;
+  left: 2%;
+  top: 27%;
+  width: 36%;
+}
+
+.xl-view-gaialogin-content {
+  height: 50%;
+  left: 38%;
+  text-align: center;
+  top: 24%;
+  width: 61%;
+}
+
+.xl-view-default-langprompt {
+  left: 5%;
+  top: 5%;
+}
+
+.xl-view-default-geoprompt {
+  left: 2%;
+  top: 2%;
+}
+
+.xl-view-default-controls {
+  bottom: 0;
+  height: 15%;
+  width: 100%;
+  left: 0;
+  z-index: 100;
+}
+
+.xl-view-default-playbutton {
+  left: 0;
+  width: 14%;
+  height: 100%;
+  top: 0;
+}
+
+.xl-view-default-pausebutton {
+  left: 14%;
+  width: 14%;
+  height: 100%;
+  top: 0;
+}
+
+.xl-view-default-rwbutton {
+  left: 28%;
+  width: 0;
+  height: 0;
+  top: 0;
+}
+
+.xl-view-default-ffbutton {
+  left: 42%;
+  width: 0;
+  height: 0;
+  top: 0;
+}
+
+.xl-view-default-prevbutton {
+  left: 56%;
+  width: 14%;
+  height: 100%;
+  top: 0;
+}
+
+.xl-view-default-nextbutton {
+  left: 70%;
+  width: 14%;
+  height: 100%;
+  top: 0;
+}
+
+.xl-view-default-fsbutton {
+  left: 84%;
+  width: 14%;
+  height: 100%;
+  top: 0;
+}
+
+/* General popup window */
+.xl-view-site-popup {
+  background:black none repeat scroll 0;
+  border:4px solid #344D6D;
+  height:26%;
+  left:20%;
+  top:37%;
+  width:60%;
+  z-index:100;
+}
+
+.xl-view-site-popup_message {
+  background: black none repeat scroll 0 50%;
+  border: 1px solid;
+  height: 40%;
+  left: 42%;
+  top: 31%;
+  width: 40%;
+  z-index: 200;
+}
+
+.xl-view-site-long_popup {
+  background:black none repeat scroll 0 50%;
+  border:4px solid #344D6D;
+  height:62%;
+  left:20%;
+  top:21%;
+  width:60%;
+  z-index:100;
+}
+
+.xl-view-site-popup_related_message {
+  background: black none repeat scroll 0 50%;
+  border: 1px solid;
+  height: 40%;
+  left: 65%;
+  top: 21%;
+  width: 26%;
+  z-index: 200;
+}
+
+.xl-view-message-ok {
+  bottom: 5%;
+  height: 18%;
+  left: 33%;
+  width: 31%;
+}
+
+.xl-view-message-text {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70%;
+  text-align: center;
+}
+
+
+.xl-view-default-channelsub {
+  height:74%;
+  left:6%;
+  top:17%;
+  width:18%;
+}
+
+.xl-view-default-channelinfo {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 40%;
+}
+
+.xl-view-button-channelicon {
+  height:67%;
+  left:10%;
+  top:11%;
+  width:79%;
+}
+
+.xl-view-default-signedin {
+  font-size:80%;
+  left:10%;
+  top:50%;
+}
+
+.xl-view-default-joined {
+  font-size:80%;
+  left:65%;
+  top:7%;
+  width: 33%;
+  height: 5%; 
+}
+
+.xl-view-default-subscribers {
+  font-size:80%;
+  left:65%;
+  top:12%;
+  width: 33%;
+  height: 5%; 
+}
+
+.xl-view-default-lastlogin {
+  font-size:80%;
+  left:65%;
+  top:17%;
+  width: 33%;
+  height: 5%; 
+}
+
+.xl-view-default-viewcount {
+  font-size:80%;
+  left:65%;
+  top:22%;
+  width: 33%;
+  height: 5%; 
+}
+
+.xl-view-default-description {
+  width: 60%;
+  left:2%;
+  top:11%;
+  height: 83%;
+}
+
+
+.xl-view-default-videos_button {
+  height:8%;
+  left:0;
+  top:43%;
+  width:100%;
+}
+
+.xl-view-default-subscribe {
+  height:8%;
+  left:0;
+  top:54%;
+  width:75%;
+}
+
+.xl-view-default-subscribebuttoncontainer {
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-default-unsubscribebuttoncontainer {
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-default-subscribebutton {
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-default-unsubscribebutton {
+  width: 100%;
+  height: 100%;
+}
+
+.xl-view-button-channelname {
+  left:10%;
+  top:81%;
+  height:18%;
+  width:81%;
+}
+
+.xl-view-default-search_box {
+  height: 4.4%;
+  left: 75.5%;
+  top: 2.7%;
+  width: 23%;
+  z-index: 200;
+}
+
+.xl-view-default-search_input {
+  font-size: 100%;
+  width: 82%;
+  border: 4px solid black;
+  height: 100%;
+}
+
+.xl-view-default-search_button {
+  height: 100%;
+  left: 85%;
+  width: 15%;
+  top: 0;
+  border: 4px solid black;
+} 
+
+
+.xl-view-search-search_input {
+  border:4px solid black;
+  font-size:100%;
+  width:87%;
+  height: 100%;
+}
+
+.xl-view-search-search_button {
+  height:100%;
+  left:89%;
+  top:0;
+  width:11%;
+  border:4px solid black;
+} 
+
+.currentfocus {
+ /*  border: 2px solid yellow; Readd later */
+}
+
+.xl-view-watch-search_box {
+  height:4.5%;
+  left:61.2%;
+  top:12.5%;
+  width:38.8%;
+}
+
+.inputover {
+  border: 2px solid #FFCC00;
+}
+
+.xl-view-default-classiclink {
+  color:#FFFF66;
+  top:90%;
+  text-decoration: underline;
+  width: 21%;
+  height: 4%;
+  text-align: center;
+  padding: 4px;
+  left: 2%;
+  z-index: 99;
+  font-size: 70%;
+}
+
+.linkover {
+  border: 4px solid #FFCC00;
+  background: #3F3F3f;
+  color: white;
+  padding: 0;
+}
+
+.checkboxfocus {
+  border: 4px solid #FFCC00;
+}
+
+.xl-view-default-progressbar {
+  width:0;
+  height:100%;
+  background-color:yellow;
+}
+
+.xl-view-default-progressbarcontainer {
+  height:10%;
+  width: 90%;
+  background-color: red;
+}

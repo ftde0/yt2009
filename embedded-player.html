@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yt2009 embed</title>
+	<style>
+		body {
+			overflow: hidden;
+		}
+
+		.html5_video {
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			width: 100%;
+			height: 100%;
+			background-color: black;
+			cursor: pointer;
+		}
+
+		.timer {
+			top: -6px !important;
+		}
+
+		.hid {
+			display: none;
+		}
+	</style>
+
+	<link rel="stylesheet" href="/assets/site-assets/html5-player.css">
+
+	<style>
+		/*
+		=======
+		css wygenerowany na podstawie parametrów color1 i color2.
+		=======
+		*/
+
+		/*yt2009_embed_css
+
+		embed_css_end_mark*/
+	</style>
+</head>
+<body style="font: 12px Arial, sans-serif;background: black;">
+	<div class="embed-container">
+		<video class="html5_video">
+			mp4_files
+		</video>
+		<div class="volume_popout">
+			<span class="volume_head"></span>
+		</div>
+		<div class="player_additions_popout">
+			<span class="annotations none"></span>
+			<span class="cc none"></span>
+			<div class="annotations-tooltip player-tooltip hid">
+				<span class="tooltip-end"></span>
+				<span class="main-text">Loading...</span>
+			</div>
+		</div>
+		<div class="video_controls">
+			<span class="play_btn"></span>
+			<span class="pause_btn" style="display: none;"></span>
+			<div class="progress_container">
+				<span class="seek"></span>
+				<span class="loaded"></span>
+				<span class="elapsed">
+					<span class="seek_btn"></span>
+				</span>
+			</div>
+			<p class="timer">0:00 / 0:00</p>
+			<div class="volume_container">
+				<span class="volume_button"></span>
+			</div>
+			<span class="fullscreen"></span>
+			<span class="player_additions"></span>
+			<span class="flashing-btn pause hid"
+				style="opacity: 0.7;width: 0px;height: 0px;"
+			></span>
+			<span class="flashing-btn play hid"
+				style="opacity: 0.7;width: 0px;height: 0px;"
+			></span>
+		</div>
+		<span class="seek_time hid"><p class="seek_time_text">0:00</p></span>
+		<div class="endscreen hid">
+			<div class="button-replay yt-center" style="margin-top: 150px;cursor: pointer;" onclick="videoReplay();">
+				<img src="/player-imgs/replay.png"/>
+				<h2>Replay</h2>
+			</div>
+		</div>
+		<span class="embed-play-btn" style="display: block;" onclick="video.play();"></span>
+		<style class="player_auto_css"></style>
+	</div>
+	<script src="/assets/site-assets/html5-player.js"></script>
+	<script>
+		initPlayer(document, true)
+		//yt2009-no-controls-fade
+		//yt2009-annotation-redirect
+	</script>
+
+	<!--autoplay_hook-->
+	<!--related_hook-->
+</body>
+</html>

@@ -1,0 +1,4 @@
+<cross-domain-policy>
+    <allow-access-from domain="192.168.1.4" secure="false"/>
+    <allow-access-from domain="ftde-projects.tk" secure="false"/>
+</cross-domain-policy>

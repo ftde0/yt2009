@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>YouTube XL</title>
+  <link rel="stylesheet" type="text/css" href="xl-base-vfl92884.css" />
+  <link rel="stylesheet" type="text/css" href="xl-button-vfl92884.css" />
+  <link rel="stylesheet" type="text/css" href="xl-default-vfl118365.css" />
+  <link rel="stylesheet" type="text/css" href="xl-image-vfl98674.css" />
+  <link rel="stylesheet" type="text/css" href="xl-site-vfl84759.css" />
+  <style>
+    .yt2009-full {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body scroll="no">
+  <!-- splash screen -->
+  <noscript>YouTube XL is a version of YouTube optimized for watching YouTube videos on any large screen.</noscript>
+  <div id="splash" style="position: absolute; height: 100%; width: 100%; overflow: hidden;">
+    <div style="position: absolute; left: 14%; width: 73%; height: 40%; top: 30%;">
+      <img id="splash-image" style="position: absolute; width: 100%; height: 100%;" src="http://s.ytimg.com/yt/img/syn/xl-logo-big-vfl98674.png" alt="YouTube" />
+    </div>
+  </div>
+  <!-- iframe for history control -->
+  <input id="syn-control-history-state" type="text" style="display: none;" name="syn-control-history-state" />
+  <iframe id="syn-control-history-iframe" style="display: none;">
+    <html>
+    <head></head>
+    <body></body>
+    </html>
+  </iframe>
+  <!-- main site anchor -->
+  <div id="main" class="xl-view-hidden main"></div>
+
+  <script type="text/javascript">
+  
+    var display = {
+      resourceSwfBridge: 'express_bridge-vfl118365.swf',
+      resourceSwfPlayer: 'express-vfl124920.swf',
+      gaiaLoginUrl: 'javascript:alert("not implemented yet")',
+      gaiaLogoutUrl: '/',
+      classicUrl: '/',
+      rootUrl: '/',
+      hlSelected: 'en',
+      glSelected: 'US',
+      vq: '',
+      debug: 0,
+      relativeFontSize: 35 / 1080
+    };
+    //debug: parseInt('0', 10),
+  
+    var configuration = {"resize_to_maximize_viewport": false, "action_volumedown": 174, "action_prevtrack": 144, "analytics_include_rate": 10, "html5": false, "javascript_tick": 150, "action_qualityoff": 0, "player_wmode": "window", "player_disable_external_interface": false, "playback_mode": "flash", "viewport_height": 0, "action_volumemute": 160, "analytics_sample_rate": 100, "action_fullscreen": 0, "action_nexttrack": 153, "playlist": "", "player_style_label": "xl", "enable_link_emulation": false, "action_autoplayon": 0, "client": "", "enable_key_navigation": false, "resize_on_fullscreen": false, "player_quality": "high", "action_rewind": 0, "action_forward": 0, "listenkeys": false, "viewport_width": 0, "player_disable_seek_beyond_buffer": false, "analytics_session_timeout": 1800, "player_tick": 500, "playback_hd": true, "enable_hotkeys": false, "resize_body": false, "action_quality": 0, "player_event_label": "detailpage", "user": "", "action_stop": 164, "action_pause": 0, "playback_flashlite_h264": false, "action_autoplay": 0, "custom_css": [], "action_play": 0, "player_disable_native_fullscreen": false, "display_unsupported": false, "display_suggest_update": "9.0.0", "safe_search": "off", "action_autoplayoff": 0, "has_virtual_keyboard": false, "user_agent": "ANY", "action_playpause": 162, "action_volumeup": 176, "action_clear": 0, "page": "", "experimental": false, "action_qualityon": 0};
+  
+    var maximizePending = false;
+    var maximizeViewport = function() {
+      if (configuration.resize_to_maximize_viewport && !maximizePending) {
+        maximizePending = true;
+        window.resizeBy(1, 1);
+        maximizePending = false;
+      }
+    };
+  
+    var resizePending = false;
+    var onResize = function() {
+      if (!resizePending) {
+        resizePending = true;
+        maximizeViewport();
+        var el = (configuration.resize_body ? document.body : document.getElementById('main'));
+        yt.xl.resizeToViewport(el, display.relativeFontSize);
+        resizePending = false;
+      }
+    };
+
+  </script>
+
+  <script src="yt2009.js"></script>
+
+  <script type="text/javascript" src="xl-vfl121967.js"></script>
+  <script src="syndata.js"></script>
+</body>
+</html>

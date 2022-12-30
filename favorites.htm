@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="en">
+<head>
+	<title>YouTube - Favorites</title>
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-the-rest-vfl120680.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-my_account_base-vfl153434.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-my_videos-vfl121286.css">
+	<style type="text/css">
+		#mymedia #messages-new-playlist,
+		#mymedia #messages-addto-playlist {
+			margin-bottom: 10px;
+		}
+		#mymedia #dialog-new-playlist,
+		#mymedia #dialog-addto-playlist {
+			width: 350px;
+		}
+		#mymedia #addto-playlist-checklist {
+			height: 100px;
+			overflow: auto;
+			border: 1px solid #999;
+		}
+		#mymedia #expand-view .video-details .video-title {
+			margin-bottom: 10px;
+		}
+		#mymedia #expand-view .video-details .video-title a {
+			color: #03c;
+			font-size: 14px;
+			font-weight: bold;
+			text-decoration: none;
+		}
+		#mymedia .sort-field {
+			border-left: 1px solid #666;
+			margin-left: 8px;
+			padding-left: 8px;
+		}
+		#mymedia .sort-field-first {
+			margin-left: 8px;
+		}
+		#mymedia a.sort-field,
+		#mymedia a.sort-field-first {
+			text-decoration: none;
+		}
+	</style>
+	<style>
+		#videos .video {
+			height: 180px !important;
+		}
+	</style>
+</head>
+<body class="date-20091117 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<a href="/">
+				<button id="logo" class="master-sprite" title=""></button>
+			</a>
+			<div id="masthead-search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
+					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" value="" maxlength="128">
+					<input id="search-type-masthead" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document['searchForm'].submit()"><span>Search</span></a>
+				</form>
+			</div>
+			<div id="masthead-utility">
+				<!--yt2009_login_insert-->
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/my_subscriptions?feature=mhw4">Subscriptions</a>
+				<a href="/my_history?feature=mhw4">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload?feature=mhw4"><span>Upload</span></a>
+			</div>
+			<div id="masthead-nav-main">
+				<a href="/">Home</a>
+				<a href="/videos?feature=mhw4">Videos</a>
+				<a href="/channels">Channels</a>
+			</div>
+			<div id="masthead-end"></div>
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091117 video-info ">
+		<!-- begin top section -->
+		<div id="mymedia">
+			<div class="page-heading">
+				<div>
+					<div id="my-account-header">
+						<h1>
+							<span class="yt-menulink yt-menulink-primary" id="" style="" onmouseenter="this.className += ' yt-menulink-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menulink-primary-hover', '');"><a class="yt-menulink-btn yt-button yt-button-primary" href="/account" onclick="">My Account</a><a class="yt-menulink-arr" href="/account" onclick=""></a>
+								<ul class="yt-menulink-menu">
+									<li><a href="/inbox?folder=messages&amp;action_message=1" onclick="">Inbox</a></li>
+									<li><a href="/my_videos" onclick="">Videos, Favorites, and Playlists</a></li>
+									<li><a href="/my_subscriptions" onclick="">Subscriptions</a></li>
+									<li><a href="/address_book" onclick="">Address Book</a></li>
+									<li><a href="/account" onclick="">Account Settings</a></li>
+									<li><a href="/my_profile" onclick="">My Channel</a></li>
+									<li><a href="/my_videos_insight" onclick="">Insight: Statistics and Data</a></li>
+								</ul>
+							</span>
+							&nbsp;<span class="subSep">/</span>&nbsp;
+							<span>Favorites</span>
+						</h1>
+					</div>
+				</div>
+			</div>
+			<div id="nav-pane">
+				<div class="header">
+					<div class="action-button" id="button-new">
+						<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick=""><span>New</span></a><a class="yt-menubutton-arr yt-button yt-button-primary" href="#" onclick=""><button></button><span></span></a>
+							<ul class="yt-menubutton-menu">
+								<li><a href="#" onclick="showNewPlaylistDialog(); return false;">Playlist</a></li>
+								<li><a href="/my_videos_upload" onclick="">Video Upload</a></li>
+							</ul>
+						</span>
+						<div class="dropdown">
+							<div id="menu-new"></div>
+							<div class="dialog hidden" id="dialog-new-playlist">
+								<form id="form-new-playlist" class="dialog-body" onsubmit="return false;">
+									<div id="messages-new-playlist" class="yt-message-panel hidden"></div>
+									<p class="title line first">New Playlist Title</p>
+									<p class="line"><input id="new-playlist-title-textbox" class="textbox" name="new-playlist-title-textbox" type="text" maxlength="255" /></p>
+									<p class="line">
+										<a class="yt-button" id="" style="" href="#"><span>Create</span></a>
+										or
+										<a href="#" onclick="closeNewDropdown(); return false;">cancel</a>
+									</p>
+								</form>
+							</div>
+							<div class="dialog hidden" id="dialog-creating-playlist">
+								<div class="dialog-body">
+									<span class="yt-loader">Creating playlist...</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="list-pane">
+					<div class="folder"><a class="name" href="/my_videos">Uploaded Videos</a></div>
+					<div class="folder selected"><a class="name" href="/my_favorites">Favorites</a></div>
+					<div class="folder"><a class="name" href="/my_playlists">Playlists</a></div>
+					<div class="folder"><a class="name" href="/my_subscriptions">Subscriptions</a></div>
+					<div class="folder"><a class="name" href="/watch_queue">Quicklist</a></div>
+					<div class="folder"><a class="name" href="/my_history">History</a></div>
+				</div>
+			</div>
+			<div id="view-pane">
+				<div class="header">
+					<div class="pager">
+						<a href="#" onclick="switchPage('f')">First &#171;</a>
+						<a href="#" onclick="switchPage(-1)">Previous &#8249;</a>&nbsp;
+						<span id="yt2009-page-n2">Page 1 - yt2009_page_count</span>
+						<a href="#" onclick="switchPage(1)">Next &#8250;</a>&nbsp;
+						<a href="#" onclick="switchPage('l')">Last &raquo;</a>
+					</div>
+					<h2>Favorites</h2>
+				</div>
+				<div class="splitter">
+					<div class="view">
+						<div class="settings">
+							<div class="search">
+								<div id="view-toggle"><a class="list" href="#"></a><a class="expand" href="#"><img src="/assets/site-assets/pixel-vfl73.gif" alt="Expanded View" /></a><a class="grid-selected" href="#"><img src="/assets/site-assets/pixel-vfl73.gif" alt="Grid View" /></a></div>
+								<img src="/assets/site-assets/pixel-vfl73.gif" height="20" width="20" style="vertical-align: middle;" />
+							</div>
+						</div>
+						<div class="actions" style="height: 26px;">
+							<img class="img-action-arrow" src="/assets/site-assets/pixel-vfl73.gif" style="float: left; vertical-align: middle; margin-right: 5px; margin-top: 5px;" />
+							<div class="action-button" id="button-addto" style="float: left">
+								<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="return false;"><img class="yt-button-icon-add" src="/assets/site-assets/pixel-vfl73.gif" alt=""><span>Add to</span></a><a class="yt-menubutton-arr yt-button yt-button-primary" href="#" onclick="return false;"><button></button><span></span></a>
+									<ul class="yt-menubutton-menu">
+										<li><a href="#" onclick="showAddToPlaylistDialog(); return false;">Playlist</a></li>
+										<li><a href="#" onclick="onAddVideosToFavorites(getSelectedItems('videos')); return false;">Favorites</a></li>
+									</ul>
+								</span>
+								<div class="dropdown">
+									<div class="menu" id="menu-addto"></div>
+									<div class="dialog hidden" id="dialog-addto-playlist">
+										<form id="form-addto-playlist" class="dialog-body">
+											<div id="messages-addto-playlist" class="yt-message-panel hidden"></div>
+											<p class="line">Add the selected videos to:</p>
+											<p class="line title">Playlist(s)</p>
+											<p class="line">
+											<div id="addto-playlist-checklist">
+											</div>
+											</p>
+											<p class="line">
+												<a class="yt-button" id="button-addto-playlist" style="" href="#" onclick="if (isButtonEnabled(this)) { onAddToPlaylistFormSubmitted(_gel('form-addto-playlist')); }; return false;"><span>Add to Playlist</span></a>
+												or
+												<a href="#" onclick="closeAddToDropdown(); return false;">cancel</a>
+											</p>
+										</form>
+									</div>
+									<div class="dialog hidden" id="dialog-addingto-playlist">
+										<div class="dialog-body">
+											<span class="yt-loader">Adding videos to selected playlists...</span>
+										</div>
+									</div>
+									<div class="dialog hidden" id="dialog-addto-favorites">
+										<div class="dialog-body">
+											<span class="yt-loader">Adding videos to favorites...</span>
+										</div>
+									</div>
+									<div class="dialog hidden" id="dialog-addto-quicklist">
+										<div class="dialog-body">
+											<span class="yt-loader">Adding videos to quicklist...</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div id="messages" class="yt-message-panel hidden"></div>
+						<div id="grid-view">
+							<table id="table">
+								<thead>
+									<tr id="headings">
+										<td id="heading-check" class="first heading">
+											<div><input id="all-items-checkbox" type="checkbox" onclick="if (this.checked == true) { selectAllItems('videos'); } else { deselectAllItems('videos'); };" /></div>
+										</td>
+										<td id="heading-filter" class="heading">
+											<div>
+											</div>
+										</td>
+									</tr>
+								</thead>
+								<!--yt2009_videos_insert-->
+							</table>
+						</div>
+						<div class="footer">
+							<div class="pager">
+								<a href="#" onclick="switchPage('f')">First &#171;</a>
+								<a href="#" onclick="switchPage(-1)">Previous &#8249;</a>&nbsp;
+								<span id="yt2009-page-n1">Page 1 - yt2009_page_count</span>
+								<a href="#" onclick="switchPage(1)">Next &#8250;</a>&nbsp;
+								<a href="#" onclick="switchPage('l')">Last &raquo;</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="promos" class="clear">
+		</div>
+		<div id="footer">
+			<div class="search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="footer-search-form">
+					<input id="footer-search-term" class="search-term" name="search_query" type="text">
+					<input id="search-type-footer" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document['footer-search-form'].submit();"><span>Search</span></a>
+				</form>
+			</div>
+			<div class="links">
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<th>YouTube</th>
+						<th>Programs</th>
+						<th>Help</th>
+						<th>Policy</th>
+						<th>Discover</th>
+					</tr>
+					<tr>
+						<td><a href="/t/contact_us">Contact Us</a></td>
+						<td><a href="/t/advertising">Advertising</a></td>
+						<td><strong><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US">Get Help</a></strong></td>
+						<td><a href="/t/privacy">Privacy Policy</a></td>
+						<td><a href="/mobile">YouTube on Your Phone</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://www.googlestore.com/youtube">YouTube Store</a></td>
+						<td><a href="http://code.google.com/apis/youtube/overview.html">Developers</a></td>
+						<td><a href="/t/yt_handbook_home">YouTube Handbook</a></td>
+						<td><a href="/t/terms">Terms of Service</a></td>
+						<td><a href="/youtubeonyoursite">YouTube on Your Site</a></td>
+					</tr>
+					<tr>
+						<td><a href="/press_room">Press Room</a></td>
+						<td><a href="/partners">Partnerships</a></td>
+						<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">Community Help Forums</a></td>
+						<td><a href="/t/dmca_policy">Copyright Notices</a></td>
+						<td><a href="/youtubeonyourtv">YouTube on Your TV</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://ytbizblog.blogspot.com/">Business Blog</a></td>
+						<td><a href="/t/content_management">Content Management</a></td>
+						<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">Safety Center</a></td>
+						<td><a href="/t/community_guidelines">Community Guidelines</a></td>
+						<td><a href="/t/rss_feeds">YouTube RSS Feeds</a></td>
+					</tr>
+					<tr>
+						<td><a href="/blog">YouTube Blog</a></td>
+						<td></td>
+						<td><a href="/t/creators_corner">Creator's Corner</a></td>
+						<td></td>
+						<td><a href="/testtube">TestTube</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="region-and-language-pickers">
+				<div class="google-home">
+					<a href="http://www.google.com/webmasters/igoogle/youtube.html">Add YouTube to your Google homepage</a>
+				</div>
+				<div class="region-picker-box">
+					<span class="region-label">Current Location:</span>
+					<strong class="region-title">Worldwide</strong>
+					<a href="#" onclick="yt.www.masthead.loadPicker('region-picker'); return false;">Show locations</a>
+					<div id="region-picker-container">
+						<div id="region-picker-loading" style="display: none">Loading...</div>
+					</div>
+				</div>
+				<div class="language-picker-box">
+					<span class="language-label">Current Language:</span>
+					<strong class="language-title">English</strong>
+					<a href="#" onclick="yt.www.masthead.loadPicker('language-picker'); return false;">Show languages</a>
+					<div id="language-picker-container">
+						<div id="language-picker-loading" style="display: none">Loading...</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="copyright">
+			&copy; 2009 YouTube, LLC
+		</div>
+		<!-- end bottom section -->
+	</div>
+	<div>
+	</div>
+	<a name="pageBottom"></a>
+	<script src="/assets/site-assets/yt2009_userpage_common.js"></script>
+</body>
+</html>

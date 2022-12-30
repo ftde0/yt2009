@@ -1,0 +1,38 @@
+<div id="yt-static-main-content">
+    <h2 class="yt-static">"Feather" Beta</h2>
+
+    <p class="yt-static">This is an opt-in beta for "Feather" support on YouTube. The "Feather" project is intended to serve YouTube video watch pages with the lowest latency possible. It achieves this by severely limiting the features available to the viewer and making use of advanced web techniques for reducing the total amount of bytes downloaded by the browser. It is a work in progress and <b>may not work for all videos</b>.</p>
+    <br>
+    <p class="yt-static">Your comments will help us improve and perfect the mixtures we're working on. So jump in, play around, and send your feedback directly to the brains behind the scenes.</p>
+
+    <div class="yt-static-tt-entry">
+        <div class="info">
+            <h3>
+                <h3 class="yt-static status-text">You are not currently in the "Feather" beta.</h3>
+                <h3 class="yt-static"><a href="#" class="join-link" onclick="toggleFeather();">Join the "Feather" Beta</a>
+            </h3>
+            
+        </div>
+    </div>
+</div>
+<script>
+    var featherEnabled = false;
+
+    if(document.cookie.indexOf("useFeather") !== -1) {
+        featherEnabled = true;
+        document.querySelector(".status-text").innerHTML = "You are currently in the \"Feather\" beta."
+        document.querySelector(".join-link").innerHTML = "Leave the \"Feather\" Beta"
+    }
+
+    function toggleFeather() {
+        featherEnabled = !featherEnabled
+
+        if(featherEnabled) {
+            document.cookie = "useFeather=y; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        } else {
+            document.cookie = "useFeather=y; Path=/; expires=Fri, 31 Dec 2005 23:59:59 GMT"
+        }
+
+        location.reload();
+    }
+</script>

@@ -1,0 +1,160 @@
+body {
+    overflow: hidden;
+}
+video {
+    background: black;
+    cursor: pointer;
+}
+.full {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+}
+.hid {
+    display: none !important;
+}
+
+
+.controls {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    height: 17%;
+    transition: opacity 1.5s;
+}
+
+
+/*progress bar properties*/
+.progressbar, .progressbar span {
+    position: absolute;
+    left: 0px;
+    height: 100%;
+    background-size: contain;
+}
+
+.progressbar {
+    bottom: 0px;
+    width: 100%;
+    height: 30%;
+    background-image: url("./player-imgs/default.png");
+}
+
+.watched {
+    background-image: url("./player-imgs/watched.png");
+}
+
+.loaded {
+    background-image: url("./player-imgs/loaded.png");
+}
+
+.seekbtn {
+    width: 2%;
+    background: white;
+}
+
+
+/*player buttons*/
+.btn {
+    position: absolute;
+    bottom: 35%;
+    width: 15%;
+    min-height: 40px;
+    height: 45%;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: black;
+}
+
+.btn:active {
+    background-color: white;
+}
+
+.play-btn, .pause-btn {
+    left: 2%;
+}
+
+.play-btn {
+    background-image: url("./player-imgs/play-btn.png");
+}
+
+.play-btn:active {
+    background-image: url("./player-imgs/play-btn-active.png");
+}
+
+.pause-btn {
+    background-image: url("./player-imgs/pause-btn.png");
+}
+
+.pause-btn:active {
+    background-image: url("./player-imgs/pause-btn-active.png");
+}
+
+.rewind-btn {
+    left: 18%;
+    background-image: url("./player-imgs/rewind-btn.png");
+}
+
+.rewind-btn:active {
+    background-image: url("./player-imgs/rewind-btn-active.png");
+}
+
+.fw-btn {
+    left: 34%;
+    background-image: url("./player-imgs/fw-btn.png");
+}
+
+.fw-btn:active {
+    background-image: url("./player-imgs/fw-btn-active.png");
+}
+
+.loop-btn {
+    left: 55%;
+    background-image: url("./player-imgs/loop-btn.png");
+}
+
+.loop-btn.inactive {
+    background-image: url("./player-imgs/loop-btn-inactive.png");
+}
+
+.fullscreen-btn {
+    background-image: url("./player-imgs/fullscreen-btn.png");
+    right: 2%;
+} 
+
+
+/*time text*/
+.timer {
+    text-align: center;
+    display: block;
+    position: absolute;
+    bottom: 90%;
+    padding: 5px 40px;
+    margin: 0px 0px;
+    background-color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 42px;
+    font-family: "Arial", sans-serif;
+    color: white;
+}
+
+.timer.browser-modern {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+@media screen and (max-height: 540px) {
+    .timer {
+        display: none;
+    }
+}

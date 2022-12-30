@@ -1,0 +1,205 @@
+/***************************************************************************
+ * DEPRECATED PAGE - THIS FILE HAS RANDOM CSS RULES THAT AREN'T REALLY UNIFIED
+ ***************************************************************************/
+
+/* old spotlight code */
+.spotlightBodyLabel {
+	float: left;
+	font-size: 13px;
+	font-weight: bold;
+	color: #333;
+	margin-bottom: 10px;
+}
+
+.relVidsCell {
+	vertical-align: top;
+	margin-left: 5px;
+	padding-left: 5px;
+	height: 75px;
+}
+.relVidsCellBorder {
+	border-left: 1px solid #bbb;
+}
+.relVideoThumb {
+	float: left;
+	padding: 0px 4px 3px 4px;
+}
+.relVideoThumb:hover div div {
+	border: 1px solid orange;
+}
+
+/* old browse page code */
+.browse-subcat {
+	margin-left: 25px;
+}
+
+.videoModifiers {
+	padding: 5px 0px;
+	border-bottom: 1px solid #ccc;
+	text-align: center;
+}
+
+#subsubNav .videoModifiers {
+	text-align: left;
+}
+
+.videoModifiers div.subcategory {
+	border-left: 1px solid #ccc;
+	padding: 0px 10px;
+	font-size: 12px;
+	display: inline;
+}
+
+.videoModifiers div.subcategory a,
+.videoModifiers div.subcategory span {
+	white-space: nowrap;
+}
+
+.videoModifiers div.first {
+	border-left: 0px;
+	padding: 0px 10px 0px 2px;
+}
+
+.videoModifiers a {
+	text-decoration: none;
+}
+
+.videoModifiers a:hover {
+	text-decoration: underline;
+}
+
+.videoModifiers a {
+	font-weight: normal;
+}
+.videoModifiers .selected {
+	font-weight: bold;
+	color: black !important;
+}
+.videoModifiers .selected:hover {
+	text-decoration: none;
+}
+
+.videoModifiers .not_available,
+.browse-subcat.not_available {
+	color: #aaa !important;
+}
+
+#subsubNav {
+	padding-top: 3px;
+	margin-top: 13px;
+	border-top: 1px solid #ccc;
+}
+
+#subsubNav .videoModifiers span.subcategory {
+	margin: 0px;
+}
+
+#subsubNav .videoModifiers {
+	padding-bottom: 4px;
+	padding-top: 0px;
+}
+
+html > body #subsubNav { /* hide from ie6 */
+	padding-top: 7px;
+}
+
+#displayLabel {
+	padding-bottom: 10px;
+	padding-right: 3px;
+}
+
+/* old browse page layout code */
+
+
+/***************************************************************************
+ * 'Newtube' layout - browse, members, etc.
+ ***************************************************************************/
+
+#header-wrapper {
+	border-bottom: 1px solid #cccccc;
+	height: 25px;
+	margin-top: 5px;
+}
+#left-column,
+#header-left {
+	margin-top: 12px;
+	margin-right: 10px;
+	width: 140px;
+	float: left;
+}
+#body-column,
+#header-middle {
+	margin-top: 12px;
+	width: 620px;
+	float: left;
+}
+#right-column {
+	margin-top: 5px;
+	margin-left: 10px;
+	width: 160px;
+	float: left;
+}
+
+#header-left {
+	font-size: 18px;
+	margin-top: 0;
+}
+#header-middle {
+	font-size: 18px;
+	font-weight: bold;
+	margin-top: 0;
+}
+#header-right {
+	margin-top: 0px;
+	width: 170px;
+	float: left;
+}
+#left-column div {
+	margin-bottom: 4px;
+}
+
+#left-column a {
+	text-decoration: none;
+}
+#left-column a:hover {
+	text-decoration: underline;
+}
+
+.category-selected {
+	font-weight: bold;
+}
+
+#sideAd {
+	float: right;
+	width: 160px;
+	padding-top: 6px;
+}
+
+#header-wrapper.newtube-header-wrapper {
+	width: auto;
+}
+#body-column.community {
+	width: 790px;
+}
+
+/*
+     FILE ARCHIVED ON 02:07:16 Dec 17, 2009 AND RETRIEVED FROM THE
+     INTERNET ARCHIVE ON 17:42:40 Aug 09, 2022.
+     JAVASCRIPT APPENDED BY WAYBACK MACHINE, COPYRIGHT INTERNET ARCHIVE.
+
+     ALL OTHER CONTENT MAY ALSO BE PROTECTED BY COPYRIGHT (17 U.S.C.
+     SECTION 108(a)(3)).
+*/
+/*
+playback timings (ms):
+  captures_list: 2064.749
+  exclusion.robots: 0.137
+  exclusion.robots.policy: 0.127
+  cdx.remote: 0.078
+  esindex: 0.012
+  LoadShardBlock: 310.985 (3)
+  PetaboxLoader3.datanode: 275.723 (4)
+  CDXLines.iter: 13.466 (3)
+  load_resource: 115.263
+  PetaboxLoader3.resolve: 72.1
+*/

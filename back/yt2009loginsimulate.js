@@ -1,0 +1,66 @@
+const base_code_logged_in = `
+<style>.yt-menulink-menu a {padding: 5px 8px;display: block;}</style>
+<div id="masthead-utility">
+    <span class="utility-item" id="masthead-utility-menulink-long">
+        <span class="yt-menulink yt-menulink-primary" id="" style="" onmouseenter="this.className += ' yt-menulink-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menulink-primary-hover', '');">
+            <a class="yt-menulink-btn yt-button yt-button-primary">yt2009_username</a>
+            <a class="yt-menulink-arr"></a>
+            <span class="yt-menulink-menu">
+                <span><a href="#">Account</a></span>
+                <span><a href="#">My Videos</a></span>
+                <span><a href="/my_favorites">Favorites</a></span>
+                <span><a href="/my_playlists">Playlists</a></span>
+            </span>
+        </span>
+    </span>
+    <span class="utility-item"><button class="master-sprite img-general-messages" title="Inbox"></button></span>
+    <span class="utility-item"><a href="#">Sign Out</a></span>
+</div>
+`
+
+const base_code_logged_out = `
+<span class="utility-item">
+	<a href="#"><strong>Create Account</strong></a>
+	<span class="utility-joiner">or</span>
+	<a href="#">Sign In</a>
+</span>`
+
+module.exports = function(req, code) {
+    let flags = req.query && req.query.flags ? req.query.flags + ":" : ""
+    try {
+        req.headers.cookie.split(";").forEach(cookie => {
+            if(cookie.trimStart().startsWith("global_flags")) {
+                flags += cookie.trimStart().replace("global_flags=", "")
+            }
+        })
+    }
+    catch(error) {
+        flags = req;
+    }
+
+    flags = flags.split(";").join(":")
+
+    let loggedInUsername = false;
+
+    try {
+        flags.split(":").forEach(flag => {
+            if(flag.includes("login_simulate")) {
+                loggedInUsername = flag.split("login_simulate")[1];
+            }
+        })
+    }
+    catch(error) {
+        // ej ej ej ale bez takich
+        if(req.headers["user-agent"] == "Shockwave Flash") {
+            return "";
+        }
+    }
+
+    if(loggedInUsername) {
+        code = code.replace("<!--yt2009_login_insert-->", base_code_logged_in.split("yt2009_username").join(decodeURIComponent(loggedInUsername).split("<").join("&lt;").split(">").join("&gt;")))
+    } else {
+        code = code.replace("<!--yt2009_login_insert-->", base_code_logged_out)
+    }
+
+    return code;
+}

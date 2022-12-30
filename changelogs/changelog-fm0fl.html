@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="pl">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title></title>
+
+	<link id="www-core-css" rel="stylesheet" href="www-core-vfl122413.css">
+</head>
+
+<body class="date-20091111 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<div id="masthead-utility" style="visibility: hidden;cursor: default;">
+				<span class="utility-item">
+					<a href="#"><strong>Create Account</strong></a>
+					<span class="utility-joiner">or</span>
+					<a href="#">Sign In</a>
+				</span>
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/watch_queue?all" id="quicklist-nav" style="display: none;">QuickList (<span id="quicklist-nav-count">0</span>)</a>
+				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
+				<a href="/my_history">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" href="/my_videos_upload"><span>Upload</span></a>
+			</div>
+			<div id="masthead-end"></div>
+
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091111 video-info ">
+		<!-- begin top section -->
+
+        <p>
+        <h1>1.1</h1><br><br>
+        [meta]<br>
+        -- na wersji https tym protokołem też są requestowane miniaturki filmów (wcześniej obie wersje miały miniaturki http i np. firefox się przyczepiał o mixed content)<br>
+        -- yt2009_flags już nie resetuje zaznaczonych wcześniej checkboxów (niektóre mogą nie działać, np. login_simulate) (dzięki, Szprink i Filippu!)<br>
+        -- yt2009_flags wymaga autoryzacji tokenem<br><br><br>
+
+        [watchpage]<br>
+        -- naprawiony przycisk Search<br>
+        -- poprawiony handling filmów z wyłączonymi komentarzami (dzięki, breakgimme!)<br>
+        -- naprawiony width footera by nie zlewał się z innymi elementami (np. rozwiniętym opisem)<br>
+        -- usunięto linki "sign in" jeżeli włączona jest flaga login_simulate<br>
+        -- przycisk show more comments nie pokaże się jak ogólnie na filmie jest mniej niż 20 komentarzy<br>
+        -- przycisk show more comments ukrywa się podczas ładowania nowych<br>
+        -- playlisty są dynamicznie refetchowane jak nie ma cached danych<br>
+        -- nowy mały easter egg odnoszący się do oficjalnego z 2009 - ktoś chciałby to możecie znaleźć go w js :D<br><br><br>
+
+        [player]<br>
+        -- js playera odseparowany do osobnego pliku<br>
+        -- obsługa zewnętrznego pause/play (dzięki, fratik!)<br><br><br>
+
+        [search]<br>
+        -- poprawne działanie zakładek channels i playlists (dzięki, Filippu!)<br>
+        -- po wyszukaniu czegoś input zostaje w textboxie wyszukiwarki<br>
+        -- lepiej sformatowany source html<br><br><br>
+
+        feedback zawsze mile widziany - niezależnie jak mały.<br><br><br>
+
+        ========<br>
+        nie chcę wam spamić na dm o każdym update, więc jak chcecie powiadomienia jak będą to <a href="https://twitter.com/ybnn670" target="_blank">https://twitter.com/ybnn670</a> (kłódka ale jak rozpoznam nazwę to bez problemu)<br><br>
+
+        chyba że ktoś chce jednak powiadomienia na dm to już piszcie indywidualnie<br>
+        ========<br><br><br>
+
+        randomowy tip na ten update:<br>
+        wersję swf warp playera można uruchomić (na wersji http) używając flash player projectora. endpointy których używa ta wersja warp w połączeniu z user agentem projectora nie wymagają tokena, lecz mają bez niego ratelimity na ip.
+
+        </p>
+
+		<!-- end bottom section -->
+	</div>
+	<a name="pageBottom"></a>
+
+</body>
+
+</html>

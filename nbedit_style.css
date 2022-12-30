@@ -1,0 +1,116 @@
+/*
+=======
+poprawki css do oryginalnej strony oglądania (+ własne rzeczy typu video player)
+
+yt2009 2022
+=======
+*/
+
+#watch-video-tags {
+    overflow-wrap: break-word;
+}
+
+.flash-player {
+    width: 640px;
+    height: 385px;
+    overflow: hidden;
+}
+
+.html5_video {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    cursor: pointer;
+}
+
+
+
+
+
+
+.fullscreen-unsupported {
+    position: absolute !important;
+    left: 0px;
+    top: 0px;
+    width: 100% !important;
+    height: 100%;
+    z-index: 99;
+    overflow: hidden;
+}
+
+
+
+.widescreen {
+    width: 960px !important;
+}
+
+#watch-this-vid.widescreen, #watch-player-div.widescreen {
+    height: 565px !important;
+}
+
+
+
+.description, #watch-video-tags-div {
+    word-wrap: break-word;
+}
+
+
+
+#watch-customize-embed-theme-preview {
+    float: right;
+    margin: 4px;
+}
+
+#watch-customize-embed-desc {
+    word-wrap: break-word;
+    width: 200px;
+    padding: 6px;
+    font-size: 11px;
+}
+
+
+.watch-check-grn-circle {
+    background-image: url("/assets/site-assets/success.png");
+    width: 16px;
+    height: 16px;
+    float: left;
+    display: block
+}
+
+.watch-action-result .watch-action-response {
+    position: relative;
+    top: 2px;
+}
+
+
+.y-in {
+    display: inline-block;
+}
+
+
+.button.QLIcon, button.QLIconImg, button.QLIconImgOver, button.QLIconImgDone {
+    margin-top: 10px;
+}
+
+
+#watch-channel-brand-cap {
+    height: 45px;
+}
+
+#masthead {
+    height: 60px;
+}
+
+a[href="/my_videos_upload"] span {
+    display: block;
+}
+
+#watch-longform-player.not-pos-exclude, #watch-longform-popup.not-pos-exclude {
+    position: relative;
+    top: -5px;
+}
+
+.quicklist-inlist {
+    position: relative;
+    top: -28px;
+}

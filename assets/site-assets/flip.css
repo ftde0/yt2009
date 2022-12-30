@@ -1,0 +1,7 @@
+.flip {
+    transform: rotate(180deg);
+    direction: rtl;
+}
+.ltr_override {
+    direction: ltr !important;
+}

@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>
+		YouTube - yt2009_channel_name's Channel
+	</title>
+
+	<link id="www-core-css" rel="stylesheet" href="/assets/site-assets/www-core-vfl138942.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-the-rest-vfl137783.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-channel_new-vfl138942.css">
+
+	<!--yt2009_style_fixes_f-->
+
+	<style>
+		#yt2009_playhead {
+			width: 640px;
+			height: 385px;
+		}
+
+		.playnav-playlist {
+			height: 45px !important;
+		}
+
+		.navbar-tab {
+			cursor: pointer;
+		}
+
+		.playlist-thumbnail {
+			background-image: url("/assets/site-assets/video_cluster_180_border-vfl88394.png");
+			background-size: cover;
+			width: 95px;
+			height: 55px;
+		}
+
+		#user_friends-body .user-peep {
+			height: 90px !important;
+			overflow-wrap: break-word;
+		}
+
+		.icon_black {
+			background-position-y: -30px !important;
+		}
+
+		.panel-tab-indicator-cell .arrow-container {
+			width: 40px;
+			height: 20px;
+			position: relative;
+		}
+
+		.panel-tab-indicator-cell svg {
+			fill: yt2009_main_bg;
+		}
+
+		.playnav_comments {
+			overflow-y: scroll;
+			overflow-x: hidden;
+			width: 450px;
+			height: 130px;
+			border: 1px yt2009_text_color solid;
+		}
+
+		.favorite-panel {
+			background: #f5f5f5;
+			padding: 10px 10px;
+		}
+
+		.favorite-panel a {
+			color: blue !important;
+		}
+	</style>
+
+	<style type="text/css" id="channel-theme-css" name="channel-theme-css">
+		#channel-body {
+			background-color: yt2009_main_bg;
+		}
+
+		.channel-bg-color {
+			background-color: yt2009_main_bg;
+		}
+
+		#channel-body {
+			background-repeat: no-repeat
+		}
+
+		.outer-box {
+			background-color: yt2009_darker_bg;
+		}
+
+		.outer-box-bg-color {
+			background-color: yt2009_darker_bg;
+		}
+
+		.outer-box-bg-as-border {
+			border-color: yt2009_darker_bg;
+		}
+
+		#playnav-chevron {
+			border-left-color: yt2009_darker_bg;
+		}
+
+		.panel-tab-indicator-arrow {
+			border-color: yt2009_darker_bg;
+		}
+
+		.playnav-item .selector {
+			background-color: yt2009_darker_bg;
+		}
+
+		.playnav-video.selected {
+			background-color: yt2009_darker_bg;
+			border-radius: 5px;
+		}
+
+		.outer-box {
+			color: yt2009_text_color;
+		}
+
+		.outer-box-bg-color {
+			color: #000000;
+		}
+
+		.outer-box-color {
+			color: yt2009_text_color;
+		}
+
+		.panel-tab-selected a {
+			color: yt2009_text_color !important;
+		}
+
+		.outer-box-color-as-border-color {
+			border-color: #000000;
+		}
+
+		.outer-box a {
+			color: yt2009_text_color;
+		}
+
+		.outer-box-bg-color a {
+			color: yt2009_text_color;
+		}
+
+		.outer-box-link-color {
+			color: yt2009_text_color;
+		}
+
+		.outer-box-link-as-border-color {
+			border-color: yt2009_text_color;
+		}
+
+		#channel-body {
+			font-family: arial
+		}
+
+		.title-text-color {
+			color: yt2009_text_color !important;
+		}
+
+		a.title-text-color,
+		.title-text-color a {
+			color: yt2009_text_color !important;
+		}
+
+		#playnav-navbar a.navbar-tab-selected,
+		#playnav-navbar a.navbar-tab:hover {
+			background-color: #000000;
+		}
+
+		.title-text {
+			color: yt2009_text_color !important;
+		}
+
+		title-text-as-border-color {
+			border-color: #000000;
+		}
+
+		a.view-button-selected,
+		a.view-button:hover {
+			background-color: #000000;
+		}
+
+		a.view-button-selected .tri,
+		a.view-button:hover .tri {
+			border-left-color: #000000;
+		}
+
+		.outer-box .inner-box a,
+		.outer-box .inner-box-colors a {
+			color: yt2009_text_color;
+		}
+
+		.outer-box .inner-box-bg-color a {
+			color: yt2009_text_color;
+		}
+
+		.outer-box .inner-box-link-color {
+			color: yt2009_text_color;
+		}
+
+		.channel-cmd {
+			border-bottom-color: #0000cc
+		}
+
+		.link-as-border-color {
+			border-color: yt2009_text_color;
+		}
+
+		.view-button .a {
+			background-color: yt2009_text_color;
+		}
+
+		/*.view-button .tri {
+			border-top-color: yt2009_main_bg;
+			border-bottom-color: yt2009_main_bg;
+		}*/
+
+		.view-button .tri {
+			background-color: black;
+		}
+
+		.inner-box {
+			color: yt2009_text_color;
+		}
+
+		.inner-box-color {
+			color: yt2009_text_color;
+		}
+
+		.inner-box-colors {
+			color: yt2009_text_color;
+		}
+
+		.inner-box-colors .playnav-show .show-facets .show-mini-description {
+			color: yt2009_text_color;
+		}
+
+		.box-outline-color {
+			border-color: yt2009_text_color;
+		}
+
+		a.inner-box-color-as-link {
+			color: yt2009_text_color;
+		}
+
+		.inner-box {
+			background-color: yt2009_main_bg;
+		}
+
+		.inner-box-colors {
+			background-color: yt2009_main_bg;
+		}
+
+		.inner-box-bg-color {
+			background-color: yt2009_main_bg;
+		}
+
+		.inner-box-bg-as-border-color {
+			border-color: yt2009_darker_bg;
+		}
+
+		.inner-box-bg-color-as-border-color {
+			border-color: yt2009_darker_bg;
+		}
+
+		.panel-tab-selected .panel-tab-indicator-arrow {
+			border-bottom-color: yt2009_darker_bg !important;
+		}
+
+		.view-button .tri {
+			border-left-color: yt2009_main_bg;
+		}
+
+		a.view-button-selected .a,
+		.view-button:hover .a {
+			background-color: white;
+		}
+
+		a.view-button-selected .tri,
+		.view-button:hover .tri {
+			border-top-color: white;
+			border-bottom-color: white;
+			background-color: white;
+		}
+
+		#playnav-navbar a.navbar-tab-selected,
+		#playnav-navbar a.navbar-tab:hover {
+			color: white !important;
+		}
+
+		#masthead-container {
+			border-bottom: 3px solid #999999;
+		}
+
+	</style>
+
+	<!--yt2009_wayback_channel_custom_css-->
+
+	<link rel="icon" href="/favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+	<meta name="description" content="Share your videos with friends, family, and the world">
+	<meta name="keywords" content="video, sharing, camera phone, video phone, free, upload">
+	<style>
+		.playnav-item-title span {
+			max-width: 150px !important;
+		}
+		#masthead {
+			height: 60px;
+		}
+
+		a[href="/my_videos_upload"] span {
+			display: block;
+		}
+
+		.yt2009-grid-tb {
+			width: 900px;
+		}
+
+		.yt2009-grid-part {
+			padding: 10px;
+			width: 280px !important;
+		}
+
+		.yt2009-grid-playnav-item {
+			width: 280px !important;
+			height: 58px !important;
+			padding: 5px !important;
+		}
+		
+		span[class*="video-title"] {
+			max-height: 29px !important;
+		}
+	</style>
+	<script>
+		function setDefault(element) {
+			element.src = "/assets/site-assets/default.png"
+		}
+	</script>
+</head>
+
+<body class="date-20091224 en_US is-english">
+	<script>
+		function removeUserPeep(id) {
+			var peep = document.getElementById("peep-" + id)
+			peep.parentNode.removeChild(peep)
+		}
+	</script>
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<a href="/">
+				<button id="logo" class="master-sprite"></button>
+			</a>
+			<div id="masthead-search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
+					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" maxlength="128" autocomplete="off">
+					<input id="search-type-masthead" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document.searchForm.submit();"><span style="display: block;">Search</span></a>
+					<input type="hidden" name="aq" value="f"><input type="hidden" name="oq" value="" disabled="disabled">
+				</form>
+
+			</div>
+			<div id="masthead-utility">
+				<!--yt2009_login_insert-->
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
+				<a href="/my_history">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload"><span>Upload</span></a>
+			</div>
+			<div id="masthead-nav-main">
+				<a href="/">Home</a>
+				<a href="/videos">Videos</a>
+				<a href="/channels">Channels</a>
+			</div>
+			<div id="masthead-end"></div>
+
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091224 video-info ">
+		<!-- begin top section -->
+
+	</div>
+
+	<div id="channel-body" class="jsloaded">
+		<div id="channel-base-div">
+
+			<div id="user_playlist_navigator" class="outer-box">
+				<div id="playnav-channel-header" class="inner-box-bg-color">
+					<div id="playnav-navbar-toggle">
+						<a title="Switch to Grid View" href="javascript:;" onmousedown="playnav_view('grid')"
+							id="gridview-icon" class="view-button">
+							<div class="contents">
+								<div class="a yt xl"></div>
+								<div class="a yt xc"></div>
+								<div class="a yt xr"></div>
+								<div class="a yc xl"></div>
+								<div class="a yc xc"></div>
+								<div class="a yc xr"></div>
+								<div class="a yb xl"></div>
+								<div class="a yb xc"></div>
+								<div class="a yb xr"></div>
+							</div>
+						</a>
+
+						<a title="Switch to Player View" href="javascript:;" onmousedown="playnav_view('play')"
+							id="playview-icon" class="view-button view-button-selected">
+							<div class="contents">
+								<div class="a box"></div>
+								<div class="a tri"></div>
+								<div class="a yt"></div>
+								<div class="a yc"></div>
+								<div class="a yb"></div>
+							</div>
+						</a>
+					</div>
+
+					<div id="playnav-title-bar">
+						<div id="playnav-channel-name" class="outer-box-bg-color">
+							<div class="channel-thumb-holder outer-box-color-as-border-color">
+								<div class="user-thumb-semismall">
+									<div>
+										<img id="" src="yt2009_channel_avatar" alt="">
+									</div>
+								</div>
+
+							</div>
+
+							<div style="float:left;padding:0.4em;">
+								<div class="channel-title outer-box-color" style="display:none" id="channel_title">
+								</div>
+								<div class="channel-title outer-box-color" style="padding:9px 0 0 0" id="channel_base_title">yt2009_channel_name's Channel</div>
+							</div>
+
+							<div style="float:left;padding-top:10px;_display:inline" id="subscribe-buttons">
+								<div id="subscribe_user_playlist_navigator" class="subscribe-div yt2009-subscribe-button-hook" onclick="subscribe();">
+									<a class="yt-button yt-button-urgent" id="" style="" href="#"><span>Subscribe</span></a>
+								</div>
+								<div id="unsubscribeDiv" class="yt2009-unsubscribe-button-hook" onclick="unsubscribe();">
+									<a class="yt-button" id="" href="#"><span>Unsubscribe</span></a>
+								</div>
+
+							</div>
+						</div>
+						<div id="playnav-chevron">&nbsp;</div>
+					</div>
+
+					<div id="playnav-navbar">
+						<table>
+							<tbody>
+								<tr>
+									<td><a class="navbar-tab inner-box-link-color navbar-tab-selected" id="playnav-navbar-tab-all" onclick="switchTab('all', this)">All</a></td>
+									<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-uploads" onclick="switchTab('uploads', this)">Uploads</a></td>
+									<!--yt2009_favorites_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-favorites" onclick="openPlaylist(document.querySelector('.yt2009_favorites_id_div'), 'favorites')">Favorites</a><div class="hid yt2009_favorites_id_div" data-id="yt2009_favorites_id_value"></div></td>yt2009_favorites_remove_end-->
+									<!--yt2009_playlists_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-playlists" onclick="switchTab('playlists', this)">Playlists</a></td>yt2009_playlists_remove_end-->
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<div class="cb"></div>
+				</div>
+
+				<div id="subscribeMessage" class="hid">&nbsp;</div>
+
+				<div id="user_playlist_navigator-messages" style="color:#333;display:none"></div>
+
+				<div id="playnav-body">
+					<div id="playnav-player" class="playnav-player-container" style="visibility:visible">
+						<!--yt2009_player-->
+					</div>
+
+					<div id="playnav-playview" class="" style="display: block;">
+						<div id="playnav-player-restricted" class="inner-box-colors" style="display:none;">
+							<div id="playnav-inner-restricted">
+								<div id="playnav-restricted-title-div">
+									<h3 id="playnav-restricted-title"></h3>
+								</div>
+							</div>
+						</div>
+
+						<div id="playnav-left-panel">
+							<div class="playnav-player-container"></div>
+							<div id="playnav-video-details">
+								<div id="playnav-bottom-links">
+									<div id="playnav-bottom-links-clip">
+										<table>
+											<tbody>
+												<tr>
+													<td id="playnav-panel-tab-info" class="panel-tab-selected">
+														<table class="panel-tabs">
+															<tbody>
+																<tr>
+																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('info')">
+																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-info"></div>
+																		<div class="playnav-bottom-link" id="info-bottom-link">
+																			<a href="#">Info</a>
+																		</div>
+																		<div class="spacer">&nbsp;</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="panel-tab-indicator-cell inner-box-opacity">
+																		<div class="arrow-container" style="left: 10px;">
+																			<svg class="" width="40" height="20" viewBox="0 0 40 20">
+																				<path id="Selection" stroke-width="1"
+																					d="M 20.00,0.00
+																					C 25.56,3.98 36.14,13.96 39.00,20.00
+																						39.00,20.00 1.00,20.00 1.00,20.00
+																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
+																			</svg>
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+													<td id="playnav-panel-tab-comments" class="">
+														<table class="panel-tabs">
+															<tbody>
+																<tr>
+																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('comments')">
+																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-comments"></div>
+																		<div class="playnav-bottom-link" id="comments-bottom-link">
+																			<a href="#">Comments</a>
+																		</div>
+																		<div class="spacer">&nbsp;</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="panel-tab-indicator-cell inner-box-opacity">
+																		<div class="arrow-container" style="left: 25px;">
+																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
+																				<path id="Selection" stroke-width="1"
+																					d="M 20.00,0.00
+																					C 25.56,3.98 36.14,13.96 39.00,20.00
+																						39.00,20.00 1.00,20.00 1.00,20.00
+																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
+																			</svg>
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+													<td id="playnav-panel-tab-favorite" class="">
+														<table class="panel-tabs">
+															<tbody>
+																<tr>
+																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('favorite')">
+																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-favorite"></div>
+																		<div class="playnav-bottom-link" id="favorite-bottom-link">
+																			<a href="#">Favorite</a>
+																		</div>
+																		<div class="spacer">&nbsp;</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="panel-tab-indicator-cell inner-box-opacity">
+																		<div class="arrow-container" style="left: 20px;">
+																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
+																				<path id="Selection" stroke-width="1"
+																					d="M 20.00,0.00
+																					C 25.56,3.98 36.14,13.96 39.00,20.00
+																						39.00,20.00 1.00,20.00 1.00,20.00
+																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
+																			</svg>
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+													<td id="playnav-panel-tab-share" class="">
+														<table class="panel-tabs">
+															<tbody>
+																<tr>
+																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('share')">
+																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-share"></div>
+																		<div class="playnav-bottom-link" id="share-bottom-link">
+																			<a href="#">Share</a>
+																		</div>
+																		<div class="spacer">&nbsp;</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="panel-tab-indicator-cell inner-box-opacity">
+																		<div class="arrow-container" style="left: 15px;">
+																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
+																				<path id="Selection" stroke-width="1"
+																					d="M 20.00,0.00
+																					C 25.56,3.98 36.14,13.96 39.00,20.00
+																						39.00,20.00 1.00,20.00 1.00,20.00
+																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
+																			</svg>
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+													<td id="playnav-panel-tab-playlists">
+														<table class="panel-tabs">
+															<tbody>
+																<tr>
+																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('playlists')">
+																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-playlists"></div>
+																		<div class="playnav-bottom-link" id="playlists-bottom-link">
+																			<a href="#">Playlists</a>
+																		</div>
+																		<div class="spacer">&nbsp;</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="panel-tab-indicator-cell inner-box-opacity">
+																		<div class="arrow-container" style="left: 20px;">
+																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
+																				<path id="Selection" stroke-width="1"
+																					d="M 20.00,0.00
+																					C 25.56,3.98 36.14,13.96 39.00,20.00
+																						39.00,20.00 1.00,20.00 1.00,20.00
+																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
+																			</svg>
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+													<td id="playnav-panel-tab-flag">
+														<table class="panel-tabs">
+															<tbody>
+																<tr>
+																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('flag')">
+																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-flag"></div>
+																		<div class="playnav-bottom-link" id="flag-bottom-link">
+																			<a href="#">Flag</a>
+																		</div>
+																		<div class="spacer">&nbsp;</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="panel-tab-indicator-cell inner-box-opacity">
+																		<div class="arrow-container" style="left: 10px;">
+																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
+																				<path id="Selection" stroke-width="1"
+																					d="M 20.00,0.00
+																					C 25.56,3.98 36.14,13.96 39.00,20.00
+																						39.00,20.00 1.00,20.00 1.00,20.00
+																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
+																			</svg>
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+
+									<div class="cb"></div>
+
+									<div class="playnav-video-panel inner-box-colors border-box-sizing">
+										<div id="playnav-video-panel-inner" class="border-box-sizing">
+											<div id="playnav-panel-info" class="scrollable">
+												<div id="playnav-curvideo-rating">
+													<div id="ratingWrapper">
+														<div class="floatL">
+															<div id="ratingMessage" class="floatL">
+																<div id="defaultRatingMessage"><span class="smallText">yt2009_head_video_ratings ratings</span></div>
+															</div>
+															<div id="ratingStars" class="floatL">
+																<button class="master-sprite ratingL ratingL-4.0"
+																	title="4.0"></button>
+															</div>
+														</div>
+													</div>
+
+												</div>
+												<div id="playnav-curvideo-title" class="inner-box-title">
+													<span style="cursor:pointer;margin-right:7px" onclick="document.location.href='/watch?v=yt2009_head_video_id'" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+														yt2009_head_video_title
+													</span>
+												</div>
+												<div id="playnav-curvideo-info-line">
+
+													From: <span id="playnav-curvideo-channel-name">yt2009_channel_name</span>&nbsp;|
+													yt2009_head_video_upload&nbsp;|
+													<span id="playnav-curvideo-view-count">yt2009_head_video_views</span>
+												</div>
+
+												<div class="cb"></div>
+
+												<div id="playnav-curvideo-description-container">
+													<div id="playnav-curvideo-description">yt2009_head_video_short_description</div>
+												</div>
+
+												<a href="/watch?v=yt2009_head_video_id" id="playnav-watch-link">View comments, related videos, and more</a>
+												<div id="playnav-curvideo-controls">
+												</div>
+
+												<div class="cb"></div>
+											</div>
+
+											<div id="playnav-panel-comments" class="hid">
+												<img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">
+											</div>
+											<div id="playnav-panel-favorite" class="hid" style="color: black;">
+												<div class="favorite-panel">
+													<div class="favorite-added">
+														<p>This video has been <b>added</b> to your <a href="/my_favorites" target="_blank">Favorites.</a> (<a href="#" onclick="favorite_undo();">Undo</a>)</a></p>
+													</div>
+													<div class="favorite-remove hid">
+														<p>This video has been <b>removed</b> from your <a href="/my_favorites" target="_blank">Favorites.</a> (<a href="#" onclick="favorite_video();">Undo</a>)</a></p>
+													</div>
+												</div>
+											</div>
+											<div id="playnav-panel-share" class="hid scrollable"></div>
+											<div id="playnav-panel-playlists" class="hid">
+												<div id="addToPlaylistDiv" class="watch-more-action" style="padding: 0px 8px 5px 3px;">
+													<h2>Add to Playlist</h2>
+													<select class="playlists-options" style="display: inline-block;"></select>
+													<div class="playlist-add" style="display: inline-block;">
+														<a class="yt-button" id="playlist-add-btn" href="#"><span>Add</span></a>
+													</div>
+													<div class="playlist-create" style="display: none;">
+														<span>Playlist Name: </span>
+														<input type="text" class="playlist-name-input" autocomplete="off" spellcheck="false"/>
+														<a class="yt-button" id="playlist-create-btn" href="#"><span>Add</span></a>
+													</div>
+												</div>
+												<div id="addToPlaylistResult" class="watch-action-result" style="display: none;">
+													The video has been added to your playlist.
+													<div class="close" style="float: right;"><a href="#" title="close this layer" onclick="playlistResultBack();">close</a></div>
+												</div>
+											</div>
+											<div id="playnav-panel-flag" class="hid">nie</div>
+										</div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+						<div id="playnav-play-panel">
+							<div id="playnav-play-content" style="height: 595px;">
+								<div class="playnav-playlist-holder" id="playnav-play-playlist-all-holder">
+									<div id="playnav-play-all-scrollbox" class="scrollbox-wrapper inner-box-colors">
+										<div class="scrollbox-content playnav-playlist-all">
+											<div class="scrollbox-body" style="height: 585px;">
+												<div class="outer-scrollbox yt2009-scrollbox scrollbox-all">
+													<div id="playnav-play-all-items" class="inner-scrollbox">
+														<div class="playnav-playlist-header">
+															<a style="text-decoration:none" class="title title-text-color">
+																<span id="playnav-playlist-all-all-title" class="title">Uploads</span>
+															</a>
+														</div>
+														<!--yt2009_all_scrollbox_uploads-->
+														<div class="playnav-play-column-all">
+															<div class="playnav-more"><a class="channel-cmd" href="#" onclick="switchTab('uploads', $('#playnav-navbar-tab-uploads'))">see more</a></div>
+														</div>
+														<div class="spacer">&nbsp;</div>
+														<div class="scrollbox-separator">
+															<div class="outer-box-bg-as-border"></div>
+														</div>
+														<!--yt2009_all_scrollbox_playlists-->
+
+													</div>
+												</div>
+
+												<div class="outer-scrollbox yt2009-scrollbox scrollbox-uploads hid">
+													<div id="playnav-play-all-items" class="inner-scrollbox">
+														<div class="playnav-playlist-header">
+															<a style="text-decoration:none" class="title title-text-color">
+																<span id="playnav-playlist-uploads-all-title" class="title">Uploads</span>
+															</a>
+														</div>
+														<!--yt2009_uploads-->
+														<div class="spacer">&nbsp;</div>
+
+														<div class="scrollbox-separator">
+															<div class="outer-box-bg-as-border"></div>
+														</div>
+
+													</div>
+												</div>
+
+												<!--yt2009_playlists_scrollbox-->
+											</div>
+										</div>
+
+										
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="playnav-gridview" class="" style="display: none;">
+						<div id="playnav-grid-panel">
+							<div id="playnav-grid-content">
+							</div>
+						</div>
+						<div id="playnav-grid-loading" class="loading">
+							<div class="cover outer-box-bg-color"></div>
+							<div class="image-holder">
+								<div class="image-holder-middle">
+									<div class="image-holder-inner">
+										<img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="outer-box" id="main-channel-content" style="z-index: 0">
+				<div class="left-column" id="main-channel-left">
+					<div class="inner-box">
+						<div style="float:left;padding:0 4px 4px 0" class="link-as-border-color">
+							<div class="user-thumb-xlarge link-as-border-color">
+								<div>
+									<img id="" src="yt2009_channel_avatar">
+								</div>
+							</div>
+
+						</div>
+						<div style="float:left;width:170px">
+							<div class="box-title yt2009-name title-text-color" style="float:none;padding-left:4px;margin-top:-2px;width:170px;overflow:hidden;font-size:150%">yt2009_channel_name</div>
+							<div style="position:relative;width:170px;">
+								<div>
+									<div id="subscribe_user_profile" class="subscribe-div yt2009-subscribe-button-hook" onclick="subscribe();">
+										<a class="yt-button yt-button-urgent" id="" href="#"><span>Subscribe</span></a>
+									</div>
+									<div id="unsubscribeDiv" class="yt2009-unsubscribe-button-hook" onclick="unsubscribe();">
+										<a class="yt-button" id="" href="#"><span>Unsubscribe</span></a>
+									</div>
+
+									<div class="cb"></div>
+								</div>
+								<div style="padding:4px">
+									<span id="aProfileAddFriend" class="nowrap"><a href="#">Add as Friend</a>&nbsp;|&nbsp;</span>
+									<span class="nowrap"><a id="aProfileBlockUser" href="#">Block User</a>&nbsp;|&nbsp;</span>
+									<span class="nowrap"><a id="aProfileSendMsg" href="#">Send Message</a></span>
+								</div>
+							</div>
+
+						</div>
+						<div class="cb"></div>
+					</div>
+
+					<div class="inner-box" id="user_profile">
+						<div style="float:left;" class="box-title title-text-color">Profile</div>
+						<div style="float:right;;_display:inline;white-space:nowrap">
+						</div>
+						<div class="cb"></div>
+
+						<div id="user_profile-body">
+							<div id="user_profile-messages" style="color:#333;margin:1em;padding:1em;display:none">
+							</div>
+							<div class="edit_info spacer">&nbsp;</div>
+							<div class="profile_info">
+								<!--yt2009_properties-->
+								<!--yt2009_wayback_properties-->
+							</div>
+
+						</div>
+						<div class="cb"></div>
+
+					</div>
+
+					<div class="inner-box yt2009-subscriptions-mark" id="user_subscriptions">
+						<div style="zoom:1">
+							<div class="box-title title-text-color">Subscriptions (yt2009_subscriptions_count)</div>
+							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
+								<div style="float:right">
+								</div>
+							</div>
+							<div class="cb"></div>
+						</div>
+						<div id="user_subscriptions-messages" style="color:#333;margin:1em;padding:1em;display:none">
+						</div>
+
+						<div id="user_subscriptions-body">
+							<div style="zoom:1;margin: 0 -12px">
+								<!--yt2009_subs-->
+
+								<div style="clear:both;font-height:1px"></div>
+							</div>
+							<div>
+								<div style="font-size: 12px; text-align: right; margin-top: 7px;">
+									<b><a name="channel-box-see-all"
+											href="#">
+											see all
+										</a></b>
+								</div>
+
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+
+					<!--yt2009_wayback_subscribers_slot1-->
+
+					<!--yt2009_friends_slot1-->
+				</div>
+				<div class="right-column" id="main-channel-right">
+					<!--<div class="inner-box" id="user_recent_activity">
+						<div style="zoom:1">
+							<div class="box-title title-text-color">
+								Recent Activity &nbsp;
+							</div>
+							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
+								<div style="float:right">
+								</div>
+							</div>
+							<div class="cb"></div>
+						</div>
+						<div id="user_recent_activity-messages" style="color:#333;margin:1em;padding:1em;display:none">
+						</div>
+						<div class="clear"></div> 
+					</div>-->
+
+					<!--yt2009_wayback_subscribers_slot2-->
+
+					<!--yt2009_friends_slot2-->
+
+					<div class="inner-box" id="user_comments">
+						<div style="zoom:1">
+							<div class="box-title title-text-color">Channel Comments (yt2009_channel_comment_count)</div>
+							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
+								<div style="float:right">
+								</div>
+							</div>
+							<div class="cb"></div>
+						</div>
+						<div id="user_comments-messages" style="color:#333;margin:1em;padding:1em;display:none"></div>
+
+						<div id="user_comments-body">
+							<div class="commentsTableFull text-field outer-box-bg-as-border" style="_width:610px">
+								<table id="profile_comments_table" cellspacing="0" cellpadding="0" border="0">
+									<tbody>
+										<!--yt2009_comments-->
+									</tbody>
+								</table>
+							</div>
+							<div id="user-comments-login-add-comment" style="font-size: 12px; margin-top: 10px" class="alignC"><a href="#">Add Comment</a></div>
+						</div>
+						<div class="clear"></div>
+					</div>
+
+				</div>
+				<div class="cb"></div>
+			</div>
+
+		</div>
+	</div>
+
+
+	<script src="/assets/site-assets/channelpage.js"></script>
+	<!--yt2009_ryd_set-->
+	<!--yt2009_f-->
+	<!--yt2009_embed_fullscreen-->
+
+	<script>
+		//[yt2009-hook-no-videos]
+	</script>
+</body>
+
+</html>

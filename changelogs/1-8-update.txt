@@ -1,0 +1,43 @@
+1.8:
+
+[meta]
+(1.9) - dodana podstrona /yt2009_utils z różnymi opcjami związanymi prosto z yt2009 - np. naprawianie indeksów. można też znaleźć utils w stopce podstron pod nazwą Utilities.
+-- tam gdzie jest dostępna flaga remove_username_space dostępna od teraz również jest flaga username_asciiify, która usuwa wszystkie inne znaki niż litery i numery z nazw, w przeciwieństwie do remove_username_space, które tylko usuwa spacje i zostawia wszystkie inne specjalne znaki.
+-- (pozmieniaj dev urle na prod w xl i cps swf!!!) dodany częściowo-działający frontend YouTube XL z 2009. dostępny na /xl, na razie tylko działający z flashem.
+-- na /toggle_f można również ustawić niestandardowy plik swf jako player.
+
+[wayback_features]
+//-- ulepszone działanie extractora danych
+-- opis dla niektórych filmów nie jest już 1 linijkę w dół (dzięki, GRIFFEN!)
+-- jeśli dostępny, pokazany będzie baner autora. jak nie będzie, do kontenera baneru zostanie dodana klasa <code>wayback_not_found</code> aby można było np. zfiltrować te używając niestandardowego CSS.
+(1.9) - obrazy (m.in. awatar) są zapisywane lokalnie
+-- na yt2009_flags można wykorzystać parametr all aby skorzystać ze wszystkich pobranych danych (dzięki, GRIFFEN!)
+-- liczba komentarzy na watchpage poprawnie uwzględnia komentarze dodane z tą flagą. (dzięki, GRIFFEN!)
+-- poprawione dodawanie do ulubionych i do playlist.
+
+[watchpage]
+-- [feather] obsługa wayback_features
+-- fallback daty yyyy-mm-dd poprawione aby pokazywały się normalnie (np. 2009-10-10 pokaże się jako Oct 10, 2009)
+-- klikając Video Responses załadowane będą stare odpowiedzi na film jeśli takie są. zalecane jest używanie wayback_features pod bardziej celne wyniki.
+-- zaktualizowana lista słów filtrowanych przez comments_remove_future.
+-- naprawiony błąd ze stroną oglądania pokazującą losową liczbę ocen w przypadku ich braku wg. use_ryd.
+-- z włączonym f i exp_related, na endscreenie pokażą się filmy z exp_related. (credit hazelnut znajdź nazwę)
+-- poprawione działanie share_behavior i login_simulate (dzięki, breakgimme!)
+
+[player]
+-- wyższa jakość gwiazdek na endscreenie
+-- jeśli filmy pokazywane na endscreenie mają w cache dane ryd, pokażą się one. w przeciwnym wypadku domyślne 5 gwiazdek.
+-- poprawiony migający speech tip w adnotacjach (dzięki, GRIFFEN i breakgimme!)
+-- poprawiony wyciszony przycisk głośności będący 1px w dół.
+-- starsze przeglądarki pokazują gradient na adnotacjach (dzięki, BoredWithADHD!)
+
+[playlisty]
+-- kliknięcie na tytuł lub miniaturkę filmu przekieruje na ten film.
+
+[kanały]
+- (1.9) wayback_features jest dostępne na kanałach. więcej opcji na yt2009_flags.
+-- mniejsze poprawki do handlingu flag i edge case'ów od strony yt.
+
+[wyszukiwarka]
+-- dodane strony (dzięki, BoredWithADHD!)
+-- flaga only_old jest bardziej niezawodna (dzięki, GRIFFEN!)

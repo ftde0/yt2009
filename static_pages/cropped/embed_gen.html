@@ -1,0 +1,194 @@
+<div id="watch-customize-embed">
+    <img src="/assets/site-assets/pixel-vfl73.gif" class="embed-sprite" id="watch-customize-embed-theme-preview">
+
+    <textarea onclick="this.focus(); this.select();" id="watch-embed-code"></textarea>
+    <p id="watch-customize-embed-desc">
+        After making your selection, copy and paste the embed code above. The code changes based on your selection.
+    </p>
+
+    <ul id="watch-customize-embed-options">
+        <li>
+            <label>
+                <input type="checkbox" id="embed-show-related" onclick="embed_settings.add_related_html = this.checked;embed_update_code();">
+                Include related videos
+            </label>
+        </li>
+        <li>
+            <label>
+                <input type="checkbox" id="embed-use-iframe-code" onclick="embed_settings.flash_player = !this.checked;embed_update_code();">
+                Use HTML5 player
+            </label>
+        </li>
+    </ul>
+
+    <hr>
+
+    <div id="watch-customize-embed-theme-swatches">
+        <a id="watch-embed-theme-blank" data-color1="b1b1b1" data-color2="cfcfcf" class="embed-radio-link embed-sprite selected" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-storm" data-color1="3a3a3a" data-color2="999999" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-iceberg" data-color1="2b405b" data-color2="6b8ab6" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-acid" data-color1="006699" data-color2="54abd6" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-green" data-color1="234900" data-color2="4e9e00" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-orange" data-color1="e1600f" data-color2="febd01" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-pink" data-color1="cc2550" data-color2="e87a9f" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-purple" data-color1="402061" data-color2="9461ca" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <a id="watch-embed-theme-rubyred" data-color1="5d1719" data-color2="cd311b" class="embed-radio-link embed-sprite" onclick="switchColorEmbed(this)">
+            <img src="/assets/site-assets/pixel-vfl73.gif">
+        </a>
+        <div class="clearL"></div>
+    </div>
+
+    <hr>
+
+    <div id="watch-customize-embed-size">
+        <a id="watch-embed-size-radio-default" class="embed-radio-link" onclick="switchSize('320', '265', this)">
+            <span id="watch-embed-size-text-default">320x265</span>
+            <div id="watch-embed-size-default-box" class="watch-embed-radio-box"></div>
+        </a>
+        <a id="watch-embed-size-radio-medium" class="embed-radio-link" onclick="switchSize('425', '344', this)">
+            <span id="watch-embed-size-text-medium">425x344</span>
+            <div id="watch-embed-size-medium-box" class="watch-embed-radio-box selected"></div>
+        </a>
+        <a id="watch-embed-size-radio-large" class="embed-radio-link" onclick="switchSize('480', '385', this)">
+            <span id="watch-embed-size-text-large">480x385</span>
+            <div id="watch-embed-size-large-box" class="watch-embed-radio-box"></div>
+        </a>
+        <a id="watch-embed-size-radio-larger" class="embed-radio-link" onclick="switchSize('640', '505', this)">
+            <span id="watch-embed-size-text-larger">640x505</span>
+            <div id="watch-embed-size-larger-box" class="watch-embed-radio-box"></div>
+        </a>
+        <div class="clearL"></div>
+    </div>
+
+    <p class="embed-close">(<a href="#" onclick="close_embed()">close</a>)</p>
+</div>
+
+<style>
+    .embed-close {
+        font-size: 11px;
+        text-align: right;
+        margin-top: 5px;
+    }
+
+    /*css embed*/
+    .embed-sprite {
+        background-image: url("/assets/site-assets/embed_selection-vfl81006.png");
+    }
+
+    #watch-customize-embed-theme-preview {
+        background-position: -3px -26px;
+        width: 94px;
+        height: 78px;
+        float: right;
+    }
+
+    #watch-embed-code {
+        display: none;
+    }
+
+    /*kolory*/
+    #watch-customize-embed-theme-swatches .embed-radio-link {
+        width: 46px;
+        height: 23px;
+        display: inline-block;
+        margin: 4px 4px;
+    }
+    #watch-embed-theme-blank {
+        background-position: -46px 0px;
+    }
+    #watch-embed-theme-storm {
+        background-position: -138px 0px;
+    }
+    #watch-embed-theme-acid {
+        background-position: -92px 0px;
+    }
+    #watch-embed-theme-green {
+        background-position: -184px 0px;
+    }
+    #watch-embed-theme-orange {
+        background-position: -230px 0px;
+    }
+    #watch-embed-theme-pink {
+        background-position: -276px 0px;
+    }
+    #watch-embed-theme-purple {
+        background-position: -322px 0px;
+    }
+    #watch-embed-theme-rubyred {
+        background-position: -368px 0px;
+    }
+
+    #watch-customize-embed-theme-swatches .embed-radio-link.selected {
+        outline: 3px black solid;
+    }
+
+
+    /*rozmiary*/
+    #watch-customize-embed-size .embed-radio-link {
+        display: block;
+        cursor: pointer;
+        text-align: center;
+        color: #b2b2b2;
+        float: left;
+        margin-top: 5px;
+        margin-right: 7px;
+    }
+
+    .watch-embed-radio-box {
+        background: #ddd;
+        border: 1px solid #999999;
+    }
+
+    .watch-embed-radio-box.selected {
+        background: #d8e7f8;
+        border: 1px solid #b0bcce;
+    }
+
+
+    #watch-embed-size-radio-default {
+        width: 43px;
+    }
+    #watch-embed-size-radio-medium {
+        width: 56px;
+    }
+    #watch-embed-size-radio-large {
+        width: 63px;
+    }
+    #watch-embed-size-radio-larger {
+        width: 84px;
+    }
+
+
+    #watch-embed-size-default-box {
+        width: 43px;
+        height: 34px;
+    }
+    #watch-embed-size-medium-box {
+        width: 56px;
+        height: 43px;
+    }
+    #watch-embed-size-large-box {
+        width: 63px;
+        height: 49px;
+    }
+    #watch-embed-size-larger-box {
+        width: 84px;
+        height: 63px;
+    }
+</style>

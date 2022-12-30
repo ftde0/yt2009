@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="pl">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title></title>
+
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+</head>
+
+<body class="date-20091111 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<div id="masthead-utility" style="visibility: hidden;cursor: default;">
+				<span class="utility-item">
+					<a href="#"><strong>Create Account</strong></a>
+					<span class="utility-joiner">or</span>
+					<a href="#">Sign In</a>
+				</span>
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/watch_queue?all" id="quicklist-nav" style="display: none;">QuickList (<span id="quicklist-nav-count">0</span>)</a>
+				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
+				<a href="/my_history">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" href="/my_videos_upload"><span>Upload</span></a>
+			</div>
+			<div id="masthead-end"></div>
+
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091111 video-info ">
+		<!-- begin top section -->
+
+        <style>
+            p {
+                margin: 0px 0px;
+            }
+            .section {
+                margin-top: 25px;
+            }
+        </style>
+
+        <a href="changelog-mbmgs-en.html">Read this changelog in <b>English</b></a>
+
+        <h1>1.8</h1>
+        <div class="section">
+            <p>[meta]</p>
+            <p>-- tam gdzie jest dostępna flaga remove_username_space dostępna od teraz również jest flaga username_asciiify, która usuwa wszystkie inne znaki niż litery i numery z nazw, w przeciwieństwie do remove_username_space, które tylko usuwa spacje i zostawia wszystkie inne specjalne znaki.</p>
+            <p>-- dodany frontend YouTube XL z 2009 do testów. dostępny na /xl, na razie tylko działający z flashem.</p>
+            <p>-- na /toggle_f można również ustawić niestandardowy plik swf jako player.</p>
+        </div>
+
+        <div class="section">
+            <p>[wayback_features]</p>
+            <p>-- opis dla niektórych filmów nie jest już 1 linijkę w dół (dzięki, Griffen!)</p>
+            <p>-- jeśli dostępny, pokazany będzie baner autora. jak nie będzie, do kontenera baneru zostanie dodana klasa <code>wayback_not_found</code> aby można było np. zfiltrować te używając niestandardowego CSS.</p>
+            <p>-- na yt2009_flags można wykorzystać parametr all aby skorzystać ze wszystkich pobranych danych (dzięki, Griffen!)</p>
+            <p>-- liczba komentarzy na watchpage poprawnie uwzględnia komentarze dodane z tą flagą. (dzięki, Griffen!)</p>
+            <p>-- poprawione dodawanie do ulubionych i do playlist.</p>
+        </div>
+        
+        <div class="section">
+            <p>[watchpage]</p>
+            <p>-- [feather] obsługa wayback_features</p>
+            <p>-- fallback daty yyyy-mm-dd poprawione aby pokazywały się normalnie (np. 2009-10-10 pokaże się jako Oct 10, 2009)</p>
+            <p>-- klikając Video Responses załadowane będą stare odpowiedzi na film jeśli takie są. zalecane jest używanie wayback_features pod bardziej celne wyniki.</p>
+            <p>-- zaktualizowana lista słów filtrowanych przez comments_remove_future.</p>
+            <p>-- naprawiony błąd ze stroną oglądania pokazującą losową liczbę ocen w przypadku ich braku wg. use_ryd.</p>
+            <p>-- z włączonym f i exp_related, na endscreenie pokażą się filmy z exp_related. (dzięki, HazelNut!)</p>
+            <p>-- poprawione działanie share_behavior i login_simulate (dzięki, breakgimme!)</p>
+        </div>
+
+        <div class="section">
+            <p>[player]</p>
+            <p>-- wyższa jakość gwiazdek na endscreenie</p>
+            <p>-- jeśli filmy pokazywane na endscreenie mają w cache dane ryd, pokażą się one. w przeciwnym wypadku domyślne 5 gwiazdek.</p>
+            <p>-- poprawiony migający speech tip w adnotacjach (dzięki, Griffen i breakgimme!)</p>
+            <p>-- poprawiony wyciszony przycisk głośności będący 1px w dół.</p>
+            <p>-- starsze przeglądarki pokazują gradient na adnotacjach (dzięki, BoredWithADHD!)</p>
+        </div>
+
+        <div class="section">
+            <p>[playlisty]</p>
+            <p>-- kliknięcie na tytuł lub miniaturkę filmu przekieruje na ten film.</p>
+        </div>
+
+        <div class="section">
+            <p>[wyszukiwarka]</p>
+            <p>-- dodane strony (dzięki, BoredWithADHD!)</p>
+            <p>-- flaga only_old jest bardziej niezawodna (dzięki, Griffen!)</p>
+        </div>
+
+        <div class="section">
+            <p>[kanały]</p>
+            <p>-- mniejsze poprawki do handlingu flag i edge case'ów od strony yt.</p>
+        </div>
+		<!-- end bottom section -->
+	</div>
+	<a name="pageBottom"></a>
+
+</body>
+
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="pl">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title></title>
+
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+</head>
+
+<body class="date-20091111 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<div id="masthead-utility" style="visibility: hidden;cursor: default;">
+				<span class="utility-item">
+					<a href="#"><strong>Create Account</strong></a>
+					<span class="utility-joiner">or</span>
+					<a href="#">Sign In</a>
+				</span>
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/watch_queue?all" id="quicklist-nav" style="display: none;">QuickList (<span id="quicklist-nav-count">0</span>)</a>
+				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
+				<a href="/my_history">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" href="/my_videos_upload"><span>Upload</span></a>
+			</div>
+			<div id="masthead-end"></div>
+
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091111 video-info ">
+		<!-- begin top section -->
+
+        <style>
+            p {
+                margin: 0px 0px;
+            }
+            .section {
+                margin-top: 25px;
+            }
+        </style>
+
+        <h1>1.4</h1>
+        <div class="section">
+            <p>[meta]</p>
+            <p>-- dodane wsparcie playlist zapisywanych clientside.</p>
+            <p>-- globalna flaga no_controls_fade wyłączy zanikanie kontrolek playera. - watchpage, embed</p>
+            <p>-- yt2009_flags ma na górze wybór języków <b>pl</b> i <b>en</b>.</p>
+        </div>
+
+        <div class="section">
+            <p>[watchpage]</p>
+            <p>-- flaga always_morefrom: zawsze pokazuje sekcję "More from" nad podobnymi filmami. jeśli nie ma już w cache informacji o filmach, będą one pobrane po rozwinięciu tej sekcji.</p>
+            <p>-- poprawka aby tryb Feather działał z f_mode.</p>
+            <p>-- zmiana nazwy flagi exp_ryd na use_ryd. ustawione wcześniej exp_ryd będzie dalej działać.</p>
+            <p>-- flaga exp_hd - zaznaczając pojawi się przycisk HQ na playerze. wciśnięcie rozpocznie odtwarzanie filmu w 720p jak to możliwe.**
+            </p>
+        </div>
+        
+        <div class="section">
+            <p>[player]</p>
+            <p>-- najeżdżając na pasek przewijania pojawia się <span class="hover-change-timer">jumper :tf:</span></p>
+            <p>-- przycisk fullscreen pokazuje poprawny sprite wyjścia z pełnego ekranu</p>
+            <p>-- fullscreen-unsupported reaguje na zmiany rozmiarów przeglądarki</p>
+            <p>-- dodany przycisk na prawo od przycisku fullscreen pokazujący adnotacje i napisy (niedziałające na razie)</p>
+            <p>-- [embed] przycisk fullscreen</p>
+        </div>
+
+        <div class="section">
+            <p>[kanały]</p>
+            <p>-- poprawki max-width dla niektórych elementów</p>
+            <p>-- flaga <b>use_ryd</b> jest teraz dostępna (do osobnego włączenia) na kanałach. nawigując po filmach będą pobierane ratingi tak samo jak na /watch.</p>
+        </div>
+
+        <div class="section">
+            <p>** uwagi i limitacje:</p>
+            <p>
+                - rozpoczęcie odtwarzania 720p może zająć chwilę - w zależności od długości filmu.<br>
+                - przycisk HQ pokaże się tylko jak film ma 720p.<br>
+                - filmy 720p nie będą konwertowane do ogg.<br>
+                - w przypadku braku możliwości przycisk HQ się odznaczy - oznacza to powrót do domyślnego 360p.<br>
+                - niedostępne w trybie f.
+            </p>
+        </div>
+
+		<!-- end bottom section -->
+
+        <script>
+            // :tf:
+            var e = document.querySelector(".hover-change-timer")
+            var mouseOutDebounce = false;
+            e.addEventListener("mousemove", function() {
+                if(e.innerHTML.indexOf("img") !== -1) return;
+                e.innerHTML = "<img src=\"./changelog-imgs/timer.png\" draggable=\"false\"/>"
+                mouseOutDebounce = true;
+                setTimeout(function() {
+                    mouseOutDebounce = false;
+                }, 250)
+            }, false)
+
+            e.addEventListener("mouseout", function() {
+                if(mouseOutDebounce) return;
+                e.innerHTML = "jumper :tf:"
+            }, false)
+        </script>
+	</div>
+	<a name="pageBottom"></a>
+
+</body>
+
+</html>

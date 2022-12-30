@@ -1,0 +1,34 @@
+1.3:
+
+[meta]
+-- dodawanie filmów do ulubionych działa
+-- f: dodając parametr f=1 można korzystać z yt na przeglądarkach niewspierających <code>&lt;video&gt;</code> - wtedy m.in. używany jest flash player z tamtego czasu.
+f=1 można również ustawić aby automatycznie było używane gdzie trzeba za pomocą <a href="/toggle_f" target="_blank">/toggle_f</a>.
+-- historia oglądania, subskrypcje i ulubione będą używać localStorage jak jest to możliwe. dotychczasowe przechowywanie w cookie dalej jest wspierane i dane przechowane w cookie będą dalej działać.
+
+[watchpage]
+-- kliknięcie na textbox <b>Embed</b> pokaże działające opcje z embedem (kolory, rozmiar etc)
+-- udostępnianie filmów można ustawić za pomocą flagi share_behavior. (dzięki breakgimme i Filippu!)
+-- linki w opisach można klikać
+-- flaga fake_upload_date pokazuje date w tym samym formacie co normalne daty wrzucenia
+-- bliższy 2009 tryb Feather
+
+[player]
+-- przycisk głośności pokazuje poprawny sprite po najechaniu, wciśnięcie na niego automatycznie wycisza film
+-- fullscreen-unsupported (fallback jak przeglądarka nie wspiera requestFullscreen) nie prześwituje już nazwy z login-simulate
+-- [embed] ustawiona na watchpage flaga autoplay też działa teraz na embedach
+-- [embed] naprawiony spam błędów w konsoli w przypadku braku filmów na endscreenie
+
+[kanały]
+-- z flagą exp_playlists, jak użytkownik nie ma żadnych playlist, zakładka Playlists się ukrywa
+-- trwały cache (zachowujący się między restartami)
+-- dodany pasek z akcjami na oglądanym filmie ("dolne linki")
+-- z flagą fake_upload_date, daty na innych wystąpieniach tego samego filmu już nie będą inne
+
+randomowy tip
+na embedach zmieniając parametry color1 i color2 można ustawiać własne hex kolory.
+na html5 playerze jak nie będzie to kolor z palety którą można wybrać tworząc embed, zostanie wygenerowany server-side gradient.
+
+P.S.
+ostatnio dużo na myśli mi chodzi dać spróbować yt2009 większej ilości ludzi. nie od razu full publicznie ale po kilka-kilkanaście osób.
+nwm jak i czy to w ogóle zrobię, ale jak zawsze jestem otwarty na wasze sugestie.

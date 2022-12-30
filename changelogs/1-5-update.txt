@@ -1,0 +1,56 @@
+1.5:
+
+[meta]
+-- filmy w ogg będą eksportowane dopiero jak będzie to potrzebne.
+-- zwiększony bitrate dla nowo-pobieranych filmów w alternatywnych formatach (ogg, flv)
+-- dopełnienie angielskich tekstów na yt2009_flags
+-- /toggle_f ma switch polski/angielski
+
+[warp_swf]
+-- poprawiony bufferTime aby filmy nie zatrzymywały się nagle podczas odtwarzania
+
+[watchpage]
+-- przycisk QL wyciągnięty w górę (dzięki, BoredWithADHD!)
+
+[player]
+-- poprawiony CSS związany z paskiem progresu
+-- poprawiony sprite przycisku pauzy i lepsza jakość przycisków na endscreenie
+(dzięki BoredWithADHD za oba! ↑)
+-- [embed] naprawione tło przycisku dodatków z ustawionym kolorem inny niż domyślny
+-- sprite przycisku fullscreen poprawnie wraca jak pełny ekran jest zamknięty inaczej niż przyciskiem (np. klikając esc)
+-- poprawione dopasowywanie szerokości paska progresu (dzięki SwuerpY!)
+-- dodane adnotacje - wymagają ulepszeń w przyszłości ale ogólnie działają
+-- z flagą no_controls_fade wysokość filmu dostosuje się aby nie być zakrywany przez pasek progresu.
+
+[kanały]
+-- linki w opisie kanału można klikać
+-- w przypadku zepsutego pliku awataru w komentarzach zostanie załadowany domyślny.
+
+
+1.5
+
+[meta]
+-- ogg video will only be exported when necessary
+-- higher bitrate for newly-downloaded alternative formats video (ogg, flv)
+-- fully translated yt2009_flags to english
+-- /toggle_f translated to english.
+
+[warp_swf]
+-- fixed bufferTime to prevent videos from abruptly stopping while playing
+
+[watchpage]
+-- QL button is slightly higher now (Thanks, BoredWithADHD!)
+
+[player]
+-- fixed CSS related to the progressbar
+-- fixed the pause button sprite and included higher quality endscreen sprites
+(Thanks BoredWithADHD for both! ↑)
+-- [embed] fixed the player additions button background when a non-default color is set
+-- the fullscreen button sprite correctly switches back when a user exists fullscreen in a different way than using the button (like pressing ESC)
+-- fixed the progressbar not always resizing (Thanks, SwuerpY!)
+-- added annotations - they will be improved with time but generally work
+-- using no_controls_fade, the video height will be adjusted so its bottom isn't covered
+
+[kanały]
+-- links in the channel description are clickable
+-- in case of a broken commenter avatar's file, the default avatar will be loaded.

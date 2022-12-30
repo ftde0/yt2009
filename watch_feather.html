@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<title>YouTube - video_title</title>
+	<link rel="stylesheet" href="/www-core-feather.css">
+	<link rel="stylesheet" href="nbedit_style.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<style>
+		#watch-channel-vids-div {
+			background: #dddddd;
+		}
+
+		#watch-embed-div label, #watch-url-div label {
+			text-align: left !important;
+		}
+		
+		#watch-channel-icon {
+			margin-top: 10px;
+			margin-left: 8px;
+		}
+
+		#watch-video-details-inner-more {
+			padding-left: 11px;
+			padding-right: 11px;
+			margin-top: 16px !important;
+		}
+
+		.watch-video-added {
+			font-weight: bold;
+		}
+
+		.watch-video-desc {
+			margin-top: 16px;
+		}
+
+		#watch-video-details-inner-more {
+			margin-top: 16px;
+		}
+
+		#watch-channel-stats {
+			text-align: right;
+			float: right;
+			padding: 14px 14px;
+			font-size: 20px;
+		}
+
+		#watch-channel-stats a {
+			float: right;
+		}
+
+		.watch-comment-entry {
+			border-top: none !important;
+		}
+
+		#watch-views-div {
+			float: right;
+			position: absolute;
+			right: 5px;
+			top: 0px;
+			font-size: 15px;
+			font-weight: initial !important;
+		}
+
+		#watch-channel-icon {
+			overflow: hidden;
+		}
+	</style>
+
+	<!--yt2009_style_fixes_f-->
+</head>
+<body class="en_US is-english">
+	<script>
+		// check if the video exists based on the thumbnail image height
+		// put on the top to make sure it's working by the time the images load
+		function checkExists(element) {
+			if(element.naturalHeight <= 90) {
+				// 404 image
+				var id = element.parentNode.getAttribute("href").split("?v=")[1]
+				document.querySelector("[data-id=\"" + id + "\"]").className += " hid"
+			}
+		}
+	</script>
+	<div id="masthead-container">
+		<div id="masthead">
+			<a href="/">
+				<button id="logo" class="master-sprite" title="" onclick="window.top.location.href='/'; return false;"></button>
+			</a>
+			<div id="masthead-search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
+					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" value="" maxlength="128">
+					<input id="search-type-masthead" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" onclick="this.parentNode.submit();"><span style="display: block;">Search</span></a>
+				</form>
+			</div>
+			<div id="masthead-end"></div>
+		</div>
+	</div>
+	<div id="baseDiv" class="date-20090927 video-info  ">
+		<div id="watch-vid-title" class="title  longform">
+			<h1 class="watch-vid-ab-title">video_title</h1>
+			<div id="watch-views-div">
+				<span id="watch-views"><span id="watch-view-count">video_view_count</span> views</span>
+			</div>
+		</div>
+		<div class="clearL"></div>
+		<!-- end top section -->
+		<div id="watch-this-vid" class="yt-rounded">
+			<!--yt2009_f-->
+			<div id="watch-player-div" class="flash-player">
+				<iframe class="html5_video" src="/embed/video_id"></iframe>
+			</div>
+		</div>
+		<!-- begin right section -->
+		<div id="watch-other-vids">
+			<div id="watch-channel-vids-div" class="vcard">
+				<div id="watch-channel-vids-top">
+					<div id="watch-channel-icon" class="user-thumb-medium">
+						<div>
+							<a class="url" href="#"><img src="channel_icon" class="photo" alt="Channel Icon"></a>
+						</div>
+					</div>
+					<div id="watch-channel-stats">
+						<a href="channel_url" class="hLink fn n contributor">channel_name</a><br>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div id="watch-video-details">
+					<div id="watch-video-details-inner">
+						<div id="watch-video-details-inner-more">
+							<span class="watch-video-added post-date">upload_date</span><br>
+							<div class="watch-video-desc description">
+								<!--yt2009_wayback_full_desc--><span>
+									video_full_description</span>
+							</div>
+						</div>
+						<div id="watch-url-div">
+							<form action="" name="urlForm" id="urlForm">
+								<label for="watch-url-field">URL</label>
+								<input name="video_link" id="watch-url-field" type="text" class="email-video-url" value="video_url" readonly>
+								<div class="clearL"></div>
+							</form>
+						</div>
+						<div id="watch-embed-div">
+							<form action="" name="embedForm" id="embedForm">
+								<label for="embed_code">Embed</label>
+								<div>
+									<input id="embed_code" name="embed_code" type="text" value="video_embed_link" readonly />
+								</div>
+								<div class="clearL"></div>
+							</form>
+						</div>
+					</div>
+					<form id="watch-customize-embed-div" name="embedCustomizeForm" style="display: none;">Loading...
+					</form>
+				</div>
+			</div>
+			<!--yt2009_playlist_panel-->
+			<div id="watch-related-videos-panel" class="watch-discoverbox-wrapper yt-uix-expander " data-expander-action="watchTogglePanel" data-discoverbox-type="related" data-discoverbox-username="">
+				<h2 class="yt-uix-expander-head">
+					<button title="" class="yt-uix-expander-arrow master-sprite"></button>
+					<span>
+						Related Videos
+					</span>
+				</h2>
+				<div id="watch-related-vids-body" class="watch-discoverbox-body mini-list-view yt-uix-expander-body">
+					<div id="watch-related-discoverbox" class="watch-discoverbox" style="height:432px">
+						<!--yt2009_wayback_related_features_marking-->
+						<!--yt2009_exp_related_marking-->
+						<!--yt2009_add_marking_related-->
+					</div>
+				</div>
+				<div class="clearL"></div>
+			</div>
+		</div>
+		<!-- end right section -->
+		<!-- begin info section -->
+		<div id="watch-this-vid-info">
+			<div id="watch-ratings-views">
+				<div id="watch-rating-div">
+					<div id="ratingWrapper">
+						<div class="floatL">
+							<div id="ratingStars" class="floatL">
+								<button class="master-sprite ratingL ratingL-4.5" title="4.5"></button>
+							</div>
+							<div id="ratingMessage">
+								<div id="defaultRatingMessage"><span class="smallText">yt2009_ratings_count ratings</span></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div id="watch-comment-panel" class="yt-uix-expander  expander-small" data-expander-action="watchToggleCommentPanel">
+				<div class="yt-uix-expander-body">
+					<div id="div_main_comment2"></div>
+					<div id="recent_comments" class="comments">
+						<!--yt2009_wayback_comments-->
+						<!--yt2009_add_comments-->
+						<table id="watch-comments-footer-table">
+							<tbody>
+								<tr>
+									<td class="watch-comments-footer-td">
+										<strong>Showing <span id="watch-comment-count">yt2009_comment_count</span></strong> comments
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div id="copyright">
+				&copy; 2009 YouTube, LLC
+			</div>
+		</div>
+</body>
+</html>

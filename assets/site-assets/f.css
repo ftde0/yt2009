@@ -1,0 +1,19 @@
+#playnav-navbar-toggle {
+    width: 100px;
+}
+#profile_show_description {
+    width: 276px;
+    overflow-x: hidden;
+}
+.video-main-content {
+    width: 166px;
+}
+.video-entry {
+    width: 274px;
+}
+#watch-video-tags-div {
+    width: 286px;
+}
+#masthead-search .yt-button {
+    height: 23px !important;
+}

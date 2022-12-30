@@ -1,0 +1,41 @@
+1.6:
+
+[meta]
+-- dodając do urla używającego flag parametr <b>resetflags=1</b> można tymczasowo wyświetlić tą stronę bez żadnych.
+- (1.7) testowa podstawowa wersja mobilna. /mobile/
+-- /warp_speed translated to english
+-- poprawiona wysokość przycisku Search
+-- flaga default_avatar ma opcje: adapt i always. adapt pokaże domyślny awatar jak obecny jest domyślny. always działa jak ta flaga do tej pory.
+!! adapt może dawać false-positive wyniki na temat tego czy awatar jest domyślny czy nie, reporty takich przypadków mile widziane !!
+
+[f_mode]
+-- mniejsze poprawki wyświetlania layoutu
+-- więcej funkcjonalności zportowanej do f_mode:
+<ul>
+<li>historia oglądania</li>
+<li>przyciski widescreen i popout</li>
+<li>karty na kanałach</li>
+<li>playlisty na watchpage</li>
+</ul>
+
+[watchpage]
+-- exp_related - tam gdzie możliwe, pokazuje stare podobne filmy bazując na tagach oglądanego
+- (1.7) exp_hd pokaże też przycisk HQ w przypadku dostępnego 480p. jednak jak będzie dostępne 720p to to będzie odtwarzane.
+-- fake_upload_date ma teraz opcje: adapt i always. adapt pokazuje podmienioną datę tylko jak film był wrzucony po kwietniu 2010, always działa jak ta flaga do tej pory.
+-- poprawiona wysokość filmu z 360px do 385px - tak jak oryginalnie w 2009 (dzięki, BoredWithADHD!)
+-- nad kartą z twórcą, opisem itp. pokaże się też baner tego kanału. (dzięki, aubrey!)
+-- use_ryd od teraz jest wykonywane serverside.
+
+
+[kanały]
+-- widok siatki działa (dzięki, ISM_64!)
+-- exp_playlists: dodano wsparcie dla kanałów używających półek na playlisty (m.in. kanały muzyczne).
+
+[player]
+- (1.7) [embed] dodaj parametr year i zobacz co się stanie
+-- [embed] z wyłączonym autoplay pokaże się przycisk play z 2009 (dzięki BoredWithADHD za sprite!)
+-- [embed] no_controls_fade można dodać do parametrów url'a aby zadziałało bez ustawiania flag - &no_controls_fade=1
+-- elementy paska progresu używają CSS procentów tam gdzie możliwe zamiast pikseli. (dzięki, aubrey!)
+-- poprawiona nawigacja po filmach na endscreenie
+-- dodany różowo-czerwony pasek pokazujący ile filmu się załadowało
+-- globalna flaga: always_annotations automatycznie włączająca adnotacje do filmów

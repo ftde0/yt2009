@@ -1,0 +1,112 @@
+body {
+    background-color: black;
+    overflow: hidden;
+    cursor: pointer;
+    color: white;
+    user-select: none;
+}
+
+* {
+    margin: 0px 0px;
+}
+
+.container {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.warp_grid {
+    position: absolute;
+    width: 5000px;
+    height: 5000px;
+    border: 1px white solid;
+}
+
+.video-circle {
+    position: absolute;
+    border: 10px white solid;
+    border-radius: 64px;
+    width: 64px;
+    height: 64px;
+    background-size: cover;
+    -moz-background-size: cover;
+    border-radius: 50px;
+    -moz-border-radius: 64px;
+    -webkit-transition: all 1s;
+    -moz-transition: all 1s;
+    transition: all 1s;
+    background-position: center;
+}
+
+.video-circle.small {
+    width: 50px;
+    height: 50px;
+}
+
+.overlay {
+    display: table;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    text-align: center;
+}
+
+.inner {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.overlay .center {
+    margin: auto auto;
+}
+
+.player-embed {
+    width: 960px;
+    height: 540px;
+}
+
+/*
+informacje o filmie
+*/
+
+.hover-element {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    color: black;
+    width: 245px;
+    height: 73px;
+    background-image: url("/assets/site-assets/warp-hover.png"), url("/assets/site-assets/warp-hover-overflow.png");
+    background-repeat: no-repeat, repeat-x;
+    white-space: nowrap;
+}
+
+.video-title {
+    position: absolute;
+    left: 77px;
+    top: 6px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.length {
+    position: absolute;
+    left: 79px;
+    top: 37px;
+    font-size: 10px;
+    font-family: Arial, sans-serif;
+}
+
+.thumbnail {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    width: 66px;
+    height: 44px;
+}

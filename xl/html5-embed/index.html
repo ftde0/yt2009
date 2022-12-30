@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yt2009 - html5 xl player</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <video src="" class="full"></video>
+    <div class="controls" style="opacity: 1;">
+        <div class="progressbar">
+            <span class="loaded"></span>
+            <span class="watched"></span>
+            <span class="seekbtn hid" style="left: 0%"></span>
+        </div>
+        <span class="btn play-btn"></span>
+        <span class="btn pause-btn hid"></span>
+        <span class="btn rewind-btn"></span>
+        <span class="btn fw-btn"></span>
+        <span class="btn loop-btn inactive"></span>
+        <span class="btn fullscreen-btn"></span>
+        <h1 class="timer">0:00 / 0:00</h1>
+    </div>
+    <script>
+        // fill the video tag
+        var id = location.href.split("video_id=")[1].split("&")[0]
+        var version = location.href.indexOf("ogg") !== -1 ? "ogg" : "mp4"
+        document.querySelector("video").src = "/assets/" + id + "." + version
+    </script>
+    <script src="html5-player.js"></script>
+</body>
+</html>

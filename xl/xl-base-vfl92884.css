@@ -1,0 +1,60 @@
+
+body {
+	background-color: black;
+	color: white;
+	font-family: "arial";
+	text-decoration: none;
+  font-size: 35px;  
+}
+
+.main {
+	z-index: 10;
+	width: 100%;
+  left: 0px;
+  top: 0px;
+  height: 100%;
+  overflow: hidden;
+}
+
+div {
+	position: absolute;
+	padding: 0px;
+	border: 0px;
+	margin: 0px;
+  display: inline;
+  /*-moz-border-radius: 4px;*/
+}
+
+input {
+  border: 2px solid white;
+  background-color: white;
+  padding: 0px;
+  margin: 0px;
+}
+
+a > img {
+	z-index: 99;
+}
+
+img {
+	display: block;
+	position: absolute;
+	padding: 0px;
+	border: 0px;
+	margin: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 99;
+}
+
+/* The following disables force feedback when a view is disabled */
+.disabled > a {
+	display: none;
+}
+

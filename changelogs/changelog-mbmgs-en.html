@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="pl">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title></title>
+
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+</head>
+
+<body class="date-20091111 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<div id="masthead-utility" style="visibility: hidden;cursor: default;">
+				<span class="utility-item">
+					<a href="#"><strong>Create Account</strong></a>
+					<span class="utility-joiner">or</span>
+					<a href="#">Sign In</a>
+				</span>
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/watch_queue?all" id="quicklist-nav" style="display: none;">QuickList (<span id="quicklist-nav-count">0</span>)</a>
+				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
+				<a href="/my_history">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" href="/my_videos_upload"><span>Upload</span></a>
+			</div>
+			<div id="masthead-end"></div>
+
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091111 video-info ">
+		<!-- begin top section -->
+
+        <style>
+            p {
+                margin: 0px 0px;
+            }
+            .section {
+                margin-top: 25px;
+            }
+        </style>
+
+        <a href="changelog-mbmgs.html">Read this changelog in <b>Polish</b></a>
+
+        <h1>1.8</h1>
+        <div class="section">
+            <p>[meta]</p>
+            <p>-- wherever <code>remove_username_space</code> is available, a new flag called <code>username_asciify</code> was added. it removes all non-alphanumerical characters instead of only removing spaces.</p>
+            <p>-- added a YouTube XL frontend from 2009 for testing. available at /xl, working only with Flash for now.</p>
+            <p>-- at /toggle_f, you can now also set a custom swf file as a player.</p>
+        </div>
+
+        <div class="section">
+            <p>[wayback_features]</p>
+            <p>-- descriptions for some videos aren't lowered 1 line anymore (Thanks, Griffen!)</p>
+            <p>-- if available, an old user banner will be shown. otherwise a <code>wayback_not_found</code> classname will be added to the container, so - for example - they can be filtered out with CSS</p>
+            <p>-- on yt2009_flags, you can set an <code>all</code> parameter to use all Wayback Features. (Thanks, Griffen!)</p>
+            <p>-- the comment count properly counts comments added through wayback_features (Thanks, Griffen!)</p>
+            <p>-- fixed adding to favorites and playlists.</p>
+        </div>
+        
+        <div class="section">
+            <p>[watchpage]</p>
+            <p>-- [feather] added support for wayback_features</p>
+            <p>-- fallback date formats (yyyy-mm-dd) will show normally now (ex. 2009-10-10 will be shown as Oct 10, 2009)</p>
+            <p>-- clicking Video Responses will bring up some video responses from the time. using wayback_features is recommended for better results.</p>
+            <p>-- updated the word list used by comments_remove_future to filter comments.</p>
+            <p>-- fixed a bug where the watchpage would show a random rating number if use_ryd doesn't report any ratings.</p>
+            <p>-- with f enabled, videos added using exp_related will show on the endscreen. (Thanks, HazelNut!)</p>
+            <p>-- fixed share_behavior and login_simulate (Thanks, breakgimme!)</p>
+        </div>
+
+        <div class="section">
+            <p>[player]</p>
+            <p>-- higher quality stars on the endscreen</p>
+            <p>-- if the videos shown on the endscreen have a cached use_ryd rating, it will be shown instead of the default 5 stars.</p>
+            <p>-- fixed the blinking speech tip in annotations (Thanks, Griffen and breakgimme!)</p>
+            <p>-- fixed the muted volume button being 1px off.</p>
+            <p>-- older browsers will now show an annotations gradient (Thanks, BoredWithADHD!)</p>
+        </div>
+
+        <div class="section">
+            <p>[playlists]</p>
+            <p>-- clicking on a title or a thumbnail will redirect to that video.</p>
+        </div>
+
+        <div class="section">
+            <p>[search]</p>
+            <p>-- added pages (Thanks, BoredWithADHD!)</p>
+            <p>-- only_old is more reliable (Thanks, Griffen!)</p>
+        </div>
+
+        <div class="section">
+            <p>[channels]</p>
+            <p>-- better flag and edge case handling.</p>
+        </div>
+		<!-- end bottom section -->
+	</div>
+	<a name="pageBottom"></a>
+
+</body>
+
+</html>

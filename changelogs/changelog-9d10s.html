@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="pl">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title></title>
+
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+</head>
+
+<body class="date-20091111 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<div id="masthead-utility" style="visibility: hidden;cursor: default;">
+				<span class="utility-item">
+					<a href="#"><strong>Create Account</strong></a>
+					<span class="utility-joiner">or</span>
+					<a href="#">Sign In</a>
+				</span>
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/watch_queue?all" id="quicklist-nav" style="display: none;">QuickList (<span id="quicklist-nav-count">0</span>)</a>
+				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
+				<a href="/my_history">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" href="/my_videos_upload"><span>Upload</span></a>
+			</div>
+			<div id="masthead-end"></div>
+
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091111 video-info ">
+		<!-- begin top section -->
+
+        <style>
+            p {
+                margin: 0px 0px;
+            }
+            .section {
+                margin-top: 25px;
+            }
+        </style>
+
+        <h1>1.3</h1>
+        <div class="section">
+            <p>[meta]</p>
+            <p>-- dodawanie filmów do ulubionych działa</p>
+            <p>-- f: dodając parametr f=1 można korzystać z yt na przeglądarkach niewspierających &lt;video&gt; - wtedy m.in. używany jest flash player z tamtego czasu.<br>f=1 można również ustawić aby automatycznie było używane gdzie trzeba za pomocą <a href="/toggle_f" target="_blank">/toggle_f</a>.</p>
+            <p>-- historia oglądania, subskrypcje i ulubione będą używać localStorage jak jest to możliwe. dotychczasowe przechowywanie w cookie dalej jest wspierane i dane przechowane w cookie będą dalej działać.</p>
+        </div>
+
+        <div class="section">
+            <p>[watchpage]</p>
+            <p>-- kliknięcie na textbox <b>Embed</b> pokaże działające opcje z embedem (kolory, rozmiar etc)</p>
+            <p>-- udostępnianie filmów można ustawić za pomocą flagi share_behavior. (dzięki breakgimme i Filippu!)</p>
+            <p>-- linki w opisach można klikać</p>
+            <p>-- flaga fake_upload_date pokazuje date w tym samym formacie co normalne daty wrzucenia</p>
+            <p>-- bliższy 2009 tryb Feather</p>
+        </div>
+        
+        <div class="section">
+            <p>[player]</p>
+            <p>-- przycisk głośności pokazuje poprawny sprite po najechaniu, wciśnięcie na niego automatycznie wycisza film</p>
+            <p>-- fullscreen-unsupported (fallback jak przeglądarka nie wspiera requestFullscreen) nie prześwituje już nazwy z login-simulate</p>
+            <p>-- [embed] ustawiona na watchpage flaga autoplay też działa teraz na embedach</p>
+            <p>-- [embed] naprawiony spam błędów w konsoli w przypadku braku filmów na endscreenie</p>
+        </div>
+
+        <div class="section">
+            <p>[kanały]</p>
+            <p>-- z flagą exp_playlists, jak użytkownik nie ma żadnych playlist, zakładka Playlists się ukrywa</p>
+            <p>-- trwały cache (zachowujący się między restartami)</p>
+            <p>-- dodany pasek z akcjami na oglądanym filmie ("dolne linki")</p>
+            <p>-- z flagą fake_upload_date, daty na innych wystąpieniach tego samego filmu już nie będą inne</p>
+        </div>
+
+        <div class="section">
+            <p>randomowy tip:</p>
+            <p>na embedach zmieniając parametry color1 i color2 można ustawiać własne hex kolory.</p>
+            <p>na html5 playerze jak nie będzie to kolor z palety którą można wybrać tworząc embed, zostanie wygenerowany server-side gradient.</p>
+        </div>
+
+        <div class="section">
+            <p>P.S.</p>
+            <p>ostatnio dużo na myśli mi chodzi dać spróbować yt2009 większej ilości ludzi. nie od razu full publicznie ale po kilka-kilkanaście osób.<br>nwm jak i czy to w ogóle zrobię, ale jak zawsze jestem otwarty na wasze sugestie.</p>
+        </div>
+
+		<!-- end bottom section -->
+	</div>
+	<a name="pageBottom"></a>
+
+</body>
+
+</html>

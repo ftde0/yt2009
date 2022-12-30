@@ -1,0 +1,14 @@
+yt2009 checklist:
+
+meta:
+- więcej filmów na główną bo za dużo się powtarzają
+- add/remove modules
+
+zrobione:
+- wyszukiwarka
+- kanały
+- playlisty
+- strona główna
+- większość statycznych stron
+- /my_history (zapisujące do cookie obejrzane dane o filmach)
+- /my_subscriptions - https://www.youtube.com/watch?v=d90pEAzy3Mo + http://web.archive.org/web/20100327012012/youtube.com/my_subscriptions

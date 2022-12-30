@@ -1,0 +1,25 @@
+<a href="/warp_speed_en">[en]</a>
+
+<h2>warp:</h2>
+<p>wklej tu link do filmu, aby wygenerować link warp - wizualnej przeglądarki yt usuniętej w 2011.<br><br>więcej informacji: <a href="/watch?v=hA3X6xIloQI">kliknij tu.</a><br><br>wybierz wersję:</p>
+
+<input type="radio" name="warp_type" class="radio" id="type_html5" onclick="setReplaceType('/warp')">
+<label for="type_html5">rekreacja html+js+css</label><br>
+<input type="radio" name="warp_type" class="radio" id="type_swf" checked onclick="setReplaceType('/warp.swf')">
+<label for="type_swf">oryginalna wersja flash, naprawiona aby działała z yt2009</label><br>
+
+<input type="text" autocomplete="off" spellcheck="false" placeholder="oryginalny link do filmu" id="yt-video-link" style="width: 300px;"/><br>
+<input type="text" autocomplete="off" spellcheck="false" readonly placeholder="link warp do wybranej wersji" id="yt-warp-link" style="width: 300px;" onclick="this.select()"/>
+
+<script>
+    var replace_text = "/warp.swf"
+
+    function setReplaceType(replace) {
+        replace_text = replace;
+        document.querySelector("#yt-warp-link").value = document.querySelector("#yt-video-link").value.replace("/watch", replace_text)
+    }
+
+    document.querySelector("#yt-video-link").addEventListener("input", function() {
+        document.querySelector("#yt-warp-link").value = document.querySelector("#yt-video-link").value.replace("/watch", replace_text)
+    }, false)
+</script>

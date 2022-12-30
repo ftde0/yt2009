@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="en">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>
+		yt2009_flags
+	</title>
+
+	<link id="www-core-css" rel="stylesheet" href="www-core-vfl122413.css">
+</head>
+
+<body class="date-20091111 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<div id="masthead-utility" style="visibility: hidden;cursor: default;">
+				<span class="utility-item">
+					<a href="#"><strong>Create Account</strong></a>
+					<span class="utility-joiner">or</span>
+					<a href="#">Sign In</a>
+				</span>
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/watch_queue?all" id="quicklist-nav" style="display: none;">QuickList (<span id="quicklist-nav-count">0</span>)</a>
+				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
+				<a href="/my_history">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" href="/my_videos_upload"><span>Upload</span></a>
+			</div>
+			<div id="masthead-end"></div>
+
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091111 video-info ">
+		<!-- begin top section -->
+		<div class="languages">
+			<input id="lang-pl" type="radio" checked onclick="location.reload();">
+			<label for="lang-pl">pl</label>
+			<input id="lang-en" type="radio" onclick="setEnglish();">
+			<label for="lang-en">en</label>
+		</div>
+
+		<h4 id="i_header">flagi do yt2009<br>każda z tych flag zmienia w pewien sposób funkcjonalność. najedź na checkbox aby zobaczyć co.<br>ta funkcja wymaga włączonych cookies. jak nie działa to najpierw to sprawdź.<br><br>jeśli chcesz użyć flagi tylko raz, dodaj parametr flags w url'u.</h4>
+
+		<div class="group1">
+			<h2>/watch</h2>
+			<input type="checkbox" id="watch-always-morefrom" title="pokazuje sekcję More From nawet jak nie ma w cache filmów z kanału.">
+			<label for="watch-always-morefrom">always_morefrom</label><br>
+			<input type="checkbox" id="watch-author-old-names" title="jeśli kanały mają link /user/, używaj nazwy z niego zamiast obecnej - twórca filmu, komentarze, related, more from">
+			<label for="watch-author-old-names">author_old_names</label><br>
+			<input type="checkbox" id="watch-autoplay" title="automatycznie zaczyna odtwarzanie filmu (w nowszych przeglądarkach wymagane będzie zezwolenie na autoplay dla strony)">
+			<label for="watch-autoplay">autoplay</label><br>
+			<input type="checkbox" id="watch-comments-remove-future" title="filtruje komentarze zawierające lata 2011-2022">
+			<label for="watch-comments-remove-future">comments_remove_future</label><br>
+			<input type="checkbox" id="watch-default-avatar" title="domyślny awatar z 2009 zamiast awatara twórcy">
+			<label for="watch-default-avatar">default_avatar</label>
+			<input type="text" id="watch-default-avatar-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<a id="watch-avatar-expander" href="javascript:toggleExpander('watch-default-avatar-expander')">(możliwe wartości)</a><br>
+			<p id="watch-default-avatar-expander" class="hid">tryby default_avatar:<br>
+			- adapt - ustawia domyślny awatar tylko jak obecny jest domyślny<br>
+			- always - zawsze ustawia domyślny awatar.<br>
+			(zostawienie pustego pola/inna wartość oznaczy always)</p>
+			<input type="checkbox" id="watch-exp-hd" title="pokazuj przycisk HQ jak film jest dostępny w 720p">
+			<label for="watch-exp-hd">exp_hd</label><br>
+			<input type="checkbox" id="watch-exp-related" title="pokazuje podobne filmy bazując na tagach oglądanego filmu">
+			<label for="watch-exp-related">exp_related</label><br>
+			<input type="checkbox" id="watch-fake-comment-dates" title="fake daty komentarzy">
+			<label for="watch-fake-comment-dates">fake_comment_dates</label><br>
+			<input type="checkbox" id="watch-fake-upload-date" title="fake data wrzucenia filmu (01.01.2009 - 31.12.2009)">
+			<label for="watch-fake-upload-date">fake_upload_date</label>
+			<input type="text" id="watch-fake-upload-date-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<a id="watch-upload-expander" href="javascript:toggleExpander('watch-fake-upload-date-expander')">(możliwe wartości)</a><br>
+			<p id="watch-fake-upload-date-expander" class="hid">tryby fake_upload_date:<br>
+			- adapt - ustawia datę wrzucenia z 2009 tylko jak film był opublikowany po kwietniu 2010<br>
+			- always - tak jak ta flaga działała do tej pory - niezależnie od filmu ustawia datę z 2009<br>
+			(wszystko inne/zostawienie pola pustego oznaczy always)</p>
+			<input type="checkbox" id="watch-homepage-contribute" title="filmy obejrzane przez ciebie, wrzucone przed 2011 będą pokazywane na 'videos being watched now' na stronie głównej i na /videos">
+			<label for="watch-homepage-contribute">homepage_contribute</label><br>
+			<input type="checkbox" id="watch-realistic-view-count" title="bardziej realistyczna na 2009 liczba wyświetleń i ratingów">
+			<label for="watch-realistic-view-count">realistic_view_count</label><br>
+			<input type="checkbox" id="watch-remove-username-space" title="usuwa spacje z nazw użytkowników">
+			<label for="watch-remove-username-space">remove_username_space</label><br>
+			<input type="checkbox" id="watch-share-behavior" title="ustawia zachowanie stron na które można udostępniać filmy (zaznacz aby zobaczyć tryby)">
+			<label for="watch-share-behavior">share_behavior</label>
+			<input type="text" id="watch-share-behavior-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<a id="watch-share-expander" href="javascript:toggleExpander('watch-share-behavior-expander')">(możliwe wartości)</a><br>
+			<p id="watch-share-behavior-expander" class="hid">tryby share_behavior:<br>
+			- only_remove - tylko usuwa niedziałające platformy<br>
+			- only_add - tylko dodaje nowe działające platformy<br>
+			- both - usuwa niedziałające &amp; dodaje nowe platformy</p>
+			<input type="checkbox" id="watch-use-ryd" title="używaj API Return YouTube Dislike (https://returnyoutubedislike.com/) pod poprawny rating gwiazdkami">
+			<label for="watch-use-ryd">use_ryd</label><br>
+			<input type="checkbox" id="watch-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
+			<label for="watch-username-asciify">username_asciify</label><br>
+			<input type="checkbox" id="watch-wayback-features" title="użyj zapisów z Wayback Machine na yt2009">
+			<label for="watch-wayback-features">wayback_features</label>
+			<input type="text" id="watch-wayback-features-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<a id="watch-wayback-expander" href="javascript:toggleExpander('watch-wayback-features-expander')">(możliwe wartości)</a><br>
+			<p id="watch-wayback-features-expander" class="hid">używając wielu wartości oddzielaj je <code>+</code>, np. <code>related+metadata</code>. możesz tez użyć <code>all</code> aby użyć wszystkich na raz.<br>
+			- metadata - główne dane o filmie - tytuł, opis, tagi<br>
+			- author - nazwa, awatar autora<br>
+			- related - dodaje podobne filmy z zapisu, filtruje nieistniejące<br>
+			- comments - pokaże komentarze z tamtego czasu<br><b>wayback_features nie zadziała na filmach wrzuconych po 2013-01-01.</b></p>
+		</div>
+		<div class="group2">
+			<h2>/results</h2>
+			<input type="checkbox" id="results-author-old-names" title="jeśli kanały mają link /user/, używaj nazwy z niego zamiast obecnej">
+			<label for="results-author-old-names">author_old_names</label><br>
+			<input type="checkbox" id="results-fake-upload-dates" title="fake daty wrzuceń filmów (np. 11 lat temu -> 3 miesiące temu)">
+			<label for="results-fake-upload-dates">fake_upload_dates</label><br>
+			<input type="checkbox" id="results-only-old" title="pokazuje w wyszukiwarce tylko filmy wrzucone przed 01.04.2010">
+			<label for="results-only-old">only_old</label><br>
+			<input type="checkbox" id="results-realistic-view-count" title="bardziej realistyczna na 2009 liczba wyświetleń">
+			<label for="results-realistic-view-count">realistic_view_count</label><br>
+			<input type="checkbox" id="results-remove-username-space" title="usuwa spacje z nazw użytkowników">
+			<label for="results-remove-username-space">remove_username_space</label><br>
+			<input type="checkbox" id="results-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
+			<label for="results-username-asciify">username_asciify</label><br>
+		</div>
+
+		<div class="group3">
+			<h2>/channel, /user, /c</h2>
+			<h4 id="i_exp_notice">flagi zaczynające się na "exp" są eksperymentalne i nie zawsze mogą działać. bug reporty mile widziane.</h4>
+			<input type="checkbox" id="channel-author-old-names" title="jeśli kanały mają link /user/, używaj nazwy z niego zamiast obecnej - twórca, friends+subscriptions, komentarze">
+			<label for="channel-author-old-names">author_old_names</label><br>
+			<input type="checkbox" id="channel-default-avatar" title="domyślny awatar z 2009">
+			<label for="channel-default-avatar">default_avatar</label>
+			<input type="text" id="channel-default-avatar-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<span id="default-avatar-notice">zobacz default_avatar na /watch dla możliwych wartości</span><br>
+			<input type="checkbox" id="channel-default-color" title="domyślne kolory tła (szare) zamiast brania ich z baneru">
+			<label for="channel-default-color">default_color</label><br>
+			<input type="checkbox" id="channel-exp-fill-comments" title="zapełni sekcję komentarzy kanału komentarzami z najwyższego filmu">
+			<label for="channel-exp-fill-comments">exp_fill_comments</label><br>
+			<input type="checkbox" id="channel-exp-friends" title="zapełni sekcję subskrypcji i znajomych w ramach możliwości (znajomi - polecane kanały)">
+			<label for="channel-exp-friends">exp_friends</label><br>
+			<input type="checkbox" id="channel-exp-playlists" title="eksperymentalna obsługa playlist na kanałach">
+			<label for="channel-exp-playlists">exp_playlists</label><br>
+			<input type="checkbox" id="channel-fake-upload-date" title="fake data wrzucenia filmów na kanale">
+			<label for="channel-fake-upload-date">fake_upload_date</label><br>
+			<input type="checkbox" id="channel-index-contribute" title="kanały które odwiedzisz będą widoczne (anonimowo) dla wszystkich na /channels">
+			<label for="channel-index-contribute">index_contribute</label><br>
+			<input type="checkbox" id="channel-realistic-view-count" title="bardziej realistyczna na 2009 liczba wyświetleń na filmach">
+			<label for="channel-realistic-view-count">realistic_view_count</label><br>
+			<input type="checkbox" id="channel-remove-username-space" title="usuwa spacje z nazw użytkowników">
+			<label for="channel-remove-username-space">remove_username_space</label><br>
+			<input type="checkbox" id="channel-use-ryd" title="używa API Return YouTube Dislike (https://returnyoutubedislike.com/) aby pokazywać rating gwiazdkami na filmach">
+			<label for="channel-use-ryd">use_ryd</label><br>
+			<input type="checkbox" id="channel-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
+			<label for="channel-username-asciify">username_asciify</label><br>
+			<input type="checkbox" id="channel-wayback-features" title="użyj zapisów z Wayback Machine na yt2009">
+			<label for="channel-wayback-features">wayback_features</label>
+			<input type="text" id="channel-wayback-features-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<a id="channel-wayback-expander" href="javascript:toggleExpander('channel-wayback-features-expander')">(możliwe wartości)</a><br>
+			<p id="channel-wayback-features-expander" class="hid">używając wielu wartości oddzielaj je <code>+</code>, np. <code>fields+comments</code>. możesz tez użyć <code>all</code> aby użyć wszystkich na raz.<br>
+			- fields - jednolinijkowe pola z informacjami wypełniane głównie przez twórcę - np. link do strony, opis<br>
+			- basic - podstawowe dane kanału, np. awatar, kolory ustawione w tamtym czasie<br>
+			- sections - sekcje subscriptions i friends jak są<br>
+			- comments - komentarze kanału<br></p>
+		</div>
+
+		<div class="group3">
+			<h2>/, /videos, /channels, /my_subscriptions</h2>
+			<input type="checkbox" id="mainpage-realistic-view-count" title="bardziej realistyczna na 2009 liczba wyświetleń">
+			<label for="mainpage-realistic-view-count">realistic_view_count</label><br>
+			<input type="checkbox" id="mainpage-remove-username-space" title="usuwa spacje z nazw użytkowników">
+			<label for="mainpage-remove-username-space">remove_username_space</label><br>
+			<input type="checkbox" id="mainpage-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
+			<label for="mainpage-username-asciify">username_asciify</label><br>
+		</div>
+
+		<div class="group4">
+			<h2>[global]</h2>
+			<h4 id="i_all_pages">te flagi działają na wszystkich podstronach. mogą kompletnie inaczej działać (lub nie działać).</h4>
+			<input type="checkbox" id="global-always-annotations" title="automatycznie włącza adnotacje na filmach">
+			<label for="global-always-annotations">always_annotations</label><br>
+			<input type="checkbox" id="global-annotation-redirect" title="przekierowuje linki youtube.com w adnotacjach na yt2009">
+			<label for="global-annotation-redirect">annotation_redirect</label><br>
+			<input type="checkbox" id="global-login-simulate" title="symuluje zalogowanego użytkownika">
+			<label for="global-login-simulate">login_simulate</label>
+			<input type="text" id="global-login-simulate-input" autocomplete="off" spellcheck="false" placeholder="nazwa"><br>
+			<input type="checkbox" id="global-no-controls-fade" title="wyłącza zanikanie kontrolek odtwarzacza">
+			<label for="global-no-controls-fade">no_controls_fade</label><br>
+			<input type="checkbox" id="global-shows-tab" title="pokazuje zakładkę Shows pod wyszukiwarką (nic nie robi, pod pokaz)">
+			<label for="global-shows-tab">shows_tab</label>
+		</div>
+		<a class="yt-button yt-button-primary" href="#" onclick="update_cookies();"><span id="i_save">zapisz</span></a>
+
+
+		<!-- end bottom section -->
+	</div>
+	<a name="pageBottom"></a>
+
+	<!--yt2009_f-->
+	<script src="/assets/site-assets/yt2009-flags-languages.js"></script>
+	<script>
+		var watch_flags = ""
+		var results_flags = ""
+		var channel_flags = ""
+		var mainpage_flags = ""
+		var global_flags = ""
+
+		function update_cookies() {
+			watch_flags = ""
+			results_flags = ""
+			channel_flags = ""
+			mainpage_flags = ""
+			global_flags = ""
+
+			var boxes = document.querySelectorAll("input[type='checkbox']");
+			for(var checkbox in boxes) {
+				try {
+					var add_to = boxes[checkbox].id.split("-")[0]
+					var checked = boxes[checkbox].checked
+					var flag_name = document.querySelector("label[for='" + boxes[checkbox].id + "']").innerHTML
+
+					// inputy 
+					var flag_input = ""
+					try {
+						flag_input = document.querySelector("#" + boxes[checkbox].id + "-input").value
+					}
+					catch(error) {}
+
+					// dodawanie do zmiennej nazwa_flags
+					if(checked) {
+						window[add_to + "_flags"] += flag_name + encodeURIComponent(flag_input) + ":"
+					}
+				}
+				catch(error) {}
+			}
+
+			document.cookie = "watch_flags=" + watch_flags + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			document.cookie = "results_flags=" + results_flags + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			document.cookie = "channel_flags=" + channel_flags + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			document.cookie = "mainpage_flags=" + mainpage_flags + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			document.cookie = "global_flags=" + global_flags + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+
+			alert("ok")
+		}
+
+
+		// zaznaczanie wcześniej zapisanych flag
+		document.cookie.split(";").forEach(function(cookie) {
+			var flag_category = cookie.trimLeft().split("=")[0].split("_")[0]
+			var cookieValue = cookie.split("=")[1]
+
+			cookieValue.split(":").forEach(function(flag) {
+				try {
+					// custom handling for flags with textboxes
+					if(!document.querySelector("#" + flag_category + "-" + decodeURIComponent(flag.split("_").join("-")))) {
+						// probably a flag with an input textbox
+						var flagPartialName = flag.split("_")
+						flagPartialName.pop();
+						flagPartialName = flagPartialName.join("-")
+						if(flag_category + "-" + flagPartialName == flag_category + "-") return;
+
+						// determine the flag element
+						var fullFlag = document.querySelector("[id*=\"" + flag_category + "-" + flagPartialName + "\"]")
+						fullFlag.checked = true;
+						var flag_name = document.querySelector("label[for=\"" + fullFlag.id + "\"]").innerHTML
+						var flag_value = flag.replace(flag_name, "")
+						document.querySelector("#" + fullFlag.id + "-input").value = decodeURIComponent(flag_value)
+					} 
+
+					// normal flags
+					document.querySelector("#" + flag_category + "-" + flag.split("_").join("-")).checked = true;
+				}
+				catch(error) {}
+			})
+		})
+
+
+		// expander pokazujący więcej informacji o fladze jak takie są
+		function toggleExpander(expanderName) {
+			var element = document.querySelector("#" + expanderName);
+
+			if(element.className == "hid") {
+				element.className = ""
+			} else {
+				element.className = "hid"
+			}
+		}
+	</script>
+</body>
+
+</html>

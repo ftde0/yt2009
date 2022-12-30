@@ -1,0 +1,23 @@
+{
+    "subscribe": "h",
+    "unsubscribe": "h",
+    "home": "h",
+    "videos": "h",
+    "channels": "h",
+    "search": "h",
+    "create_btn": "h",
+    "or": "h",
+    "sign_btn": "h",
+    "subs_btn": "h",
+    "history_btn": "h",
+    "upload_btn": "h",
+    "moreinfo": "h",
+    "lessinfo": "h",
+    "tags_begin": "h",
+    "morefrom": "h",
+    "related": "h",
+    "views_suffix": "h",
+    "ratings_suffix": "h",
+    "statsdata": "h",
+    "responses": "h"
+}

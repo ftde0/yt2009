@@ -1,0 +1,155 @@
+.xl-view-image {
+  overflow: hidden;
+}
+
+
+/*****************************************************************************************
+ * xl-view-up
+ *****************************************************************************************/
+
+.xl-view-up {
+	z-index: 30;
+}
+
+.xl-view-up-image {
+	width: 37px;
+	height: 25px;
+	top: 50%;
+	left: 50%;
+	margin-left: -18px;
+	margin-top: -12px;
+}
+
+/****************************************************************************************
+ * xl-view-down
+ *****************************************************************************************/
+
+.xl-view-down {
+	z-index: 30;
+}
+
+.xl-view-down-image {
+	width: 37px;
+	height: 25px;
+	top: 50%;
+	left: 50%;
+	margin-left: -18px;
+	margin-top: -12px;
+}
+
+/*****************************************************************************************
+ * xl-view-thumbnail
+ *****************************************************************************************/
+
+/* 1.5 aspect ratio */
+.xl-view-thumbnail {
+	width: 130px;
+	height: 87px; 
+	overflow: hidden;
+}
+
+/* normally 130x97 */
+.xl-view-thumbnail-image {
+	width: 130px; /* size */
+	height: 97px;	/* size */ 
+	margin-top: -5px; /* offset */
+}
+
+/*****************************************************************************************
+ * xl-view-thumbnail_small
+ *****************************************************************************************/
+
+/* 1.5 aspect ratio */
+.xl-view-thumbnail_small {
+	width: 118px;
+	height: 78px;
+	overflow: hidden;
+}
+
+/* normally 130x97 */
+.xl-view-thumbnail_small-image {
+	width: 118px; /* size */
+	height: 88px;	/* size */ 
+	margin-top: -5px; /* offset */
+}
+
+/*****************************************************************************************
+ * xl-view-thumbnail_small_fixedsize
+ *****************************************************************************************/
+
+/* 1.5 aspect ratio */
+.xl-view-thumbnail_small_fixedsize {
+	width: 94px !important;
+	height: 70px !important;
+	margin-left: -47px;
+	margin-top: -35px;	
+	overflow: hidden;
+}
+
+/* normally 130x97 */
+.xl-view-thumbnail_small_fixedsize-image {
+	width: 94px; /* size */
+	height: 70px;	/* size */ 
+	margin-top: -5px; /* offset */
+}
+
+/*****************************************************************************************
+ * xl-view-thumbnail_large
+ *****************************************************************************************/
+
+/* 1.5 aspect ratio */
+.xl-view-thumbnail_large {
+	overflow: hidden;
+}
+
+/* normally 130x97 */
+.xl-view-thumbnail_large-image {
+	width: 160px; /* size */
+	height: 120px; /* size */
+	margin-top: -8px; /* offset */
+}
+
+/*****************************************************************************************
+ * xl-view-thumbnail_large_fizedsize
+ *****************************************************************************************/
+
+/* 1.5 aspect ratio */
+.xl-view-thumbnail_large_fixedsize {
+	width: 162px !important;
+	height: 108px !important;	
+	margin-left: -81px;
+	margin-top: -54px;	
+	overflow: hidden;
+}
+
+/* normally 130x97 */
+.xl-view-thumbnail_large_fixedsize-image {
+	width: 160px; /* size */
+	height: 120px; /* size */
+	margin-top: -8px; /* offset */
+}
+
+.syn-view-checkbox {
+
+}
+
+.xl-view-checkbox_container-boxempty {
+  height: 40%;
+  left: 0px;
+  top: 0px;
+  width: 10%;
+  z-index: 50;
+}
+
+.xl-view-checkbox_container-boxchecked {
+  height: 40%;
+  left: 0px;
+  top: 0px;
+  width: 10%;
+  display: none;
+  z-index: 51;
+}
+
+.xl-view-checkbox_container-boxchecked.showcheck {
+  display: block;
+}
