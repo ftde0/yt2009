@@ -6,3 +6,5 @@ assets/*.png
 assets/*.jpg
 back/cache_dir/annotations/*
 back/cache_dir/*.json
+player-imgs/temp/
+player-imgs/embed-bgs/user-gen/*

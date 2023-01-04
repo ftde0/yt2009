@@ -13,6 +13,11 @@
     <script>
         function submit() {
             document.cookie = "auth=" + document.getElementById("textbox").value + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT";
+            if(document.cookie.indexOf("global_flags") == -1) {
+                // default set no_controls_fade
+                document.cookie = "watch_flags= ; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+                document.cookie = "global_flags=no_controls_fade:; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            }
             location.href = "/"
         }
     </script>
