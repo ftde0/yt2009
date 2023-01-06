@@ -212,10 +212,10 @@ function switchVideo(video) {
     $(".playnav-mvlf9xls").innerHTML = '\
     <div class="for-some-reason-ie6-doesnt-work-without-this hid">h</div>\
     <object width="640" height="385">\
-    <param class="fl" name="movie" value="/watch.swf?video_id=' + id + '"></param>\
+    <param class="fl" name="movie" value="' + customPlayerUrl + '?' + customPlayerArg + '=' + id + '"></param>\
     <param name="allowFullScreen" value="true"></param>\
     <param name="allowscriptaccess" value="always"></param>\
-    <embed src="/watch.swf?video_id=' + id + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>\
+    <embed src="' + customPlayerUrl + '?' + customPlayerArg + '=' + id + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>\
     </object>'
     $("#playnav-watch-link").setAttribute("href", "/watch?v=" + id)
 

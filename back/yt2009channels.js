@@ -270,6 +270,11 @@ function internal_applyHTML(data, flags, callback, req, flashMode) {
             <embed src="${watch_url}?${watch_arg}=${video.id}&iv_module=http%3A%2F%2F${env == "dev" ? "192.168.1.4%3A82" : "ftde-projects.tk%3A5316"}%2Fiv_module-${env}.swf" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>
             </object>`)
             code = code.replace(`onclick="document.searchForm.submit();"`, `onclick="document.searchForm.submit();" style="width: 40px;"`)
+            code = code.replace(
+                `//yt2009-f-custom-player`,
+                `var customPlayerUrl = "${watch_url}";
+                var customPlayerArg = "${watch_arg}"`
+            )
             code = code.replace(`<!--yt2009_f-->`, `<script src="/assets/site-assets/f_script.js"></script>`)
             code = code.replace(`<script src="/assets/site-assets/channelpage.js"></script>`, ``)
             code = code.replace(`<!--yt2009_style_fixes_f-->`, `<link rel="stylesheet" href="/assets/site-assets/f.css">`)
