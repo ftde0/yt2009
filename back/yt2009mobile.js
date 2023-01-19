@@ -4,6 +4,9 @@ const channels = require("./yt2009html")
 const utils = require("./yt2009utils")
 const fs = require("fs")
 const child_process = require("child_process")
+const env = process.platform == "win32" ? "dev" : "prod"
+const rtsp_server = env == "dev" ? "rtsp://192.168.1.5:5318/"
+                            : "rtsp://ftde-projects.tk:5318/"
 
 const watchpage_html = fs.readFileSync("../mobile/watchpage.htm").toString();
 const search_html = fs.readFileSync("../mobile/search.htm").toString()
@@ -19,6 +22,7 @@ module.exports = {
             }
 
             let code = watchpage_html;
+            code = code.replace(`yt2009_id`, data.id)
             code = code.replace(`yt2009_title`, data.title)
             code = code.replace(`yt2009_description`, data.description)
             code = code.replace(`yt2009_length`, utils.seconds_to_time(data.length))
@@ -102,5 +106,23 @@ module.exports = {
     },
 
     // oglądanie filmów
-    
+    "setup_rtsp": function(id, mute, res) {
+        let fileName = `${id}-144.mp4`
+        // process requested video if needed
+        if(!fs.existsSync(`../assets/${fileName}`)
+        && fs.existsSync(`../assets/${id}.mp4`)) {
+            let streamId = Math.floor(Math.random() * 37211)
+            child_process.execSync(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -ac 1 -c:v libx264 -s 256x144 ${__dirname}/../assets/${fileName}`)
+            child_process.exec(`ffmpeg -re -i ${__dirname}/../assets/${fileName} ${mute ? "-an" : ""} -f rtsp -rtsp_transport udp ${rtsp_server}video/${id}-${streamId}`, (error, stdout, stderr) => {
+                
+            })
+            res.redirect(`${rtsp_server}video/${id}-${streamId}`)
+        } else if(fs.existsSync(`../assets/${fileName}`)) {
+            let streamId = Math.floor(Math.random() * 37211)
+            child_process.exec(`ffmpeg -re -i ${__dirname}/../assets/${fileName} ${mute ? "-an" : ""} -f rtsp -acodec aac -rtsp_transport udp ${rtsp_server}video/${id}-${streamId}`, (error, stdout, stderr) => {
+                
+            })
+            res.redirect(`${rtsp_server}video/${id}-${streamId}`)
+        }
+    }
 }

@@ -1149,6 +1149,15 @@ app.get("/mobile/profile", (req, res) => {
     //yt2009_mobile.create_watchpage(req, res)
     res.send("łot")
 })
+app.get("/mobile/create_rtsp", (req, res) => {
+    let id = req.query.v
+    let noSound = req.query.muted ? true : false
+    if(!id) {
+        res.send("no video id param, cannot start stream.")
+        return;
+    }
+    yt2009_mobile.setup_rtsp(id, noSound, res)
+})
 
 /*
 ======
