@@ -129,7 +129,10 @@ app.get("/relay_test_yt", (req, res) => {
         return;
     }
     if(userdata.usernameCache) {
-        res.send(userdata.usernameCache)
+        res.send({
+            "username": userdata.usernameCache,
+            "handle": userdata.handleCache
+        })
     } else {
         res.send(404)
     }

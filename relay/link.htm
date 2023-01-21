@@ -61,6 +61,22 @@
 			<p id="relay-authorized">relay authorized with a 6-character code - ?</p>
 			<p id="yt-account">youtube account properly setup - ?</p>
 		</div>
+		<div id="use-login-simulate-name" class="hid">
+			<hr>
+			<p>if you want, you can change your login_simulate name to your connected youtube name.</p>
+			<a class="yt-button yt-button-primary"
+				href="#" onclick="login_simulate_change(this)">
+				<span id="ytname-option1">username</span>
+			</a>
+			<a class="yt-button yt-button-primary"
+				href="#" onclick="login_simulate_change(this)">
+				<span id="ytname-option2">@handle</span>
+			</a>
+			<a class="yt-button yt-button-primary"
+				href="#" onclick="login_simulate_change(this)">
+				<span id="ytname-option3">handle</span>
+			</a>
+		</div>
 
 		<!-- end bottom section -->
 	</div>
@@ -83,6 +99,7 @@
 			return key;
 		}
 
+		// relay connection
 		function relay_connect() {
 			var r = new XMLHttpRequest();
 			var host = "http://127.0.0.1:" + get_relay_port() + "/"
@@ -98,6 +115,8 @@
 				"connection to locally-hosted relay - connection error"
 			})
 		}
+
+		// authorization endpoint test
 		function relay_test_authorization() {
 			var r = new XMLHttpRequest();
 			var host = "http://127.0.0.1:" + get_relay_port() + "/"
@@ -120,6 +139,8 @@
 			}
 			r.addEventListener("error", setError)
 		}
+
+		// youtube account request
 		function relay_test_yt() {
 			var r = new XMLHttpRequest();
 			var host = "http://127.0.0.1:" + get_relay_port() + "/"
@@ -131,9 +152,20 @@
 					setError()
 					return;
 				}
+				var res = JSON.parse(r.responseText)
 				document.getElementById("yt-account").innerHTML =
 				"youtube account properly setup - connected account found: "
-				+ r.responseText
+				+ res.username
+
+				// update selectable login_simulate names
+				document.getElementById("ytname-option1")
+						.innerHTML = res.username
+				document.getElementById("ytname-option2")
+						.innerHTML = res.handle
+				document.getElementById("ytname-option3")
+						.innerHTML = res.handle.replace("@", "")
+				document.getElementById("use-login-simulate-name")
+						.className = ""
 			}, false)
 			function setError() {
 				document.getElementById("yt-account").innerHTML =
@@ -143,6 +175,10 @@
 			}
 			r.addEventListener("error", setError)
 		}
+
+
+
+
 		function relay_code_update() {
 			document.cookie = "relay_key="
 							+ document.getElementById("relay-code").value
@@ -154,6 +190,33 @@
 							+ document.getElementById("relay-port").value
 							+ "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 			alert("relay port set! make sure to test your relay connection before using relay.")
+		}
+
+
+		// login_simulate change
+		function login_simulate_change(element) {
+			var targetName = element.getElementsByTagName("span")[0].innerHTML
+			var globalFlags = document.cookie;
+			if(globalFlags.indexOf("global_flags=") !== -1) {
+				globalFlags = globalFlags.split("global_flags=")[1].split(";")[0]
+				if(globalFlags.indexOf("login_simulate") == -1) {
+					var loginSimulateName = globalFlags
+											.split("login_simulate")[1]
+											.split(":")[0]
+					globalFlags = globalFlags.replace(
+						loginSimulateName,
+						targetName
+					)
+				} else {
+					globalFlags += "login_simulate" + targetName + ":"
+				}
+			} else {
+				globalFlags = "login_simulate" + targetName + ":"
+			}
+			document.cookie = "global_flags="
+							+ globalFlags
+							+ "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			alert("username updated")
 		}
 	</script>
 </body>
