@@ -1240,6 +1240,15 @@ app.post("/create_playlist", (req, res) => {
         res.send(playlistId)
     }
 })
+
+/*
+======
+relay
+======
+*/
+app.get("/relay", (req, res) => {
+    res.redirect("/relay/intro.htm")
+})
 /*
 pizdec
 */

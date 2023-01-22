@@ -348,5 +348,34 @@ module.exports = {
                 <div class="video-clear-list-left"></div>
             </div>
         </div>`
+    },
+    "videoCommentPost": function(relay_url, id, relay_key) {
+        return `
+                        <div id="watch-comment-post">
+                            <div class="floatR hid">
+                                <a class="hLink bold" href="#" rel="nofollow">Post a Video Response</a>
+                            </div>
+                            <h2>Comment on this video</h2>
+                        </div>
+                        <div>
+                            <div style="float:left;width:650px;">
+                                <div id="div_main_comment" style="float:left;" class="">
+                                    <form name="comment_formmain_comment" id="comment_formmain_comment" onsubmit="return false;" method="post" action="${relay_url}/comment_post">
+                                        <input type="hidden" name="relay_key" value="${relay_key}">
+                                        <input type="hidden" name="video_id" value="${id}">
+                                        <input type="hidden" name="form_id" value="comment_formmain_comment">
+                                        <input type="hidden" name="reply_parent_id" value="">
+                                        <textarea id="comment_textarea_main_comment" name="comment" class="comments-textarea" cols="46" rows="5" maxchars="500" oninput="updateCharacterCount();"></textarea>
+                                        <br>
+                                        <div class="watch-comment-reply-form-actions">
+                                            <input type="button" name="add_comment_button" value="Post Comment" onclick="commentSend()">
+                                            <span id="maxCharLabelmain_comment">Remaining character count: 500</span>
+                                        </div>
+                                    </form>
+                                    <br class="clear">
+                                </div>
+                            </div>
+                            <div style="clear:both;"></div>
+                        </div>`
     }
 }

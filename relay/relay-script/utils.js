@@ -1,4 +1,5 @@
 const crypto = require("crypto")
+const fetch = require("node-fetch")
 
 module.exports = {
     "getAuthorization": function(cookie) {
@@ -40,6 +41,76 @@ module.exports = {
             "x-youtube-client-name": "1",
             "x-youtube-client-version": context.client.clientVersion,
             "x-origin": "https://www.youtube.com"
+        }
+    },
+    "commentParamFromVideoId": function(videoId, cookie, context,
+                                        session, userAgent, apiKey,
+                                        callback) {
+        // get innertube comment param by just the video id by navigating to it
+        // and extracting the param to send a comment.
+
+        let headers = this.createInnertubeHeaders(
+            cookie,
+            context,
+            session,
+            userAgent
+        )
+
+        // fetch video
+        fetch(`https://www.youtube.com/youtubei/v1/next?key=${apiKey}`, {
+            "headers": headers,
+            "referrer": `https://www.youtube.com/watch?v=${videoId}`,
+            "referrerPolicy": "origin-when-cross-origin",
+            "body": JSON.stringify({
+                "autonavState": "STATE_OFF",
+                "captionsRequested": false,
+                "contentCheckOk": false,
+                "context": context,
+                "playbackContext": {
+                    "lactMilliseconds": "-1",
+                    "vis": 0
+                },
+                "racyCheckOk": false,
+                "videoId": videoId
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => r.json().then(r => {
+            // comment continuation token
+            r.engagementPanels.forEach(panel => {
+                if(panel.engagementPanelSectionListRenderer
+                        .panelIdentifier == "comment-item-section") {
+                    let token = panel.engagementPanelSectionListRenderer
+                                .content.sectionListRenderer.contents[0]
+                                .itemSectionRenderer.contents[0]
+                                .continuationItemRenderer.continuationEndpoint
+                                .continuationCommand.token // seen those long
+                                // jsons in it like a million times already
+                                // yet they can't stop amazing me
+                    commentParam(token)
+                }
+            })
+        }))
+
+        // fetch comments for add param
+        function commentParam(token) {
+            setTimeout(function() {
+                fetch(`https://www.youtube.com/youtubei/v1/next?key=${apiKey}&prettyPrint=false`, {
+                    "headers": headers,
+                    "referrer": `https://www.youtube.com/watch?v=${videoId}`,
+                    "referrerPolicy": "origin-when-cross-origin",
+                    "body": JSON.stringify({
+                        "context": context,
+                        "continuation": token
+                    }),
+                    "method": "POST",
+                    "mode": "cors"
+                }).then(r => {r.text().then(r => {
+                    let commentParamToken = r.split(`"createCommentParams":"`)[1]
+                                            .split(`"`)[0]
+                    callback(commentParamToken)
+                })});
+            }, 166)
         }
     }
 }

@@ -5,7 +5,13 @@ const fs = require("fs")
 const ytdl = require("ytdl-core")
 const utils = require("./utils")
 const config = require("./config.json")
-let userdata = {}
+let userdata = {
+    "itKey": "",
+    "itContext": {},
+    "session": "",
+    "usernameCache": "",
+    "handleCache": "@h"
+}
 if(fs.existsSync("userdata.json")) {
     userdata = JSON.parse(fs.readFileSync("userdata.json").toString())
     console.log("userdata file exists, no need to create")
@@ -29,6 +35,9 @@ app.listen(config.port, () => {
 });
 app.use(express.static("./vidstorage/"))
 app.use(cors()) // make it work!!!
+app.use(express.raw({
+    "type": () => true
+}))
 
 /*
 =======
@@ -59,12 +68,6 @@ use it on (frontend url)/relay/link.htm`)
         initialUserdata.itContext = itContext;
         initialUserdata.session = itSession;
         // cache username + handle (if available)
-        console.log(JSON.stringify(utils.createInnertubeHeaders(
-            config.cookie,
-            itContext,
-            itSession,
-            config.useragent
-        )))
         fetch(`https://www.youtube.com/youtubei/v1/account/account_menu?key=${itApiKey}`, {
             "headers": utils.createInnertubeHeaders(
                 config.cookie,
@@ -136,4 +139,45 @@ app.get("/relay_test_yt", (req, res) => {
     } else {
         res.send(404)
     }
+})
+
+/*
+=======
+comment
+=======
+*/
+app.post("/comment_post", (req, res) => {
+    if(req.headers.auth !== userdata.code || !userdata.usernameCache) {
+        res.sendStatus(401)
+        return;
+    }
+    let commentText = JSON.parse(req.body.toString()).comment
+    let id = req.headers.source.split("v=")[1].split("&")[0].split("#")[0]
+    utils.commentParamFromVideoId(
+        id, config.cookie,
+        userdata.itContext,
+        userdata.session,
+        config.useragent,
+        userdata.itKey,
+    (data) => {
+        setTimeout(function() {
+            fetch(`https://www.youtube.com/youtubei/v1/comment/create_comment?key=${userdata.itKey}`, {
+                "headers": utils.createInnertubeHeaders(
+                    config.cookie,
+                    userdata.itContext,
+                    userdata.session,
+                    config.useragent
+                ),
+                "method": "POST",
+                "body": JSON.stringify({
+                    "context": userdata.itContext,
+                    "commentText": commentText,
+                    "createCommentParams": data
+                })
+            }).then(r => {r.json().then(r => {
+                res.send("")
+                console.log(`comment posted via relay to ${id}, with text ${commentText}`)
+            })})
+        }, 1753)
+    })
 })

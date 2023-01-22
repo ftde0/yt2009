@@ -86,7 +86,12 @@ module.exports = {
                 r.text().then(response => {
                     let ytInitialPlayerResponse;
                     try {
-                        ytInitialPlayerResponse = JSON.parse(response.split(`ytInitialPlayerResponse = `)[1].split(`;var meta`)[0])
+                        // i hate this way and i have to fix it one day
+                        if(response.includes(";var head ")) {
+                            ytInitialPlayerResponse = JSON.parse(response.split(`ytInitialPlayerResponse = `)[1].split(`;var head`)[0])
+                        } else {
+                            ytInitialPlayerResponse = JSON.parse(response.split(`ytInitialPlayerResponse = `)[1].split(`;var meta`)[0])
+                        }
                     }
                     catch(error) {
                         callback(false)
@@ -1342,9 +1347,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
-        // ocenianie z login_simulate
-        
-
         // udostępnianie
         let shareBehaviorServices = {
             "default": {
@@ -1672,6 +1674,28 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 callback(code)
             }
         }))
+
+        // relay
+        if(req.headers.cookie.includes("relay_key")) {
+            let relayKey = req.headers.cookie
+                                    .split("relay_key=")[1]
+                                    .split(";")[0]
+            let relayPort = "6547"
+            if(req.headers.cookie.includes("relay_port")) {
+                relayPort = req.headers.cookie
+                                        .split("relay_port=")[1]
+                                        .split(";")[0]
+            }
+
+            code = code.replace(
+                `<!--yt2009_relay_comment_form-->`,
+                yt2009templates.videoCommentPost(
+                    "http://127.0.0.1:" + relayPort,
+                    data.id,
+                    relayKey
+                )
+            )
+        }
 
         if(requiredCallbacks == 0) {
             render_endscreen()

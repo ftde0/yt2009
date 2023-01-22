@@ -352,6 +352,11 @@ video.addEventListener("pause", function() {
 
 video.addEventListener("play", function() {
     video_show_play_btn()
+    if(document.querySelector(".html5-loading")
+    && document.querySelector(".html5-loading")
+                .className.indexOf("hid") == -1) {
+        $(".html5-loading").className += " hid"
+    }
 }, false)
 
 // play/pause animation
@@ -451,12 +456,12 @@ function adjustSeekbarWidth() {
     }
     
     // gif ładowania
-    if(document.querySelector(".loading")) {
+    if(document.querySelector(".html5-loading")) {
         // -16 z połowy wymiarów gifa (32x32)
-        $(".loading").style.left = video.getBoundingClientRect().width / 2
-                                    - 16 + "px"
-        $(".loading").style.top = video.getBoundingClientRect().height / 2
-                                    - 16 + "px"; 
+        $(".html5-loading").style.left = video.getBoundingClientRect().width / 2
+                                            - 16 + "px"
+        $(".html5-loading").style.top = video.getBoundingClientRect().height / 2
+                                            - 16 + "px"; 
     }
 
 
@@ -1370,3 +1375,12 @@ try {
     }, false)
 }
 catch(error) {}
+
+
+// loading sprite
+function showLoadingSprite() {
+    mainElement
+    .querySelector(".html5-loading")
+    .className = mainElement.querySelector(".html5-loading").className
+                                                            .replace("hid", "")
+}

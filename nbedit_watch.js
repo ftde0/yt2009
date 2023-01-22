@@ -955,3 +955,33 @@ if(document.cookie.indexOf("login_simulate") !== -1) {
         }, false)
     }, false)
 }
+
+
+/*
+======
+comments with relay
+======
+*/
+function updateCharacterCount() {
+    var charsLeft = 500 - $("#comment_textarea_main_comment").value.length
+    $("#maxCharLabelmain_comment").innerHTML = "Remaining character count: " + charsLeft
+    if(charsLeft < 0) {
+        $("#maxCharLabelmain_comment").innerHTML = "Number of characters over the limit: " + Math.abs(charsLeft)
+    }
+}
+
+function commentSend() {
+    var r = new XMLHttpRequest();
+    r.open("POST", $("#comment_formmain_comment").getAttribute("action"))
+    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
+    r.setRequestHeader("source", location.href)
+    r.send(JSON.stringify({
+        "comment": $("#comment_textarea_main_comment").value
+    }))
+    var btn = $("[name=\"add_comment_button\"]")
+    btn.setAttribute("disabled", "")
+    btn.setAttribute("value", "Adding comment...")
+    r.addEventListener("load", function(e) {
+        btn.setAttribute("value", "Comment Posted!")
+    }, false)
+}

@@ -8,3 +8,8 @@ back/cache_dir/annotations/*
 back/cache_dir/*.json
 player-imgs/temp/
 player-imgs/embed-bgs/user-gen/*
+relay/relay-script/config.json
+relay/relay-script/userdata.json
+mobile/*.mp4
+mobile/*.3gp
+mobile/*.ogg
