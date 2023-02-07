@@ -115,7 +115,7 @@ if(window.localStorage) {
 
     var path = location.pathname.split("?")[0].split("&")[0]
     switch(path) {
-        case "/favorites": {
+        case "/my_favorites": {
             storageObject = JSON.parse(localStorage.favorites)
             break;
         }
@@ -129,12 +129,6 @@ if(window.localStorage) {
             break;
         }
     }
-    /*if(location.href.indexOf("favorites") !== -1) {
-        storageObject = JSON.parse(localStorage.favorites)
-    } else if(location.href.indexOf("my_history") !== -1) {
-        storageObject = JSON.parse(localStorage.watch_history)
-    }*/
-
 
     // podłóż htmla
     if(!document.querySelector(".videos-page-0")) {

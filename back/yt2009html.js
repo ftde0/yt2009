@@ -524,7 +524,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                     href="
                                         ${data.author_url}">
                                         <img src="${waybackData.authorAvatar
-                                                    .replace("https://",
+                                                    .replace("http://",
                                                     req.protocol + "://")}"
                                             loading="lazy"
                                             onerror="this.parentNode.removeChild(this)"
