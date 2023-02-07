@@ -178,5 +178,37 @@ module.exports = {
         code = require("./yt2009loginsimulate")(req, code)
 
         res.send(code)
+    },
+    "create_rss": function(req, res) {
+        let rssCode = `
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+
+<channel>
+  <title>yt2009 videos</title>
+  <link>https://orzeszek.website:5317/videos</link>
+  <description>yt2009 /videos</description>
+  <!--yt2009-videos-->
+</channel>
+
+</rss> `
+        let index = 0;
+        let categoryNumber = req.query.c || "0"
+        let rssVideos = ``
+        function addVideo(video) {
+            rssVideos += `
+  <item>
+    <title>${video.title}</title>
+    <link>https://orzeszek.website:5317/watch?v=${video.id}</link>
+    <description> </description>
+  </item>`
+        }
+        yt2009html.featured().forEach(video => {
+            if(parseInt(categoryNumber) !== 0
+            || index > 23) return;
+            addVideo(video)
+            index++;
+        })
+        rssCode = rssCode.replace("<!--yt2009-videos-->", rssVideos)
     }
 }

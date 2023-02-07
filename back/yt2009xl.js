@@ -15,7 +15,6 @@ module.exports = {
             res.send({})
             return;
         }
-        console.log(`[${utils.get_used_token(req)}] xl mainpage use`)
         /*
         =======
         create the homepage JSON
@@ -69,7 +68,6 @@ module.exports = {
             switch(source) {
                 case "default-yt": {
                     // use default YouTube "related" videos
-                    console.log("default")
                     html.get_related_videos(
                     req.query.video_id || "",
                     (videos => {

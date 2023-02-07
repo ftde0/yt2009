@@ -9,6 +9,7 @@ const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
 const wayback_channel = require("./cache_dir/wayback_channel")
 const templates = require("./yt2009templates")
+const config = require("./config.json")
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
@@ -20,7 +21,7 @@ let saved_channel_playlists = {}
 let featured_channels = require("./cache_dir/public_channel_listing.json")
 
 function internal_applyHTML(data, flags, callback, req, flashMode) {
-    let env = process.platform == "win32" ? "dev" : "prod"
+    let env = config.env
     let code = channel_code;
     let stepsRequiredToCallback = 1;
     let stepsTaken = 0;
@@ -264,10 +265,10 @@ function internal_applyHTML(data, flags, callback, req, flashMode) {
             code = code.replace(`><span style="display: block;">Search`, ` style="width: 40px;"><span>Search`)
             code = code.replace(`id="playnav-player" class="playnav-player-container"`, `id="playnav-player" class="playnav-mvlf9xls playnav-player-container"`)
             code = code.replace("<!--yt2009_player-->", `<object width="640" height="385">
-            <param name="movie" value="${watch_url}?${watch_arg}=${video.id}&iv_module=http%3A%2F%2F${env == "dev" ? "192.168.1.4%3A82" : "ftde-projects.tk%3A5316"}%2Fiv_module-${env}.swf"></param>
+            <param name="movie" value="${watch_url}?${watch_arg}=${video.id}&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module-${env}.swf"></param>
             <param name="allowFullScreen" value="true"></param>
             <param name="allowscriptaccess" value="always"></param>
-            <embed src="${watch_url}?${watch_arg}=${video.id}&iv_module=http%3A%2F%2F${env == "dev" ? "192.168.1.4%3A82" : "ftde-projects.tk%3A5316"}%2Fiv_module-${env}.swf" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>
+            <embed src="${watch_url}?${watch_arg}=${video.id}&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module-${env}.swf" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>
             </object>`)
             code = code.replace(`onclick="document.searchForm.submit();"`, `onclick="document.searchForm.submit();" style="width: 40px;"`)
             code = code.replace(

@@ -6,6 +6,7 @@ assets/*.png
 assets/*.jpg
 back/cache_dir/annotations/*
 back/cache_dir/*.json
+back/config.json
 player-imgs/temp/
 player-imgs/embed-bgs/user-gen/*
 relay/relay-script/config.json

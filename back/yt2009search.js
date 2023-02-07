@@ -2,7 +2,8 @@ const fetch = require("node-fetch");
 const yt2009utils = require("./yt2009utils");
 const yt2009contants = require("./yt2009constants.json");
 const yt2009exports = require("./yt2009exports");
-const yt2009templates = require("./yt2009templates")
+const yt2009templates = require("./yt2009templates");
+const config = require("./config.json")
 const fs = require("fs")
 const search_code = fs.readFileSync("../search-generic-page.htm").toString();
 
@@ -34,10 +35,14 @@ module.exports = {
         if(cache.read()[query] && !resetCache) {
             // cached dane
             callback(cache.read()[query])
-            console.log(`(${token}) ${query} from cache ${Date.now()}`)
+            if(config.env == "dev") {
+                console.log(`(${token}) ${query} from cache ${Date.now()}`)
+            }
         } else {
             // fetch
-            console.log(`(${token}) ${query} clean fetch ${Date.now()}`)
+            if(config.env == "dev") {
+                console.log(`(${token}) ${query} clean fetch ${Date.now()}`)
+            }
             fetch(`https://www.youtube.com/results?search_query=${query.split("!yt2009")[0]}&sp=${params || ""}`, {
                 "headers": {
                     "accept-encoding": "gzip, deflate, br",

@@ -3,6 +3,7 @@ const fs = require("fs");
 const child_process = require("child_process")
 const embed_code = fs.readFileSync("../embedded-player.html").toString()
 const utils = require("./yt2009utils")
+const config = require("./config.json")
 
 let ip_request_count = {}
 
@@ -22,7 +23,7 @@ function flash_handler(req, res) {
                     createdUrl += `&rv.${i}.title=${encodeURIComponent(video.title)}`
                     createdUrl += `&rv.${i}.thumbnailUrl=${encodeURIComponent(`http://i.ytimg.com/vi/${video.id}/hqdefault.jpg`)}`
                     createdUrl += `&rv.${i}.length_seconds=${utils.time_to_seconds(video.length)}`
-                    createdUrl += `&rv.${i}.url=${encodeURIComponent(`http://ftde-projects.tk:5316/watch?v=${video.id}&f=1`)}`
+                    createdUrl += `&rv.${i}.url=${encodeURIComponent(`http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`)}`
                     createdUrl += `&rv.${i}.view_count=${video.views.replace(" views", "")}`
                     createdUrl += `&rv.${i}.rating=5`
                     createdUrl += `&rv.${i}.id=${video.id}`
@@ -57,7 +58,9 @@ module.exports = function(req, res) {
 
     // autoryzacja
     if(utils.isAuthorized(req)) {
-        console.log(`(${utils.get_used_token(req)}) embed ${id}`)
+        if(config.env == "dev") {
+            console.log(`(${utils.get_used_token(req)}) embed ${id}`)
+        }
     } else {
         if(!ip_request_count[req.ip]) {
             ip_request_count[req.ip] = 1

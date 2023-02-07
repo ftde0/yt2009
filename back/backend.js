@@ -25,6 +25,7 @@ const yt2009_languages = require("./language_data/language_engine")
 const yt2009_quicklist = require("./yt2009quicklistserver")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
+const config = require("./config.json")
 
 const use_external_storage = false;
 const external_storage_server = "";
@@ -37,12 +38,11 @@ app.use(express.raw({
     "type": () => true
 }))
 
-
-if(process.platform == "win32") {
+if(config.env == "dev") {
     let launchTime = ""
     let date = new Date();
     launchTime = `launch time: ${date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : "0" + date.getMinutes()}`
-    app.listen(82, () => {
+    app.listen(config.port, () => {
         console.log(`
     ==========
 
@@ -53,13 +53,15 @@ if(process.platform == "win32") {
     ${launchTime}
         `);
     });
-} else {
-    const server = https.createServer({
-        cert: fs.readFileSync(`/etc/letsencrypt/live/ftde-projects.tk/fullchain.pem`),
-        key: fs.readFileSync(`/etc/letsencrypt/live/ftde-projects.tk/privkey.pem`)
-    }, app).listen(5317)
+} else if(config.env == "prod") {
+    if(config.useSSL) {
+        const server = https.createServer({
+            cert: fs.readFileSync(config.SSLCertPath),
+            key: fs.readFileSync(config.SSLKeyPath)
+        }, app).listen(config.SSLPort)    
+    }
     
-    app.listen(5316, () => {
+    app.listen(config.port, () => {
         console.log(`
     ==========
 
@@ -85,7 +87,9 @@ app.get('/', (req,res) => {
         res.redirect("/auth.html")
         return;
     }
-    console.log(`(${yt2009_utils.get_used_token(req)}) mainpage ${Date.now()}`)
+    if(config.env == "dev") {
+        console.log(`(${yt2009_utils.get_used_token(req)}) mainpage ${Date.now()}`)
+    }
     yt2009_home(req, res)
 })
 

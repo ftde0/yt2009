@@ -14,6 +14,7 @@ const yt2009waybackwatch = require("./cache_dir/wayback_watchpage")
 const yt2009templates = require("./yt2009templates");
 const yt2009exports = require("./yt2009exports")
 const constants = require("./yt2009constants.json")
+const config = require("./config.json")
 
 const watchpage_code = fs.readFileSync("../watch.html").toString();
 const watchpage_feather = fs.readFileSync("../watch_feather.html").toString()
@@ -41,7 +42,9 @@ module.exports = {
         // jeśli zapisane przekazujemy lokalne dane
         if(cache.read()[id] && !waitForOgv && !resetCache) {
             let v = cache.read()[id]
-            console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
+            if(config.env == "dev") {
+                console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
+            }
 
             if(!fs.existsSync(`../assets/${id}.mp4`)) {
                 let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
@@ -67,18 +70,24 @@ module.exports = {
                 // robimy ogg przed callbackiem
                 child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {
                     let v = cache.read()[id]
-                    console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
+                    if(config.env == "dev") {
+                        console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
+                    }
                     callback(v)
                 })
             } else {
                 // mamy ogg, możemy spokojnie callbackować
                 let v = cache.read()[id]
-                console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
+                if(config.env == "dev") {
+                    console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
+                }
                 callback(v)
             }
         } else {
             // w przeciwnym wypadku fetch
-            console.log(`(${userToken}) ${id} clean fetch ${Date.now()} ${resetCache ? "(cache reset)" : ""}`)
+            if(config.env == "dev") {
+                console.log(`(${userToken}) ${id} clean fetch ${Date.now()} ${resetCache ? "(cache reset)" : ""}`)
+            }
             fetch("https://youtube.com/watch?v=" + id, {
                 "headers": constants.headers
             }).then(r => {
@@ -666,15 +675,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             }
                                         
                             // apply
-                            /*endscreen_queue.push({
-                                "title": video.title,
-                                "id": video.id,
-                                "length": yt2009utils.time_to_seconds(video.time),
-                                "url": encodeURIComponent(`http://ftde-projects.tk:5316/watch?v=${video.id}&f=1`),
-                                "views": video.viewCount,
-                                "creatorUrl": video.creatorUrl,
-                                "creatorName": video.uploaderName
-                            })*/
                             relatedHTML += yt2009templates.relatedVideo(
                                 video.id,
                                 video.title,
@@ -850,7 +850,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 req.headers.cookie.split("alt_swf_arg=")[1].split(";")[0]
             )
         }
-        let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}&iv_module=http%3A%2F%2F${env == "dev" ? "192.168.1.4%3A82" : "ftde-projects.tk%3A5316"}%2Fiv_module-${env}.swf`
+        let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module-${env}.swf`
         if(useFlash) {
             code = code.replace(
                 `<!DOCTYPE HTML>`,
@@ -887,7 +887,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         <source src="${data.mp4}.mp4" type="video/mp4"></source>
         <source src="${data.mp4}.ogg" type="video/ogg"></source>`)
         code = code.replace("video_url", `http://youtube.com/watch?v=${data.id}`)
-        code = code.replace("video_embed_link", `<object width=&quot;425&quot; height=&quot;344&quot;><param name=&quot;movie&quot; value=&quot;http://ftde-projects.tk:5316/watch.swf?video_id=${data.id}&quot;></param><param name=&quot;allowFullScreen&quot; value=&quot;true&quot;></param><param name=&quot;allowscriptaccess&quot; value=&quot;always&quot;></param><embed src=&quot;http://ftde-projects.tk:5316/watch.swf?video_id=${data.id}&quot; type=&quot;application/x-shockwave-flash&quot; allowscriptaccess=&quot;always&quot; allowfullscreen=&quot;true&quot; width=&quot;425&quot; height=&quot;344&quot;></embed></object>`)
+        code = code.replace("video_embed_link", `<object width=&quot;425&quot; height=&quot;344&quot;><param name=&quot;movie&quot; value=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot;></param><param name=&quot;allowFullScreen&quot; value=&quot;true&quot;></param><param name=&quot;allowscriptaccess&quot; value=&quot;always&quot;></param><embed src=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot; type=&quot;application/x-shockwave-flash&quot; allowscriptaccess=&quot;always&quot; allowfullscreen=&quot;true&quot; width=&quot;425&quot; height=&quot;344&quot;></embed></object>`)
 
         // parsing opisów - treating http:// i https:// jako linki
         let shortDescription = data.description.split("\n").slice(0, 3).join("<br>")
@@ -1065,7 +1065,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "title": video.title,
                     "id": video.id,
                     "length": yt2009utils.time_to_seconds(video.length),
-                    "url": encodeURIComponent(`http://ftde-projects.tk:5316/watch?v=${video.id}&f=1`),
+                    "url": encodeURIComponent(`http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`),
                     "views": relatedViewCount,
                     "creatorUrl": video.creatorUrl,
                     "creatorName": uploader
@@ -1289,7 +1289,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 let avgRating = yt2009utils.custom_rating_round(
                     (userRating + parseFloat(useRydRating)) / 2
                 )
-                console.log(userRating, useRydRating, parseFloat(useRydRating))
                 if(userRating == 0) {
                     avgRating = useRydRating;
                 }
@@ -1592,7 +1591,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         "title": video.title,
                         "id": video.id,
                         "length": yt2009utils.time_to_seconds(video.length),
-                        "url": encodeURIComponent(`http://ftde-projects.tk:5316/watch?v=${video.id}&f=1`),
+                        "url": encodeURIComponent(`http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`),
                         "views": video.views,
                         "creatorUrl": video.creatorUrl,
                         "creatorName": video.creatorName
@@ -1630,7 +1629,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             "title": video.title,
                             "id": video.id,
                             "length": yt2009utils.time_to_seconds(video.length),
-                            "url": encodeURIComponent(`http://ftde-projects.tk:5316/watch?v=${video.id}&f=1`),
+                            "url": encodeURIComponent(`http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`),
                             "views": viewCount,
                             "creatorUrl": video.creatorUrl,
                             "creatorName": authorName

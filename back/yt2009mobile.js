@@ -4,7 +4,9 @@ const channels = require("./yt2009html")
 const utils = require("./yt2009utils")
 const fs = require("fs")
 const child_process = require("child_process")
-const env = process.platform == "win32" ? "dev" : "prod"
+const config = require("./config.json")
+const env = config.env
+// todo: generalize soon
 const rtsp_server = env == "dev" ? "rtsp://192.168.1.5:5318/"
                             : "rtsp://ftde-projects.tk:5318/"
 

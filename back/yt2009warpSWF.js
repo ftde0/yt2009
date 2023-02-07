@@ -9,6 +9,7 @@ const constants = require("./yt2009constants.json")
 const utils = require("./yt2009utils")
 const child_process = require("child_process")
 const ytdl = require("ytdl-core")
+const config = require("./config.json")
 
 module.exports = {
     "get_video": function(req, res) {
@@ -18,7 +19,9 @@ module.exports = {
             return;
         }
 
-        console.log(`(${utils.get_used_token(req) + "_warp_swf"}) warp init (${Date.now()})`)
+        if(config.env == "dev") {
+            console.log(`(${utils.get_used_token(req) + "_warp_swf"}) warp init (${Date.now()})`)
+        }
 
         yt2009main.fetch_video_data(req.query.video_id, (data) => {
             res.send(`<?xml version="1.0" encoding="utf-8"?><ut_response status="ok"><video><author>${data.author_name}</author><id>${req.query.video_id}</id><title>${data.title}</title><length_seconds>${data.length}</length_seconds><rating_avg>5</rating_avg><rating_count>1</rating_count><description>.</description><view_count>1</view_count><upload_time>1</upload_time><comment_count>1</comment_count><tags> </tags><url>http://www.youtube.com/watch?v=${req.query.video_id}</url><thumbnail_url>http://i.ytimg.com/vi/${req.query.video_id}/default.jpg</thumbnail_url><embed_status>ok</embed_status><allow_ratings>yes</allow_ratings></video></ut_response>`)
@@ -33,7 +36,9 @@ module.exports = {
             return;
         }
 
-        console.log(`(${utils.get_used_token(req) + "_warp_swf"}) warp videos load (${req.query.video_id}, ${Date.now()})`)
+        if(config.env == "dev") {
+            console.log(`(${utils.get_used_token(req) + "_warp_swf"}) warp videos load (${req.query.video_id}, ${Date.now()})`)
+        }
 
         let videos_xml = `
         <?xml version="1.0" encoding="utf-8"?>
@@ -45,7 +50,6 @@ module.exports = {
             yt2009wayback.read(
                 req.query.video_id,
                 (data) => {
-                    console.log(data.related)
                     if(data.related.length >= 1) {
                         let actual_exist = []
                         let video_check_table = []

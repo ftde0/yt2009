@@ -11,6 +11,7 @@ const fetch = require("node-fetch")
 const constants = require("./yt2009constants.json")
 const fs = require("fs")
 const page = fs.readFileSync("../subscriptions.htm").toString()
+const config = require("./config.json")
 
 let saved_subscription_data = {}
 
@@ -81,7 +82,9 @@ module.exports = {
             res.send(this.parse_new_videos(JSON.parse(JSON.stringify(saved_subscription_data[url])), flags))
         } else {
             // clean fetch
-            console.log(`(${utils.get_used_token(req)}) /my_subscriptions navigate (${url})`)
+            if(config.env == "dev") {
+                console.log(`(${utils.get_used_token(req)}) /my_subscriptions navigate (${url})`)
+            }
 
             fetch("https://youtube.com/" + url + "/videos?view=0&sort=dd&flow=grid", {
                 "headers": constants.headers

@@ -4,6 +4,7 @@ templates for individual yt2009 parts fillable with function calls.
 =======
 */
 const utils = require("./yt2009utils")
+const config = require("./config.json")
 
 module.exports = {
     "videoComment": function(authorUrl, authorName, commentTime, content, flags) {
@@ -156,7 +157,7 @@ module.exports = {
     <openSearch:itemsPerPage>12</openSearch:itemsPerPage>`
     },
     "cpsSearchEntry": function(id, title, description, lengthSeconds, authorName) {
-        let domainName = process.platform == "win32" ? "192.168.1.4:82" : "ftde-projects.tk:5316"
+        let domainName = config.ip + ":" + config.port
         return `
     <entry>
         <id>http://${domainName}/feeds/api/videos/${id}</id>
