@@ -226,7 +226,11 @@ function subscription_handle() {
     var html = ""
     JSON.parse(localStorage.subscriptions).forEach(function(sub) {
         if(!sub.url) return;
-        html += '<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="' + sub.url + '"><a class="name" href="#">' + sub.creator + '</a></div>'
+        var url = sub.url
+        if(sub.id) {
+            url = "/channel/" + sub.id
+        }
+        html += '<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="' + url + '"><a class="name" href="#">' + sub.creator + '</a></div>'
     })
 
     document.querySelector(".secondary-subscription-list").innerHTML += html

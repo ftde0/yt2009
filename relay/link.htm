@@ -77,6 +77,24 @@
 				<span id="ytname-option3">handle</span>
 			</a>
 		</div>
+		<div id="relay-settings" class="hid">
+			<hr>
+			<p>use this panel to adjust relay to your liking.</p>
+			<input type="checkbox" id="relay-create-favorites"
+					title="create a Favorites playlist on your YouTube account for yt2009 to add videos to when you click the Favorite button.">
+			<label for="relay-create-favorites">create_favorites</label><br>
+			<input type="checkbox" id="relay-playlists-sync"
+					title="bring over YouTube playlists to yt2009.">
+			<label for="relay-playlists-sync">relay_playlists_sync</label><br>
+			<input type="checkbox" id="relay-sub-sync"
+					title="bring over YouTube subscriptions to yt2009. also subscribes channels on your real YouTube account when clicked through yt2009.">
+			<label for="relay-sub-sync">relay_sub_sync</label><br>
+			<a class="yt-button yt-button-primary"
+				href="#" onclick="apply_relay_settings()">
+				<span>save</span>
+			</a>
+			<p id="relay-sync-status">relay syncing status: &lt;sync not started&gt;, save to start</p>
+		</div>
 
 		<!-- end bottom section -->
 	</div>
@@ -166,6 +184,8 @@
 						.innerHTML = res.handle.replace("@", "")
 				document.getElementById("use-login-simulate-name")
 						.className = ""
+				document.getElementById("relay-settings")
+						.className = ""
 			}, false)
 			function setError() {
 				document.getElementById("yt-account").innerHTML =
@@ -217,6 +237,89 @@
 							+ globalFlags
 							+ "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 			alert("username updated")
+		}
+
+		// relay settings
+		function apply_relay_settings() {
+			var host = "http://127.0.0.1:" + get_relay_port() + "/"
+			var settings = []
+			var checkboxes = document.querySelectorAll("#relay-settings input")
+			for(var s in checkboxes) {
+				try {
+					if(checkboxes[s].checked) {
+						settings.push(checkboxes[s].id)
+					}
+				}
+				catch(error) {}
+			}
+
+
+
+			var r = new XMLHttpRequest();
+			r.open("POST", host + "apply_relay_settings")
+			r.setRequestHeader("auth", get_relay_key())
+			r.send(JSON.stringify({
+				"settings": settings
+			}))
+			setSyncStatus("syncing")
+			r.addEventListener("load", function(e) {
+				var res = JSON.parse(r.responseText)
+				var syncStatus = "done"
+				if(res.subscriptions) {
+					syncStatus += ", " + res.subscriptions.length
+								  + " subscriptions found"
+					appendSubscriptions(res.subscriptions)
+				}
+				if(res.playlists) {
+					syncStatus += ", " + res.playlists.length
+								  + " playlists found"
+					appendPlaylists(res.playlists)
+				}
+				setSyncStatus(syncStatus)
+			}, false)
+		}
+
+		function setSyncStatus(text) {
+			document.querySelector("#relay-sync-status").innerHTML
+			= "relay syncing status: " + text
+		}
+
+		// sync subscriptions with data from relay
+		function appendSubscriptions(subscriptions) {
+			var subs = []
+			try {
+				subs = JSON.parse(localStorage.subscriptions)
+			}
+			catch(error) {}
+			subscriptions.forEach(function(subscription) {
+				// check if not already added
+				var added = false;
+				subs.forEach(function(sub) {
+					if(sub.url == subscription.url) added = true
+				})
+				if(added) return;
+				subs.push(subscription)
+			})
+			localStorage.subscriptions = JSON.stringify(subs)
+		}
+
+		// sync playlists with data from relay
+		function appendPlaylists(playlists) {
+			var playlistIndex = []
+			try {
+				playlistIndex = JSON.parse(localStorage.playlistsIndex)
+			}
+			catch(error) {}
+			playlists.forEach(function(playlist) {
+				// check if not already added
+				var added = false;
+				playlistIndex.forEach(function(p) {
+					if(p.id == playlist.id) added = true
+				})
+				if(added) return;
+				playlistIndex.push(playlist)
+			})
+			localStorage.playlistsIndex = JSON.stringify(playlistIndex)
 		}
 	</script>
 </body>

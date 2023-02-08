@@ -112,5 +112,30 @@ module.exports = {
                 })});
             }, 166)
         }
+    },
+    "fetchGuide": function(cookie, context,
+                           session, userAgent, apiKey,
+                           callback) {
+        let headers = this.createInnertubeHeaders(
+            cookie,
+            context,
+            session,
+            userAgent
+        )
+
+        fetch("https://www.youtube.com/youtubei/v1/guide?key=" + apiKey, {
+            "headers": headers,
+            "referrer": `https://www.youtube.com/`,
+            "referrerPolicy": "origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": context,
+                "fetchLiveState": true
+            }),
+            "method": "POST",
+            "mode": "cors",
+            "credentials": "include"
+        }).then(res => {res.json().then(r => {
+            callback(r)
+        })})
     }
 }

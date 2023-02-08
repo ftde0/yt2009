@@ -58,7 +58,10 @@ module.exports = {
         let url = req.headers.url;
 
         // pierwotne checki
-        if(!url.startsWith("/channel/") && !url.startsWith("/user/") && !url.startsWith("/c/")) {
+        if(!url.startsWith("/channel/")
+        && !url.startsWith("/user/")
+        && !url.startsWith("/c/")
+        && !url.startsWith("/@")) {
             res.send("[yt2009] niepoprawny url kanału")
             return;
         }

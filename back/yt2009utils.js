@@ -18,6 +18,7 @@ const tokens = [
     "vbju5fy8f","dvp8ep4zj","euigooew4","yo3duyi3r","l2zqy2qkj",
     "tnb_d3v","g3n_d3m"
 ]
+const config = require("./config.json")
 let ip_uses_flash = []
 
 module.exports = {
@@ -393,6 +394,10 @@ module.exports = {
             setTimeout(function() {
                 ip_uses_flash[req.ip]--;
             }, 120000)
+        }
+
+        if(config.env == "dev") {
+            tr = true;
         }
 
         return tr;

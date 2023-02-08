@@ -141,6 +141,151 @@ app.get("/relay_test_yt", (req, res) => {
     }
 })
 
+
+/*
+=======
+relay settings update
+=======
+*/
+app.post("/apply_relay_settings", (req, res) => {
+    if(req.headers.auth !== userdata.code || !userdata.usernameCache) {
+        res.sendStatus(401)
+        return;
+    }
+    let guideCache = {}
+    let settings = JSON.parse(req.body.toString()).settings
+    // if required, fetch guide for playlists and subs first
+    if(settings.includes("relay-playlists-sync")
+    || settings.includes("relay-sub-sync")) {
+        utils.fetchGuide(
+            config.cookie,
+            userdata.itContext,
+            userdata.session,
+            config.useragent,
+            userdata.itKey,
+            (data) => {
+                guideCache = data;
+                fs.writeFileSync("test.json", JSON.stringify(data))
+                applySettings()
+            }
+        )
+    } else {
+        applySettings()
+    }
+
+    // and THEN apply the settings
+    function applySettings() {
+        userdata.uiSettings = settings;
+        settings.forEach(setting => {
+            switch(setting) {
+                // per-setting handling
+
+                // import playlists
+                case "relay-playlists-sync": {
+                    let playlists = []
+                    // get to array
+                    // I HATE THIS.
+                    guideCache.items.forEach(item => {
+                        if(item.guideSectionRenderer) {
+                            item.guideSectionRenderer.items.forEach(
+                                sectionRenderer => {
+                                if(sectionRenderer
+                                   .guideCollapsibleSectionEntryRenderer) {
+                                    sectionRenderer
+                                    .guideCollapsibleSectionEntryRenderer
+                                    .sectionItems.forEach(sectionItem => {
+                                        if(sectionItem
+                                           .guideCollapsibleEntryRenderer) {
+                                            handleExpandableItems(
+                                                sectionItem
+                                                .guideCollapsibleEntryRenderer
+                                                .expandableItems
+                                            )
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    }) 
+                    // move over the further handle so this doesnt pile up
+                    // infinitely
+                    function handleExpandableItems(expandableItems) {
+                        expandableItems.forEach(item => {
+                            item = item.guideEntryRenderer
+                            if(item.icon.iconType == "PLAYLISTS") {
+                                playlists.push({
+                                    "name": item.formattedTitle.simpleText,
+                                    "id": item.entryData
+                                          .guideEntryData.guideEntryId
+                                })
+                            }
+                        })
+                    }
+                    userdata.playlists = playlists
+                    break;
+                }
+
+                // import subscriptions
+                case "relay-sub-sync": {
+                    let subscriptions = []
+                    guideCache.items.forEach(section => {
+                        if(section.guideSubscriptionsSectionRenderer) {
+                            section = section.guideSubscriptionsSectionRenderer
+                            section.items.forEach(item => {
+                                // channels!! (hope)
+                                if(item.guideEntryRenderer) {
+                                    item = item.guideEntryRenderer
+                                    addSubscription(item)
+                                } else if(item.guideCollapsibleEntryRenderer) {
+                                    item = item.guideCollapsibleEntryRenderer
+                                    // more items!!!
+                                    item.expandableItems.forEach(subscription => {
+                                        subscription = subscription
+                                                       .guideEntryRenderer
+                                        if(!subscription.icon) {
+                                            addSubscription(subscription)
+                                        }
+                                        
+                                    })
+                                }
+                            })
+                        }
+                    })
+
+                    // actually push a subscription
+                    function addSubscription(item) {
+                        if(item.guideEntryRenderer) {
+                            item = item.guideEntryRenderer
+                        }
+                        subscriptions.push({
+                            "creator": item.formattedTitle.simpleText,
+                            "id": item.entryData.guideEntryData
+                                  .guideEntryId,
+                            "url": item.navigationEndpoint
+                                          .browseEndpoint
+                                          .canonicalBaseUrl
+                        })
+                    }
+                    userdata.subscriptions = subscriptions
+                    break;
+                }
+            }
+        })
+        fs.writeFileSync("./userdata.json", JSON.stringify(userdata))
+    }
+
+
+    let response = {}
+    if(userdata.subscriptions) {
+        response.subscriptions = userdata.subscriptions
+    }
+    if(userdata.playlists) {
+        response.playlists = userdata.playlists
+    }
+    res.send(response)
+    
+})
+
 /*
 =======
 comment
