@@ -43,7 +43,7 @@ module.exports = {
             </div>
         </div>`
     },
-    "relatedVideo": function(id, title, protocol, length, viewCount, creatorUrl, creatorName, flags) {
+    "relatedVideo": function(id, title, protocol, length, viewCount, creatorUrl, creatorName, flags, playlistId) {
         if(creatorName.startsWith("by ")) {
             creatorName = creatorName.replace("by ", "")
         }
@@ -51,19 +51,19 @@ module.exports = {
                     <div class="v90WideEntry">
                         <div class="v90WrapperOuter">
                             <div class="v90WrapperInner">
-                                <a href="/watch?v=${id}" class="video-thumb-link" rel="nofollow"><img title="${title.split('"').join("&quot;")}" thumb="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" src="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" class="vimg90" qlicon="${id}" alt="${title.split('"').join("&quot;")}}" onload="checkExists(this)"></a>
+                                <a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" class="video-thumb-link" rel="nofollow"><img title="${title.split('"').join("&quot;")}" thumb="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" src="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" class="vimg90" qlicon="${id}" alt="${title.split('"').join("&quot;")}}" onload="checkExists(this)"></a>
         
                                 <div class="addtoQL90"><a href="#" ql="${id}" title="Add Video to QuickList"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(creatorName)}')"></button></a>
                                     <div class="hid quicklist-inlist"><a href="#">Added to Quicklist</a></div>
                                 </div>
         
-                                <div class="video-time"><a href="/watch?v=${id}" rel="nofollow">${length}</a></div>
+                                ${length !== "" ? `<div class="video-time"><a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" rel="nofollow">${length}</a></div>` : ""}
                             </div>
                         </div>
                     </div>
                     <div class="video-main-content">
                         <div class="video-mini-title">
-                        <a href="/watch?v=${id}" rel="nofollow">${title}</a></div>
+                        <a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" rel="nofollow">${title}</a></div>
                         <div class="video-view-count">${viewCount}</div>
                         <div class="video-username"><a href="${creatorUrl}">${creatorUrl.includes("/user/") && flags.includes("author_old_names") ? creatorUrl.split("/user/")[1] : creatorName}</a>
                         </div>
@@ -378,5 +378,61 @@ module.exports = {
                             </div>
                             <div style="clear:both;"></div>
                         </div>`
+    },
+    "createFffmpegOgg": function(id) {
+        return `ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`
+    },
+    "morefromEntry": function(name) {
+        return `
+            <div id="watch-channel-videos-panel" class="watch-discoverbox-wrapper yt-uix-expander " data-expander-action="watchTogglePanel" data-discoverbox-type="channel">
+                <h2 class="yt-uix-expander-head yt-uix-expander-collapsed" onclick="toggleExpander(this)">
+                    <button title="" class="yt-uix-expander-arrow master-sprite"></button>
+                    <span>
+                        More From: ${name}
+                    </span>
+                </h2>
+                <div id="watch-channel-vids-body" class="watch-discoverbox-body mini-list-view yt-uix-expander-body hid">
+                    <div id="watch-channel-discoverbox" class="watch-discoverbox" style="height:432px">`
+    },
+    "html4": `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">`,
+    "watchpagePlaylistPanelEntry": `
+    <div id="watch-playlist-videos-panel" class="watch-discoverbox-wrapper yt-uix-expander" data-expander-action="watchTogglePanel" data-discoverbox-type="playlist" data-discoverbox-username="">
+        <h2 class="yt-uix-expander-head">
+            <span>Playlist</span>
+        </h2>
+        <div id="watch-playlist-vids-body" class="watch-discoverbox-body mini-list-view yt-uix-expander-body">
+            <div id="watch-playlist-discoverbox" class="watch-discoverbox" style="height:432px">`,
+    "html5Endscreen": `
+                        <span class="endscreen-arrow-left" onclick="endscreen_section_change(-1)"></span>
+                        <span class="endscreen-arrow-right" onclick="endscreen_section_change(1)"></span>
+                        <div class="buttons yt-center">
+                            <div class="button-share">
+                                <img src="/player-imgs/share.png"/>
+                                <h2>Share</h2>
+                            </div>
+                            <div class="button-replay" onclick="videoReplay();">
+                                <img src="/player-imgs/replay.png"/>
+                                <h2>Replay</h2>
+                            </div>
+                        </div>
+    `,
+    "endscreenVideo": function(id, protocol, length, title, endscreen_version, creatorUrl, creatorName, views, rating, flags) {
+        return `
+        <div class="endscreen-video" onclick="videoNav('${id}')">
+            <div class="endscreen-video-thumbnail">
+                <img src="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" width="80" height="65"/>
+                ${endscreen_version !== 1 ? `<div class="video-time" style="float: right;"><a href="">${utils.seconds_to_time(length)}</a></div>` : ""}
+            </div>
+            <div class="endscreen-video-info">
+                <h3 style="max-width: 0px;overflow: hidden;" class="endscreen-video-title">${title.length > 80 ? title.substring(0, 80) + "..." : title}</h3>
+                <h3 class="gr" ${endscreen_version !== 1 ? `style="height: 17px"` : ""}>${endscreen_version == 1 ? `<span>${length}</span>` : ""}</h3>
+                <h3 class="gr">From: <span class="text-light">${(creatorUrl || "").includes("/user/") && flags.includes("author_old_names") ? (creatorUrl || "").split("/user/")[1] : creatorName}</span></h3>
+                <h3 class="gr" ${endscreen_version !== 1 ? `style="margin-top: 2px !important;"` : ""}>Views: <span class="text-light">${views.replace(/[^0-9]/g, "")}</span></h3>
+                ${endscreen_version !== 1 ? `<span class="endscreen-video-star rating-${rating}"></span>` : ""}
+            </div>
+        </div>`
+    },
+    "flashObject": function(url) {
+        return `<object width="640" height="385" class="fl"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
     }
 }

@@ -970,6 +970,12 @@ function updateCharacterCount() {
     }
 }
 
+var relay_address = ""
+if(document.querySelector("#comment_formmain_comment")) {
+    relay_address = $("#comment_formmain_comment").getAttribute("action")
+                    .replace("comment_post", "")
+}
+
 function commentSend() {
     var r = new XMLHttpRequest();
     r.open("POST", $("#comment_formmain_comment").getAttribute("action"))
@@ -984,4 +990,17 @@ function commentSend() {
     r.addEventListener("load", function(e) {
         btn.setAttribute("value", "Comment Posted!")
     }, false)
+}
+
+/*
+======
+favoriting with relay
+======
+*/
+function relayFavorite() {
+    var r = new XMLHttpRequest();
+    r.open("POST", relay_address + "favorite_video")
+    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
+    r.setRequestHeader("source", location.href)
+    
 }

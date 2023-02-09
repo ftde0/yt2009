@@ -346,6 +346,31 @@ module.exports = {
         || "5 months ago";
     },
 
+    
+    "genAbsoluteFakeDate": function() {
+        return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Math.floor(Math.random() * 12)] || "Feb"} ${Math.floor(Math.random() * 26) + 1}, 2009`
+    },
+
+    
+    "markupDescription": function(description) {
+        let descriptionMarkedup = ``
+        description.split("<br>").forEach(part => {
+            part.split(" ").forEach(word => {
+                if(word.startsWith("http://")
+                || word.startsWith("https://")) {
+                    descriptionMarkedup += 
+                    "<a href=\"" + word + "\" target=\"_blank\">"
+                    + (word.length > 40 ? word.substring(0, 40) + "..." : word)
+                    + "</a>"
+                } else {
+                    descriptionMarkedup += `${word} `
+                }
+            })
+            descriptionMarkedup += "<br>"
+        })
+        return descriptionMarkedup;
+    },
+
 
     "saveAvatar": function(link) {
         if(link.startsWith("//")) {

@@ -660,5 +660,45 @@
             "views": "63,486 views",
             "time": "3:38"
         }
-    ]
+    ],
+    "shareBehaviorServices": {
+        "default": {
+            "MySpace": "http://www.myspace.com/Modules/PostTo/Pages/?t=%title%&u=%url%",
+            "Facebook": "http://www.facebook.com/sharer.php?u=%url%&t=%title%",
+            "Twitter": "http://www.twitter.com/intent/tweet?text=Check%20this%20video%20out%20--%20%title%%20%url%",
+            "Digg": "http://digg.com/submit?phase=2&url=%url%&title=%title%",
+            "orkut": "http://www.orkut.com/FavoriteVideos.aspx?u=%url%",
+            "Live Spaces": "http://spaces.live.com/BlogIt.aspx?Title=YouTube%20-%20%title%&SourceURL=%url%",
+            "Bebo": "http://www.bebo.com/c/share?Url=%url%&Title=%title%",
+            "hi5": "http://www.hi5.com/friend/checkViewedVideo.do?t=%title%&url=%url%"
+        },
+        "only_remove": {
+            "Facebook": "http://www.facebook.com/sharer.php",
+            "Twitter": "http://www.twitter.com/intent/tweet?text=Check%20this%20video%20out%20--%20%title%%20%url%",
+            "hi5": "http://www.hi5.com/friend/checkViewedVideo.do?t=%title%&url=%url%"
+        },
+        "only_add": {
+            "MySpace": "http://www.myspace.com/Modules/PostTo/Pages/?t=%title%&u=%url%",
+            "Facebook": "http://www.facebook.com/sharer.php?u=%url%&t=%title%",
+            "Twitter": "http://www.twitter.com/intent/tweet?text=Check%20this%20video%20out%20--%20%title%%20%url%",
+            "Digg": "http://digg.com/submit?phase=2&url=%url%&title=%title%",
+            "orkut": "http://www.orkut.com/FavoriteVideos.aspx?u=%url%",
+            "Live Spaces": "http://spaces.live.com/BlogIt.aspx?Title=YouTube%20-%20%title%&SourceURL=%url%",
+            "Bebo": "http://www.bebo.com/c/share?Url=%url%&Title=%title%",
+            "hi5": "http://www.hi5.com/friend/checkViewedVideo.do?t=%title%&url=%url%",
+            "Reddit": "http://www.reddit.com/submit?url=%url%&title=%title%",
+            "Pinterest": "http://pinterest.com/pin/create/button/?url=%url%&description=%title%&is_video=true&media=https%3A//i.ytimg.com/vi/%id%/hqdefault.jpg",
+            "mailto": "mailto:?body=%url%",
+            "Blogger": "http://www.blogger.com/blog-this.g?n=%title%&source=youtube&b=%3Ciframe%20width%3D%22480%22%20height%3D%22270%22%20src%3D%22https%3A//youtube.com/embed/%id%%22%20frameborder%3D%220%22%20allow%3D%22accelerometer%3B%20autoplay%3B%20clipboard-write%3B%20encrypted-media%3B%20gyroscope%3B%20picture-in-picture%22%20allowfullscreen%3E%3C/iframe%3E&eurl=https%3A//i.ytimg.com/vi/%id%/hqdefault.jpg"
+        },
+        "both": {
+            "Reddit": "http://www.reddit.com/submit?url=%url%&title=%title%",
+            "Facebook": "http://www.facebook.com/sharer.php",
+            "Twitter": "http://www.twitter.com/intent/tweet?text=Check%20this%20video%20out%20--%20%title%%20%url%",
+            "mailto": "mailto:?body=%url%",
+            "Pinterest": "http://pinterest.com/pin/create/button/?url=%url%&description=%title%&is_video=true&media=https%3A//i.ytimg.com/vi/%id%/hqdefault.jpg",
+            "hi5": "http://www.hi5.com/friend/checkViewedVideo.do?t=%title%&url=%url%",
+            "Blogger": "http://www.blogger.com/blog-this.g?n=%title%&source=youtube&b=%3Ciframe%20width%3D%22480%22%20height%3D%22270%22%20src%3D%22https%3A//youtube.com/embed/%id%%22%20frameborder%3D%220%22%20allow%3D%22accelerometer%3B%20autoplay%3B%20clipboard-write%3B%20encrypted-media%3B%20gyroscope%3B%20picture-in-picture%22%20allowfullscreen%3E%3C/iframe%3E&eurl=https%3A//i.ytimg.com/vi/%id%/hqdefault.jpg"
+        }
+    }
 }
