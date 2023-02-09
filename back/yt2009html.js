@@ -126,7 +126,8 @@ module.exports = {
         } else if(cache.read()[id] && waitForOgv && !resetCache) {
             if(!fs.existsSync(`../assets/${id}.ogg`)) {
                 // robimy ogg przed callbackiem
-                child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {
+                child_process.exec(yt2009templates.createFffmpegOgg(id),
+                (error, stdout, stderr) => {
                     let v = cache.read()[id]
                     if(config.env == "dev") {
                         console.log(`(${userToken}) ${id} z cache (${Date.now()})`)

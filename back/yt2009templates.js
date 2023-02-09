@@ -434,5 +434,72 @@ module.exports = {
     },
     "flashObject": function(url) {
         return `<object width="640" height="385" class="fl"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
+    },
+    "playlist": function(name, id) {
+        return `<div class="subfolder" data-id=${id}" onclick="show_playlist(this)"><a class="name" href="#">${name}</a></div>`
+    },
+    "searchChannel": function(url, avatar, name, subscribers) {
+        return `
+        <div class="channel-cell" style="height: 90px;">
+            <div class="channel-entry yt-uix-hovercard">
+                <div class="user-thumb-large" style="float: left;">
+                    <div><a href="${url}"><img class="yt-uix-hovercard-target" src="${avatar}"></a></div>
+                </div>
+                <div class="channel-main-content" style="float: left;margin-left: 8px;margin-top: 3px;">
+                    <div class="channel-title">
+                        <div class="channel-long-title"><a href="${url}" title="${name}" rel="nofollow">${name}</a></div>
+                    </div>
+                    <div class="channel-facets"><span>${subscribers}</span></div>
+                </div>
+            </div>
+        </div>`
+    },
+    "searchPlaylistEntry": function(id, protocol, videos, name, videoCount) {
+        return `
+        <div class="playlist-cell" style="width:24.5%">
+            <div class="playlist-entry yt-uix-hovercard">
+                <div class="playlist-main-thumb">
+                    <div class="vCluster120WideEntry">
+                        <div class="vCluster120WrapperOuter playlist-thumbnail">
+                            <div class="vCluster120WrapperInner">
+                                <a href="/playlist?list=${id}" rel="nofollow"><img src="${protocol}://i.ytimg.com/vi/${videos[0].id}/hqdefault.jpg" class="vimgCluster120 yt-uix-hovercard-target"></a>
+                                <div class="video-corner-text"><span>${videos[0].length}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="playlist-main-content" id="playlist-main-content-DF3129C5832D6AE7">
+                    <div class="playlist-title playlist-title-results">
+                        <div class="playlist-long-title">
+                            <a href="/playlist?list=${id}" class="yt-uix-hovercard-target" rel="nofollow">${name}</a>
+                            <span class="playlist-video-count">${videoCount} videos</span>
+                        </div>
+                    </div>
+                    <div class="playlist-videos">
+                        <ul>
+                        `
+    },
+    "searchPlaylistVideo": function(video, playlist) {
+        return `
+                            <li>
+                                <div class="playlist-video">
+                                    <span><a class="hLink" title="" href="/watch?v=${video.id}&list=${playlist.id}">${video.title}</a></span>
+                                    <span class="playlist-video-duration">(${video.length})</span>
+                                </div>
+                            </li>`
+    },
+    "searchPlaylistEnd": function(playlist) {
+        return `
+                        </ul>
+                    </div>
+                    <div class="playlist-facets">
+                        <span class="result-type">Playlist</span>
+                        <span class="playlist-video-count">(${playlist.videoCount} videos)</span>
+                    </div>	
+                </div>
+                <div class="playlist-clear-list-left"></div>
+                </div>	
+            </div>
+                `
     }
 }

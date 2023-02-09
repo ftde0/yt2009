@@ -16,11 +16,12 @@ module.exports = {
     "get_search": function(query, flags, params, callback, token, resetCache) {
         // request wyszukiwania i handlowanie flag
         flags = decodeURIComponent(flags)
-        query = query.split(" ").join("+").split("%20").join("+")
+        query = decodeURIComponent(query)
         if(flags.includes("only_old")) {
-            query += "+before%3A2010-04-01"
+            query += " before:2010-04-01"
         }
 
+        
         switch(encodeURIComponent(params.split("&")[0])) {
             case "EgIQAw%3D%3D": {
                 query += "!yt2009_search_type_playlist"
@@ -43,28 +44,33 @@ module.exports = {
             if(config.env == "dev") {
                 console.log(`(${token}) ${query} clean fetch ${Date.now()}`)
             }
-            fetch(`https://www.youtube.com/results?search_query=${query.split("!yt2009")[0]}&sp=${params || ""}`, {
-                "headers": {
-                    "accept-encoding": "gzip, deflate, br",
-                    "accept-language": "en-US,en;q=0.9",
-                    "dnt": 1,
-                    "sec-fetch-dest": "document",
-                    "sec-fetch-mode": "navigate",
-                    "sec-fetch-site": "same-origin",
-                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
-                }
-            }).then(r => {
-                r.text().then(response => {
-                    // parsowanie strony
-                    let ytInitialData = JSON.parse(response.split(`var ytInitialData = `)[1].split(`;</script>`)[0])
-                    let resultsToCallback = []
 
-                    resultsToCallback = yt2009utils.search_parse(ytInitialData)
-                    
-                    cache.write(query, JSON.parse(JSON.stringify(resultsToCallback)))
-                    callback(JSON.parse(JSON.stringify(resultsToCallback)))
-                })
-            })
+            // construct requestbody
+            let requestBody = {
+                "context": yt2009contants.cached_innertube_context,
+                "query": query.split("!yt2009_")[0]
+            }
+            if(params) {
+                requestBody.params = params
+            }
+
+            // send request
+            fetch(`https://www.youtube.com/youtubei/v1/search?key=${
+                yt2009exports.read().api_key
+            }`, {
+                "headers": yt2009contants.headers,
+                "referrer": "https://www.youtube.com/",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": JSON.stringify(requestBody),
+                "method": "POST",
+                "mode": "cors"
+            }).then(r => (r.json().then(r => {
+                let resultsToCallback = []
+                resultsToCallback = yt2009utils.search_parse(r)
+                
+                cache.write(query, JSON.parse(JSON.stringify(resultsToCallback)))
+                callback(JSON.parse(JSON.stringify(resultsToCallback)))
+            })))
         }
     },
 
@@ -127,12 +133,18 @@ module.exports = {
                     if(flags.includes("username_asciify")) {
                         uploaderName = yt2009utils.asciify(uploaderName)
                     }
-                    if(flags.includes("author_old_names") && video.author_url.includes("/user/")) {
+                    if(flags.includes("author_old_names")
+                    && video.author_url.includes("/user/")) {
                         uploaderName = video.author_url.split("/user/")[1]
                     }
                     let viewCount = video.views
-                    if(flags.includes("realistic_view_count") && parseInt(viewCount.replace(/[^0-9]/g,  "")) >= 100000) {
-                        viewCount = yt2009utils.countBreakup(Math.floor(parseInt(viewCount.replace(/[^0-9]/g, "")) / 90)) + " views"
+                    if(flags.includes("realistic_view_count")
+                    && parseInt(viewCount.replace(/[^0-9]/g,  "")) >= 100000) {
+                        viewCount = yt2009utils.countBreakup(
+                            Math.floor(
+                                parseInt(viewCount.replace(/[^0-9]/g, "")) / 90
+                            )
+                        ) + " views"
                     }
     
     
@@ -157,72 +169,32 @@ module.exports = {
                 case "channel": {
                     if(search_type == "playlist") return;
                     let channel = result;
-                    results_html += `
-                            <div class="channel-cell" style="height: 90px;">
-                                <div class="channel-entry yt-uix-hovercard">
-                                    <div class="user-thumb-large" style="float: left;">
-                                        <div><a href="${channel.url}"><img class="yt-uix-hovercard-target" src="${channel.avatar}"></a></div>
-                                    </div>
-                                    <div class="channel-main-content" style="float: left;margin-left: 8px;margin-top: 3px;">
-                                        <div class="channel-title">
-                                            <div class="channel-long-title"><a href="${channel.url}" title="${channel.name}" rel="nofollow">${channel.name}</a></div>
-                                        </div>
-                                        <div class="channel-facets"><span>${channel.subscribers}</span></div>
-                                    </div>
-                                </div>
-                            </div>`
+                    results_html += yt2009templates.searchChannel(
+                        channel.url,
+                        channel.avatar,
+                        channel.name,
+                        channel.subscribers
+                    )
                     break;
                 }
                 case "playlist": {
                     if(search_type == "channel") return;
                     let playlist = result;
-                    results_html += `
-                    <div class="playlist-cell" style="width:24.5%">
-                        <div class="playlist-entry yt-uix-hovercard">
-                            <div class="playlist-main-thumb">
-                                <div class="vCluster120WideEntry">
-                                    <div class="vCluster120WrapperOuter playlist-thumbnail">
-                                        <div class="vCluster120WrapperInner">
-                                            <a href="/playlist?list=${playlist.id}" rel="nofollow"><img src="${protocol}://i.ytimg.com/vi/${playlist.videos[0].id}/hqdefault.jpg" class="vimgCluster120 yt-uix-hovercard-target"></a>
-                                            <div class="video-corner-text"><span>${playlist.videos[0].length}</span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="playlist-main-content" id="playlist-main-content-DF3129C5832D6AE7">
-                                <div class="playlist-title playlist-title-results">
-                                    <div class="playlist-long-title">
-                                        <a href="/playlist?list=${playlist.id}" class="yt-uix-hovercard-target" rel="nofollow">${playlist.name}</a>
-                                        <span class="playlist-video-count">${playlist.videoCount} videos</span>
-                                    </div>
-                                </div>
-                                <div class="playlist-videos">
-                                    <ul>
-                                    `;
+                    results_html += yt2009templates.searchPlaylistEntry(
+                        playlist.id,
+                        protocol,
+                        playlist.videos,
+                        playlist.name,
+                        playlist.videoCount
+                    );
 
                     playlist.videos.forEach(video => {
-                        results_html += `
-                    <li>
-                        <div class="playlist-video">
-                            <span><a class="hLink" title="" href="/watch?v=${video.id}&list=${playlist.id}">${video.title}</a></span>
-                            <span class="playlist-video-duration">(${video.length})</span>
-                        </div>
-                    </li>`
+                        results_html += yt2009templates.searchPlaylistVideo(
+                            video, playlist
+                        )
                     })
 
-
-                    results_html += `
-                                        </ul>
-                                    </div>
-                                    <div class="playlist-facets">
-                                        <span class="result-type">Playlist</span>
-                                        <span class="playlist-video-count">(${playlist.videoCount} videos)</span>
-                                    </div>	
-                                </div>
-                                <div class="playlist-clear-list-left"></div>
-                            </div>	
-                        </div>
-                    `
+                    results_html += yt2009templates.searchPlaylistEnd(playlist)
 
                     break;
                 }
@@ -239,7 +211,10 @@ module.exports = {
             "playlist": "Playlists"
         }
 
-        code = code.replace(`<span class="yt2009-hook-${search_type}-selected search-type-not-selected"><a href="yt2009_search_${search_type}_link">${visibleNames[search_type]}</a></span>`, `<span class="yt2009-hook-${search_type}-selected search-type-selected" href="yt2009_search_${search_type}_link">${visibleNames[search_type]}</span>`)
+        code = code.replace(
+            `<span class="yt2009-hook-${search_type}-selected search-type-not-selected"><a href="yt2009_search_${search_type}_link">${visibleNames[search_type]}</a></span>`,
+            `<span class="yt2009-hook-${search_type}-selected search-type-selected" href="yt2009_search_${search_type}_link">${visibleNames[search_type]}</span>`
+        )
 
         code = code.replace(
             `yt2009_search_all_link`,
@@ -331,14 +306,19 @@ module.exports = {
                     if(watch_flags.includes("username_asciify")) {
                         authorName = yt2009utils.asciify(authorName)
                     }
-                    if(watch_flags.includes("author_old_names") && result.author_url.includes("/user/")) {
-                        authorName = result.author_url.split("/user/")[1].split("?")[0]
+                    if(watch_flags.includes("author_old_names")
+                    && result.author_url.includes("/user/")) {
+                        authorName = result.author_url.split("/user/")[1]
+                                                      .split("?")[0]
                     }
     
                     // view count flags
                     let viewCount = result.views;
-                    if(watch_flags.includes("realistic_view_count") && parseInt(viewCount.replace(/[^0-9]/g, "")) >= 100000) {
-                        viewCount = yt2009utils.countBreakup(Math.floor(parseInt(viewCount.replace(/[^0-9]/g, "")) / 90)) + " views"
+                    if(watch_flags.includes("realistic_view_count")
+                    && parseInt(viewCount.replace(/[^0-9]/g, "")) >= 100000) {
+                        viewCount = yt2009utils.countBreakup(Math.floor(
+                            parseInt(viewCount.replace(/[^0-9]/g, "")) / 90
+                        )) + " views"
                     }
     
                     related_html += yt2009templates.relatedVideo(
