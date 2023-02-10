@@ -435,6 +435,9 @@ module.exports = {
     "flashObject": function(url) {
         return `<object width="640" height="385" class="fl"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
     },
+    "html5Embed": function(id, elementId) {
+        return `<iframe id="${elementId}" allowfullscreen src="/embed/${id}"></iframe>`
+    },
     "playlist": function(name, id) {
         return `<div class="subfolder" data-id=${id}" onclick="show_playlist(this)"><a class="name" href="#">${name}</a></div>`
     },
@@ -501,5 +504,75 @@ module.exports = {
                 </div>	
             </div>
                 `
+    },
+    "playnavVideo": function(video, video_index, views, upload_date, ratings, protocol) {
+        return `
+        <div class="playnav-item playnav-video ${video_index == 0 ? "selected" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this)">
+            <div class="content">
+                <div class="playnav-video-thumb link-as-border-color">
+                    <a class="video-thumb-90 no-quicklist" href="#"><img title="${video.title.split('"').join("&quot;")}" src="${video.thumbnail.replace("http", protocol)}" class="vimg90 yt-uix-hovercard-target" alt="${video.title.split('"').join("&quot;")}"></a>
+        
+                </div>
+                <div class="playnav-video-info">
+                    <a href="#" class="playnav-item-title ellipsis"><span class="video-title-${video.id}">${video.title}</span></a>
+                    <div class="metadata video-meta-${video.id}">${views} - ${upload_date}</div>
+                    <div class="video-ratings-${video.id} hid">${utils.countBreakup(ratings)}</div>
+                </div>
+            </div>
+        </div>`
+    },
+    "html4": `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">`,
+    "channelProperty": function(p_uppercase, value) {
+        return `
+        <div class="show_info outer-box-bg-as-border">
+            <div style="float:left;font-weight:bold;">${p_uppercase}</div>
+            <div style="float:right;" id="profile_show_${p_uppercase.toLowerCase()}">${value}</div>
+            <div class="cb"></div>
+        </div>`
+    },
+    "allScrollboxPlaylistHead": `
+    <div class="playnav-playlist-header">
+        <a style="text-decoration:none" class="title title-text-color">
+            <span id="playnav-playlist-all-all-title" class="title">Playlists</span>
+        </a>
+    </div>
+    `,
+    "allScrollboxPlaylistEnd": `
+    <div class="playnav-play-column-all">
+        <div class="playnav-more"><a class="channel-cmd" href="#" onclick="switchTab('playlists', $('#playnav-navbar-tab-playlists'))">see more</a></div>
+    </div>
+    <div class="spacer">&nbsp;</div>
+    <div class="scrollbox-separator">
+        <div class="outer-box-bg-as-border"></div>
+    </div>`,
+    "playlistScrollboxHead": `
+    <div class="outer-scrollbox yt2009-scrollbox scrollbox-playlists hid">
+        <div id="playnav-play-all-items" class="inner-scrollbox">
+            <div class="playnav-playlist-header">
+                <a style="text-decoration:none" class="title title-text-color">
+                    <span id="playnav-playlist-playlists-all-title" class="title">Playlists</span>
+                </a>
+            </div>`,
+    "playlistScrollboxEnd": `
+        <div class="spacer">&nbsp;</div>
+        <div class="scrollbox-separator">
+            <div class="outer-box-bg-as-border"></div>
+        </div>
+    </div>
+    </div>`,
+    "playnavPlaylist": function(playlist, protocol) {
+        return `
+        <div class="playnav-item playnav-playlist" onclick="openPlaylist(this)" data-id="${playlist.id}">
+            <div class="content">
+                <div class="playnav-video-thumb link-as-border-color playlist-thumbnail">
+                    <a class="video-thumb-90 no-quicklist" href="#"><img src="${playlist.thumbnail.replace("http", protocol)}" class="vimg90 yt-uix-hovercard-target"></a>
+        
+                </div>
+                <div class="playnav-video-info">
+                    <a href="#" class="playnav-item-title ellipsis"><span>${playlist.name}</span></a>
+                    <div class="metadata">${playlist.videos} videos</div>
+                </div>
+            </div>
+        </div>`
     }
 }

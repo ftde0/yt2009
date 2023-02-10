@@ -1,6 +1,8 @@
 const fetch = require("node-fetch")
 const constants = require("./yt2009constants.json")
+const yt2009exports = require("./yt2009exports")
 const fs = require("fs")
+const dominant_color = require("./dominant_color")
 const tokens = [
     "afpembogo","yhjsvjg8u","7gnubmr4b","drgbz36m7","r0lkmbyu4",
     "b1kerktyk","mgx5sk71v","6jy05apcy","nn3mahwu0","xpqvx1ati",
@@ -390,6 +392,26 @@ module.exports = {
         return `/assets/${fname}.png`
     },
 
+    "get_dominant_color": function(banner, callback) {
+        let banner_fname = banner.split("/")[banner.split("/").length - 1]
+        if(!fs.existsSync(`../assets/${banner_fname}.png`)) {
+            fetch(banner, {
+                "headers": constants.headers
+            }).then(r => {r.buffer().then(buffer => {
+                fs.writeFileSync(`../assets/${banner_fname}.png`, buffer)
+                execDominantColor()
+            })})
+        } else {
+            execDominantColor()
+        }
+
+        function execDominantColor() {
+            dominant_color(`${__dirname}/../assets/${banner_fname}.png`,
+            (color) => {
+                callback(color)
+            }, 32)
+        }
+    },
 
     "isAuthorized": function(req) {
         let tr = false;
@@ -505,5 +527,260 @@ module.exports = {
             randomUsername += Math.floor(Math.random() * 90).toString()
         }
         return r;
+    },
+
+    "channelUrlMarkup": function(originalUrl) {
+        let url = ""
+        switch(originalUrl.split("/")[1]) {
+            case "user": {
+                url = "user/" + originalUrl
+                                .split("/")[2]
+                                .split("/")[0]
+                                .split("?")[0]
+                break;
+            }
+            case "channel": {
+                if(!originalUrl
+                    .split("/")[2]
+                    .split("?")[0]
+                    .toLowerCase()
+                    .startsWith("uc")) return;
+                url = "channel/" + originalUrl
+                                    .split("/")[2]
+                                    .split("/")[0]
+                                    .split("?")[0]
+                break;
+            }
+            case "c": {
+                url = "c/" + originalUrl
+                            .split("/")[2]
+                            .split("/")[0]
+                            .split("?")[0]
+                break;
+            }
+        }
+        if(originalUrl.startsWith("/@")) {
+            url = originalUrl
+            .split("/")[1]
+            .split("/")[0]
+            .split("?")[0]
+        }
+        return url
+    },
+
+    "channelGetSectionByParam": function(browseId, param, callback) {
+        fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
+            yt2009exports.read().api_key
+        }`, {
+            "headers": constants.headers,
+            "referrer": "https://www.youtube.com/",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": constants.cached_innertube_context,
+                "browseId": browseId,
+                "params": param
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            callback(r)
+        })})
+    },
+
+    "channelJumpTab": function(response, tabName) {
+        let tr = {}
+        response.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
+            if(tab.tabRenderer
+            && tab.tabRenderer.title.toLowerCase() == tabName) {
+                tr = tab.tabRenderer
+            }
+        })
+        return tr;
+    },
+
+    "parseChannelsSections": function(sections, submenu) {
+        let channels_list = {}
+
+        // use submenu for section names
+        try {
+            submenu = submenu.channelSubMenuRenderer.contentTypeSubMenuItems
+        }
+        catch(error) {}
+
+        // loop through sections
+        sections.forEach(section => {
+            let parsedSection = []
+            try {
+                let sectionContents = {}
+                let sectionName = ""
+                if(section.itemSectionRenderer.contents[0].shelfRenderer) {
+                    sectionContents = section.itemSectionRenderer
+                                             .contents[0].shelfRenderer
+                                             .content.horizontalListRenderer
+                                             .items
+                    sectionName = section.itemSectionRenderer
+                                         .contents[0].shelfRenderer.title
+                                         .runs[0].text
+                } else {
+                    sectionContents = section.itemSectionRenderer.contents[0]
+                                             .gridRenderer.items
+                    sectionName = submenu[0].title
+                }
+                sectionContents.forEach(channel => {
+                    if(channel.gridChannelRenderer) {
+                        channel = channel.gridChannelRenderer
+                    }
+                    parsedSection.push({
+                        "name": channel.title.simpleText,
+                        "avatar": channel.thumbnail.thumbnails[1].url,
+                        "id": channel.channelId,
+                        "url": channel.navigationEndpoint.browseEndpoint
+                                                         .canonicalBaseUrl
+                    })
+                })
+                channels_list[sectionName] = parsedSection
+            }
+            catch(error) {console.log(error)}
+        })
+        return channels_list;
+    },
+
+    "parseChannelPlaylists": function(section) {
+        let parsedPlaylists = []
+        if(section.gridRenderer) {
+            section.gridRenderer.items.forEach(item => {
+                if(item.gridPlaylistRenderer) {
+                    item = item.gridPlaylistRenderer
+                    let videoId = item.navigationEndpoint.watchEndpoint.videoId
+                    parsedPlaylists.push({
+                        "name": item.title.runs[0].text,
+                        "id": item.playlistId,
+                        "videos": parseInt(
+                            item.videoCountShortText.simpleText
+                        ),
+                        "thumbnail": "//i.ytimg.com/vi/"
+                                     + videoId
+                                     + "/hqdefault.jpg",
+                    })
+                }
+            })
+        }
+        return parsedPlaylists;
+    },
+
+    "createRgb": function(colors) {
+        return `rgb(${
+            Math.abs(colors[0])
+        }, ${
+            Math.abs(colors[1])
+        }, ${
+            Math.abs(colors[2])
+        })`
+    },
+
+    "bareCount": function(input) {
+        return parseInt(input.replace(/[^0-9]/g, ""))
+    },
+
+    /*
+    ========
+    flag handling for simpler things, move to this in the future
+    ========
+    */
+    "textFlags": function(input, flags, additionalInput) {
+        let tr = input;
+        if(flags.startsWith("undefined")) {
+            flags = flags.replace("undefined", "")
+        }
+        flags = flags.split(";")
+        flags.forEach(flag => {
+            switch(flag) {
+                case "remove_username_space": {
+                    if(tr.includes(" ago")) return
+                    tr = tr.split(" ").join("")
+                    break;
+                }
+                case "username_asciify": {
+                    if(tr.includes(" ago")) return
+                    tr = this.asciify(tr)
+                    break;
+                }
+                case "author_old_names": {
+                    if(additionalInput
+                    && additionalInput.startsWith("user/")) {
+                        tr = additionalInput.split("user/")[1]
+                    }
+                    break;
+                }
+            }
+        })
+        return tr;
+    },
+    
+   
+    "timeFlags": function(input, flags, additionalInput) {
+        let tr = input;
+        if(flags.startsWith("undefined")) {
+            flags = flags.replace("undefined", "")
+        }
+        flags = flags.split(";")
+        flags.forEach(flag => {
+            switch(flag) {
+                case "fake_upload_date": {
+                    tr = this.genFakeDate()
+                    break;
+                }
+            }
+        })
+        return tr;
+    },
+
+    "viewFlags": function(input, flags, additionalInput) {
+        let tr = input;
+        if(flags.startsWith("undefined")) {
+            flags = flags.replace("undefined", "")
+        }
+        flags = flags.split(";")
+        flags.forEach(flag => {
+            switch(flag) {
+                case "realistic_view_count": {
+                    let bareCount = this.bareCount(input)
+                    if(bareCount >= 100000) {
+                        let newCount = Math.floor(bareCount / 90)
+                        tr = this.countBreakup(newCount) + " views"
+                    }
+                    break;
+                }
+            }
+        })
+        return tr;
+    },
+
+    "fakeAvatarFlags": function(input, flags, additionalInput) {
+        let tr = input;
+        if(flags.startsWith("undefined")) {
+            flags = flags.replace("undefined", "")
+        }
+        flags = flags.split(";")
+        flags.forEach(flag => {
+            switch(flag) {
+                case "fake_avatar":
+                case "fake_avataralways": {
+                    tr = "/assets/site-assets/default.png"
+                    break;
+                }
+            }
+        })
+        return tr;
+    },
+
+    "estRating": function(views) {
+        let power = 15;
+        let tr = 0;
+        if(this.bareCount(views) >= 100000) {
+            power = 150;
+        }
+        tr = Math.floor(this.bareCount(views) / power)
+        return tr;
     }
 }

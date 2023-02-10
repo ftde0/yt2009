@@ -27,12 +27,9 @@ const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
 
-const use_external_storage = false;
-const external_storage_server = "";
-
 const https = require("https")
 const fs = require("fs")
-const updateDate = "05.11.2022"
+const updateDate = "15.02.2023"
 const app = express();
 app.use(express.raw({
     "type": () => true
