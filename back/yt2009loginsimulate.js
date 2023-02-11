@@ -38,11 +38,10 @@ module.exports = function(req, code) {
         flags = req;
     }
 
-    flags = flags.split(";").join(":")
-
     let loggedInUsername = false;
 
     try {
+        flags = flags.split(";").join(":")
         flags.split(":").forEach(flag => {
             if(flag.includes("login_simulate")) {
                 loggedInUsername = flag.split("login_simulate")[1];

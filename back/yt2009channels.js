@@ -230,7 +230,7 @@ module.exports = {
 
         // fallback: no videos tab (eg topic channels)
         if(!videosTabAvailable) {
-            additionalFetchesCompleted++
+            additionalFetchesCompleted = fetchesRequired
             try {
                 r.contents.twoColumnBrowseResultsRenderer.tabs[1].tabRenderer
                  .content.sectionListRenderer.contents[0].itemSectionRenderer
@@ -248,7 +248,6 @@ module.exports = {
                         })
                     }
                 })
-                onVideosCreate()
             }
             catch(error) {
                 try {
@@ -270,8 +269,8 @@ module.exports = {
                     })
                 }
                 catch(error) {}
-                onVideosCreate()
             }
+            onVideosCreate()
         }
 
         // exec when videos are done fetching
@@ -343,11 +342,14 @@ module.exports = {
                     markCompleteStep()
                 })
             }
+        } else {
+            markCompleteStep()
         }
 
        // friends
        let channels_list = {}
-       if(n_impl_yt2009channelcache.read("friend")[data.id]) {
+       if(n_impl_yt2009channelcache.read("friend")[data.id]
+       || !data.tabParams) {
             markCompleteStep()
         } else {
             if(data.tabParams["channels"]) {
@@ -376,7 +378,8 @@ module.exports = {
 
         // playlists
         let playlist_list = {}
-        if(n_impl_yt2009channelcache.read("playlist")[data.id]) {
+        if(n_impl_yt2009channelcache.read("playlist")[data.id]
+        || !data.tabParams) {
             markCompleteStep()
         } else {
             if(data.tabParams["playlists"]) {
@@ -456,6 +459,7 @@ module.exports = {
 
         // custom colors
         // main background
+        console.log(data.dominant_color)
         let mainBg = yt2009utils.createRgb([
             data.dominant_color[0] + 20,
             data.dominant_color[1] + 20,
@@ -1130,7 +1134,6 @@ module.exports = {
                 }
 
 
-
                 stepsTaken++
                 if(stepsRequiredToCallback == stepsTaken) {
                     try{callback(code)}catch(error){}
@@ -1138,8 +1141,8 @@ module.exports = {
             }), (req.query.resetcache == 1 || req.query.resetwayback == 1))
         }
 
-        
-        if(stepsRequiredToCallback == stepsTaken) {
+
+        if(stepsRequiredToCallback <= stepsTaken) {
             try{callback(code)}catch(error){}
         }
     },

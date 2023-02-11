@@ -95,7 +95,7 @@ module.exports = function(req, res) {
     })
 
     // shows tab
-    if(req.headers.cookie.includes("shows_tab")) {
+    if((req.headers.cookie || "").includes("shows_tab")) {
         code = code.replace(`<a href="/channels">Channels</a>`, `<a href="/channels">Channels</a><a href="#">Shows</a>`)
     }
     

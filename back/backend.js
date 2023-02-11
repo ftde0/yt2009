@@ -101,6 +101,8 @@ app.get("/watch", (req, res) => {
         res.redirect("/unauth.htm")
         return;
     }
+    req = yt2009_utils.addFakeCookie(req)
+
     let id = req.query.v
     let useFlash = false;
     let resetCache = false;
@@ -866,7 +868,7 @@ app.get("/get_video", (req, res) => {
 
 /*
 ======
-/videos, /channels
+/videos, /videos rss /channels
 ======
 */
 app.get("/videos", (req, res) => {
@@ -874,6 +876,9 @@ app.get("/videos", (req, res) => {
 })
 app.get("/channels", (req, res) => {
     yt2009_channels_page.apply(req, res)
+})
+app.get("/videos-rss", (req, res) => {
+    yt2009_videos_page.create_rss(req, res)
 })
 
 /*

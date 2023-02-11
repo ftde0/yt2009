@@ -630,13 +630,15 @@ module.exports = {
                     if(channel.gridChannelRenderer) {
                         channel = channel.gridChannelRenderer
                     }
-                    parsedSection.push({
-                        "name": channel.title.simpleText,
-                        "avatar": channel.thumbnail.thumbnails[1].url,
-                        "id": channel.channelId,
-                        "url": channel.navigationEndpoint.browseEndpoint
-                                                         .canonicalBaseUrl
-                    })
+                    if(channel.title) {
+                        parsedSection.push({
+                            "name": channel.title.simpleText,
+                            "avatar": channel.thumbnail.thumbnails[1].url,
+                            "id": channel.channelId,
+                            "url": channel.navigationEndpoint.browseEndpoint
+                                                             .canonicalBaseUrl
+                        })
+                    }
                 })
                 channels_list[sectionName] = parsedSection
             }
@@ -782,5 +784,12 @@ module.exports = {
         }
         tr = Math.floor(this.bareCount(views) / power)
         return tr;
+    },
+
+    "addFakeCookie": function(req) {
+        if(!req.headers.cookie) {
+            req.headers.cookie = ""
+        }
+        return req;
     }
 }

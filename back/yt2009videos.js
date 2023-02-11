@@ -3,7 +3,7 @@
 /videos handler
 =======
 
-yt2009, 2022
+yt2009, 2022-2033
 */
 
 const yt2009html = require("./yt2009html")
@@ -11,6 +11,7 @@ const utils = require("./yt2009utils")
 const fs = require("fs")
 const page = fs.readFileSync("../videos.htm").toString()
 const templates = require("./yt2009templates")
+const config = require("./config.json")
 const category_numbers = {
     "0": "All Categories",
     "2": "Autos & Vehicles",
@@ -66,24 +67,15 @@ module.exports = {
         let categoryNumber = req.query.c || "0"
         let categoryName = category_numbers[categoryNumber]
 
-        code = require("./yt2009loginsimulate")(req, code)
-
-        // wybrana kategoria
-        code = code.replace(
-            "hook-category-" + categoryNumber,
-            "category-selected hook-category-" + categoryNumber
-        )
-        code = code.replace("yt2009_category_name", categoryName)
-
-        // filmy
+        // sorting option
         let sortByPopular = true;
         if(req.query.s == "mr") {
             sortByPopular = false;
         }
 
+        // add video bare html
         let videosHTML = ``
         function addVideo(video) {
-
             let views = video.views;
             if(flags.includes("realistic_view_count")
             && parseInt(views.replace(/[^0-9]/g, "")) >= 100000) {
@@ -102,17 +94,15 @@ module.exports = {
                 flags
             )
         }
-        if(!sortByPopular) {
-            // bez sortowania
-            let index = 0;
-            yt2009html.featured().forEach(video => {
-                if(video.category !== categoryName
-                && parseInt(categoryNumber) !== 0
-                || index > 23) return;
-                addVideo(video)
-                index++;
-            })
 
+        // get matching videos
+        let videos = this.internal_getVideos(req, flags)
+        videos.forEach(video => {
+            addVideo(video)
+        })
+
+        // apply selected options to html
+        if(!sortByPopular) {
             code = code.replace(
                 `<!--yt2009_popular-->`,
                 `<a href="/videos">Popular</a>`
@@ -126,7 +116,73 @@ module.exports = {
                 `selected`
             )
         } else {
-            // sortujemy od najbardziej popularnych (najwięcej wyświetleń)
+            code = code.replace(
+                `<!--yt2009_popular-->`,
+                `<span>Popular</span>`
+            )
+            code = code.replace(
+                `<!--yt2009_recent_videos-->`,
+                `<a href="?s=mr">Recent Videos</a>`
+            )
+            code = code.replace(
+                `yt2009-hook-selected-pop`,
+                `selected`
+            )
+        }
+
+        // selected category
+        code = code.replace(
+            "hook-category-" + categoryNumber,
+            "category-selected hook-category-" + categoryNumber
+        )
+        code = code.replace("yt2009_category_name", categoryName)
+        
+        code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
+
+        // rss this page button
+        code = code.split("yt2009_rss_button").join(
+            `http://${config.ip}:${config.port}${
+                req.originalUrl.replace("/videos", "/videos-rss")
+            }`
+        )
+
+        // finalize
+        code = require("./yt2009loginsimulate")(req, code)
+        res.send(code)
+    },
+
+    "internal_getVideos": function(req, flags) {
+        // category & sorting options
+        let categoryNumber = req.query.c || "0"
+        let categoryName = category_numbers[categoryNumber]
+        let sortByPopular = true;
+        if(req.query.s == "mr") {
+            sortByPopular = false;
+        }
+        let videos = []
+        function addVideo(video) {
+            let views = utils.viewFlags(video.views, flags);
+
+            videos.push({
+                "id": video.id,
+                "title": video.title,
+                "uploaderName": video.uploaderName,
+                "uploaderUrl": video.uploaderUrl,
+                "views": views,
+            })
+        }
+        if(!sortByPopular) {
+            // no sorting (latest)
+            let index = 0;
+            yt2009html.featured().forEach(video => {
+                if(video.category !== categoryName
+                && parseInt(categoryNumber) !== 0
+                || index > 23) return;
+                addVideo(video)
+                index++;
+            })
+        } else {
+            // sort by most popular, then add
             let index = 0;
             let baseVideos = JSON.parse(JSON.stringify(yt2009html.featured()))
             let tempArray = []
@@ -157,58 +213,48 @@ module.exports = {
                 addVideo(video)
                 index++;
             })
-
-            code = code.replace(
-                `<!--yt2009_popular-->`,
-                `<span>Popular</span>`
-            )
-            code = code.replace(
-                `<!--yt2009_recent_videos-->`,
-                `<a href="?s=mr">Recent Videos</a>`
-            )
-            code = code.replace(
-                `yt2009-hook-selected-pop`,
-                `selected`
-            )
         }
-        
 
-        code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
-
-        code = require("./yt2009loginsimulate")(req, code)
-
-        res.send(code)
+        return videos;
     },
+
     "create_rss": function(req, res) {
-        let rssCode = `
-<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
-
-<channel>
-  <title>yt2009 videos</title>
-  <link>https://orzeszek.website:5317/videos</link>
+        let rssCode = `<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:atom='http://www.w3.org/2005/Atom' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' version='2.0'>
+    <channel>
+        <description></description>
+        <title>yt2009 videos</title>
+        <link>http://${config.ip}:${config.port}/videos</link>
+        <managingEditor>yt2009</managingEditor>
+        <!--yt2009-videos-->
+    </channel>
+</rss>`
+/*<title>yt2009 videos</title>
+  <link>http://${config.ip}:${config.port}/videos</link>
   <description>yt2009 /videos</description>
-  <!--yt2009-videos-->
-</channel>
-
-</rss> `
-        let index = 0;
-        let categoryNumber = req.query.c || "0"
+  <description></description>
+  <atom:id>http://${config.ip}:${config.port}${req.originalUrl}</atom:id>
+  <managingEditor>yt2009</managingEditor>
+  <!--yt2009-videos-->*/
         let rssVideos = ``
         function addVideo(video) {
             rssVideos += `
-  <item>
-    <title>${video.title}</title>
-    <link>https://orzeszek.website:5317/watch?v=${video.id}</link>
-    <description> </description>
-  </item>`
+        <item>
+            <title>${video.title}</title>
+            <link>http://${config.ip}:${config.port}/watch?v=${video.id}</link>
+            <description> </description>
+            <author> </author>
+            <category domain='http://schemas.google.com/g/2005#kind'>http://gdata.youtube.com/schemas/2007#video</category>
+        </item>`
         }
-        yt2009html.featured().forEach(video => {
-            if(parseInt(categoryNumber) !== 0
-            || index > 23) return;
+
+
+        let videos = this.internal_getVideos(req, "")
+        videos.forEach(video => {
             addVideo(video)
-            index++;
         })
+
         rssCode = rssCode.replace("<!--yt2009-videos-->", rssVideos)
+        res.send(rssCode)
     }
 }
