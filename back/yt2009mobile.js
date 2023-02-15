@@ -7,8 +7,7 @@ const child_process = require("child_process")
 const config = require("./config.json")
 const env = config.env
 // todo: generalize soon
-const rtsp_server = env == "dev" ? "rtsp://192.168.1.5:5318/"
-                            : "rtsp://ftde-projects.tk:5318/"
+const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 
 const watchpage_html = fs.readFileSync("../mobile/watchpage.htm").toString();
 const search_html = fs.readFileSync("../mobile/search.htm").toString()

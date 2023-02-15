@@ -9,6 +9,7 @@ module.exports = {
             res.send("")
             return;
         }
+        req = utils.addFakeCookie(req)
         const content = fs.readFileSync("../static_pages/cropped/" + path_to_content)
         let site = header + content + footer
 

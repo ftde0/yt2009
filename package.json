@@ -1,0 +1,24 @@
+{
+  "name": "yt2009",
+  "version": "1.10.0",
+  "description": "2009 frontend for youtube",
+  "main": "back/backend.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "2009",
+    "youtube",
+    "yt2009",
+    "frontend"
+  ],
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "express": "latest",
+    "ytdl-core": "latest",
+    "node-html-parser": "^5.3.3",
+    "readline-sync": "^1.4.10"
+  },
+  "author": "dxegom",
+  "license": "ISC"
+}

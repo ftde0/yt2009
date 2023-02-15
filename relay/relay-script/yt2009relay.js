@@ -10,7 +10,8 @@ let userdata = {
     "itContext": {},
     "session": "",
     "usernameCache": "",
-    "handleCache": "@h"
+    "handleCache": "@h",
+    "uiSettings": []
 }
 if(fs.existsSync("userdata.json")) {
     userdata = JSON.parse(fs.readFileSync("userdata.json").toString())
@@ -165,7 +166,6 @@ app.post("/apply_relay_settings", (req, res) => {
             userdata.itKey,
             (data) => {
                 guideCache = data;
-                fs.writeFileSync("test.json", JSON.stringify(data))
                 applySettings()
             }
         )
@@ -187,21 +187,29 @@ app.post("/apply_relay_settings", (req, res) => {
                     // I HATE THIS.
                     guideCache.items.forEach(item => {
                         if(item.guideSectionRenderer) {
-                            item.guideSectionRenderer.items.forEach(
-                                sectionRenderer => {
-                                if(sectionRenderer
-                                   .guideCollapsibleSectionEntryRenderer) {
-                                    sectionRenderer
-                                    .guideCollapsibleSectionEntryRenderer
+                            item.guideSectionRenderer.items.forEach(sectionRenderer => {
+                                if(sectionRenderer.guideCollapsibleSectionEntryRenderer) {
+                                    sectionRenderer.guideCollapsibleSectionEntryRenderer
                                     .sectionItems.forEach(sectionItem => {
-                                        if(sectionItem
-                                           .guideCollapsibleEntryRenderer) {
+                                        try {
+                                            if(sectionItem.guideEntryRenderer
+                                            && sectionItem.guideEntryRenderer
+                                            .icon.iconType == "PLAYLISTS") {
+                                                playlists.push({
+                                                    "name": item.formattedTitle.simpleText,
+                                                    "id": item.entryData
+                                                              .guideEntryData.guideEntryId
+                                                })
+                                            }
+                                        }
+                                        catch(error) {console.log(error)}
+                                        if(sectionItem.guideCollapsibleEntryRenderer) {
                                             handleExpandableItems(
-                                                sectionItem
-                                                .guideCollapsibleEntryRenderer
-                                                .expandableItems
+                                                sectionItem.guideCollapsibleEntryRenderer
+                                                           .expandableItems
                                             )
                                         }
+                                        
                                     })
                                 }
                             })
@@ -288,6 +296,19 @@ app.post("/apply_relay_settings", (req, res) => {
 
 /*
 =======
+get settings
+=======
+*/
+app.get("/relay_settings", (req, res) => {
+    if(req.headers.auth !== userdata.code || !userdata.usernameCache) {
+        res.sendStatus(401)
+        return;
+    }
+    res.send(userdata.uiSettings)
+})
+
+/*
+=======
 comment
 =======
 */
@@ -325,4 +346,115 @@ app.post("/comment_post", (req, res) => {
             })})
         }, 1753)
     })
+})
+
+/*
+=======
+add to playlist
+=======
+*/
+function addToPlaylist(playlistId, videoId, callback) {
+    setTimeout(function() {
+        fetch(`https://www.youtube.com/youtubei/v1/browse/edit_playlist?key=${userdata.itKey}`, {
+            "headers": utils.createInnertubeHeaders(
+                config.cookie,
+                userdata.itContext,
+                userdata.session,
+                config.useragent
+            ),
+            "method": "POST",
+            "body": JSON.stringify({
+                "context": userdata.itContext,
+                "playlistId": playlistId,
+                "actions": [
+                    {
+                        "action": "ACTION_ADD_VIDEO",
+                        "addedVideoId": videoId
+                    }
+                ]
+            })
+        }).then(r => {r.json().then(r => {
+            callback()
+            console.log(`video ${videoId} added to ${playlistId} via relay`)
+        })})
+    }, 1753)
+}
+
+
+app.post("/playlist_add", (req, res) => {
+    if(req.headers.auth !== userdata.code || !userdata.usernameCache
+    || !userdata.uiSettings.includes("relay-playlists-sync")) {
+        res.sendStatus(401)
+        return;
+    }
+    let playlistId = JSON.parse(req.body.toString()).playlistId
+    let videoId = req.headers.source.split("v=")[1].split("&")[0].split("#")[0]
+    let playlistPartOfRelay = false;
+    userdata.playlists.forEach(playlist => {
+        if(playlist.id == playlistId) {
+            playlistPartOfRelay = true;
+        }
+    })
+
+    // if playlist doesn't belong to relay, send 404
+    if(!playlistPartOfRelay) {
+        res.sendStatus(404)
+        return;
+    }
+
+    // add!!
+    addToPlaylist(playlistId, videoId, () => {
+        res.sendStatus(200)
+    })
+})
+
+/*
+=======
+favorites
+=======
+*/
+app.post("/favorites_add", (req, res) => {
+    if(req.headers.auth !== userdata.code || !userdata.usernameCache
+    || !uiSettings.includes("relay-create-favorites")) {
+        res.sendStatus(401)
+        return;
+    }
+
+    let videoId = req.headers.source.split("v=")[1].split("&")[0].split("#")[0]
+
+    let favoritesId = false;
+    userdata.playlists.forEach(playlist => {
+        if(playlist.name == "Favorites") {
+            favoritesId = playlist.id
+        }
+    })
+
+    // if no favorites playlist, create one
+    if(!favoritesId) {
+        fetch(`https://www.youtube.com/youtubei/v1/playlist/create?key=${userdata.itKey}`, {
+            "headers": utils.createInnertubeHeaders(
+                config.cookie,
+                userdata.itContext,
+                userdata.session,
+                config.useragent
+            ),
+            "method": "POST",
+            "body": JSON.stringify({
+                "context": userdata.itContext,
+                "privacyStatus": "UNLISTED",
+                "title": "Favorites",
+                "videoIds": [videoId]
+            })
+        }).then(r => {r.json().then(r => {
+            callback()
+            console.log(`relay: created a Favorites playlist and added ${videoId} to it!`)
+            res.send(JSON.stringify({
+                "relayCommand": "resync", 
+            }))
+        })})
+    } else {
+        addToPlaylist(favoritesId, videoId, () => {
+            res.send("{}")
+        })
+    }
 })

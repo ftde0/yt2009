@@ -103,9 +103,17 @@ module.exports = {
 
         // apply selected options to html
         if(!sortByPopular) {
+            let popUrl = req.originalUrl
+            if(popUrl.includes("s=mr")) {
+                popUrl = popUrl.replace("s=mr", "s=pop")
+            } else if(popUrl.includes("?")) {
+                popUrl += "&s=pop"
+            } else {
+                popUrl += "?s=pop"
+            }
             code = code.replace(
                 `<!--yt2009_popular-->`,
-                `<a href="/videos">Popular</a>`
+                `<a href="${popUrl}">Popular</a>`
             )
             code = code.replace(
                 `<!--yt2009_recent_videos-->`,
@@ -116,13 +124,21 @@ module.exports = {
                 `selected`
             )
         } else {
+            let mrUrl = req.originalUrl
+            if(mrUrl.includes("s=pop")) {
+                mrUrl = mrUrl.replace("s=pop", "s=mr")
+            } else if(mrUrl.includes("?")) {
+                mrUrl += "&s=mr"
+            } else {
+                mrUrl += "?s=mr"
+            }
             code = code.replace(
                 `<!--yt2009_popular-->`,
                 `<span>Popular</span>`
             )
             code = code.replace(
                 `<!--yt2009_recent_videos-->`,
-                `<a href="?s=mr">Recent Videos</a>`
+                `<a href="${mrUrl}">Recent Videos</a>`
             )
             code = code.replace(
                 `yt2009-hook-selected-pop`,

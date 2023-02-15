@@ -3,24 +3,8 @@ const constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const fs = require("fs")
 const dominant_color = require("./dominant_color")
-const tokens = [
-    "afpembogo","yhjsvjg8u","7gnubmr4b","drgbz36m7","r0lkmbyu4",
-    "b1kerktyk","mgx5sk71v","6jy05apcy","nn3mahwu0","xpqvx1ati",
-    "c017equoo","64eisoh0g","u8pp4s6si","szwis7e82","hm3lk3fbk",
-    "sy66udgeh","3zlbf0b1m","b7nsl6y6z","lclzpq4na","pbldqsud4",
-    "txhss09v4","q8f5168pr","qf9892j7e","azi3ia0b2","aginouadg",
-    "iipnqquqx","dsm34qwe2","bfi5oh2wn","g3z9g0vl6","zp1ba70zk",
-    "2gel64s2w","l23smuu1z","zlf9bx78p","75hl58cpp","a4axdlso1",
-    "kuvjo5hmq","7o6uiqjx3","gjyotd7h8","vocqjn2ux","j8t8iai6g",
-    "xz6fir3zs","2luillzrr","qcoazyewg","ibjkiqy2i","mn8lplfat",
-    "zjiohvu7v","prs1r3uuw","5fmdmal15","k5pa845jf","e3fumzlxq",
-    "a8ym4mch6","0fj3id73s","oew6wjts9","3kf0wq9tb","5lno4huoi",
-    "5esyzkgsd","tbo59b7oa","uyk9rmmde","ayk0clg6i","iuvpe3zam",
-    "vfhz32ft0","bs9rngfjz","pq1ldqgn3","ynpfm0s41","6z7j7a2j7",
-    "vbju5fy8f","dvp8ep4zj","euigooew4","yo3duyi3r","l2zqy2qkj",
-    "tnb_d3v","g3n_d3m"
-]
 const config = require("./config.json")
+const tokens = config.tokens || ["amogus"]
 let ip_uses_flash = []
 
 module.exports = {

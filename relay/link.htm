@@ -256,7 +256,7 @@
 
 
 			var r = new XMLHttpRequest();
-			r.open("POST", host + "apply_relay_settings")
+			r.open("POST", host + "apply_relay_settings?timestamp=" + Date.now())
 			r.setRequestHeader("auth", get_relay_key())
 			r.send(JSON.stringify({
 				"settings": settings

@@ -25,6 +25,7 @@ module.exports = {
             callback(cacheList.bannerCache[channelUrl])
         } else {
             // clean fetch the channel for banner
+            
             fetch(`https://www.youtube.com/${channelUrl}`, {
                 "headers": constants.headers
             }).then(r => {r.text().then(res => {
@@ -51,10 +52,6 @@ module.exports = {
                 } else {
                     cacheList.bannerCache[channelUrl] = "no"
                     callback("no")
-                }
-
-                function scaleImg(file) {
-                    child_process.execSync(`convert "${file_path}" +dither -colors 2 -define histogram:unique-colors=true -format "%c" histogram:info: | sort ${process.platform == "linux" ? "-n" : ""}`)
                 }
             })})
         }

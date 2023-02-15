@@ -759,16 +759,18 @@ function addPlaylistVideo(playlistId) {
         "time": $(".timer").innerHTML.split("/ ")[1]
     }
 
+    // relay if used
+    relayPlaylistAdd(playlistId)
+    
+    // show success tick
+    $("#addToPlaylistResult").style.display = "block"
+    $("#addToPlaylistDiv").style.display = "none"
+
     var playlist = JSON.parse(localStorage["playlist-" + playlistId])
     if(JSON.stringify(playlist).indexOf(currentId) == -1) {
         playlist.unshift(videoData)
     }
     localStorage["playlist-" + playlistId] = JSON.stringify(playlist)
-
-
-    // pokaż success tick
-    $("#addToPlaylistResult").style.display = "block"
-    $("#addToPlaylistDiv").style.display = "none"
 }
 
 // pokaż z powrotem kartę dodawania do playlisty
@@ -1002,5 +1004,52 @@ function relayFavorite() {
     r.open("POST", relay_address + "favorite_video")
     r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
     r.setRequestHeader("source", location.href)
-    
+    r.addEventListener("load", function(e) {
+        var res = JSON.parse(r.responseText)
+        // resync required to track the new favorites playlist
+        // that may have been created
+        if(res.relayCommand == "resync") {
+            relayResync()
+        }
+    }, false)
+}
+
+/*
+======
+relay resync
+======
+*/
+function relayResync() {
+    var settings;
+    var r = new XMLHttpRequest();
+    r.open("GET", relay_address + "relay_settings")
+    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
+    r.addEventListener("load", function(e) {
+        settings = JSON.parse(r.responseText)
+        r = new XMLHttpRequest();
+        r.open("POST", relay_address + "apply_relay_settings")
+        r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
+        r.send(JSON.stringify({
+            "settings": settings
+        }))
+        r.addEventListener("load", function(e) {}, false)
+    }, false)
+}
+
+/*
+======
+playlists with relay
+======
+*/
+function relayPlaylistAdd(playlistId) {
+    var r = new XMLHttpRequest();
+    r.open("POST", relay_address + "playlist_add")
+    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
+    r.setRequestHeader("source", location.href)
+    r.send(JSON.stringify({
+        "playlistId": playlistId
+    }))
+    r.addEventListener("load", function(e) {
+        
+    }, false)
 }

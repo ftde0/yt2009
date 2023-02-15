@@ -3,12 +3,9 @@ const readline = require("readline-sync")
 let cfg = {}
 
 console.log(`
-[yt2009] yt2009 setup:
-- first, you will be asked a few questions to fill up the configuration file,
-- then, some dependencies will be installed,
-- some original yt files will be downloaded,
-- and finally, a start script will be made
-  in the same directory you are in right now.`)
+
+
+[yt2009] yt2009 setup`)
 
 
 // port
@@ -41,9 +38,9 @@ cfg.env = env;
 let ip = ""
 console.log(`
 what IP should be used where it needs to be coded in?
-(ex. the flash player related)
+(eg. the flash player related)
 preferably use your IP you will use to connect to yt2009. localhost/127.0.0.1
-isn't recommended because it will break as soon as you use a different pc.`)
+isn't recommended because it may break as soon as you use a different pc.`)
 ip = readline.question("IP address: ")
 cfg.ip = ip;
 

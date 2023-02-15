@@ -51,19 +51,51 @@ var languageData_EN = {
     },
 
     "elements": {
-        "#i_header": "yt2009 flags<br>each one of those flags change functionality in some way. hover over a flag's checkbox to see the flag description.<br>this function requires cookies to be enabled, so if it doesn't work, check that first.<br><br>if you want to use a flag only once, add a flags parameter to the URL.",
+        "#i_header": "yt2009 flags<br>\
+        each one of those flags change functionality in some way. hover over a flag's checkbox to see the flag description.\
+        <br>this function requires cookies to be enabled, so if it doesn't work, check that first.\
+        <br><br>if you want to use a flag only once, add a flags parameter to the URL.",
+
         "#watch-share-expander": "(possible values)",
         "#watch-upload-expander": "(possible values)",
         "#watch-avatar-expander": "(possible values)",
         "#watch-wayback-expander": "(possible values)",
-        "#watch-fake-upload-date-expander": "fake_upload_date mode:<br>- adapt - sets a 2009 upload date only if a video was uploaded after April 2010<br>- always - the same way this flag used to work - set a 2009 date regardless of the video.<br>setting anything else/leaving the mode box empty will be treated as always.",
-        "#watch-share-behavior-expander": "share_behavior modes:<br>- only_remove - removes services that are non-functional<br>- only_add - only adds new services<br>- both - removes &amp; and adds services",
-        "#watch-default-avatar-expander": "default_avatar modes:<br>- adapt - shows a default avatar only if the current avatar is default<br>- always - sets a default avatar regardless of the current uploader's avatar.<br>(leaving this box empty/setting anything else will be treated as always).",
-        "#watch-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, ex. <code>related+metadata</code>.<br>- metadata - main video data - title, description, tags<br>- author - name, avatar of the creator<br>- related - adds related videos, filters dead links<br>- comments - will show comments from the save<br><b>wayback_features will not work for videos uploaded after 2013-01-01.</b>",
+        "#channel-wayback-expander": "(possible values)",
+
+        "#watch-fake-upload-date-expander": "fake_upload_date mode:\
+        <br>- adapt - sets a 2009 upload date only if a video was uploaded after April 2010\
+        <br>- always - the same way this flag used to work - set a 2009 date regardless of the video.\
+        <br>setting anything else/leaving the mode box empty will be treated as always.",
+
+        "#watch-share-behavior-expander": "share_behavior modes:\
+        <br>- only_remove - removes services that are non-functional\
+        <br>- only_add - only adds new services\
+        <br>- both - removes &amp; and adds services",
+
+        "#watch-default-avatar-expander": "default_avatar modes:\
+        <br>- adapt - shows a default avatar only if the current avatar is default\
+        <br>- always - sets a default avatar regardless of the current uploader's avatar.\
+        <br>(leaving this box empty/setting anything else will be treated as always).",
+
+        "#watch-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, ex. <code>related+metadata</code>.\
+        you can also type <code>all</code> to use them all at once.\
+        <br>- metadata - main video data - title, description, tags\
+        <br>- author - name, avatar of the creator\
+        <br>- related - adds related videos, filters dead links\
+        <br>- comments - will show comments from the save\
+        <br><b>wayback_features will not work for videos uploaded after 2013-01-01.</b>",
+
         "#i_exp_notice": "flags starting with \"exp_\" are experimental and may not always work. bug reports appreciated.",
         "#i_all_pages": "these flags work with all pages. they may behave in a different way than the other ones.",
         "#i_save": "save",
-        "#default-avatar-notice": "check default_avatar in /watch for possible values"
+        "#default-avatar-notice": "check default_avatar in /watch for possible values",
+
+        "#channel-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, ex. <code>fields+comments</code>.\
+        you can also type <code>all</code> to use them all at once.<br>\
+        - fields - one-line information visible on the left side, usually filled by the creator, like a website link or a description<br>\
+        - basic - basic channel data, such as avatar and colors<br>\
+        - sections - subscriptions and friends sections if present<br>\
+        - comments - channel comments"
     },
 
     "placeholders": {
@@ -72,6 +104,7 @@ var languageData_EN = {
         "watch-default-avatar-input": "mode",
         "watch-wayback-features-input": "mode",
         "channel-default-avatar-input": "mode",
+        "channel-wayback-features-input": "mode",
         "global-login-simulate-input": "username"
     }
 }

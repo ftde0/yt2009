@@ -16,6 +16,7 @@ module.exports = {
             res.send("")
             return;
         }
+        req = utils.addFakeCookie(req)
         
         let code = page;
 
