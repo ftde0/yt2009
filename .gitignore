@@ -4,6 +4,7 @@ assets/*.ogg
 assets/*.flv
 assets/*.png
 assets/*.jpg
+assets/*.3gp
 back/cache_dir/annotations/*
 back/cache_dir/*.json
 back/config.json

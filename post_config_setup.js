@@ -177,7 +177,7 @@ let files = [
     },
     {
         "url": "https://s.ytimg.com/yt/img/annotations_icon-vfl78622.gif",
-        "path": "./assets/site-assets/annotations_editor_switch-vfl78622.gif"
+        "path": "./assets/site-assets/annotations_icon-vfl78622.gif"
     },
     {
         "url": "https://s.ytimg.com/yt/img/arrow_dropdown-vfl29016.gif",
