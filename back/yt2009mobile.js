@@ -6,7 +6,6 @@ const fs = require("fs")
 const child_process = require("child_process")
 const config = require("./config.json")
 const env = config.env
-// todo: generalize soon
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 
 const watchpage_html = fs.readFileSync("../mobile/watchpage.htm").toString();
@@ -23,7 +22,7 @@ module.exports = {
             }
 
             let code = watchpage_html;
-            code = code.replace(`yt2009_id`, data.id)
+            code = code.split(`yt2009_id`).join(data.id)
             code = code.replace(`yt2009_title`, data.title)
             code = code.replace(`yt2009_description`, data.description)
             code = code.replace(`yt2009_length`, utils.seconds_to_time(data.length))
@@ -113,14 +112,15 @@ module.exports = {
         if(!fs.existsSync(`../assets/${fileName}`)
         && fs.existsSync(`../assets/${id}.mp4`)) {
             let streamId = Math.floor(Math.random() * 37211)
-            child_process.execSync(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -ac 1 -c:v libx264 -s 256x144 ${__dirname}/../assets/${fileName}`)
+            child_process.execSync(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -ac 1 -acodec aac -c:v libx264 -s 256x144 ${__dirname}/../assets/${fileName}`)
             child_process.exec(`ffmpeg -re -i ${__dirname}/../assets/${fileName} ${mute ? "-an" : ""} -f rtsp -rtsp_transport udp ${rtsp_server}video/${id}-${streamId}`, (error, stdout, stderr) => {
                 
             })
             res.redirect(`${rtsp_server}video/${id}-${streamId}`)
         } else if(fs.existsSync(`../assets/${fileName}`)) {
+            console.log(`../assets/${fileName}`)
             let streamId = Math.floor(Math.random() * 37211)
-            child_process.exec(`ffmpeg -re -i ${__dirname}/../assets/${fileName} ${mute ? "-an" : ""} -f rtsp -acodec aac -rtsp_transport udp ${rtsp_server}video/${id}-${streamId}`, (error, stdout, stderr) => {
+            child_process.exec(`ffmpeg -re -i ${__dirname}/../assets/${fileName} ${mute ? "-an" : ""} -f rtsp -rtsp_transport udp  ${rtsp_server}video/${id}-${streamId}`, (error, stdout, stderr) => {
                 
             })
             res.redirect(`${rtsp_server}video/${id}-${streamId}`)

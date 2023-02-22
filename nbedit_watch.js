@@ -521,6 +521,12 @@ dodawanie filmów do ulubionych
 // kod taktycznie z kanałów zabrany
 // dodawanie
 function favorite_video() {
+    try {
+        relayFavorite()
+    }
+    catch(error) {}
+
+
     var currentId = $(".email-video-url").value.split("?v=")[1]
     var favorites = ""
     if(useLocalStorage) {
@@ -1004,12 +1010,15 @@ function relayFavorite() {
     r.open("POST", relay_address + "favorite_video")
     r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
     r.setRequestHeader("source", location.href)
+    r.send(null)
     r.addEventListener("load", function(e) {
         var res = JSON.parse(r.responseText)
         // resync required to track the new favorites playlist
         // that may have been created
         if(res.relayCommand == "resync") {
-            relayResync()
+            setTimeout(function() {
+                relayResync()
+            }, 1024)
         }
     }, false)
 }
@@ -1024,6 +1033,7 @@ function relayResync() {
     var r = new XMLHttpRequest();
     r.open("GET", relay_address + "relay_settings")
     r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
+    r.send(null)
     r.addEventListener("load", function(e) {
         settings = JSON.parse(r.responseText)
         r = new XMLHttpRequest();
