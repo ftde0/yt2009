@@ -83,6 +83,8 @@ for(let file in cacheFiles) {
     }
 }
 
+fs.mkdirSync("./back/cache_dir/annotations/")
+
 /*
 =======
 generate innertube data
