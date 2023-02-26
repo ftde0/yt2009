@@ -574,5 +574,46 @@ module.exports = {
                 </div>
             </div>
         </div>`
+    },
+    "mobile_video": function(video) {
+        console.log(video)
+        return `
+            <table width="100%">
+                <tr valign="top">
+                    <td style="font-size:0px" width="80">
+                        <a href="watch?v=${video.id}"><img src="http://i.ytimg.com/vi/${video.id}/hqdefault.jpg" alt="video" width="80" height="60" style="border:0;margin:0px;" /></a>
+                    </td>
+                    <td style="width:100%;font-size:13px;padding-left:2px">
+                        <div style="font-size:90%;padding-bottom:1px">
+                            <a accesskey="1" href="watch?v=${video.id}">${video.title}</a>
+                        </div>
+                        <div style="color:#333;font-size:80%">${video.time || video.length || ""}&nbsp;&nbsp;<img src="/assets/site-assets/stars_5.0_49x9-vfl84759.gif" alt="5.0 stars" width="49" height="9" style="border:0;margin:0px;" /></div>
+                        ${video.upload ? `<div style="color:#333;font-size:80%">${video.upload}</div>` : ""}
+                        <div style="color:#333;font-size:80%">${video.views}</div>
+                    </td>
+                </tr>
+            </table>
+            <hr size="1" noshade="noshade" color="#999" style="width:100%;height:1px;margin:2px 0;padding:0;color:#999;background:#999;border:none;" />`
+    },
+    "mobile_search_video": function(video) {
+        return `
+            <table width="100%">
+                <tbody>
+                    <tr valign="top">
+                        <td style="font-size:0px" width="80">
+                            <a href="watch?v=${video.id}"><img src="${video.thumbnail}" alt="video" style="border:0;margin:0px;" width="80" height="60"></a>
+                        </td>
+                        <td style="width:100%;font-size:13px;padding-left:2px">
+                            <div style="font-size:90%;padding-bottom:1px">
+                                <a accesskey="1" href="watch?v=${video.id}">${video.title}</a>
+                            </div>
+                            <div style="color:#333;font-size:80%">${video.time}<img src="/assets/site-assets/stars_5.0_49x9-vfl84759.gif" alt="5.0 stars" style="border:0;margin:0px;" width="49" height="9"></div>
+                            <div style="color:#333;font-size:80%">${video.upload}</div>
+                            <div style="color:#333;font-size:80%">${video.views}</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr style="width:100%;height:1px;margin:2px 0;padding:0;color:#999;background:#999;border:none;" size="1" noshade="noshade" color="#999">`
     }
 }

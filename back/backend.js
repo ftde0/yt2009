@@ -1143,13 +1143,16 @@ basic mobilny widok
 */
 
 app.get("/mobile", (req, res) => {
-    res.send(fs.readFileSync("../mobile/mainpage.htm").toString())
+    yt2009_mobile.create_homepage(req, res)
 })
 app.get("/mobile/watch", (req, res) => {
     yt2009_mobile.create_watchpage(req, res)
 })
 app.get("/mobile/results", (req, res) => {
     yt2009_mobile.search(req, res)
+})
+app.get("/mobile/view_comment", (req, res) => {
+    yt2009_mobile.view_comments(req, res)
 })
 app.get("/mobile/profile", (req, res) => {
     //yt2009_mobile.create_watchpage(req, res)

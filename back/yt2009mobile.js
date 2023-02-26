@@ -2,22 +2,43 @@ const yt2009html = require("./yt2009html")
 const ytsearch = require("./yt2009search")
 const channels = require("./yt2009html")
 const utils = require("./yt2009utils")
+const templates = require("./yt2009templates")
 const fs = require("fs")
 const child_process = require("child_process")
 const config = require("./config.json")
 const env = config.env
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
+const ffmpeg_process_144 = [
+    "ffmpeg",
+    "-i $1",
+    "-ac 1",
+    "-acodec aac",
+    "-c:v libx264",
+    "-s 256x144",
+    "$2"
+]
+const ffmpeg_stream = [
+    "ffmpeg",
+    "-re -i",
+    "$1",
+    "$2",
+    "-f rtsp",
+    "-rtsp_transport udp",
+    "$3"
+]
 
 const watchpage_html = fs.readFileSync("../mobile/watchpage.htm").toString();
-const search_html = fs.readFileSync("../mobile/search.htm").toString()
+const search_html = fs.readFileSync("../mobile/search.htm").toString();
+const comments_html = fs.readFileSync("../mobile/view-comment.htm").toString();
+const homepage_html = fs.readFileSync("../mobile/mainpage.htm").toString()
 
 module.exports = {
-    // tworzenie strony oglądania
+    // create the watch page
     "create_watchpage": function(req, res) {
         let id = req.query.v.substring(0, 11)
         yt2009html.fetch_video_data(id, (data) => {
             if(!data) {
-                res.send(`[yt2009] zepsuło się<br>możliwe powody:<br>- film nie istnieje/jest prywatny<br>- filmu nie można pobrać`)
+                res.send(`[yt2009] something went wrong while getting video data`)
                 return;
             }
 
@@ -37,23 +58,7 @@ module.exports = {
             data.related.forEach(video => {
                 if(utils.time_to_seconds(video.length) >= 1800 || relatedIndex > 4) return;
 
-                relatedHTML += `
-            <table width="100%">
-                <tr valign="top">
-                    <td style="font-size:0px" width="80">
-                        <a href="watch?v=${video.id}"><img src="http://i.ytimg.com/vi/${video.id}/hqdefault.jpg" alt="video" width="80" height="60" style="border:0;margin:0px;" /></a>
-                    </td>
-                    <td style="width:100%;font-size:13px;padding-left:2px">
-                        <div style="font-size:90%;padding-bottom:1px">
-                            <a accesskey="1" href="watch?v=${video.id}">${video.title}</a>
-                        </div>
-                        <div style="color:#333;font-size:80%">1:20&nbsp;&nbsp;<img src="/assets/site-assets/stars_5.0_49x9-vfl84759.gif" alt="5.0 stars" width="49" height="9" style="border:0;margin:0px;" /></div>
-                        <div style="color:#333;font-size:80%">${video.views}</div>
-                    </td>
-                </tr>
-            </table>
-            <hr size="1" noshade="noshade" color="#999" style="width:100%;height:1px;margin:2px 0;padding:0;color:#999;background:#999;border:none;" />`
-
+                relatedHTML += templates.mobile_video(video)
                 relatedIndex++;
             })
 
@@ -63,7 +68,7 @@ module.exports = {
         }, req.headers["user-agent"], utils.get_used_token(req), false)
     },
 
-    // wyszukiwanie
+    // video searching
     "search": function(req, res) {
 
         let code = search_html
@@ -76,26 +81,7 @@ module.exports = {
             data.forEach(video => {
                 if(videoIndex > 10 || video.type !== "video") return;
 
-                searchHTML += `
-            <table width="100%">
-                <tbody>
-                    <tr valign="top">
-                        <td style="font-size:0px" width="80">
-                            <a href="watch?v=${video.id}"><img src="${video.thumbnail}" alt="video" style="border:0;margin:0px;" width="80" height="60"></a>
-                        </td>
-                        <td style="width:100%;font-size:13px;padding-left:2px">
-                            <div style="font-size:90%;padding-bottom:1px">
-                                <a accesskey="1" href="watch?v=${video.id}">${video.title}</a>
-                            </div>
-                            <div style="color:#333;font-size:80%">${video.time}<img src="/assets/site-assets/stars_5.0_49x9-vfl84759.gif" alt="5.0 stars" style="border:0;margin:0px;" width="49" height="9"></div>
-                            <div style="color:#333;font-size:80%">${video.upload}</div>
-                            <div style="color:#333;font-size:80%">${video.views}</div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <hr style="width:100%;height:1px;margin:2px 0;padding:0;color:#999;background:#999;border:none;" size="1" noshade="noshade" color="#999">`
-
+                searchHTML += templates.mobile_video(video)
                 videoIndex++;
             })
 
@@ -105,25 +91,86 @@ module.exports = {
         }), utils.get_used_token(req))
     },
 
-    // oglądanie filmów
+    // rtsp video watch
     "setup_rtsp": function(id, mute, res) {
         let fileName = `${id}-144.mp4`
+        let streamId = Math.floor(Math.random() * 37211)
+
         // process requested video if needed
         if(!fs.existsSync(`../assets/${fileName}`)
         && fs.existsSync(`../assets/${id}.mp4`)) {
-            let streamId = Math.floor(Math.random() * 37211)
-            child_process.execSync(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -ac 1 -acodec aac -c:v libx264 -s 256x144 ${__dirname}/../assets/${fileName}`)
-            child_process.exec(`ffmpeg -re -i ${__dirname}/../assets/${fileName} ${mute ? "-an" : ""} -f rtsp -rtsp_transport udp ${rtsp_server}video/${id}-${streamId}`, (error, stdout, stderr) => {
-                
-            })
-            res.redirect(`${rtsp_server}video/${id}-${streamId}`)
-        } else if(fs.existsSync(`../assets/${fileName}`)) {
-            console.log(`../assets/${fileName}`)
-            let streamId = Math.floor(Math.random() * 37211)
-            child_process.exec(`ffmpeg -re -i ${__dirname}/../assets/${fileName} ${mute ? "-an" : ""} -f rtsp -rtsp_transport udp  ${rtsp_server}video/${id}-${streamId}`, (error, stdout, stderr) => {
-                
-            })
-            res.redirect(`${rtsp_server}video/${id}-${streamId}`)
+            // convert to 144p
+            child_process.execSync(
+                ffmpeg_process_144.join(" ").replace(
+                    "$1", `${__dirname}/../assets/${id}.mp4`
+                ).replace(
+                    "$2", `${__dirname}/../assets/${fileName}`
+                )
+            )
         }
+
+        // start RTSP stream of 144 file
+        child_process.exec(
+            ffmpeg_stream.join(" ").replace(
+                "$1", `${__dirname}/../assets/${fileName}`
+            ).replace(
+                "$2", `${mute ? "-an" : ""}`
+            ).replace(
+                "$3", `${rtsp_server}video/${id}-${streamId}`
+            )
+        )
+        res.redirect(`${rtsp_server}video/${id}-${streamId}`)
+    },
+
+    // mobile homepage
+    "create_homepage": function(req, res) {
+        let code = homepage_html;
+        let index = 0;
+
+        // get homepage videos, fill in the html template and send
+        yt2009html.featured().splice(0, 4).forEach(video => {
+            index++;
+            code = code.split(`v${index}_id`).join(video.id)
+            code = code.split(`v${index}_title`).join(video.title)
+            code = code.split(`v${index}_views`).join(video.views)
+        })
+        res.send(code)
+    },
+
+    // comments view page
+    "view_comments": function(req, res) {
+        let code = comments_html
+        let actual_comments = ``
+        req = utils.addFakeCookie(req)
+        let id = req.query.v.substring(0, 11)
+
+        yt2009html.fetch_video_data(id, (data => {
+            // fill video data
+            code = code.split("yt2009_id").join(data.id)
+            code = code.split("yt2009_title").join(data.title)
+            code = code.split("yt2009_length").join(
+                utils.seconds_to_time(data.length)
+            )
+            code = code.split("yt2009_publish").join(data.upload)
+            code = code.split("yt2009_views").join(
+                utils.countBreakup(data.viewCount) + " views"
+            )
+            code = code.split("yt2009_uploader").join(
+                utils.asciify(data.author_name)
+            )
+
+            // fill comments and send
+            data.comments.forEach(comment => {
+                if(!comment.content) return;
+                if(comment.content.length > 500) return;
+                actual_comments += `
+            <div style="border-top:1px dashed #ADADAD;padding-top:8px">
+                <a href="#">${utils.asciify(comment.authorName)}</a>&nbsp;&nbsp;${comment.time}
+            </div>
+            <div style="padding-top:3px;padding-bottom:5px">${comment.content}</div>`
+            })
+            code = code.replace(`<!--yt2009_comments-->`, actual_comments)
+            res.send(code)
+        }), "", utils.get_used_token(req), false, false)
     }
 }
