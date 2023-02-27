@@ -459,7 +459,6 @@ module.exports = {
 
         // custom colors
         // main background
-        console.log(data.dominant_color)
         let mainBg = yt2009utils.createRgb([
             data.dominant_color[0] + 20,
             data.dominant_color[1] + 20,
@@ -598,6 +597,8 @@ module.exports = {
         header video
         =======
         */
+        let watch_url = "/watch.swf"
+        let watch_arg = "video_id"
         if(data.videos[0]) {
             let video = data.videos[0]
             let views = yt2009utils.viewFlags(video.views, flags)
@@ -677,14 +678,12 @@ module.exports = {
                 )
             } else {
                 // fmode~!!
-                let watch_url = "/watch.swf"
                 if(req.headers.cookie.includes("alt_swf_path=")) {
                     watch_url = decodeURIComponent(
                         req.headers.cookie.split("alt_swf_path=")[1]
                                           .split(";")[0]
                     )
                 }
-                let watch_arg = "video_id"
                 if(req.headers.cookie.includes("alt_swf_arg=")) {
                     watch_arg = req.headers.cookie.split("alt_swf_arg=")[1]
                                                   .split(";")[0]

@@ -576,7 +576,6 @@ module.exports = {
         </div>`
     },
     "mobile_video": function(video) {
-        console.log(video)
         return `
             <table width="100%">
                 <tr valign="top">

@@ -70,12 +70,10 @@ module.exports = {
 
     // video searching
     "search": function(req, res) {
-
         let code = search_html
         let query = req.query.q;
-        console.log(query)
+
         let searchHTML = ``
-        
         ytsearch.get_search(query, "", "", (data => {
             let videoIndex = 0;
             data.forEach(video => {
