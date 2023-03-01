@@ -1,14 +1,30 @@
 const fetch = require("node-fetch")
 const constants = require("./yt2009constants.json")
-const yt2009html = require("./yt2009html")
+const yt2009templates = require("./yt2009templates")
+const config = require("./config.json")
 const fs = require("fs")
 const playlist_html = fs.readFileSync("../playlist.htm").toString();
 
 let cache = require("./cache_dir/playlist_cache_manager")
 
-let saved_playlists = {}
-
 module.exports = {
+    "innertube_get_data": function(id, callback) {
+        fetch(`https://www.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
+            "headers": constants.headers,
+            "referrer": `https://www.youtube.com/`,
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "browseId": "VL" + id,
+                "context": constants.cached_innertube_context
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            callback(r)
+        })})
+    },
+
+
     "applyPlaylistHTML": function(data, req) {
         let code = playlist_html;
 
@@ -21,61 +37,48 @@ module.exports = {
         code = code.replace("yt2009_playlist_views", data.views)
         code = code.replace("yt2009_creator_link", data.creatorUrl)
         code = code.replace("yt2009_creator_name", data.creatorName)
+        code = code.replace(
+            "yt2009_playlistlink",
+            "http://www.youtube.com/view_play_list?p=" + data.playlistId
+        )
+
+        // create and throw in playlist embed
+        let playlist_embed_url = "http://www.youtube.com/swf/cpb.swf?"
+        if(data.videos[0]) {
+            playlist_embed_url += "player_id=" + data.videos[0].id + "&"
+        }
+        playlist_embed_url += "datatype=playlist&"
+        playlist_embed_url += "data=" + data.playlistId + "&"
+        playlist_embed_url += "BASE_YT_URL=http://" + config.ip + ":" + config.port + "/"
+        code = code.replace(
+            "yt2009_cpburl",
+            playlist_embed_url
+        )
+        code = code.replace("yt2009_config_hostname", config.ip)
+        code = code.replace("yt2009_config_port", config.port)
 
         if((req.headers.cookie || "").includes("shows_tab")) {
             // shows tab
-            code = code.replace(`<a href="/channels">Channels</a>`, `<a href="/channels">Channels</a><a href="#">Shows</a>`)
+            code = code.replace(
+                `<a href="/channels">Channels</a>`,
+                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+            )
         }
 
         let videos_html = ``
         data.videos.forEach(video => {
-            videos_html += `
-            <div class="video-cell" style="width:19.5%">
-                <div class="video-entry yt-uix-hovercard">
-                    <div class="v120WideEntry">
-                        <div class="v120WrapperOuter">
-                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/watch?v=${video.id}&list=${data.playlistId}" rel="nofollow">
-                                <img src="${video.thumbnail.replace("http", req.protocol)}" class="vimg120 yt-uix-hovercard-target"></a>
-                                <!--<div class="video-time" style="position: relative;top: -6px;"><a href="/watch?v=${video.id}&list=${data.playlistId}" rel="nofollow">yt2009_video_time</a></div>-->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="video-main-content">
-                        <div class="video-title ">
-                            <div class="video-long-title">
-                                <a href="/watch?v=${video.id}&list=${data.playlistId}" class="yt-uix-hovercard-target" rel="nofollow">${video.title}</a>
-                            </div>
-                        </div>
-
-                        <div class="video-description">
-                            ${require("./yt2009html").get_video_description(video.id)}
-                        </div>
-
-                        <div class="video-facets">
-                            <span class="video-rating-list ">
-                                <div>
-                                    <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
-                                </div>
-                            </span>
-                            <span class="video-rating-grid ">
-                                <div>
-                                    <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
-                                </div>
-                            </span>
-                            <span class="video-username"><a class="hLink" href="${video.uploaderUrl}">${video.uploaderName}</a></span>
-                        </div>
-
-                    </div>
-
-                    <div class="video-clear-list-left"></div>
-                </div>
-            </div>`
+            videos_html += yt2009templates.playlistVideo(
+                video, data.playlistId, req.protocol
+            )
         })
 
         if(data.videos[0]) {
-            code = code.replace("/yt2009_playlist_thumbnail", data.videos[0].thumbnail)
-            code = code.split("yt2009_watch_all_link").join(`/watch?v=${data.videos[0].id}&list=${data.playlistId}`)
+            code = code.replace(
+                "/yt2009_playlist_thumbnail", data.videos[0].thumbnail
+            )
+            code = code.split("yt2009_watch_all_link").join(
+                `/watch?v=${data.videos[0].id}&list=${data.playlistId}`
+            )
         } else {
             code = code.split("yt2009_watch_all_link").join(`/`)
         }
@@ -101,20 +104,20 @@ module.exports = {
                 "videoCount": "",
                 "playlistId": playlistId
             }
-            fetch(`https://www.youtube.com/playlist?list=${playlistId}`, {
-                "headers": constants.headers
-            }).then(r => {r.text().then(response => {
-                // parse danych z ytInitialData
-
-                let ytInitialData = JSON.parse(response.split("var ytInitialData = ")[1].split(";</script>")[0])
-                let playlistArray = ytInitialData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].playlistVideoListRenderer.contents
-
-
-                // metadane
-                let primarySidebar = ytInitialData.sidebar.playlistSidebarRenderer.items[0].playlistSidebarPrimaryInfoRenderer
+            this.innertube_get_data(playlistId, (r) => {
+                let playlistArray = r.contents.twoColumnBrowseResultsRenderer
+                                     .tabs[0].tabRenderer.content
+                                     .sectionListRenderer.contents[0]
+                                     .itemSectionRenderer.contents[0]
+                                     .playlistVideoListRenderer.contents
+                // metadata
+                let primarySidebar = r.sidebar.playlistSidebarRenderer.items[0]
+                                      .playlistSidebarPrimaryInfoRenderer
                 let owner = ""
                 try {
-                    owner = ytInitialData.sidebar.playlistSidebarRenderer.items[1].playlistSidebarSecondaryInfoRenderer.videoOwner.videoOwnerRenderer.title.runs[0]
+                    owner = r.sidebar.playlistSidebarRenderer.items[1]
+                             .playlistSidebarSecondaryInfoRenderer.videoOwner
+                             .videoOwnerRenderer.title.runs[0]
                 }
                 catch(error) {}
                 
@@ -131,9 +134,13 @@ module.exports = {
                 videoList.name = primarySidebar.title.runs[0].text
                 videoList.views = primarySidebar.stats[1].simpleText
                 videoList.creatorName = owner.text
-                videoList.creatorUrl = owner.navigationEndpoint.browseEndpoint.canonicalBaseUrl
+                videoList.creatorUrl = owner.navigationEndpoint.browseEndpoint
+                                            .canonicalBaseUrl
                 try {
-                    videoList.description = primarySidebar.description ? primarySidebar.description.simpleText.split("\n").splice(0, 3).join("<br>") : ""
+                    videoList.description = primarySidebar.description
+                                            ? primarySidebar.description
+                                              .simpleText.split("\n")
+                                              .splice(0, 3).join("<br>") : ""
                 }
                 catch(error) {}
                 videoList.lastUpdate = lastUpdate
@@ -147,15 +154,48 @@ module.exports = {
                     videoList.videos.push({
                         "id": video.videoId,
                         "title": video.title.runs[0].text,
-                        "thumbnail": "http://i.ytimg.com/vi/" + video.videoId + "/hqdefault.jpg",
+                        "thumbnail": "http://i.ytimg.com/vi/"
+                                    + video.videoId
+                                    + "/hqdefault.jpg",
                         "uploaderName": video.shortBylineText.runs[0].text,
-                        "uploaderUrl": video.shortBylineText.runs[0].navigationEndpoint.browseEndpoint.canonicalBaseUrl
+                        "uploaderUrl": video.shortBylineText.runs[0]
+                                            .navigationEndpoint.browseEndpoint
+                                            .canonicalBaseUrl,
+                        "time": video.lengthText ?
+                                video.lengthText.simpleText : ""
                     })
                 })
 
                 cache.write(playlistId, JSON.parse(JSON.stringify(videoList)))
                 callback(cache.read()[playlistId])
-            })})
+            })
         }
+    },
+
+    "create_cpb_xml": function(req, res) {
+        let id = req.originalUrl.split("playlists/")[1].split("?")[0]
+        let xmlResponse = ""
+        this.parsePlaylist(id, (data) => {
+            xmlResponse += yt2009templates.cpbPlaylistsBegin(
+                data.name,
+                data.playlistId,
+                data.creatorName
+            )
+            xmlResponse += yt2009templates.cpbPlaylistsCounts(
+                data.videos.length,
+                data.playlistId,
+                data.name,
+                data.description
+            )
+            let videoIndex = 1;
+            data.videos.forEach(video => {
+                xmlResponse += yt2009templates.cpbVideo(video, videoIndex)
+                videoIndex += 1
+            })
+            xmlResponse += `
+            </feed>`
+
+            res.send(xmlResponse)
+        })
     }
 }

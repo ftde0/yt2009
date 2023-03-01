@@ -7,9 +7,23 @@
 	<link rel="stylesheet" href="/www-core-vfl122413.css">
 	<link rel="stylesheet" href="/assets/site-assets/www-the-rest-vfl120680.css">
 
-	<style></style>
+	<style>
+		.html5 .video-corner-text {
+			margin-top: -28px;
+		}
+		.html5 #masthead-nav-main,
+		.html5 #masthead-nav-user {
+			line-height: 1.4em;
+		}
+		.html5 #masthead-nav-main {
+			margin-top: 1px;
+		}
+		.html5 #masthead {
+			padding-bottom: 0.45em;
+		}
+	</style>
 </head>
-<body class="en_US is-english">
+<body class="en_US is-english html5">
 	<div id="masthead-container">
 		<div id="masthead">
 			<a href="/">
@@ -70,12 +84,12 @@
 						<tr>
 							<td valign="bottom">
 								<label for="playlist-permalink-url" class="share-urls">Playlist/URL (Permalink):</label>
-								<input id="playlist-permalink-url" class="vidlink" onclick="this.select();" readonly value="">
+								<input id="playlist-permalink-url" class="vidlink" onclick="this.select();" readonly value="yt2009_playlistlink">
 							</td>
 							<td style="width: 29px;"></td>
 							<td valign="bottom">
 								<label for="playlist-embed-url" class="share-urls">Embeddable Player:</label>
-								<input id="playlist-embed-url" class="vidlink" onclick="this.select();" readonly value="">
+								<input id="playlist-embed-url" class="vidlink" onclick="this.select();" onmouseenter="yt2009_replace_cpb()" onmouseout="yt2009_return_cpb()" readonly value="yt2009_cpburl">
 							</td>
 						</tr>
 					</tbody>
@@ -196,6 +210,24 @@
 		</div>
 
 		<!-- end footer section -->
+
+		<script>
+			//yt2009 embed
+			var hostname = "yt2009_config_hostname"
+			var port = "yt2009_config_port"
+			function yt2009_replace_cpb() {
+				var url = document.getElementById("playlist-embed-url").value
+				document.getElementById("playlist-embed-url").value = url.replace(
+					"www.youtube.com", hostname + ":" + port
+				).replace("/swf/", "/alt-swf/")
+			}
+			function yt2009_return_cpb() {
+				var url = document.getElementById("playlist-embed-url").value
+				document.getElementById("playlist-embed-url").value = url.replace(
+					hostname + ":" + port, "www.youtube.com"
+				).replace("/swf/", "/alt-swf/")
+			}
+		</script>
 	</div>
 </body>
 

@@ -20,6 +20,12 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 
 ---
 
+## optional after-setup steps
+
+- patch the flash player(s) by following [flash_player_patch.md](flash_player_patch.md) and looking through [alt-swf/readme.md](alt-swf/readme.md)
+
+---
+
 ## usage
 
 now that you're in, you can just use it as it is, but there is quite a bit more you can do.

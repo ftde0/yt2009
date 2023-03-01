@@ -363,6 +363,7 @@ module.exports = {
             link = link.replace("//", "https://")
         }
         let fname = link.split("/")[link.split("/").length - 1]
+        fname = fname.replace(".png", "")
         if(!fs.existsSync(`../assets/${fname}.png`)) {
             fetch(link, {
                 "headers": constants.headers

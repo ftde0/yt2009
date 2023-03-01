@@ -29,7 +29,6 @@ const config = require("./config.json")
 
 const https = require("https")
 const fs = require("fs")
-const updateDate = "15.02.2023"
 const app = express();
 app.use(express.raw({
     "type": () => true
@@ -44,7 +43,6 @@ if(config.env == "dev") {
     ==========
 
     yt2009 - dev
-    ${updateDate}
 
     ==========
     ${launchTime}
@@ -63,7 +61,6 @@ if(config.env == "dev") {
     ==========
 
     yt2009 - prod
-    ${updateDate}
 
     ==========
         `);
@@ -71,9 +68,7 @@ if(config.env == "dev") {
 }
 
 app.get('/back/*', (req,res) => {
-    res.send(`not yet<br>
-    you'll get to see the code some day, i promise.<br>
-    it may be in a few months, it may even be after i'm dead. who knows!?`)
+    res.redirect("https://github.com/ftde0/yt2009")
 })
 app.get('/node_modules/*', (req,res) => {
     res.sendStatus(404)
@@ -549,6 +544,14 @@ app.get("/feeds/api/videos/", (req, res) => {
     yt2009_cps.get_search(req, res)
 })
 
+/*
+======
+cpb.swf (flash embed playlists)
+======
+*/
+app.get("/feeds/api/playlists/*", (req, res) => {
+    yt2009_playlists.create_cpb_xml(req, res)
+})
 
 /*
 ======

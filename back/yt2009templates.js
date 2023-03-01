@@ -614,5 +614,131 @@ module.exports = {
                 </tbody>
             </table>
             <hr style="width:100%;height:1px;margin:2px 0;padding:0;color:#999;background:#999;border:none;" size="1" noshade="noshade" color="#999">`
+    },
+    "playlistVideo": function(video, playlistId, protocol) {
+        return `
+            <div class="video-cell" style="width:19.5%">
+                <div class="video-entry yt-uix-hovercard">
+                    <div class="v120WideEntry">
+                        <div class="v120WrapperOuter">
+                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/watch?v=${video.id}&list=${playlistId}" rel="nofollow">
+                                <img src="${video.thumbnail.replace("http", protocol)}" class="vimg120 yt-uix-hovercard-target"></a>
+                                ${video.time ? `<div class="video-time" style="position: relative;top: -6px;"><a href="/watch?v=${video.id}&list=${playlistId}" rel="nofollow">${video.time}</a></div>` : ""}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="video-main-content">
+                        <div class="video-title ">
+                            <div class="video-long-title">
+                                <a href="/watch?v=${video.id}&list=${playlistId}" class="yt-uix-hovercard-target" rel="nofollow">${video.title}</a>
+                            </div>
+                        </div>
+
+                        <div class="video-description">
+                            ${require("./yt2009html").get_video_description(video.id)}
+                        </div>
+
+                        <div class="video-facets">
+                            <span class="video-rating-list ">
+                                <div>
+                                    <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
+                                </div>
+                            </span>
+                            <span class="video-rating-grid ">
+                                <div>
+                                    <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
+                                </div>
+                            </span>
+                            <span class="video-username"><a class="hLink" href="${video.uploaderUrl}">${video.uploaderName}</a></span>
+                        </div>
+
+                    </div>
+
+                    <div class="video-clear-list-left"></div>
+                </div>
+            </div>`
+    },
+    "cpbPlaylistsBegin": function(title, id, authorName) {
+        return `<?xml version='1.0' encoding='UTF-8'?>
+<feed
+    xmlns='http://www.w3.org/2005/Atom'
+    xmlns:app='http://www.w3.org/2007/app'
+    xmlns:media='http://search.yahoo.com/mrss/'
+    xmlns:openSearch='http://a9.com/-/spec/opensearch/1.1/'
+    xmlns:gd='http://schemas.google.com/g/2005'
+    xmlns:yt='http://gdata.youtube.com/schemas/2007' gd:etag='W/&quot;A0EMSX47eCp7ImA9WxJWFkQ.&quot;'>
+    <id>yt2009playlist</id>
+    <updated>2009-06-22T19:41:28.000Z</updated>
+    <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#playlist'/>
+    <title>${title}</title>
+    <subtitle>${title.toLowerCase()}</subtitle>
+    <logo>http://www.youtube.com/img/pic_youtubelogo_123x63.gif</logo>
+    <link rel='alternate' type='text/html' href='http://www.youtube.com/view_play_list?p=${id}'/>
+    <link rel='http://schemas.google.com/g/2005#feed' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}?v=2'/>
+    <link rel='http://schemas.google.com/g/2005#batch' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}/batch?v=2'/>
+    <link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}?start-index=1&amp;max-results=25&amp;v=2'/>
+    <link rel='service' type='application/atomsvc+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}?alt=atom-service&amp;v=2'/>
+    <author>
+        <name>${authorName}</name>
+        <uri>http://gdata.youtube.com/feeds/api/users/${authorName}</uri>
+    </author>
+    <generator version='2.0' uri='http://gdata.youtube.com/'>YouTube data API</generator>`
+    },
+    "cpbPlaylistsCounts": function(results, id, title, description) {
+        return `
+    <openSearch:totalResults>${results}</openSearch:totalResults>
+    <openSearch:startIndex>1</openSearch:startIndex>
+    <openSearch:itemsPerPage>${results}</openSearch:itemsPerPage>
+    <media:group>
+        <media:content url='http://www.youtube.com/ep.swf?id=${id}' type='application/x-shockwave-flash' yt:format='5'/>
+        <media:description type='plain'>${description}</media:description>
+        <media:title type='plain'>${title}</media:title>
+    </media:group>
+    <yt:playlistId>${id}</yt:playlistId>`
+    },
+    "cpbVideo": function(video, index) {
+        return `
+    <entry gd:etag='W/&quot;DUUMQnYzeCp7ImA9WxFUGU4.&quot;'>
+        <id>${video.id}</id>
+        <updated>2010-06-30T22:34:43.880Z</updated>
+        <title>${video.title}</title>
+        <link rel='alternate' type='text/html' href='http://www.youtube.com/watch?v=rInvb982mYU&amp;feature=youtube_gdata'/>
+        <link rel='http://gdata.youtube.com/schemas/2007#video.responses' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/rInvb982mYU/responses?v=2'/>
+        <link rel='http://gdata.youtube.com/schemas/2007#video.related' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/rInvb982mYU/related?v=2'/>
+        <link rel='related' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/rInvb982mYU?v=2'/>
+        <link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/0A7ED544A0D9877D/00A37F607671690E?v=2'/>
+        <author>
+            <name>${video.uploaderName}</name>
+            <uri>http://gdata.youtube.com/feeds/api/users/degumusic</uri>
+        </author>
+        <yt:accessControl action='comment' permission='allowed'/>
+        <yt:accessControl action='commentVote' permission='allowed'/>
+        <yt:accessControl action='videoRespond' permission='moderated'/>
+        <yt:accessControl action='rate' permission='allowed'/>
+        <yt:accessControl action='embed' permission='allowed'/>
+        <yt:accessControl action='syndicate' permission='allowed'/>
+        <yt:accessControl action='list' permission='allowed'/>
+        <gd:comments>
+            <gd:feedLink href='http://gdata.youtube.com/feeds/api/videos/${video.id}/comments?v=2' countHint='1'/>
+        </gd:comments>
+        <media:group>
+            <media:content url='http://www.youtube.com/v/${video.id}?f=playlists&amp;app=youtube_gdata' type='application/x-shockwave-flash' medium='video' isDefault='true' expression='full' duration='583' yt:format='5'/>
+            <media:credit role='uploader' scheme='urn:youtube' yt:type='partner'>sltrib</media:credit>
+            <media:description type='plain'>${video.description}</media:description>
+            <media:keywords>salt, lake, tribune, utah, tourist, business</media:keywords>
+            <media:player url='http://www.youtube.com/watch?v=rInvb982mYU&amp;feature=youtube_gdata'/>
+            <media:thumbnail url='http://i.ytimg.com/vi/${video.id}/default.jpg' height='90' width='120' time='00:00:00.500'/>
+            <media:thumbnail url='http://i.ytimg.com/vi/rInvb982mYU/hqdefault.jpg' height='360' width='480'/>
+            <media:title type='plain'>${video.title}</media:title>
+            <yt:aspectRatio>widescreen</yt:aspectRatio>
+            <yt:duration seconds='${video.time ? utils.time_to_seconds(video.time) : "1"}'/>
+            <yt:uploaded>2009-03-02T21:47:27.000Z</yt:uploaded>
+            <yt:videoid>${video.id}</yt:videoid>
+        </media:group>
+        <gd:rating average='5.0' max='5' min='1' numRaters='1' rel='http://schemas.google.com/g/2005#overall'/>
+        <yt:statistics favoriteCount='0' viewCount='0'/>
+        <yt:position>${index}</yt:position>
+    </entry>`
     }
 }
