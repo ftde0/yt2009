@@ -14,6 +14,8 @@ module.exports = {
 
         console.log(req.originalUrl)
 
+        req = utils.addFakeCookie(req)
+
         let flags = ""
         if(req.headers.cookie.includes("search_flags")) {
             flags = req.headers.cookie.split("search_flags=")[1].split(";")[0]

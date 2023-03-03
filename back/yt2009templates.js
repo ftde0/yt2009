@@ -137,8 +137,7 @@ module.exports = {
         //"format": "34\/640x360\/9\/0\/115,18\/640x360\/9\/0\/115,5\/320x240\/7\/0\/0,36\/320x240\/99\/0\/0,17\/176x144\/99\/0\/0"
     },
     "cpsSearchBegin": function(resultCount) {
-        return `
-<?xml version='1.0' encoding='UTF-8'?>
+        return `<?xml version='1.0' encoding='UTF-8'?>
 <feed>
     <id>http://gdata.youtube.com/feeds/api/videos</id>
     <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#video'/>
@@ -158,6 +157,7 @@ module.exports = {
     },
     "cpsSearchEntry": function(id, title, description, lengthSeconds, authorName) {
         let domainName = config.ip + ":" + config.port
+        if(!id || lengthSeconds > 600) return;
         return `
     <entry>
         <id>http://${domainName}/feeds/api/videos/${id}</id>
@@ -167,9 +167,10 @@ module.exports = {
           <name>${authorName}</name>
         </author>
         <media:group>
-          <media:content url='http://${domainName}/get_video?video_id=${id}' type='application/x-shockwave-flash' medium='video' isDefault='true' expression='full' duration='${lengthSeconds}' yt:format='5'/>
+          <media:content url='http://${domainName}/get_video?video_id=${id}' type='application/x-shockwave-flash' id='${id}' medium='video' isDefault='true' expression='full' duration='${lengthSeconds}' yt:format='5'/>
           <media:description type='plain'>${description}</media:description>
           <media:player url='http://${domainName}/watch?v=${id}'/>
+          <yt:videoid id='${id}'>${id}</yt:videoid>
           <media:thumbnail url='http://i.ytimg.com/vi/${id}/hqdefault.jpg' height='360' width='640' time='00:00:00.00'/>
           <media:title type='plain'>${title}</media:title>
           <yt:duration seconds='${lengthSeconds}'/>

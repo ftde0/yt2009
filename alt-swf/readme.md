@@ -14,6 +14,7 @@ otherwise, here are the filenames and SWFs to be downloaded from Wayback Machine
 |2012.swf|[watch_as3-vflJogbdx.swf](http://web.archive.org/web/20120705001433/https://s.ytimg.com/yt/swfbin/watch_as3-vflJogbdx.swf)|the standard 2012 video player
 |e2006.swf|[player2.swf](http://web.archive.org/web/20060706195428if_/http://youtube.com:80/player2.swf)|an early-mid 2006 player.
 |cpb.swf|[cpb-vflzG1o7y.swf](http://web.archive.org/web/20101222144444/s.ytimg.com/yt/swfbin/cpb-vflzG1o7y.swf)|embedded playlist player linked by the playlist view page. (when patching, also change the gdata base url!!)
+|cps.swf|[cps-vfl_gIfdw.swf](http://web.archive.org/web/20120427131527if_/http://s.ytimg.com/yt/swfbin/cps-vfl_gIfdw.swf)|player with built-in search. used as a fallback in some years. (also change gdata base url!)
 ---
 ## bonus: find your own!
 

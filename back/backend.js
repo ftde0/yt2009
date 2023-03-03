@@ -495,7 +495,8 @@ app.get("/get_video_info", (req, res) => {
         res.redirect("/unauth.htm")
         return;
     }
-    res.send(`status=ok
+    yt2009.fetch_video_data(req.query.video_id, (data => {
+res.send(`status=ok
 length_seconds=1
 keywords=a
 vq=None
@@ -514,9 +515,10 @@ fmt_map=34%2F0%2F9%2F0%2F115%2C5%2F0%2F7%2F0%2F0
 token=amogus
 plid=amogus
 track_embed=0
-author=a
-title=a
+author=${data.author_name}
+title=${data.title}
 video_id=${req.query.video_id}`.split("\n").join("&"))
+    }), "", "", false, false)
 })
 
 app.get("/xl/embed", (req, res) => {
