@@ -2,6 +2,8 @@ const ytdl = require("ytdl-core");
 const fs = require("fs");
 const child_process = require("child_process")
 const embed_code = fs.readFileSync("../embedded-player.html").toString()
+const wayback = require("./cache_dir/wayback_watchpage")
+const videoExists = require("./cache_dir/video_exists_cache_mgr")
 const utils = require("./yt2009utils")
 const config = require("./config.json")
 
@@ -14,7 +16,7 @@ function flash_handler(req, res) {
     restArguments = restArguments.join("&")
     let createdUrl = req.originalUrl.split("embedF")[0] + "watch.swf?video_id=" + videoId + "&" + restArguments;
 
-    // related filmy
+    // related videos
     if(req.query.server_fill_related == 1 && !req.headers["user-agent"].includes("MSIE")) {
         let i = 0;
         require("./yt2009html").get_related_videos(videoId, (related) => {
@@ -97,7 +99,8 @@ module.exports = function(req, res) {
     // magick -size 1x25 gradient:"#ffffff"-"#[color2]" test.png
     if(req.query.color1 && req.query.color2) {
         let generatedCSS = ``
-        if(colorways[req.query.color1 + "-" + req.query.color2] && colorways[req.query.color1 + "-" + req.query.color2] !== "default") {
+        if(colorways[req.query.color1 + "-" + req.query.color2]
+        && colorways[req.query.color1 + "-" + req.query.color2] !== "default") {
             // jeden z kolorków w colorways poza default
             generatedCSS += `
             .video_controls .play_btn,

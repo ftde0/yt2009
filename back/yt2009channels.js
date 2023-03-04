@@ -224,8 +224,8 @@ module.exports = {
                 }
                 
             })
-            onVideosCreate()
             additionalFetchesCompleted++;
+            onVideosCreate()
         }
 
         // fallback: no videos tab (eg topic channels)

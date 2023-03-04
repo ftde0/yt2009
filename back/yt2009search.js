@@ -3,6 +3,7 @@ const yt2009utils = require("./yt2009utils");
 const yt2009contants = require("./yt2009constants.json");
 const yt2009exports = require("./yt2009exports");
 const yt2009templates = require("./yt2009templates");
+const yt2009waybackwatch = require("./cache_dir/wayback_watchpage")
 const config = require("./config.json")
 const fs = require("fs")
 const search_code = fs.readFileSync("../search-generic-page.htm").toString();
@@ -146,14 +147,27 @@ module.exports = {
                             )
                         ) + " views"
                     }
+
+                    // wayback machine into search
+                    let waybackData = yt2009waybackwatch.readCacheOnly(video.id)
+                    let title = video.title
+                    let description = video.description;
+                    if(waybackData) {
+                        title = waybackData.title
+                        description = waybackData.description
+                        if(waybackData.authorName
+                        && !waybackData.authorName.toLowerCase()
+                                       .includes("subscribe")) {
+                            uploaderName = waybackData.authorName
+                        }
+                    }
     
-    
-                    // podkładanie htmla
+                    // apply html
                     if(!cancelled) {
                         results_html += yt2009templates.searchVideo(
                             video.id,
-                            video.title,
-                            video.description,
+                            title,
+                            description,
                             video.author_url,
                             uploaderName,
                             uploadDate,

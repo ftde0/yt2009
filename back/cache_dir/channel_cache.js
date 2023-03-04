@@ -1,6 +1,7 @@
 const fs = require("fs")
 const fetch = require("node-fetch")
 const constants = require("../yt2009constants.json")
+const utils = require("../yt2009utils")
 const child_process = require("child_process")
 let cacheList = {
     "mainCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_main_cache.json`).toString()),
@@ -19,43 +20,48 @@ module.exports = {
     },
 
     "getSmallBanner": function(channelUrl, callback) {
-        if(cacheList.mainCache[channelUrl] && cacheList.mainCache[channelUrl].banner) {
+        if(cacheList.mainCache[channelUrl]
+        && cacheList.mainCache[channelUrl].banner
+        && (fs.existsSync("../assets/" + cacheList.mainCache[channelUrl].banner)
+        || fs.existsSync("../assets/" + cacheList.mainCache[channelUrl].banner + ".png"))) {
             callback(cacheList.mainCache[channelUrl].banner);
-        } else if(cacheList.bannerCache[channelUrl]) {
+        } else if(cacheList.bannerCache[channelUrl]
+               && (fs.existsSync("../assets/" + cacheList.bannerCache[channelUrl])
+               || fs.existsSync("../assets/" + cacheList.bannerCache[channelUrl] + ".png")
+               || cacheList.bannerCache[channelUrl] == "no")) {
             callback(cacheList.bannerCache[channelUrl])
         } else {
             // clean fetch the channel for banner
-            
-            fetch(`https://www.youtube.com/${channelUrl}`, {
-                "headers": constants.headers
-            }).then(r => {r.text().then(res => {
-                let ytInitialData = JSON.parse(res.split("var ytInitialData = ")[1].split(";</script>")[0])
-                let bannerContainer = ytInitialData.header.c4TabbedHeaderRenderer;
-                if(bannerContainer.banner) {
-                    let bannerUrl = bannerContainer.banner.thumbnails[0].url
-                    let banner_fname = bannerUrl.split("/")[bannerUrl.split("/").length - 1]
-                    if(!fs.existsSync(`../assets/${banner_fname}.png`)) {
-                        // save the banner file if we don't have it yet
-                        fetch(bannerUrl, {
-                            "headers": constants.headers
-                        }).then(r => {
-                            r.buffer().then(buffer => {
-                                fs.writeFileSync(`../assets/${banner_fname}.png`, buffer)
-                                cacheList.bannerCache[channelUrl] = `${banner_fname}.png`
-                                callback(`${banner_fname}.png`)
-                            })
-                        })
-                    } else {
+            require("../cache_dir/userid_cache").read(channelUrl, (id) => {
+                fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
+                    require("../yt2009exports").read().api_key
+                }`, {
+                    "headers": constants.headers,
+                    "referrer": "https://www.youtube.com/",
+                    "referrerPolicy": "strict-origin-when-cross-origin",
+                    "body": JSON.stringify({
+                        "context": constants.cached_innertube_context,
+                        "browseId": id
+                    }),
+                    "method": "POST",
+                    "mode": "cors"
+                }).then(r => {r.json().then(r => {
+                    try {
+                        let bannerUrl = r.header.c4TabbedHeaderRenderer
+                                     .banner.thumbnails[0].url;
+                        let banner_fname = bannerUrl.split("/")
+                                        [bannerUrl.split("/").length - 1]
+                        utils.saveAvatar(bannerUrl)
                         cacheList.bannerCache[channelUrl] = `${banner_fname}.png`
                         callback(`${banner_fname}.png`)
                     }
-                } else {
-                    cacheList.bannerCache[channelUrl] = "no"
-                    callback("no")
-                }
-            })})
+                    catch(error) {
+                        cacheList.bannerCache[channelUrl] = "no"
+                        callback("no")
+                    }
+                })})
+            })
         }
-        
     }
 }
 

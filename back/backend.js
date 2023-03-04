@@ -605,7 +605,7 @@ app.get("/embed_get_endscreen", (req, res) => {
             endscreen_section_html += `
             <div class="endscreen-video" onclick="videoNav('${video.id}')">
                 <div class="endscreen-video-thumbnail">
-                    <img src="${req.protocol}://i.ytimg.com/vi/${video.id}/hqdefault.jpg" width="80" height="65"/>
+                    <img src="//i.ytimg.com/vi/${video.id}/hqdefault.jpg" width="80" height="65"/>
                     <div class="video-time" style="float: right;"><a href="">${video.length}</a></div>
                 </div>
                 <div class="endscreen-video-info">
@@ -613,7 +613,7 @@ app.get("/embed_get_endscreen", (req, res) => {
                     <h3 class="gr"style="height: 17px"></h3>
                     <h3 class="gr">From: <span class="text-light">${video.creatorName}</span></h3>
                     <h3 class="gr" style="margin-top: 2px !important;">Views: <span class="text-light">${video.views.replace(/[^0-9]/g, "")}</span></h3>
-                    <img src="/player-imgs/star-ratings.png" class="endscreen-video-star"/>
+                    <img src="/assets/site-assets/pixel-vfl73.gif" class="endscreen-video-star"/>
                 </div>
             </div>`
     
@@ -643,7 +643,7 @@ app.get("/embed_get_endscreen", (req, res) => {
         </style>
         `
         res.send(endscreen_html)
-    })
+    }, "", true)
 })
 
 /*

@@ -1901,57 +1901,103 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
 
 
-    "get_related_videos": function(id, callback, source) {
-        if(cache.read()[id]) {
+    "get_related_videos": function(id, callback, source, ignoreDefaultRelated) {
+        if(cache.read()[id] && !ignoreDefaultRelated) {
             callback(cache.read()[id].related);
         } else if(saved_related_videos[id]) {
             callback(saved_related_videos[id])
         } else {
             this.innertube_get_data(id, (data) => {
                 // related videos
-
                 let relatedParsed = []
                 let related = []
-                try {
-                    related = data.contents.twoColumnWatchNextResults
-                                    .secondaryResults.secondaryResults
-                                    .results
-                            || data.contents.twoColumnWatchNextResults
-                                    .secondaryResults.secondaryResults
-                                    .results[1].itemSectionRenderer
-                                    .contents
-                }
-                catch(error) {}
-                related.forEach(video => {
-                    if(!video.compactVideoRenderer) return;
-
-                    video = video.compactVideoRenderer;
-
-                    let creatorName = ""
-                    let creatorUrl = ""
-                    video.shortBylineText.runs.forEach(run => {
-                        creatorName += run.text;
-                        creatorUrl += run.navigationEndpoint
-                                        .browseEndpoint.canonicalBaseUrl
-                    })
-                    try {
-                        relatedParsed.push({
-                            "title": video.title.simpleText,
-                            "id": video.videoId,
-                            "views": video.viewCountText.simpleText,
-                            "length": video.lengthText.simpleText,
-                            "creatorName": creatorName,
-                            "creatorUrl": creatorUrl,
-                            "uploaded": video.publishedTimeText.simpleText
-                        })
+                
+                // prioritize exp_related
+                let lookup_keyword = ""
+                // tags
+                data.videoDetails.keywords.forEach(tag => {
+                    if(lookup_keyword.length < 9) {
+                        lookup_keyword += `${tag.toLowerCase()} `
                     }
-                    catch(error) {}
                 })
+                // or the first word from the title if not enough
+                if(lookup_keyword.length < 9) {
+                    lookup_keyword = data.videoDetails.title.split(" ")[0]
+                }
+                
+                // search
+                yt2009search.related_from_keywords(
+                    lookup_keyword, data.id, "realistic_view_count", (html, rawData) => {
+                        rawData.forEach(video => {
+                            relatedParsed.push({
+                                "title": video.title,
+                                "id": video.id,
+                                "views": video.views,
+                                "length": yt2009utils.time_to_seconds(video.length || 0),
+                                "creatorName": video.creatorName,
+                                "creatorUrl": video.creatorUrl,
+                                "uploaded": ""
+                            })
+                        })
+                        if(relatedParsed.length >= 6) {
+                            callback(relatedParsed)
+                            saved_related_videos[id] = JSON.parse(JSON.stringify(
+                                relatedParsed
+                            ))
+                        } else {
+                            useDefaultRelated()
+                        }
+                    },
+                    ""
+                )
 
-                callback(relatedParsed)
-                saved_related_videos[id] = JSON.parse(JSON.stringify(
-                    relatedParsed
-                ))
+                function useDefaultRelated() {
+                    // add default related videos if less than 6 were added
+                    // by exp_related
+                    if(relatedParsed.length < 6) {
+                        try {
+                            related = data.contents.twoColumnWatchNextResults
+                                            .secondaryResults.secondaryResults
+                                            .results
+                                    || data.contents.twoColumnWatchNextResults
+                                            .secondaryResults.secondaryResults
+                                            .results[1].itemSectionRenderer
+                                            .contents
+                        }
+                        catch(error) {}
+                        related.forEach(video => {
+                            if(!video.compactVideoRenderer) return;
+        
+                            video = video.compactVideoRenderer;
+        
+                            let creatorName = ""
+                            let creatorUrl = ""
+                            video.shortBylineText.runs.forEach(run => {
+                                creatorName += run.text;
+                                creatorUrl += run.navigationEndpoint
+                                                .browseEndpoint.canonicalBaseUrl
+                            })
+                            try {
+                                relatedParsed.push({
+                                    "title": video.title.simpleText,
+                                    "id": video.videoId,
+                                    "views": video.viewCountText.simpleText,
+                                    "length": video.lengthText.simpleText,
+                                    "creatorName": creatorName,
+                                    "creatorUrl": creatorUrl,
+                                    "uploaded": video.publishedTimeText.simpleText
+                                })
+                            }
+                            catch(error) {}
+                        })
+        
+                        callback(relatedParsed)
+                        saved_related_videos[id] = JSON.parse(JSON.stringify(
+                            relatedParsed
+                        ))
+                    }
+                }
+                
             })
         }
     },

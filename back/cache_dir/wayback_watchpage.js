@@ -8,6 +8,14 @@ module.exports = {
     "write": function(id, data) {
         cache[id] = data;
     },
+    "readCacheOnly": function(id) {
+        id = id.substring(0,11)
+        if(cache[id]) {
+            return cache[id]
+        } else {
+            return false;
+        }
+    },
     "read": function(id, callback, resetCache) {
         id = id.substring(0,11)
         let empty = {

@@ -12,6 +12,7 @@ module.exports = {
         // czas na sekundy (np. 01:00:00 -> 3600)
         let tr = 0;
     
+        if(typeof(input) == "number") return input;
         let split = input.split(":")
         switch(split.length) {
             // ss
@@ -498,7 +499,7 @@ module.exports = {
     },
 
     "asciify": function(username) {
-        let r = username.replace(/[^a-zA-Z0-9]/g, "")
+        let r = username.replace(/[^a-zA-Z0-9]/g, "").trim()
         if(r.length == 0) {
             // random username if we're left with no characters
             let randomUsername = ""
