@@ -704,15 +704,20 @@ app.get("/playnav_get_comments", (req, res) => {
 playlisty
 ======
 */
-app.get("/playlist", (req, res) => {
-    if(!yt2009_utils.isAuthorized(req)) {
-        res.redirect("/unauth.htm")
-        return;
-    }
-    yt2009_playlists.parsePlaylist(req.query.list, (list) => {
-        res.send(yt2009_playlists.applyPlaylistHTML(list, req))
+let playlist_endpoints = ["/playlist", "/view_play_list"]
+playlist_endpoints.forEach(playlistEndpoint => {
+    app.get(playlistEndpoint, (req, res) => {
+        if(!yt2009_utils.isAuthorized(req)) {
+            res.redirect("/unauth.htm")
+            return;
+        }
+        let playlistId = (req.query.list || req.query.p)
+        yt2009_playlists.parsePlaylist(playlistId, (list) => {
+            res.send(yt2009_playlists.applyPlaylistHTML(list, req))
+        })
     })
 })
+
 app.get("/channel_get_playlist", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
         res.redirect("/unauth.htm")

@@ -741,5 +741,33 @@ module.exports = {
         <yt:statistics favoriteCount='0' viewCount='0'/>
         <yt:position>${index}</yt:position>
     </entry>`
+    },
+    "subscriptionVideo": function(video, flags, videoIndex) {
+        let uploadDate = flags.includes("fake_upload_date")
+                        ? utils.genFakeDate(videoIndex) : video.upload
+        let viewCount = video.views;
+        if(flags.includes("realistic_view_count")
+        && parseInt(video.views.replace(/[^0-9]/g, "")) >= 100000) {
+            viewCount = utils.countBreakup(
+                Math.floor(parseInt(video.views.replace(/[^0-9]/g, "")) / 90)
+            ) + " views"
+        }
+        return `
+        <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">
+            <div style="float: left;">
+                <div style="float: left;">
+                    <input type="checkbox" class="checkbox" value="${video.id}" />
+                </div>
+            </div>
+            <div style="float: left; width: 120px;">
+                <a href="/watch?v=${video.id}" class="video-thumb"><img src="${video.thumbnail}"/></a>
+                <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
+                <div class="video-stats">
+                    <div class="video-stat"><span class="stat-upload">Added: ${uploadDate}</span></div>
+                    <div class="video-stat"><span class="stat-views">Views: ${viewCount}</span></div>
+                    <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>
+                </div>
+            </div>
+        </div>`
     }
 }

@@ -4,7 +4,6 @@ const dominant_color = require("./dominant_color")
 const yt2009utils = require("./yt2009utils");
 const yt2009html = require("./yt2009html");
 const yt2009constants = require("./yt2009constants.json")
-const yt2009channelcache = require("./yt2009channelcache")
 const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
 const wayback_channel = require("./cache_dir/wayback_channel")

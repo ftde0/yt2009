@@ -1081,15 +1081,21 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 && comment.authorUrl.includes("/user/")) {
                     commentPoster = comment.authorUrl.split("/user/")[1]
                 }
+
+                let commentContent = comment.content
     
                 let future = constants.comments_remove_future_phrases
                 let futurePass = true;
                 if(flags.includes("comments_remove_future")) {
+                    commentContent = commentContent.replace(/\p{Other_Symbol}/gui, "")
                     future.forEach(futureWord => {
-                        if(comment.content.toLowerCase().includes(futureWord)) {
+                        if(commentContent.toLowerCase().includes(futureWord)) {
                             futurePass = false;
                         }
                     })
+                    if(commentContent.trim().length == 0) {
+                        futurePass = false;
+                    }
                 }
     
                 if(!futurePass) return;
@@ -1098,7 +1104,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     comment.authorUrl,
                     commentPoster,
                     commentTime,
-                    comment.content,
+                    commentContent,
                     flags
                 )
     
@@ -1180,7 +1186,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 yt2009playlists.parsePlaylist(
                     playlistId, () => {}
                 ).videos.forEach(video => {
-                    playlistsHTML += yt2009templates.relatedVideo(
+                    let playlistVideoHTML = yt2009templates.relatedVideo(
                         video.id,
                         video.title,
                         protocol,
@@ -1191,6 +1197,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         "",
                         playlistId
                     )
+                    if(data.id == video.id) {
+                        playlistVideoHTML = playlistVideoHTML.replace(
+                            `"video-entry"`,
+                            `"video-entry watch-ppv-vid"`
+                        )
+                    }
+                    playlistsHTML += playlistVideoHTML
                     index++;
                 })
             }

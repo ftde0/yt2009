@@ -317,10 +317,17 @@ module.exports = {
 
 
     "genFakeDate": function(index) {
+        // for WHATEVER STUPID reason this doesn't work properly
+        // without the if statement
+        // when index is set to 0. SO I HAVE TO DO THISSSS
+        // WTF JS
+        if(index == 0) {
+            return "1 day ago"
+        }
         return [
             "1 day ago",
-            "2 weeks ago",
             "1 week ago",
+            "2 weeks ago",
             "1 month ago",
             "3 months ago",
             "4 months ago",
@@ -511,6 +518,7 @@ module.exports = {
 
             // add random number to the end
             randomUsername += Math.floor(Math.random() * 90).toString()
+            r = randomUsername;
         }
         return r;
     },

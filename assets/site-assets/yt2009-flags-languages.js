@@ -39,6 +39,7 @@ var languageData_EN = {
         "channel-use-ryd": "use data from Return YouTube Dislike (https://returnyoutubedislike.com/) for correct star ratings",
         "channel-username-asciify": "remove special characters from usernames",
 
+        "mainpage-fake-upload-date": "fake upload dates (ex. 11 years ago -> 3 months ago)",
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
         "mainpage-remove-username-space": "removes spaces from usernames",
         "mainpage-username-asciify": "remove special characters from usernames",
