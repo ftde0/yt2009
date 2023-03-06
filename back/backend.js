@@ -417,7 +417,8 @@ app.get("/results", (req, res) => {
                     req.protocol, params,
                     req.headers["user-agent"]
                 ))
-            }
+            },
+            flags.includes("only_old")
         )
     } else {
         // normal search

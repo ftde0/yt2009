@@ -154,7 +154,11 @@ module.exports = {
                     let description = video.description;
                     if(waybackData) {
                         title = waybackData.title
+                                ? waybackData.title
+                                : video.title
                         description = waybackData.description
+                                      ? waybackData.description
+                                      : video.description
                         if(waybackData.authorName
                         && !waybackData.authorName.toLowerCase()
                                        .includes("subscribe")) {
@@ -361,160 +365,129 @@ module.exports = {
         }, "exp_related")
     },
 
-    "loopPages": function(keyword, searchParameters, targetPage, callback) {
-        // this is such a mess i hate this why haven't i made a proper paging
+    "loopPages": function(keyword, searchParameters, targetPage, callback, onlyOld) {
+        // this is STILL such a mess i hate this why haven't i made a proper paging
         // system before fuckcufkcufkcufkcufkcufkcufkcckkk
 
-
+        let createPageEntry = this.createPageEntry
 
         // initial search
-        if(searchParameters.includes("only_old")) {
+        if(onlyOld) {
             keyword += " before:2010-04-01"
         }
         
         let page = 1;
-        let timeoutMultiplier = 1;
+        let lastPagingCachePage = 0;
 
-        let headers = {
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9",
-            "content-type": "application/json",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "same-origin",
-            "sec-fetch-site": "same-origin",
-            "sec-gpc": "1",
-            "x-goog-eom-visitor-id": yt2009exports.read()["context"].visitorData,
-            "x-youtube-bootstrap-logged-in": "false",
-            "x-youtube-client-name": "1",
-            "x-youtube-client-version": yt2009exports.read()["context"].clientVersion,
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
-        }
-
-        if(pagingCache.read(keyword)[page]) {
-            if(page == targetPage) {
-                onDone(yt2009utils.search_parse(
-                    pagingCache.read(keyword)[page]
-                ))
-            } else {
-                // keep fetching
-                // we've got this page in cache but we need more
-                yt2009utils.search_parse(
-                    pagingCache.read(keyword)[page] 
-                ).forEach(result => {
-                    if(result.type == "continuation") {
-                        token = result.token;
-                        endpoint = result.endpoint
-                        getByContinuation(endpoint, token)
-                    }
-                })
-            }
+        // if the desired page is in cache, callback that
+        if(pagingCache.read(keyword)[targetPage]) {
+            callback(pagingCache.read(keyword)[targetPage])
         } else {
-            // clean fetch
-            fetch(`https://www.youtube.com/youtubei/v1/search?key=${yt2009exports.read()["api_key"]}`, {
-                "headers": headers,
-                "method": "POST",
-                "body": JSON.stringify({
-                    "query": keyword,
-                    "context": yt2009exports.read()["context"]
-                })
-            }).then(res => res.json().then(r => {
-                // if we're on a correct page, callback
-                if(page == targetPage) {
-                    onDone(yt2009utils.search_parse(r))
-                }
-                // otherwise keep fetching
-                else {
-                    let token = ""
-                    let endpoint = ""
-                    setTimeout(function() {
-                        pagingCache.write(
-                            keyword,
-                            page,
-                            r
-                        )
-                        yt2009utils.search_parse(r).forEach(result => {
-                            if(result.type == "continuation") {
-                                token = result.token;
-                                endpoint = result.endpoint
-                                getByContinuation(endpoint, token)
-                            }
-                        })
-                    }, 650 * timeoutMultiplier)
-                }
-            }))
-        }
-
-        // send a new request if necessary
-        function getByContinuation(endpoint, token) {
-            timeoutMultiplier += 0.1
-            page++;
-            if(pagingCache.read(keyword)[page]) {
-                if(page == targetPage) {
-                    onDone(yt2009utils.search_parse(
-                        pagingCache.read(keyword)[page]
-                    ))
-                } else {
-                    // keep fetching
-                    // we've got this page in cache but we need more
-                    yt2009utils.search_parse(
-                        pagingCache.read(keyword)[page] 
-                    ).forEach(result => {
-                        if(result.type == "continuation") {
-                            token = result.token;
-                            endpoint = result.endpoint
-                            getByContinuation(endpoint, token)
-                        }
-                    })
-                }
-            } else {
-                fetch(`https://www.youtube.com${endpoint}?key=${yt2009exports.read()["api_key"]}`, {
-                    "headers": headers,
+            // get 1st page as baseline (if not saved already)
+            if(!pagingCache.read(keyword)[1]) {
+                fetch(`https://www.youtube.com/youtubei/v1/search?key=${
+                    yt2009exports.read()["api_key"]
+                }`, {
+                    "headers": yt2009contants.headers,
                     "method": "POST",
                     "body": JSON.stringify({
-                        "continuation": token,
+                        "query": keyword,
                         "context": yt2009exports.read()["context"]
                     })
                 }).then(res => res.json().then(r => {
-                    // if we're on a correct page, callback
-                    if(page == targetPage) {
-                        pagingCache.write(
-                            keyword,
-                            page,
-                            r.onResponseReceivedCommands[0]
-                        )
-                        onDone(yt2009utils.search_parse(
-                            r.onResponseReceivedCommands[0]
-                        ))
-                    }
-                    // otherwise keep fetching
-                    else {
-                        let token = ""
-                        let endpoint = ""
-                        setTimeout(function() {
-                            pagingCache.write(
-                                keyword,
-                                page,
-                                r.onResponseReceivedCommands[0]
-                            )
-                            yt2009utils.search_parse(
-                                r.onResponseReceivedCommands[0]
-                            ).forEach(result => {
-                                if(result.type == "continuation") {
-                                    token = result.token;
-                                    endpoint = result.endpoint
-                                    getByContinuation(endpoint, token)
-                                }
-                            })
-                            
-                        }, 650 * timeoutMultiplier)
-                    }
+                    setTimeout(function() {
+                        let rPage = yt2009utils.search_parse(r)
+                        pagingCache.write(keyword, page, rPage)
+                        firstPageReceived()
+                    })
                 }))
+            } else {
+                firstPageReceived()
             }
         }
 
-        // on done
-        function onDone(searchData) {
-            callback(searchData)
+        // on 1st page retrieve
+        function firstPageReceived() {
+            let continuationToken = ""
+            let endpoint = "/youtubei/v1/search"
+            pagingCache.read(keyword)[1].forEach(result => {
+                if(result.type == "continuation") {
+                    continuationToken = result.token
+                    endpoint = result.endpoint
+                }
+            })
+
+            fetchUntilAll(continuationToken, endpoint)
+        }
+
+        // recurse fetch until page == targetPage
+        function fetchUntilAll(continuation, endpoint) {
+            createPageEntry(endpoint, continuation, keyword, page, (results) => {
+                page++
+                if(page == targetPage) {
+                    callback(results)
+                } else {
+                    let newContinuation = ""
+                    results.forEach(result => {
+                        if(result.type == "continuation") {
+                            newContinuation = result.token;
+                            fetchUntilAll(newContinuation, endpoint)
+                        }
+                    })
+                }
+            })
+        }
+    },
+
+    "createPageEntry": function(endpoint, token, keyword, page, callback) {
+        if(pagingCache.read(keyword)[page]) {
+            // cache
+            callback(pagingCache.read(keyword)[page])
+        } else {
+            // clean fetch
+            let results = []
+            let currentContinuation = token;
+
+            // fetch on until 10 results or more
+            let fetchInterval = setInterval(function() {
+                fetch(`https://www.youtube.com${endpoint}?key=${yt2009exports.read()["api_key"]}`, {
+                    "headers": yt2009contants.headers,
+                    "method": "POST",
+                    "body": JSON.stringify({
+                        "continuation": currentContinuation,
+                        "context": yt2009exports.read()["context"]
+                    })
+                }).then(res => res.json().then(r => {
+                    // push results to a full results variable
+                    // if total results >= 10, callback
+                    // otherwise let the interval keep doing its thing
+                    let searchResults = yt2009utils.search_parse(
+                        r.onResponseReceivedCommands[0]
+                    )
+                    searchResults.forEach(result => {
+                        if(result.type !== "continuation") {
+                            results.push(result)
+                        } else {
+                            currentContinuation = result.token;
+                        }
+                    })
+
+                    if(results.length >= 10) {
+                        // add the last continuation token to the end
+                        searchResults.forEach(result => {
+                            if(result.type == "continuation") {
+                                results.push(result)
+                            }
+                        })
+
+                        // then callback the page
+                        pagingCache.write(keyword, page, results)
+                        callback(results)
+                        clearInterval(fetchInterval)
+                    }
+                }))
+            }, 1643)
+           
         }
     }
 }

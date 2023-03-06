@@ -983,7 +983,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
-        if(!userAgent.includes("MSIE") && !userAgent.includes("Chrome/")) {
+        if(!userAgent.includes("MSIE") && !userAgent.includes("Chrome/")
+        && !useFlash) {
             code = code.replace(
                 `id="watch-longform-player" class="master-sprite"`,
                 `id="watch-longform-player" class="master-sprite not-pos-exclude"`
