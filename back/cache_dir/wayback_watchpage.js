@@ -222,6 +222,8 @@ module.exports = {
                             .video-mini-title a,
                             .video-list-item-link,
                             .related-video`)
+            if(!idSelector) return;
+            if(idSelector.getAttribute("href").includes("list=")) return;
             relatedElement.id = idSelector &&
                                 idSelector.getAttribute("href") ?
                                 idSelector.getAttribute("href")
@@ -241,7 +243,8 @@ module.exports = {
                                             .video-username a,
                                             .stat .yt-user-name,
                                             .stat.attribution,
-                                            .stat:last-child`).innerText
+                                            .stat:last-child:not(.view-count),
+                                            .stat:not(.view-count)`).innerText
             }
             catch(error) {
                 relatedElement.uploaderName = ""
@@ -261,13 +264,12 @@ module.exports = {
                                                 .getAttribute(`data-ytid`)}`
             }
             relatedElement.uploaderUrl = uploaderUrl
-            
+
             try {
                 relatedElement.viewCount = video.querySelector(`
                                 .view-count,
                                 .video-view-count,
-                                .stat.view-count,
-                                .stat`).innerText
+                                .stat.view-count`).innerText
             }
             catch(error) {
                 console.log(error)

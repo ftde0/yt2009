@@ -1094,7 +1094,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             futurePass = false;
                         }
                     })
-                    if(commentContent.trim().length == 0) {
+                    if(commentContent.trim().length == 0
+                    || commentContent.trim().length > 500) {
                         futurePass = false;
                     }
                 }
