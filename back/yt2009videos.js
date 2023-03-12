@@ -12,6 +12,7 @@ const fs = require("fs")
 const page = fs.readFileSync("../videos.htm").toString()
 const templates = require("./yt2009templates")
 const config = require("./config.json")
+const wayback_watchpage = require("./cache_dir/wayback_watchpage")
 const category_numbers = {
     "0": "All Categories",
     "2": "Autos & Vehicles",
@@ -84,11 +85,26 @@ module.exports = {
                 ) + " views"
             }
 
+            let videoTitle = video.title;
+            let authorName = video.uploaderName;
+
+            let waybackData = {}
+            if(wayback_watchpage.readCacheOnly(video.id)) {
+                waybackData = wayback_watchpage.readCacheOnly(video.id)
+            }
+            if(waybackData.title) {
+                videoTitle = waybackData.title
+            }
+            if(waybackData.authorName
+            && !waybackData.authorName.toLowerCase().includes("subscribe")) {
+                authorName = waybackData.authorName
+            }
+
             videosHTML += templates.videoCell(
                 video.id,
-                video.title,
+                videoTitle.trim(),
                 req.protocol,
-                video.uploaderName,
+                authorName.trim(),
                 video.uploaderUrl,
                 views,
                 flags
