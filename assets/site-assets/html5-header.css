@@ -1,0 +1,16 @@
+.html5 .video-corner-text {
+    margin-top: -28px;
+}
+.html5 #masthead-nav-main,
+.html5 #masthead-nav-user {
+    line-height: 1.4em;
+}
+.html5 #masthead-nav-main {
+    margin-top: 1px;
+}
+.html5 #masthead {
+    padding-bottom: 0.45em;
+}
+.html5 .search-form .yt-button span {
+    display: block;
+}

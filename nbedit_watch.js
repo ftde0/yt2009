@@ -396,7 +396,10 @@ takie fajne
 ======
 */
 
-if(location.href.indexOf("&flip=1") !== -1) {
+if(location.href.indexOf("&flip=1") !== -1
+|| (new Date().getMonth() == 3
+&& new Date().getDate() == 1
+&& document.cookie.indexOf("unflip=1") == -1)) {
     // css
     var css = document.createElement("style")
     css.innerHTML = ".flip {-webkit-transform: rotate(180deg);-moz-transform: rotate(180deg);transform: rotate(180deg);direction: rtl;}\
@@ -479,6 +482,11 @@ function new_layout_alert() {
 }
 
 function new_layout_leave() {
+    if(new Date().getMonth() == 3) {
+        document.cookie = "unflip=1; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    } else {
+        document.cookie = "unflip=1; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
+    }
     location.href = location.href.replace("&flip=1", "")
 }
 

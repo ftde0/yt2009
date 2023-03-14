@@ -996,10 +996,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // podkładanie pod html podstawowych danych
-        code = code.split("video_title").join(data.title)
+        code = code.split("video_title").join(yt2009utils.xss(data.title))
         code = code.replace("video_view_count", views)
         code = code.replace("channel_icon", channelIcon)
-        code = code.replace("channel_name", author_name)
+        code = code.replace("channel_name", yt2009utils.xss(author_name))
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
         code = code.replace("yt2009_ratings_count", ratings)
@@ -1544,6 +1544,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             // flash
             if(useFlash) {
                 flash_url += render_endscreen_f()
+                if(new Date().getMonth() == 3
+                && new Date().getDate() == 1
+                && !req.headers.cookie.includes("unflip=1")) {
+                    code = code.replace(
+                        `<!--yt2009_f_apr1-->`,
+                        `<link rel="stylesheet" href="/assets/site-assets/apr1.css">`
+                    )
+                    flash_url += "&flip=1"
+                }
                 code = code.replace(
                     `<!--yt2009_f-->`,
                     yt2009templates.flashObject(flash_url)

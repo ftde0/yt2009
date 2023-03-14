@@ -1,0 +1,55 @@
+.flip #logo, .flip a, .flip #masthead-nav-main,
+.flip #masthead-nav-user, .flip .util-a1, .flip #watch-this-vid,
+.flip #watch-vid-title, .flip #watch-channel-stats, .flip #ratingMessage,
+.flip #watch-views-div, .flip #watch-video-tags-div, .flip .watch-comment-info,
+.flip .watch-comment-body, .flip .watch-comment-action,
+.flip .yt-uix-expander-head, .flip .yt-uix-expander-arrow,
+.flip .links, .flip .region-and-language-pickers, .flip .video-main-content,
+
+
+.legacy.flip .yt-uix-expander-head span {
+    -webkit-transform: rotate(180deg);
+    -moz-transform: rotate(180deg);
+    transform: rotate(180deg);
+    direction: rtl;
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+    -ms-filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+}
+
+.flip #masthead-nav-main {
+    margin-left: -120px;
+}
+
+.flip .video-main-content {
+    margin-left: 5px;
+}
+
+.legacy.flip #masthead-nav-main, .legacy.flip #masthead-utility {
+    visibility: hidden;
+}
+
+.legacy.flip .video-main-content {
+    margin-left: 0px;
+}
+
+.new-layout {
+    width: 300px;
+    height: 60px;
+    background: #c6d7f3;
+    border: 1px #a0b1dc solid;
+    margin-bottom: 10px;
+}
+.new-layout h1 {
+    width: 30px;
+    font-size: 40px;
+    margin: 10px 10px;
+    float: left;
+}
+.new-layout h2,
+.new-layout a {
+    color: #03c;
+    cursor: pointer;
+}
+.new-layout h2 {
+    margin-bottom: 15px;
+}

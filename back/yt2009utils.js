@@ -785,5 +785,10 @@ module.exports = {
             req.headers.cookie = ""
         }
         return req;
+    },
+
+    "xss": function(input) {
+        return input.split("<").join("&lt;")
+                    .split(">").join("&gt;")
     }
 }

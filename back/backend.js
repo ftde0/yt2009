@@ -296,6 +296,17 @@ app.get("/profile", (req, res) => {
 
 /*
 ======
+subtitles
+======
+*/
+app.get("/timedtext", (req, res) => {
+    // to-be-implemented, subtitles for flash
+    res.send(fs.readFileSync("../media/test.xml"))
+})
+
+
+/*
+======
 generator embedów
 ======
 */

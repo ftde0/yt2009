@@ -598,3 +598,47 @@ function toggleCommentsExpander(element) {
         )[0].className = "yt-uix-expander-body hid"
     }
 }
+
+// flip!!
+// taken from nbedit_watch.js
+// if you see this before apr 1, don't ruin the surprise to others!
+if((location.href.indexOf("/watch") !== -1
+&& location.href.indexOf("&flip=1") !== -1)
+|| (new Date().getMonth() == 3
+&& new Date().getDate() == 1
+&& document.cookie.indexOf("unflip=1") == -1
+&& location.href.indexOf("watch") !== -1)) {
+    // css
+    document.body.className += " flip"
+
+    if(navigator.userAgent.indexOf("MSIE") !== -1) {
+        document.body.className += " legacy"
+    }
+    
+    // tips for viewing the new layout
+    var tipWindowInner = "<h1 class='flip'>?</h1>\
+    <h2 onclick='new_layout_alert()'>Tips for viewing the new layout</h2>\
+    <a onclick='new_layout_leave()'>(I prefer the old-fashioned layout!)</a>"
+    $("#watch-other-vids").innerHTML = "<div class=\"new-layout\">"
+                                        + tipWindowInner + "</div>"
+                                        + $("#watch-other-vids").innerHTML
+    
+    var loginWidth = document.querySelector(".utility-item")
+                                        .getBoundingClientRect().width;
+
+    document.querySelector("#masthead-utility")
+            .style.marginLeft = (960 - loginWidth - 10) + "px"
+}
+
+function new_layout_alert() {
+    window.open("/t/new_viewing_experience")
+}
+
+function new_layout_leave() {
+    if(new Date().getMonth() == 3) {
+        document.cookie = "unflip=1; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    } else {
+        document.cookie = "unflip=1; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
+    }
+    location.href = location.href.replace("&flip=1", "")
+}

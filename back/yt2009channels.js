@@ -437,7 +437,9 @@ module.exports = {
         =======
         */
         // fill channel name & its flags
-        let channelName = yt2009utils.textFlags(data.name, flags, data.url)
+        let channelName = yt2009utils.textFlags(
+            yt2009utils.xss(data.name), flags, data.url
+        )
         code = code.split("yt2009_channel_name").join(channelName)
 
         // channel avatar
@@ -711,7 +713,7 @@ module.exports = {
             code = code.replace(
                 `<div id="playnav-navbar"`,
                 `<div style="float:left;padding-top: 1.2em" class="inner-box">
-            ${data.name} has no videos available.</div><div id="playnav-navbar"`
+            ${yt2009utils.xss(data.name)} has no videos available.</div><div id="playnav-navbar"`
             )
             code = code.replace(
                 `//[yt2009-hook-no-videos]`,
@@ -782,6 +784,9 @@ module.exports = {
         for(let p in data.properties) {
             let p_uppercase = yt2009utils.firstUppercase(p)
             let value = data.properties[p]
+            if(p == "name") {
+                value = yt2009utils.xss(value)
+            }
             let valueMarkup = yt2009utils.markupDescription(value)
 
             properties_html += templates.channelProperty(
