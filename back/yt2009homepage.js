@@ -158,6 +158,25 @@ module.exports = function(req, res) {
         )
     }
 
+    // set <title> based on login_simulate
+    let default_title = "YouTube - Broadcast Yourself."
+    if((req.headers.cookie || "").includes("login_simulate")) {
+        let signedInName = req.headers.cookie.split("login_simulate")[1]
+                                             .split(";")[0]
+                                             .split(":")[0]
+        signedInName = yt2009utils.xss(decodeURIComponent(signedInName))
+        code = code.replace(
+            "yt2009_pagetitle",
+            "YouTube - " + signedInName + "'s YouTube"
+        )
+    } else {
+        code = code.replace(
+            "yt2009_pagetitle",
+            default_title
+        )
+    }
+
+
     // wysyłamy
     res.send(code)
 }

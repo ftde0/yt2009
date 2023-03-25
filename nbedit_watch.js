@@ -633,7 +633,8 @@ var embed_settings = {
     "height": "344",
     "flash_player": true,
     "add_related_html": false,
-    "add_border": false
+    "add_border": false,
+    "no_controls_fade": false
 }
 // załaduj
 // load
@@ -659,7 +660,15 @@ function embed_update_code() {
     if(embed_settings.add_related_html) {
         attributes += "&server_fill_related=1"
     }
-    var code = '<iframe width="' + embed_settings.width + '" height="' + embed_settings.height + '" src="' + site + '/embed/' + id + attributes + '" ></iframe>' // html5
+    if(!embed_settings.flash_player) {
+        $(".embed-no-controls-fade-check").className = "embed-no-controls-fade-check"
+    } else {
+        $(".embed-no-controls-fade-check").className = "embed-no-controls-fade-check hid"
+    }
+    if(embed_settings.no_controls_fade) {
+        attributes += "&no_controls_fade=1"
+    }
+    var code = '<iframe width="' + embed_settings.width + '" height="' + embed_settings.height + '" src="' + site + '/embed/' + id + attributes + '" allowfullscreen></iframe>' // html5
     if(embed_settings.flash_player) {
         code = '<object width="' + embed_settings.width + '" height="' + embed_settings.height + '"><param name="movie" value="' + site + '/embedF/' + id + attributes + '"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="' + site + '/embedF/' + id + attributes + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="' + embed_settings.width + '" height="' + embed_settings.height + '"></embed></object>' // flash player
     }

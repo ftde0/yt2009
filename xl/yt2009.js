@@ -23,3 +23,21 @@ if(use_html5) {
         old_id = current_video;
     }, 500)
 }
+
+// check if flash loaded, throw a message otherwise
+function checkFlash() {
+    if(document.getElementsByTagName("object").length <= 0
+    && document.getElementsByTagName("embed").length <= 0
+    && !use_html5) {
+        document.getElementById("main.player.video").innerHTML += "\
+        <h1 style=\"font-size: 16px;\">your browser may not support flash. <button>load html5</button></h1>"
+
+        setTimeout(function() {
+            document.getElementById("main.player.video")
+                    .getElementsByTagName("button")[0]
+                    .onclick = function() {
+                location.href += "?html5=1"
+            }
+        }, 150)
+    }
+}
