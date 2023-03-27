@@ -703,7 +703,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 comment.authorName,
                                 commentTime,
                                 comment.content,
-                                flags
+                                flags,
+                                true
                             )
                         })
                         commentsHTML += `<!--Default YT comments below.-->`
@@ -749,9 +750,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 video.uploaderName
                                 .toLowerCase()
                                 .includes("playlist")) return;
-                            let views = yt2009utils.countBreakup(
+                            let views = "lang_views_prefix" + yt2009utils.countBreakup(
                                 parseInt(video.viewCount.replace(/[^0-9]/g, ""))
-                            ) + " views"
+                            ) + "lang_views_suffix"
                             if(isNaN(
                                 parseInt(video.viewCount.replace(/[^0-9]/g, "")))
                             ) {
@@ -900,17 +901,21 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 .videos.splice(0, 11).forEach(video => {
                     if(video.id == data.id) return;
                     let viewCount = parseInt(video.views.replace(/[^0-9]/g, ""))
+                    if(flags.includes("realistic_view_count")
+                    && viewCount >= 100000) {
+                        viewCount = yt2009utils.countBreakup(
+                            Math.floor(viewCount / 90)
+                        )
+                    } else {
+                        viewCount = yt2009utils.countBreakup(viewCount)
+                    }
+                    viewCount = "lang_views_prefix" + viewCount + "lang_views_suffix"
                     moreFromCode += yt2009templates.relatedVideo(
                         video.id,
                         video.title,
                         protocol,
                         "",
-                        flags.includes("realistic_view_count")
-                        && viewCount >= 100000
-                        ? yt2009utils.countBreakup(
-                            Math.floor(viewCount / 90)
-                        ) + " views"
-                        : yt2009utils.countBreakup(viewCount) + " views",
+                        viewCount,
                         "",
                         "",
                         flags
@@ -1107,7 +1112,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     commentPoster,
                     commentTime,
                     commentContent,
-                    flags
+                    flags,
+                    true
                 )
     
                 unfilteredCommentCount++;
@@ -1137,14 +1143,18 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 uploader = yt2009utils.asciify(uploader)
             }
 
-            let relatedViewCount = video.views
+            let relatedViewCount = parseInt(video.views.replace(/[^0-9]/g, ""))
+            relatedViewCount = "lang_views_prefix"
+                             + yt2009utils.countBreakup(relatedViewCount)
+                             + "lang_views_suffix"
             if(flags.includes("realistic_view_count")
             && parseInt(relatedViewCount.replace(/[^0-9]/g, "")) >= 1000) {
-                relatedViewCount = yt2009utils.countBreakup(
+                relatedViewCount = "lang_views_prefix" + 
+                yt2009utils.countBreakup(
                     Math.floor(
                         parseInt(relatedViewCount.replace(/[^0-9]/g, "")) / 90
                     )
-                ) + " views"
+                ) + "lang_views_suffix"
             }
 
             // sam html
@@ -1656,7 +1666,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(flags.includes("shows_tab")) {
             code = code.replace(
                 `<a href="/channels">lang_channels</a>`,
-                `<a href="/channels">lang_channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
         
@@ -1726,16 +1736,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             
                             // view count flags
                             let viewCount = video.views;
+                            viewCount = parseInt(viewCount.replace(/[^0-9]/g, ""))
                             if(flags.includes("realistic_view_count")
-                            && parseInt(
-                                viewCount.replace(/[^0-9]/g, "")
-                            ) >= 100000) {
-                                viewCount = yt2009utils.countBreakup(
-                                    Math.floor(parseInt(
-                                        viewCount.replace(/[^0-9]/g, "")
-                                    ) / 90)
-                                ) + " views"
+                            && viewCount >= 100000) {
+                                viewCount = Math.floor(viewCount / 90)
                             }
+                            viewCount = "lang_views_prefix"
+                                        + yt2009utils.countBreakup(viewCount)
+                                        + "lang_views_suffix"
 
                             endscreen_queue.push({
                                 "title": video.title,

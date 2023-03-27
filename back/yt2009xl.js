@@ -1,5 +1,6 @@
 const utils = require("./yt2009utils")
 const templates = require("./yt2009templates")
+const ytdl = require("ytdl-core")
 const videoDataCache = require("./cache_dir/video_cache_manager")
 const waybackFeatures = require("./cache_dir/wayback_watchpage")
 const exists = require("./cache_dir/video_exists_cache_mgr")

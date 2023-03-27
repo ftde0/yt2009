@@ -7,7 +7,7 @@ const utils = require("./yt2009utils")
 const config = require("./config.json")
 
 module.exports = {
-    "videoComment": function(authorUrl, authorName, commentTime, content, flags) {
+    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage) {
         if(commentTime.includes("in playlist")) {
             commentTime = commentTime.split("in playlist")[0]
         }
@@ -25,7 +25,7 @@ module.exports = {
                 </div>
                 <span class="watch-comment-spam-bug">Marked as spam</span>
                 <div class="watch-comment-action">
-                    <a>Reply</a>
+                    <a>${useLanguage ? "lang_comment_reply" : "Reply"}</a>
                     ${flags.includes("login_simulate") ? `
                     |
                     <a title="Flag this comment as Spam">Spam</a>` : ""}
@@ -389,7 +389,7 @@ module.exports = {
                 <h2 class="yt-uix-expander-head yt-uix-expander-collapsed" onclick="toggleExpander(this)">
                     <button title="" class="yt-uix-expander-arrow master-sprite"></button>
                     <span>
-                        More From: ${name}
+                        lang_morefrom${name}
                     </span>
                 </h2>
                 <div id="watch-channel-vids-body" class="watch-discoverbox-body mini-list-view yt-uix-expander-body hid">

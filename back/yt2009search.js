@@ -338,13 +338,20 @@ module.exports = {
                             parseInt(viewCount.replace(/[^0-9]/g, "")) / 90
                         )) + " views"
                     }
+
+                    // html view count (include the lang strings)
+                    let htmlViewCount = viewCount;
+                    htmlViewCount = parseInt(viewCount.replace(/[^0-9]/g, ""))
+                    htmlViewCount = "lang_views_prefix"
+                                  + yt2009utils.countBreakup(htmlViewCount)
+                                  + "lang_views_suffix"
     
                     related_html += yt2009templates.relatedVideo(
                         result.id,
                         result.title,
                         protocol,
                         result.time,
-                        viewCount,
+                        htmlViewCount,
                         result.author_url,
                         authorName,
                         watch_flags
