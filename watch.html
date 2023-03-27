@@ -174,10 +174,10 @@
 						<span class="watch-video-added post-date">upload_date</span><br />
 						<div id="watch-video-details-toggle">
 							<div id="watch-video-details-toggle-less">
-								(<a href="#" class="hLink more_info">more info</a>)
+								(<a href="#" class="hLink more_info">lang_moreinfo</a>)
 							</div>
 							<div id="watch-video-details-toggle-more" style="display: none;">
-								(<a href="#" class="hLink less_info">less info</a>)
+								(<a href="#" class="hLink less_info">lang_lessinfo</a>)
 							</div>
 						</div>
 					</div>
@@ -200,7 +200,7 @@
 							</div>
 							<div id="watch-video-tags-div">
 								<div class="floatL">
-									<span class="watch-channel-stat">Tags:&nbsp;</span>
+									<span class="watch-channel-stat">lang_tags_begin&nbsp;</span>
 								</div>
 								<div id="watch-video-tags" class="floatL">
 									video_tags_html
@@ -235,9 +235,7 @@
 			<div id="watch-related-videos-panel" class="watch-discoverbox-wrapper yt-uix-expander " data-expander-action="watchTogglePanel" data-discoverbox-type="related" data-discoverbox-username="">
 				<h2 class="yt-uix-expander-head" onclick="toggleExpander(this)">
 					<button title="" class="yt-uix-expander-arrow master-sprite"></button>
-					<span>
-						Related Videos
-					</span>
+					<span>lang_related</span>
 				</h2>
 				<div id="watch-related-vids-body" class="watch-discoverbox-body mini-list-view yt-uix-expander-body">
 					<div id="watch-related-discoverbox" class="watch-discoverbox" style="height:432px">
@@ -266,14 +264,14 @@
 								<button class="yt2009-stars master-sprite ratingL ratingL-4.5" title="4.5"></button>
 							</div>
 							<div id="ratingMessage">
-								<div id="defaultRatingMessage"><span class="smallText">yt2009_ratings_count lang_ratings_suffix</span></div>
+								<div id="defaultRatingMessage"><span class="smallText">lang_ratings_prefix yt2009_ratings_count lang_ratings_suffix</span></div>
 								<div id="hoverMessage" style="width:100%" class="hid"><a href="#">Sign in</a> to rate</div>
 							</div>
 						</div>
 					</div>
 				</div>
 				<div id="watch-views-div">
-					<span id="watch-views"><span id="watch-view-count">video_view_count</span> lang_views_suffix</span>
+					<span id="watch-views">lang_views_prefix <span id="watch-view-count">video_view_count</span> lang_views_suffix</span>
 				</div>
 				<div class="clear"></div>
 			</div>
@@ -500,7 +498,7 @@
 					<a href="#" class="hLink smallText" id="post_text_comment_link" rel="nofollow">Sign in to post a Comment</a>
 				</div>
 				<h4 class="yt-uix-expander-head" onclick="toggleCommentsExpander(this)">
-					<button title="" class="yt-uix-expander-arrow master-sprite"></button> lang_comments<a href="#" class="smallText hLink">Options</a>
+					<button title="" class="yt-uix-expander-arrow master-sprite"></button> lang_comments<a href="#" class="smallText hLink">lang_comment_options</a>
 				</h4>
 				<div class="clear"></div>
 				<div id="watch-comments-options" class="hid">
@@ -517,11 +515,11 @@
 							<tbody>
 								<tr>
 									<td class="watch-comments-footer-td">
-										<strong>Showing <span id="watch-comment-count">yt2009_comment_count</span></strong> comments
+										<strong>lang_showing_comments_p1 <span id="watch-comment-count">yt2009_comment_count</span></strong> lang_showing_comments_p2
 									</td>
 									<td class="watch-comments-footer-td yt2009_hook_more_comments" id="watch-comments-show-more-td">
 										<span id="watch-comments-loading-span"></span>
-										<a class="yt-button" id="watch-comments-show-more-button" href="#" onclick="onWatchCommentsShowMore(); return false;"><span>Show More Comments</span></a>
+										<a class="yt-button" id="watch-comments-show-more-button" href="#" onclick="onWatchCommentsShowMore(); return false;"><span>lang_more_comments</span></a>
 									</td>
 									<td class="watch-comments-footer-td" id="watch-comments-view-all-td">
 										<span id="watch-comments-view-all-span" style="visibility: hidden;cursor:default;"><a href="#" class="hLink" rel="nofollow">View All 0 comments</a></span>
@@ -530,11 +528,8 @@
 							</tbody>
 						</table>
 						<div id="watch-comment-post" class="yt2009-signin-hide">
-							<h2>Would you like to comment?</h2>
-							<div>
-								<a href="#">Join YouTube</a> for a free account, or
-								<a href="#">sign in</a> if you are already a member.
-							</div>
+							<h2>lang_cmts_login_promo_p1</h2>
+							<div>lang_cmts_login_promo_p2</div>
 						</div>
 						<!--yt2009_relay_comment_form-->
 					</div>
@@ -547,82 +542,80 @@
 					<form autocomplete="off" class="search-form" action="/results" method="get" name="footer-search-form">
 						<input id="footer-search-term" class="search-term" name="search_query" type="text" value="" maxlength="128">
 						<input id="search-type-footer" name="search_type" type="hidden" value="">
-						<a class="yt-button yt-button-primary" id="" class href="#"><span>Search</span></a>
+						<a class="yt-button yt-button-primary" id="" class href="#"><span>lang_search</span></a>
 					</form>
 				</div>
 				<div class="links">
 					<table cellpadding="0" cellspacing="0">
 						<tr>
-							<th>YouTube</th>
-							<th>Programs</th>
-							<th>Help</th>
-							<th>Policy</th>
-							<th>Discover</th>
+							<th>lang_footer_yt</th>
+							<th>lang_footer_programs</th>
+							<th>lang_footer_help</th>
+							<th>lang_footer_policy</th>
+							<th>lang_footer_discover</th>
 						</tr>
 						<tr>
-							<td><a href="/t/contact_us">Contact Us</a></td>
-							<td><a href="/t/advertising">Advertising</a></td>
-							<td><b><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US" target="_blank">Get Help</a></b></td>
-							<td><a href="/t/privacy">Privacy Policy</a></td>
-							<td><a href="/mobile">YouTube on Your Phone</a></td>
+							<td><a href="/t/contact_us">lang_footer_contact</a></td>
+							<td><a href="/t/advertising">lang_footer_advertising</a></td>
+							<td><b><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US" target="_blank">lang_footer_ghelp</a></b></td>
+							<td><a href="/t/privacy">lang_footer_privacy</a></td>
+							<td><a href="/mobile">lang_footer_mobile</a></td>
 						</tr>
 						<tr>
-							<td><a href="http://www.googlestore.com/youtube">YouTube Store</a></td>
-							<td><a href="http://code.google.com/apis/youtube/overview.html">Developers</a>
+							<td><a href="http://www.googlestore.com/youtube">lang_footer_store</a></td>
+							<td><a href="http://code.google.com/apis/youtube/overview.html">lang_footer_dev</a>
 							</td>
-							<td><a href="/t/yt_handbook_home">YouTube Handbook</a>
+							<td><a href="/t/yt_handbook_home">lang_footer_handbook</a>
 							</td>
-							<td><a href="/t/terms">Terms of Service</a></td>
-							<td><a href="/youtubeonyoursite">YouTube on Your Site</a></td>
+							<td><a href="/t/terms">lang_footer_tos</a></td>
+							<td><a href="/youtubeonyoursite">lang_footer_site</a></td>
 						</tr>
 						<tr>
-							<td><a href="/press_room">Press Room</a></td>
-							<td><a href="/partners">Partnerships</a></td>
-							<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">Community Help Forums</a></td>
-							<td><a href="/t/dmca_policy">Copyright Notices</a></td>
-							<td><a href="/youtubeonyourtv">YouTube on Your TV</a></td>
+							<td><a href="/press_room">lang_footer_press</a></td>
+							<td><a href="/partners">lang_footer_partner</a></td>
+							<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">lang_footer_community</a></td>
+							<td><a href="/t/dmca_policy">lang_footer_dmca</a></td>
+							<td><a href="/youtubeonyourtv">lang_footer_tv</a></td>
 						</tr>
 						<tr>
-							<td><a href="http://ytbizblog.blogspot.com/">Business Blog</a></td>
-							<td><a href="/t/content_management">Content Management</a></td>
-							<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">Safety Center</a></td>
-							<td><a href="/t/community_guidelines">Community Guidelines</a></td>
-							<td><a href="/t/rss_feeds">YouTube RSS Feeds</a></td>
+							<td><a href="http://ytbizblog.blogspot.com/">lang_footer_business</a></td>
+							<td><a href="/t/content_management">lang_footer_cm</a></td>
+							<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">lang_footer_safety</a></td>
+							<td><a href="/t/community_guidelines">lang_footer_guidelines</a></td>
+							<td><a href="/t/rss_feeds">lang_footer_rss</a></td>
 						</tr>
 						<tr>
-							<td><a href="/blog">YouTube Blog</a></td>
+							<td><a href="/blog">lang_footer_blog</a></td>
 							<td></td>
-							<td><a href="/t/creators_corner">Creator's Corner</a></td>
+							<td><a href="/t/creators_corner">lang_footer_corner</a></td>
 							<td></td>
-							<td><a href="/testtube">TestTube</a></td>
+							<td><a href="/testtube">lang_footer_test</a></td>
 						</tr>
 					</table>
 				</div>
 				<div class="region-and-language-pickers">
 					<div class="google-home">
-						<a href="http://www.google.com/webmasters/igoogle/youtube.html">Add YouTube to your Google homepage</a>
+						<a href="http://www.google.com/webmasters/igoogle/youtube.html">lang_footer_igoogle</a>
 					</div>
 					<div class="region-picker-box">
-						<span class="region-label">Current Location:</span>
+						<span class="region-label">lang_footer_location</span>
 						<strong class="region-title">Worldwide</strong>
-						<a href="#" onclick="loadPicker('region-picker'); return false;">Show locations</a>
+						<a href="#" onclick="loadPicker('region-picker'); return false;">lang_footer_showloc</a>
 						<div id="region-picker-container">
 							<div id="region-picker-loading" style="display: none">Loading...</div>
 						</div>
 					</div>
 					<div class="language-picker-box">
-						<span class="language-label">Current Language:</span>
+						<span class="language-label">lang_footer_language</span>
 						<strong class="language-title">English</strong>
-						<a href="#" onclick="loadPicker('language-picker'); return false;">Show languages</a>
+						<a href="#" onclick="loadPicker('language-picker'); return false;">lang_footer_showlang</a>
 						<div id="language-picker-container">
 							<div id="language-picker-loading" style="display: none">Loading...</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div id="copyright">
-				&copy; 2009 YouTube, LLC
-			</div>
+			<div id="copyright">lang_footer_copyright</div>
 			<!-- end footer section -->
 			<!--yt2009-->
 			<!--hook /assets/site-assets/f_script.js -->
