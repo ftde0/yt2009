@@ -1093,7 +1093,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 let future = constants.comments_remove_future_phrases
                 let futurePass = true;
                 if(flags.includes("comments_remove_future")) {
-                    commentContent = commentContent.replace(/\p{Other_Symbol}/gui, "")
+                    commentContent = commentContent.replace(/\p{Other_Symbol}/gui, "") 
+                    // whatever THIS character is, displays sometimes on ff
+                    commentContent = commentContent.split("🏻").join("")
                     future.forEach(futureWord => {
                         if(commentContent.toLowerCase().includes(futureWord)) {
                             futurePass = false;
@@ -1557,11 +1559,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 if(new Date().getMonth() == 3
                 && new Date().getDate() == 1
                 && !req.headers.cookie.includes("unflip=1")) {
-                    code = code.replace(
-                        `<!--yt2009_f_apr1-->`,
-                        `<link rel="stylesheet" href="/assets/site-assets/apr1.css">`
-                    )
-                    flash_url += "&flip=1"
+                    if(req.headers["user-agent"].includes("MSIE")) {
+                        code = code.replace(
+                            `<!--yt2009_f_apr1-->`,
+                            `<link rel="stylesheet" href="/assets/site-assets/apr1.css">`
+                        )
+                        flash_url += "&flip=1"
+                    }
                 }
                 code = code.replace(
                     `<!--yt2009_f-->`,

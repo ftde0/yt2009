@@ -434,7 +434,7 @@ module.exports = {
         </div>`
     },
     "flashObject": function(url) {
-        return `<object width="640" height="385" class="fl"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
+        return `<object width="640" height="385" class="fl flash-video"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
     },
     "html5Embed": function(id, elementId) {
         return `<iframe id="${elementId}" allowfullscreen src="/embed/${id}"></iframe>`

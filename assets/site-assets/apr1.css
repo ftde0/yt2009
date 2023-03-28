@@ -1,5 +1,5 @@
 .flip #logo, .flip a, .flip #masthead-nav-main,
-.flip #masthead-nav-user, .flip .util-a1, .flip #watch-this-vid,
+.flip #masthead-nav-user, .flip .util-a1,
 .flip #watch-vid-title, .flip #watch-channel-stats, .flip #ratingMessage,
 .flip #watch-views-div, .flip #watch-video-tags-div, .flip .watch-comment-info,
 .flip .watch-comment-body, .flip .watch-comment-action,
@@ -14,6 +14,15 @@
     direction: rtl;
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
     -ms-filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+}
+
+.flip #masthead-nav-user .yt-button.yt-button-urgent {
+    -webkit-transform: initial;
+    -moz-transform: -moz-initial;
+    transform: initial;
+    direction: ltr;
+    filter: "";
+    -ms-filter: "";
 }
 
 .flip #masthead-nav-main {

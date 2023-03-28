@@ -38,6 +38,7 @@ module.exports = {
             res.send("")
             return;
         }
+        req = utils.addFakeCookie(req)
 
         let flags = req.query.flags || ""
         try {

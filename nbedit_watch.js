@@ -422,7 +422,7 @@ if(location.href.indexOf("&flip=1") !== -1
     #ratingMessage, #watch-views-div, #watch-video-tags-div,\
     .watch-comment-info, .watch-comment-body,\
     .watch-comment-action, .yt-uix-expander-head, .yt-uix-expander-arrow,\
-    .links, .region-and-language-pickers")
+    .links, .region-and-language-pickers, .progress_container")
     for(var sel in s) {
         try {
             s[sel].className += " flip"
@@ -471,10 +471,17 @@ if(location.href.indexOf("&flip=1") !== -1
         seekBtn.style.left = "-9px"
     }
 
-    // better account name positioning
-    var loginDiv = document.querySelector("#masthead-utility #masthead-utility, #masthead-utility .utility-item")
-    var loginWidth = loginDiv.getBoundingClientRect().width;
-    document.querySelector("#masthead-utility").style = "margin-left: " + (960 - loginWidth) + "px !important;"
+    // login width
+    document.querySelector("#masthead-utility").style.display = "inline-block"
+    setTimeout(function() {
+        var loginWidth = document.querySelector("#masthead-utility")
+                             .getBoundingClientRect().width;
+
+        document.querySelector("#masthead-utility")
+                .style.marginLeft = (960 - loginWidth - 15) + "px"
+
+        document.querySelector("#masthead-utility").style.display = ""      
+    }, 50)
 } 
 
 function new_layout_alert() {

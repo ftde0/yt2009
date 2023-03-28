@@ -622,12 +622,39 @@ if((location.href.indexOf("/watch") !== -1
     $("#watch-other-vids").innerHTML = "<div class=\"new-layout\">"
                                         + tipWindowInner + "</div>"
                                         + $("#watch-other-vids").innerHTML
-    
-    var loginWidth = document.querySelector(".utility-item")
-                                        .getBoundingClientRect().width;
 
-    document.querySelector("#masthead-utility")
-            .style.marginLeft = (960 - loginWidth - 10) + "px"
+    // add css and setup player
+    if(navigator.userAgent.indexOf("MSIE") == -1) {
+        var r = new XMLHttpRequest()
+        r.open("GET", "/assets/site-assets/apr1.css")
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            var style = document.createElement("style")
+            style.innerHTML = r.responseText;
+            document.body.appendChild(style)
+        }, false)
+
+
+        var playerPath = document.getElementsByTagName("embed")[0].getAttribute("src")
+        document.querySelector(".flash-video").innerHTML = '\
+        <div class="aaa hid">h</div>\
+        <param name="movie" value="' + playerPath + "&flip=1" + '">\
+        <param name="allowFullScreen" value="true">\
+        <param name="allowscriptaccess" value="always">\
+        <embed src="' + playerPath + "&flip=1" + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl">'
+    }
+
+    // login width
+    document.querySelector("#masthead-utility").style.display = "inline-block"
+    setTimeout(function() {
+        var loginWidth = document.querySelector("#masthead-utility")
+                             .getBoundingClientRect().width;
+
+        document.querySelector("#masthead-utility")
+                .style.marginLeft = (960 - loginWidth - 15) + "px"
+
+        document.querySelector("#masthead-utility").style.display = ""      
+    }, 50)
 }
 
 function new_layout_alert() {
