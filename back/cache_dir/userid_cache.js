@@ -1,7 +1,11 @@
 const fs = require("fs")
 const fetch = require("node-fetch")
 const constants = require("../yt2009constants.json")
-let cache = JSON.parse(fs.readFileSync(`${__dirname}/userid.json`).toString())
+const config = require("../config.json")
+let cache = {}
+if(!config.fallbackMode) {
+    cache = JSON.parse(fs.readFileSync(`${__dirname}/userid.json`).toString())
+} 
 
 module.exports = {
     "write": function(id, data) {
@@ -39,5 +43,6 @@ module.exports = {
 
 // update pliku cache co 1h
 let cacheWrite = setInterval(() => {
+    if(config.fallbackMode) return;
     fs.writeFileSync(`${__dirname}/userid.json`, JSON.stringify(cache))
 }, 3600000)

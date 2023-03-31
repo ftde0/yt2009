@@ -2,6 +2,7 @@ const fetch = require("node-fetch")
 const constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const fs = require("fs")
+const ytdl = require("ytdl-core")
 const dominant_color = require("./dominant_color")
 const config = require("./config.json")
 const tokens = config.tokens || ["amogus"]
@@ -367,6 +368,9 @@ module.exports = {
 
 
     "saveAvatar": function(link) {
+        if(config.fallbackMode) {
+            return link;
+        }
         if(link.startsWith("//")) {
             link = link.replace("//", "https://")
         }
@@ -790,5 +794,34 @@ module.exports = {
     "xss": function(input) {
         return input.split("<").join("&lt;")
                     .split(">").join("&gt;")
+    },
+
+    "saveMp4": function(id, callback) {
+        let targetFilePath = `../assets/${id}.mp4`
+        if(config.fallbackMode) {
+            // return remote mp4 path when fallback
+            ytdl.getInfo(`https://youtube.com/watch?v=${id}`).then(r => {
+                r.formats.forEach(f => {
+                    if(f.itag == 18) {
+                        callback(f.url)
+                    }
+                })
+            })
+            return;
+        } else {
+            let writeStream = fs.createWriteStream(targetFilePath)
+            writeStream.on("finish", () => {
+                callback(targetFilePath.replace(".mp4", ""))
+            })
+    
+            ytdl(`https://youtube.com/watch?v=${id}`, {
+                "quality": 18
+            })
+            .on("error", (error) => {
+                 callback(false)
+                 return;
+             })
+            .pipe(writeStream)
+        }
     }
 }

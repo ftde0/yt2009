@@ -352,11 +352,6 @@ video.addEventListener("pause", function() {
 
 video.addEventListener("play", function() {
     video_show_play_btn()
-    if(document.querySelector(".html5-loading")
-    && document.querySelector(".html5-loading")
-                .className.indexOf("hid") == -1) {
-        $(".html5-loading").className += " hid"
-    }
 }, false)
 
 // play/pause animation
@@ -433,6 +428,12 @@ function timeUpdate() {
                 annotationRender(annotation)
             }
         }
+    }
+
+    // hide loading sprite if needed (i mean, we're progressing with the video)
+    if(document.querySelector(".html5-loading")
+                .className.indexOf("hid") == -1) {
+        $(".html5-loading").className += " hid"
     }
 }
 video.addEventListener("timeupdate", timeUpdate, false)

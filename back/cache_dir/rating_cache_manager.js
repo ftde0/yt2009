@@ -1,6 +1,10 @@
 const fs = require("fs")
 const utils = require("../yt2009utils")
-let cache = JSON.parse(fs.readFileSync(`${__dirname}/rating_cache.json`).toString())
+const config = require("../config.json")
+let cache = {}
+if(!config.fallbackMode) {
+    cache = JSON.parse(fs.readFileSync(`${__dirname}/rating_cache.json`).toString())
+} 
 
 module.exports = {
     "setRating": function(id, token, rating) {
@@ -38,5 +42,6 @@ module.exports = {
 
 // update pliku cache co 1h
 let cacheWrite = setInterval(() => {
+    if(config.fallbackMode) return;
     fs.writeFileSync(`${__dirname}/rating_cache.json`, JSON.stringify(cache))
 }, 3600000)

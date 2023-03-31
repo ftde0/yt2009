@@ -26,6 +26,7 @@ const yt2009_quicklist = require("./yt2009quicklistserver")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
+const child_process = require("child_process")
 
 const https = require("https")
 const fs = require("fs")
@@ -1044,85 +1045,22 @@ app.get("/exp_hd", (req, res) => {
     if(fs.existsSync(`../assets/${id}-hd.mp4`)) {
         res.redirect(`/assets/${id}-hd.mp4`)
     } else {
-        // sprawdzamy jaki bitrate audio jest w zapisanej już wersji 360p. czasami jest wyższy niż hd, czasami niższy.
-        require("child_process").exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4`, (error, stdout, stderr) => {
-            let bitrate = (stdout || stderr).split("Audio: ")[1].split(" kb/s")[0].split(", ")
-            bitrate = bitrate[bitrate.length - 1]
-            if(parseInt(bitrate) >= 150) {
-                // więcej niż 150kbps, konwertujemy to audio do mp3 - jest używalne
-                audioDownloading = true;
-                require("child_process").exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -ab 192000 ${__dirname}/../assets/${id}-hd-audio.mp3`, (e, sdo, ste) => {
-                    audioDownloadFinish = true;
-                })
-            }
-        })
-        // clean download
-        let videoDownloading = false;
-        let audioDownloading = false;
-        let videoDownloadFinish = false;
-        let audioDownloadFinish = false;
-        require("ytdl-core").getInfo(`https://youtube.com/watch?v=${id}`).then(info => {
-            info.formats.forEach(format => {
-                if(format.itag == 22 && !videoDownloading && !audioDownloading) {
-                    // video+audio 720p, najłatwiejsze ale nie jest wszędzie
-                    videoDownloading = true;
-                    audioDownloading = true;
-                    let writeStream = fs.createWriteStream(`../assets/${id}-hd.mp4`)
-                    writeStream.on("finish", () => {
-                        res.redirect(`/assets/${id}-hd.mp4`)
-                    })
-                    require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
-                        "quality": 22
-                    })
-                    .pipe(writeStream)
-                } else if(format.qualityLabel == "720p" && format.videoCodec.includes("avc") && format.mimeType.includes("video/mp4") && !videoDownloading) {
-                    // tylko video
-                    videoDownloading = true;
-                    let writeStream = fs.createWriteStream(`../assets/${id}-hd-video.mp4`)
-                    writeStream.on("finish", () => {
-                        videoDownloadFinish = true;
-                        if(audioDownloadFinish) {
-                            ffmpeg_merge(id, () => {
-                                res.redirect(`/assets/${id}-hd.mp4`)
-                            })
-                        }
-                    })
-                    require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
-                        "quality": format.itag
-                    })
-                    .pipe(writeStream)
-                } else if(format.mimeType.includes("audio/mp4") && !audioDownloading) {
-                    // tylko audio, to jest wykonywane jak nie mamy dobrego audio z wideo
-                    audioDownloading = true;
-                    let writeStream = fs.createWriteStream(`../assets/${id}-hd-audio.mp3`)
-                    writeStream.on("finish", () => {
-                        audioDownloadFinish = true;
-                        if(videoDownloadFinish) {
-                            ffmpeg_merge(id, () => {
-                                res.redirect(`/assets/${id}-hd.mp4`)
-                            })
-                        }
-                    })
-                    require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
-                        "quality": format.itag
-                    })
-                    .pipe(writeStream)
-                }
+        // download hd video and merge with main mp4 audio
+        let writeStream = fs.createWriteStream(`../assets/${id}-hd-video.mp4`)
+        writeStream.on("finish", () => {
+            let videoFilename = `${__dirname}/../assets/${id}-hd-video.mp4`
+            let audioFilename = `${__dirname}/../assets/${id}.mp4`
+            let targetFilename = `${__dirname}/../assets/${id}-hd.mp4`
+            let cmd = `ffmpeg -i ${videoFilename} -i ${audioFilename} -c:v copy -c:a copy -map 0:v -map 1:a -ab 192000 ${targetFilename}`
+            child_process.exec(cmd, (error, stdout, stderr) => {
+                res.redirect(`/assets/${id}-hd.mp4`)
+                fs.unlinkSync(videoFilename)
             })
         })
-
-        function ffmpeg_merge(id, callback) {
-            // merge video 720p i audio z wersji 360p (lepsza jakość tam jest, 128 -> 192)
-            require("child_process").exec(`ffmpeg -i ${__dirname}/../assets/${id}-hd-video.mp4 -i ${__dirname}/../assets/${id}-hd-audio.mp3 -c:v copy -c:a aac -ab 192000 ${__dirname}/../assets/${id}-hd.mp4`, (error, stdout, stderr) => {
-                // wywalamy -hd-video i -hd-audio i wysyłamy do usera
-                try {
-                    fs.rmSync(`${__dirname}/../assets/${id}-hd-video.mp4`)
-                    fs.rmSync(`${__dirname}/../assets/${id}-hd-audio.mp3`)
-                }
-                catch(error) {}
-                callback();
-            })
-        }
+        require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
+            "quality": 136
+        })
+        .pipe(writeStream)
     }
 })
 
@@ -1138,18 +1076,14 @@ app.get("/get_480", (req, res) => {
     } else {
         let writeStream = fs.createWriteStream(`../assets/${id}-480-temp.mp4`)
         writeStream.on("finish", () => {
-            // mix in audio
-            try {
-                require("child_process").execSync(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -ab 192000 ${__dirname}/../assets/${id}-hd-audio.mp3`)
-            }
-            catch(error) {}
-            require("child_process").execSync(`ffmpeg -i ${__dirname}/../assets/${id}-480-temp.mp4 -i ${__dirname}/../assets/${id}-hd-audio.mp3 -c:v copy -c:a aac -ab 192000 ${__dirname}/../assets/${id}-480.mp4`)
-            res.redirect(`/assets/${id}-480.mp4`)
-            try {
-                fs.rmSync(`${__dirname}/../assets/${id}-480-temp.mp4`)
-                fs.rmSync(`${__dirname}../assets/${id}-hd-audio.mp3`)
-            }
-            catch(error) {}
+            let videoFilename = `${__dirname}/../assets/${id}-480-temp.mp4`
+            let audioFilename = `${__dirname}/../assets/${id}.mp4`
+            let targetFilename = `${__dirname}/../assets/${id}-480.mp4`
+            let cmd = `ffmpeg -i ${videoFilename} -i ${audioFilename} -c:v copy -c:a copy -map 0:v -map 1:a -ab 192000 ${targetFilename}`
+            child_process.exec(cmd, (error, stdout, stderr) => {
+                res.redirect(`/assets/${id}-480.mp4`)
+                fs.unlinkSync(videoFilename)
+            })
         })
         require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
             "quality": 135

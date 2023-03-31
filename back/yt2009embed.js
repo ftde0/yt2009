@@ -4,6 +4,7 @@ const child_process = require("child_process")
 const embed_code = fs.readFileSync("../embedded-player.html").toString()
 const wayback = require("./cache_dir/wayback_watchpage")
 const videoExists = require("./cache_dir/video_exists_cache_mgr")
+const templates = require("./yt2009templates")
 const utils = require("./yt2009utils")
 const config = require("./config.json")
 
@@ -14,22 +15,37 @@ function flash_handler(req, res) {
     let restArguments = req.originalUrl.split("?")
     restArguments.shift();
     restArguments = restArguments.join("&")
-    let createdUrl = req.originalUrl.split("embedF")[0] + "watch.swf?video_id=" + videoId + "&" + restArguments;
+    let createdUrl = req.originalUrl.split("embedF")[0]
+                  + "watch.swf?video_id=" + videoId
+                  + "&" + restArguments;
 
     // related videos
-    if(req.query.server_fill_related == 1 && !req.headers["user-agent"].includes("MSIE")) {
+    if(req.query.server_fill_related == 1
+    && !req.headers["user-agent"].includes("MSIE")) {
         let i = 0;
         require("./yt2009html").get_related_videos(videoId, (related) => {
             related.forEach(video => {
                 if(i !== 8) {
-                    createdUrl += `&rv.${i}.title=${encodeURIComponent(video.title)}`
-                    createdUrl += `&rv.${i}.thumbnailUrl=${encodeURIComponent(`http://i.ytimg.com/vi/${video.id}/hqdefault.jpg`)}`
-                    createdUrl += `&rv.${i}.length_seconds=${utils.time_to_seconds(video.length)}`
-                    createdUrl += `&rv.${i}.url=${encodeURIComponent(`http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`)}`
-                    createdUrl += `&rv.${i}.view_count=${video.views.replace(" views", "")}`
+                    createdUrl += `&rv.${i}.title=${encodeURIComponent(
+                        video.title
+                    )}`
+                    createdUrl += `&rv.${i}.thumbnailUrl=${encodeURIComponent(
+                        `http://i.ytimg.com/vi/${video.id}/hqdefault.jpg`
+                    )}`
+                    createdUrl += `&rv.${i}.length_seconds=${
+                        utils.time_to_seconds(video.length)
+                    }`
+                    createdUrl += `&rv.${i}.url=${encodeURIComponent(
+                        `http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`
+                    )}`
+                    createdUrl += `&rv.${i}.view_count=${
+                        video.views.replace(" views", "")
+                    }`
                     createdUrl += `&rv.${i}.rating=5`
                     createdUrl += `&rv.${i}.id=${video.id}`
-                    createdUrl += `&rv.${i}.author=${encodeURIComponent(video.creatorName)}`
+                    createdUrl += `&rv.${i}.author=${encodeURIComponent(
+                        video.creatorName
+                    )}`
                     i++;
                 }
                 
@@ -76,10 +92,7 @@ module.exports = function(req, res) {
 
         if(ip_request_count[req.ip] >= 20) {
             res.send("[yt2009] embed cooldown (come back in 2.5 minutes).")
-            console.log(`([unathorized] ${req.ip} | ${req.headers["user-agent"]}) ograniczony`)
             return;
-        } else {
-            console.log(`([unathorized] ${req.ip} | ${req.headers["user-agent"]}) embed ${id}`)
         }
     }
 
@@ -95,48 +108,39 @@ module.exports = function(req, res) {
         "402061-9461ca": 'url("/player-imgs/embed-bgs/purple.png")',
         "5d1719-cd311b": 'url("/player-imgs/embed-bgs/dred.png")',
     }
-    // aplikujemy po kolei
-    // magick -size 1x25 gradient:"#ffffff"-"#[color2]" test.png
+    // apply colors
     if(req.query.color1 && req.query.color2) {
-        let generatedCSS = ``
+        let generatedCSS = `
+        .video_controls .play_btn,
+        .video_controls .pause_btn,
+        .video_controls .seek_btn,
+        .video_controls .volume_button,
+        .volume_popout .volume_head,
+        .video_controls .player_additions {
+            background-image: url("/player-imgs/player-buttons-transparent.png") !important;
+        }`
         if(colorways[req.query.color1 + "-" + req.query.color2]
         && colorways[req.query.color1 + "-" + req.query.color2] !== "default") {
-            // jeden z kolorków w colorways poza default
-            generatedCSS += `
-            .video_controls .play_btn,
-            .video_controls .pause_btn,
-            .video_controls .seek_btn,
-            .video_controls .volume_button,
-            .volume_popout .volume_head,
-            .video_controls .player_additions {
-                background-image: url("/player-imgs/player-buttons-transparent.png") !important;
-            }
-            `
+            // one of the predefined colors from colorways
             generatedCSS += `
             .video_controls {
-                background-image: ${colorways[req.query.color1 + "-" + req.query.color2]} !important;
+                background-image: ${
+                    colorways[req.query.color1 + "-" + req.query.color2]
+                } !important;
             }
             `
         } else if(!colorways[req.query.color1 + "-" + req.query.color2]) {
-            // custom kolor
-            generatedCSS += `
-            .video_controls .play_btn,
-            .video_controls .pause_btn,
-            .video_controls .seek_btn,
-            .video_controls .volume_button,
-            .volume_popout .volume_head,
-            .video_controls .player_additions {
-                background-image: url("/player-imgs/player-buttons-transparent.png") !important;
-            }
-            `
+            // custom color
             generatedCSS += `
             .video_controls {
-                background-image: url("/generate_gradient?c=${req.query.color2}") !important;
+                background-image: url("/generate_gradient?c=${
+                    req.query.color2
+                }") !important;
             }
             `
         }
 
-        // border na color1
+        // set border to color1
         let color1 = req.query.color1.substring(0, 6).replace(/[^0-9a-zA-Z]/g, "")
         generatedCSS += `
             .video_controls {
@@ -179,7 +183,9 @@ module.exports = function(req, res) {
     try {
         (req.headers.cookie || "").split(";").forEach(cookie => {
             if(cookie.trimStart().startsWith("watch_flags=")) {
-                watchflags += cookie.trimStart().replace("watch_flags=", "").split(":").join(";")
+                watchflags += cookie.trimStart()
+                                    .replace("watch_flags=", "")
+                                    .split(":").join(";")
             }
         })
     }
@@ -188,25 +194,18 @@ module.exports = function(req, res) {
     // flaga autoplay
     watchflags += ";"
     if(watchflags.includes("autoplay")) {
-        code = code.replace(`<!--autoplay_hook-->`, `
-            
-            <script>
-                // autoplay
-                
-                document.querySelector("video").addEventListener("canplay", function() {
-                    setTimeout(function() {
-                        document.querySelector("video").play()
-                    }, 100)
-                }, false)
-                if(document.querySelector("video").readyState >= 3) {
-                    document.querySelector("video").play();
-                }
-            </script>`)
+        code = code.replace(
+            `<!--autoplay_hook-->`,
+            templates.embedAutoplayCode
+        )
     }
 
     // flaga annotation_redirect
     if((req.headers.cookie || "").includes("annotation_redirect")) {
-        code = code.replace(`//yt2009-annotation-redirect`, `annotationsRedirect = true;`)
+        code = code.replace(
+            `//yt2009-annotation-redirect`,
+            `annotationsRedirect = true;`
+        )
     }
 
     if(id.length == 0) {
@@ -215,52 +214,87 @@ module.exports = function(req, res) {
     }
 
     // flaga no_controls_fade
-    if((req.headers.cookie || "").includes("no_controls_fade") || req.originalUrl.includes("no_controls_fade=1")) {
-        code = code.replace(`//yt2009-no-controls-fade`, `
-        fadeControlsEnable = false;
-        var s = document.createElement("style")
-        s.innerHTML = "video:not(.showing-endscreen) {height: calc(100% - 25px) !important;}#watch-player-div {background: black !important;}"
-        document.body.appendChild(s)`)
+    if((req.headers.cookie || "").includes("no_controls_fade")
+    || req.originalUrl.includes("no_controls_fade=1")) {
+        code = code.replace(
+            `//yt2009-no-controls-fade`,
+            templates.embedNoControlsFadeCode
+        )
     }
 
     let waitForOgv = false;
 
     // jeśli mamy do czynienia z firefoxem <=25, czekamy na ogg, inaczej callbackujemy mp4
-    if(req.headers["user-agent"].includes("Firefox/")) {
-        let ffVersion = parseInt(req.headers["user-agent"].split("Firefox/")[1].split(" ")[0])
+    if(req.headers["user-agent"].includes("Firefox/")
+    && !config.fallbackMode) {
+        let ffVersion = parseInt(
+            req.headers["user-agent"].split("Firefox/")[1]
+                                     .split(" ")[0]
+        )
         if(ffVersion <= 25) {
             waitForOgv = true;
         }
     }
 
-    // pobieranie
-    if(fs.existsSync(`../assets/${id}.mp4`) && !fs.existsSync(`../assets/${id}.ogg`) && waitForOgv) {
+    // download the video if needed, also convert to ogv in case of ff<=25
+    if(fs.existsSync(`../assets/${id}.mp4`)
+    && !fs.existsSync(`../assets/${id}.ogg`)
+    && waitForOgv) {
         // ogg wymagane
-        child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {
+        child_process.exec(templates.createFffmpegOgg(id),
+        (error, stdout, stderr) => {
             res.send(code.replace("mp4_files", `
             <source src="/assets/${id}.mp4" type="video/mp4"></source>
             <source src="/assets/${id}.ogg" type="video/ogg"></source>`))
         })
     }
-    if(!fs.existsSync(`../assets/${id}.mp4`)) {
+    if(!fs.existsSync(`../assets/${id}.mp4`) || config.fallbackMode) {
         let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
-        
-        writeStream.on("finish", () => {
+
+        utils.saveMp4(id, (path) => {
             setTimeout(function() {
+                if(path.includes("googlevideo")) {
+                    id = path;
+                }
                 if(waitForOgv) {
-                    child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {
-                        res.send(code.replace("mp4_files", `
-                        <source src="/assets/${id}.mp4" type="video/mp4"></source>
-                        <source src="/assets/${id}.ogg" type="video/ogg"></source>`))
+                    child_process.exec(templates.createFffmpegOgg(id),
+                    (error, stdout, stderr) => {
+                        res.send(code.replace(
+                            "mp4_files",
+                            templates.embedVideoSources(id)
+                        ))
                     })
                 } else {
-                    res.send(code.replace("mp4_files", `
-                    <source src="/assets/${id}.mp4" type="video/mp4"></source>
-                    <source src="/assets/${id}.ogg" type="video/ogg"></source>`))
+                    res.send(code.replace(
+                        "mp4_files",
+                        templates.embedVideoSources(id)
+                    ))
                 }
                 
             }, 250)
         })
+        
+        /*writeStream.on("finish", () => {
+            setTimeout(function() {
+                if(waitForOgv) {
+                    child_process.exec(templates.createFffmpegOgg(id),
+                    (error, stdout, stderr) => {
+                        res.send(code.replace(
+                            "mp4_files",
+                            templates.embedVideoSources(id)
+                        ))
+                    })
+                } else {
+                    res.send(code.replace(
+                        "mp4_files",
+                        templates.embedVideoSources(id)
+                    ))
+                }
+                
+            }, 250)
+        })
+
+        
 
         ytdl(`https://youtube.com/watch?v=${id}`, {
             "quality": 18
@@ -269,10 +303,11 @@ module.exports = function(req, res) {
             res.send("[yt2009] nie można pobrać filmu / can't download the video")
             console.log(error)
         })
-        .pipe(writeStream)
+        .pipe(writeStream)*/
     } else {
-        res.send(code.replace("mp4_files", `
-        <source src="/assets/${id}.mp4" type="video/mp4"></source>
-        <source src="/assets/${id}.ogg" type="video/ogg"></source>`))
+        res.send(code.replace(
+            "mp4_files",
+            templates.embedVideoSources(id)
+        ))
     }
 }

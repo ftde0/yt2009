@@ -1198,6 +1198,6 @@ module.exports = {
     },
 
     "get_saved_channels": function() {
-        return featured_channels;
+        return featured_channels.slice(0, 25);
     }
 }

@@ -105,20 +105,9 @@ module.exports = {
             }
 
             if(!fs.existsSync(`../assets/${id}.mp4`)) {
-                let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
-                writeStream.on("finish", () => {
+                yt2009utils.saveMp4(id, (path => {
                     callback(v)
-                })
-                
-                
-                ytdl(`https://youtube.com/watch?v=${id}`, {
-                    "quality": 18
-                })
-                .on("error", (error) => {
-                     callback(false)
-                     return;
-                 })
-                .pipe(writeStream)
+                }))
             } else {
                 callback(v)
             }
@@ -334,8 +323,8 @@ module.exports = {
                 
                 // zapisujemy mp4/ogg
 
-                if(!fs.existsSync(`../assets/${id}.mp4`)) {
-                    function on_mp4_save_finish() {
+                if(!fs.existsSync(`../assets/${id}.mp4`) || config.fallbackMode) {
+                    function on_mp4_save_finish(path) {
                         setTimeout(function() {
                             if(waitForOgv) {
                                 child_process.exec(
@@ -349,7 +338,11 @@ module.exports = {
                                     }
                                 )
                             } else {
-                                data["mp4"] = `/assets/${id}`
+                                if(path.includes("googlevideo")) {
+                                    data["mp4"] = path;
+                                } else {
+                                    data["mp4"] = `/assets/${id}`
+                                }
                                 fetchesCompleted++;
                                 if(fetchesCompleted == 3) {
                                     callback(data)
@@ -361,22 +354,25 @@ module.exports = {
                         }, 250)
                     }
 
-                   // ytdl
-                   let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
-                   writeStream.on("finish", () => {
-                       on_mp4_save_finish();
-                   })
+                    // ytdl
+                    yt2009utils.saveMp4(id, (path => {
+                        on_mp4_save_finish(path)
+                    }))
+                    /*let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
+                    writeStream.on("finish", () => {
+                        on_mp4_save_finish();
+                    })
 
                    
    
-                   ytdl(`https://youtube.com/watch?v=${id}`, {
-                       "quality": 18
-                   })
-                   .on("error", (error) => {
-                        callback(false)
-                        return;
+                    ytdl(`https://youtube.com/watch?v=${id}`, {
+                        "quality": 18
                     })
-                   .pipe(writeStream)
+                    .on("error", (error) => {
+                         callback(false)
+                         return;
+                     })
+                    .pipe(writeStream)*/
                     
                 } else {
                     data["mp4"] = `/assets/${id}`
@@ -1010,8 +1006,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.replace("yt2009_ratings_count", ratings)
         code = code.replace(
             "mp4_files", 
-            `<source src="${data.mp4}.mp4" type="video/mp4"></source>
-            <source src="${data.mp4}.ogg" type="video/ogg"></source>`
+            `<source src="${data.mp4}${!config.fallbackMode ? ".mp4" : ""}" type="video/mp4"></source>
+            <source src="${data.mp4}${!config.fallbackMode ? ".ogg" : ""}" type="video/ogg"></source>`
         )
         code = code.replace(
             "video_url",
@@ -1597,7 +1593,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         // exp_hq
         if(!useFlash
         && (qualityList.includes("720p")
-        || qualityList.includes("480p"))) {
+        || qualityList.includes("480p"))
+        && !config.fallbackMode) {
             let use720p = qualityList.includes("720p")
             code = code.replace(`<!--yt2009_style_hq_button-->`, `
             <style>
@@ -1629,7 +1626,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     var length = seconds_to_time(Math.floor(video.duration))
                     $("video").src = "/${use720p ? "exp_hd" : "get_480"}?video_id=${data.id}"
                     setTimeout(function() {
-                        $(".video_controls .timer").innerHTML = "0:00 / " + length
+                        $(".video_controls .timer").innerHTML = "0:00 / " + length;
+                        showLoadingSprite();
                     }, 500)
                     $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
                     video_play()
@@ -2034,33 +2032,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     }
                 }
                 
-            })
-        }
-    },
-
-    "720p_available": function(id, callback) {
-        if(hd_availability_cache.read()[id] !== undefined && 
-        hd_availability_cache.read()[id] !== null) {
-            callback(hd_availability_cache.read()[id])
-        } else {
-            this.innertube_get_data(id, (data) => {
-                // parse yt data
-                let hd_available = false;
-                try {
-                    data.streamingData.adaptiveFormats.forEach(quality => {
-                        if(quality.qualityLabel == "720p") {
-                            hd_available = true;
-                        }
-                    })
-
-                    callback(hd_available)
-                    hd_availability_cache.write(id, hd_available)
-                }
-                catch(error) {
-                    hd_available = false;
-                    callback(hd_available)
-                    hd_availability_cache.write(id, false)
-                }
             })
         }
     },

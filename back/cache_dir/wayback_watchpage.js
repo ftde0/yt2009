@@ -2,7 +2,11 @@ const fs = require("fs")
 const fetch = require("node-fetch")
 const utils = require("../yt2009utils")
 const html = require("node-html-parser")
-let cache = JSON.parse(fs.readFileSync(`${__dirname}/wayback_watch_cache.json`).toString())
+const config = require("../config.json")
+let cache = {}
+if(!config.fallbackMode) {
+    cache = JSON.parse(fs.readFileSync(`${__dirname}/wayback_watch_cache.json`).toString())
+} 
 
 module.exports = {
     "write": function(id, data) {
@@ -285,5 +289,6 @@ module.exports = {
 
 // update pliku cache co 1h
 let cacheWrite = setInterval(() => {
+    if(config.fallbackMode) return;
     fs.writeFileSync(`${__dirname}/wayback_watch_cache.json`, JSON.stringify(cache))
 }, 3600000)

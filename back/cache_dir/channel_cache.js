@@ -1,13 +1,22 @@
 const fs = require("fs")
+const config = require("../config.json")
 const fetch = require("node-fetch")
 const constants = require("../yt2009constants.json")
 const utils = require("../yt2009utils")
 const child_process = require("child_process")
 let cacheList = {
-    "mainCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_main_cache.json`).toString()),
-    "friendCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_friend_cache.json`).toString()),
-    "playlistCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_playlist_cache.json`).toString()),
-    "bannerCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_banner_cache.json`).toString())
+    "mainCache": {},
+    "friendCache": {},
+    "playlistCache": {},
+    "bannerCache": {}
+}
+if(!config.fallbackMode) {
+    cacheList = {
+        "mainCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_main_cache.json`).toString()),
+        "friendCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_friend_cache.json`).toString()),
+        "playlistCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_playlist_cache.json`).toString()),
+        "bannerCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_banner_cache.json`).toString())
+    }
 }
 
 module.exports = {
@@ -68,6 +77,7 @@ module.exports = {
 
 // update plików cache co 1h
 let cacheWrite = setInterval(() => {
+    if(config.fallbackMode) return;
     fs.writeFileSync(`${__dirname}/channel_main_cache.json`, JSON.stringify(cacheList.mainCache))
     fs.writeFileSync(`${__dirname}/channel_friend_cache.json`, JSON.stringify(cacheList.friendCache))
     fs.writeFileSync(`${__dirname}/channel_playlist_cache.json`, JSON.stringify(cacheList.playlistCache))

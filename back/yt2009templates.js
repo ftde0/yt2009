@@ -769,5 +769,32 @@ module.exports = {
                 </div>
             </div>
         </div>`
+    },
+    "embedAutoplayCode": `<script>
+    // autoplay
+    
+    document.querySelector("video").addEventListener("canplay", function() {
+        setTimeout(function() {
+            document.querySelector("video").play()
+        }, 100)
+    }, false)
+    if(document.querySelector("video").readyState >= 3) {
+        document.querySelector("video").play();
+    }
+</script>`,
+    "embedNoControlsFadeCode": `
+    fadeControlsEnable = false;
+    var s = document.createElement("style")
+    s.innerHTML = "video:not(.showing-endscreen) {height: calc(100% - 25px) !important;}#watch-player-div {background: black !important;}"
+    document.body.appendChild(s)`,
+    "embedVideoSources": function(id) {
+        let mp4Path = `/assets/${id}.mp4`
+        let ogvPath = `/assets/${id}.ogg`
+        if(id.includes("googlevideo")) {
+            mp4Path = id;
+            ogvPath = id;
+        }
+        return `<source src="${mp4Path}" type="video/mp4"></source>
+        <source src="${ogvPath}" type="video/ogg"></source>`
     }
 }
