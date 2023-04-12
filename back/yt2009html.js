@@ -338,7 +338,7 @@ module.exports = {
                                     }
                                 )
                             } else {
-                                if(path.includes("googlevideo")) {
+                                if((path || "").includes("googlevideo")) {
                                     data["mp4"] = path;
                                 } else {
                                     data["mp4"] = `/assets/${id}`
@@ -1004,11 +1004,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
         code = code.replace("yt2009_ratings_count", ratings)
-        code = code.replace(
-            "mp4_files", 
-            `<source src="${data.mp4}${!config.fallbackMode ? ".mp4" : ""}" type="video/mp4"></source>
-            <source src="${data.mp4}${!config.fallbackMode ? ".ogg" : ""}" type="video/ogg"></source>`
-        )
+        if(!useFlash) {
+            code = code.replace(
+                "mp4_files", 
+                `<source src="${data.mp4}${!config.fallbackMode ? ".mp4" : ""}" type="video/mp4"></source>
+                <source src="${data.mp4}${!config.fallbackMode ? ".ogg" : ""}" type="video/ogg"></source>`
+            )
+        }
         code = code.replace(
             "video_url",
             `http://youtube.com/watch?v=${data.id}`
@@ -1563,6 +1565,31 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         flash_url += "&flip=1"
                     }
                 }
+                if((req.headers["cookie"] || "").includes("f_h264")) {
+                    // create format maps and urls for the 2009 player
+                    // 22 - hd720
+                    // 35 - "large" - hq - 480p
+                    // 5 - standard quality, other numbers may have worked too
+                    let fmtMap = ""
+                    let fmtUrls = ""
+                    if(qualityList.includes("720p")) {
+                        fmtMap += "22/2000000/9/0/115"
+                        fmtUrls += `22|http://${config.ip}:${config.port}/exp_hd?video_id=${data.id}`
+                    } else if(qualityList.includes("480p")) {
+                        fmtMap += `35/0/9/0/115`
+                        fmtUrls += `35|http://${config.ip}:${config.port}/get_480?video_id=${data.id}`
+                    }
+                    if(fmtMap.length > 0) {
+                        fmtMap += ","
+                        fmtUrls += ","
+                    }
+                    fmtMap += "5/0/7/0/0"
+                    fmtUrls += `5|http://${config.ip}:${config.port}/assets/${data.id}.mp4`
+                    flash_url += "&fmt_map=" + encodeURIComponent(fmtMap)
+                    flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+                }
+                
+                
                 code = code.replace(
                     `<!--yt2009_f-->`,
                     yt2009templates.flashObject(flash_url)
@@ -1827,6 +1854,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     )
                 )
             }
+        }
+
+        // careful what yall say next time
+        if(req.query.flyingelephants == 1) {
+            code = code.replace(
+                `<!--yt2009_fe-->`,
+                `<script src="/assets/site-assets/fe.js"></script>`
+            )
         }
         
 
