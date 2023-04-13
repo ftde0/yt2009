@@ -130,6 +130,14 @@ module.exports = {
 
     // handling /get_video (flv)
     "get_flv": function(req, res) {
+        if(req.query.noflv == 1) {
+            res.send("")
+            return;
+        }
+        if(req.query.fmt == 5) {
+            res.redirect(`../assets/${req.query.video_id}.mp4`)
+            return;
+        }
         this.vid_flv(req.query.video_id, () => {
             res.redirect(`../assets/${req.query.video_id}.flv`)
         })

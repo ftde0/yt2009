@@ -19,7 +19,7 @@ module.exports = {
         flags = decodeURIComponent(flags)
         query = decodeURIComponent(query)
         if(flags.includes("only_old")) {
-            query += " before:2010-04-01"
+            query += " " + this.handle_only_old(flags)
         }
 
         
@@ -115,10 +115,21 @@ module.exports = {
                     // flagi
                     let uploadDate = video.upload
 
+                    let onlyOld = "before:2010-04-01"
+                    let yearsDiff = 13;
+                    if(flags.includes("only_old")) {
+                        onlyOld = this.handle_only_old(flags);
+                        if(onlyOld.includes("before:")) {
+                            let beforeYear = onlyOld.split("before:")[1]
+                                                    .split("-")[0]
+                            yearsDiff = new Date().getFullYear()
+                                        - parseInt(beforeYear)
+                        }
+                    }
                     if(flags.includes("only_old") && (
                         (!uploadDate.includes("years")) ||
                         (uploadDate.includes("years") &&
-                            parseInt(uploadDate.split(" ")[0]) < 12)
+                            parseInt(uploadDate.split(" ")[0]) < yearsDiff)
                         )
                     ) {
                         cancelled = true;
@@ -496,5 +507,27 @@ module.exports = {
             }, 1643)
            
         }
+    },
+    "handle_only_old": function(flags) {
+        let onlyOldFlag = ""
+        let resultSyntax = ""
+        flags.split(";").forEach(flag => {
+            if(flag.startsWith("only_old")) {
+                onlyOldFlag = flag;
+            }
+        })
+        if(onlyOldFlag.includes(" ")) {
+            // 2 dates
+            resultSyntax = "after:" + onlyOldFlag.split(" ")[0]
+                                      .replace("only_old", "")
+                            + " before:" + onlyOldFlag.split(" ")[1]
+        } else if(onlyOldFlag !== "only_old") {
+            // 1 date
+            resultSyntax = "before:" + onlyOldFlag.replace("only_old", "")
+        } else {
+            // no dates
+            resultSyntax = "before:2010-04-01"
+        }
+        return resultSyntax;
     }
 }

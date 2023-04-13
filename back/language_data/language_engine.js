@@ -1,7 +1,7 @@
 const langs = {
     "en": require("./en.json"),
     "pl": require("./pl.json"),
-    "h": require("./h.json")
+    "h": require("./h.json"),
     "sr-RS": require("./sr-RS.json"),
     "sr-Latn-RS": require("./sr-Latn-RS.json")
 }

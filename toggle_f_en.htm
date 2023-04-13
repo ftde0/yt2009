@@ -48,7 +48,8 @@
 		<h4 class="f_status" id="fmode-status">f mode: disabled.</h4>
 		<h4 style="margin-bottom: 25px;">click the button below to enable/disable f.</h4>
 		<a class="yt-button yt-button-primary" id="" href="#" onclick="toggle_f();"><span>switch</span></a>
-		<h4 style="margin-top: 25px;">(new!) you can also set an alternative .swf file to play videos.</h4>
+		<hr>
+		<h4 style="margin-top: 25px;">you can also set an alternative .swf file to play videos.</h4>
 		<h4>this can be useful - for example - when using yt2009 as a base for older/newer layouts.<br>
 		if you want to disable this feature, leave both of the text boxes empty and save.</h4>
 		full .swf file path: <input id="alt-swf-file" style="width: 350px;"/><br>
@@ -60,7 +61,13 @@
 		<a href="#" onclick="set_alt_preset('/alt-swf/2007ad.swf', 'vids')">a mainpage ad player from 2007</a><br>
 		<a href="#" onclick="set_alt_preset('/alt-swf/cps2.swf', 'video_id')">standard player with official dark theme</a><br>
 		<a href="#" onclick="set_alt_preset('/alt-swf/2010.swf', 'video_id')">late-2010</a>
-
+		<hr>
+		<h4 style="margin-top: 25px;">h264</h4>
+		<p>you can now enable h264 mp4 playback within the flash player.<br>
+		h264 lets you start playing videos way quicker and enables HD support.<br>
+		<b>h264 may not be supported depending on your browser, OS and the picked video player.</b></p>
+		<h4 id="fh264-status">h264: disabled.</h4>
+		<a class="yt-button yt-button-primary" id="" href="#" onclick="toggle_f_h264();"><span>switch</span></a>
 		<!-- end bottom section -->
 	</div>
 	<a name="pageBottom"></a>
@@ -72,6 +79,10 @@
 			fOn = true;
 			document.getElementById("fmode-status").innerHTML = "f mode: enabled."
 		}
+		var fh264On = document.cookie.indexOf("f_h264") !== -1
+		if(fh264On) {
+			document.getElementById("fh264-status").innerHTML = "h264: enabled."
+		}
 
 		function toggle_f() {
 			if(fOn) {
@@ -80,6 +91,15 @@
 			} else {
 				// włącz f
 				document.cookie = "f_mode=on; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			}
+			location.reload()
+		}
+
+		function toggle_f_h264() {
+			if(fh264On) {
+				document.cookie = "f_h264=on; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
+			} else {
+				document.cookie = "f_h264=on; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 			}
 			location.reload()
 		}

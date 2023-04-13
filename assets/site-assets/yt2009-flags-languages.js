@@ -20,7 +20,7 @@ var languageData_EN = {
 
         "results-author-old-names": "if the creator has a /user/ link, use the name from it instead of their current name.",
         "results-fake-upload-dates": "fake upload dates (ex. 11 years ago -> 3 months ago)",
-        "results-only-old": "only shows videos uploaded before 2010-04-01",
+        "results-only-old": "only shows videos uploaded in a specified time range (default before 2010-04-01)",
         "results-realistic-view-count": "more realistic for 2009 view counts",
         "results-remove-username-space": "removes spaces from usernames",
         "results-username-asciify": "remove special characters from usernames",
@@ -61,6 +61,7 @@ var languageData_EN = {
         "#watch-upload-expander": "(possible values)",
         "#watch-avatar-expander": "(possible values)",
         "#watch-wayback-expander": "(possible values)",
+        "#results-old-expander": "(possible values)",
         "#channel-wayback-expander": "(possible values)",
 
         "#watch-fake-upload-date-expander": "fake_upload_date mode:\
@@ -96,7 +97,12 @@ var languageData_EN = {
         - fields - one-line information visible on the left side, usually filled by the creator, like a website link or a description<br>\
         - basic - basic channel data, such as avatar and colors<br>\
         - sections - subscriptions and friends sections if present<br>\
-        - comments - channel comments"
+        - comments - channel comments",
+
+        "#results-only-old-expander": "only_old syntax (YYYY-MM-DD):<br>\
+        - 1 date - e.g. <b>2010-04-01</b> - will only show videos uploaded before that date<br>\
+        - 2 dates (space-separated) - e.g. <b>2007-01-01 2010-04-01</b> - will only show videos uploaded between those dates<br>\
+        - leaving this box empty - standard behavior - will only show videos uploaded before 2010-04-01."
     },
 
     "placeholders": {
@@ -106,7 +112,8 @@ var languageData_EN = {
         "watch-wayback-features-input": "mode",
         "channel-default-avatar-input": "mode",
         "channel-wayback-features-input": "mode",
-        "global-login-simulate-input": "username"
+        "global-login-simulate-input": "username",
+        "results-only-old-input": "check possible values"
     }
 }
 

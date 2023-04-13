@@ -1198,6 +1198,14 @@ module.exports = {
     },
 
     "get_saved_channels": function() {
-        return featured_channels.slice(0, 25);
+        let croppedFeaturedChannels = {}
+        let i = 0;
+        for(let c in featured_channels) {
+            if(i <= 25) {
+                croppedFeaturedChannels[c] = featured_channels[c]
+                i++;
+            }
+        }
+        return croppedFeaturedChannels;
     }
 }

@@ -111,8 +111,14 @@
 			<label for="results-author-old-names">author_old_names</label><br>
 			<input type="checkbox" id="results-fake-upload-dates" title="fake daty wrzuceń filmów (np. 11 lat temu -> 3 miesiące temu)">
 			<label for="results-fake-upload-dates">fake_upload_dates</label><br>
-			<input type="checkbox" id="results-only-old" title="pokazuje w wyszukiwarce tylko filmy wrzucone przed 01.04.2010">
-			<label for="results-only-old">only_old</label><br>
+			<input type="checkbox" id="results-only-old" title="pokazuje w wyszukiwarce tylko filmy wrzucone przed podanym zakresem dat (domyślnie 01.04.2010)">
+			<label for="results-only-old">only_old</label>
+			<input type="text" id="results-only-old-input" autocomplete="off" spellcheck="false" placeholder="sprawdź moż. wartości">
+			<a id="results-old-expander" href="javascript:toggleExpander('results-only-old-expander')">(możliwe wartości)</a><br>
+			<p id="results-only-old-expander" class="hid">składnie dla only_old (YYYY-MM-DD):<br>
+			- 1 data - np. <b>2010-04-01</b> - pokaże tylko filmy wrzucone przed datą<br>
+			- 2 daty - np. <b>2007-01-01 2010-04-01</b> - pokaże filmy wrzucone pomiędzy tymi datami<br>
+			- pozostawienie pola pustego - standardowe zachowanie - filmy wrzucone przed 2010-04-01.</p>
 			<input type="checkbox" id="results-realistic-view-count" title="bardziej realistyczna na 2009 liczba wyświetleń">
 			<label for="results-realistic-view-count">realistic_view_count</label><br>
 			<input type="checkbox" id="results-remove-username-space" title="usuwa spacje z nazw użytkowników">

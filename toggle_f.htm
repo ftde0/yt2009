@@ -48,7 +48,8 @@
 		<h4 class="f_status" id="fmode-status">tryb f: wyłączony.</h4>
 		<h4 style="margin-bottom: 25px;">kliknij przycisk niżej aby włączyć/wyłączyć f.</h4>
 		<a class="yt-button yt-button-primary" id="" href="#" onclick="toggle_f();"><span>przełącz</span></a>
-		<h4 style="margin-top: 25px;">(nowe!) możesz również ustawić inny plik swf do odtwarzania filmów.</h4>
+		<hr>
+		<h4 style="margin-top: 25px;">możesz również ustawić inny plik swf do odtwarzania filmów.</h4>
 		<h4>może to być użyteczne np. używając yt2009 jako bazy do starszych/nowszych wyglądów yt.<br>
 		jak chcesz wyłączyć tą opcję, zostaw oba pola puste i zapisz.</h4>
 		pełna ścieżka do pliku .swf: <input id="alt-swf-file" style="width: 350px;"/><br>
@@ -60,7 +61,13 @@
 		<a href="#" onclick="set_alt_preset('/alt-swf/2007ad.swf', 'vids')">odtwarzacz reklam na stronie głównej z 2007</a><br>
 		<a href="#" onclick="set_alt_preset('/alt-swf/cps2.swf', 'video_id')">oficjalny dark theme standardowy odtwarzacz</a><br>
 		<a href="#" onclick="set_alt_preset('/alt-swf/2010.swf', 'video_id')">late-2010</a>
-		<!--miałem plan miałem plan ale ten jakiś uparty jest <a href="#" onclick="set_alt_preset('/alt-swf/cps.swf', 'video_id')">cps.swf</a>-->
+		<hr>
+		<h4 style="margin-top: 25px;">h264</h4>
+		<p>możesz włączyć używanie kodeka h264 mp4 w odtwarzaczach flash.<br>
+		h264 umożliwia szybsze rozpoczęcie odtwarzania i obsługę HD.<br>
+		<b>h264 może nie być wspierane zależnie od twojej przeglądarki, systemu i wybranego odtwarzacza.</b></p>
+		<h4 id="fh264-status">h264: wyłączone.</h4>
+		<a class="yt-button yt-button-primary" id="" href="#" onclick="toggle_f_h264();"><span>przełącz</span></a>
 
 
 		<!-- end bottom section -->
@@ -75,6 +82,10 @@
 			fOn = true;
 			document.getElementById("fmode-status").innerHTML = "tryb f: włączony."
 		}
+		var fh264On = document.cookie.indexOf("f_h264") !== -1
+		if(fh264On) {
+			document.getElementById("fh264-status").innerHTML = "h264: włączone."
+		}
 
 		function toggle_f() {
 			if(fOn) {
@@ -83,6 +94,15 @@
 			} else {
 				// włącz f
 				document.cookie = "f_mode=on; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			}
+			location.reload()
+		}
+
+		function toggle_f_h264() {
+			if(fh264On) {
+				document.cookie = "f_h264=on; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
+			} else {
+				document.cookie = "f_h264=on; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 			}
 			location.reload()
 		}
