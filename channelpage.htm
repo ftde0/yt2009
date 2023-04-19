@@ -3,7 +3,7 @@
 
 <head>
 	<title>
-		YouTube - yt2009_channel_name's Channel
+		YouTube - lang_channel_headername_prefix yt2009_channel_namelang_channel_headername_suffix
 	</title>
 
 	<link id="www-core-css" rel="stylesheet" href="/assets/site-assets/www-core-vfl138942.css">
@@ -330,7 +330,12 @@
 		span[class*="video-title"] {
 			max-height: 29px !important;
 		}
+
+		.playnav-video-info .metadata {
+			max-width: 250px;
+		}
 	</style>
+	<style>lang_channel_customcss_textfit .uu{}</style>
 	<script>
 		function setDefault(element) {
 			element.src = "/assets/site-assets/default.png"
@@ -356,7 +361,7 @@
 				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
 					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" maxlength="128" autocomplete="off">
 					<input id="search-type-masthead" name="search_type" type="hidden" value="">
-					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document.searchForm.submit();"><span style="display: block;">Search</span></a>
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document.searchForm.submit();"><span style="display: block;">lang_search</span></a>
 					<input type="hidden" name="aq" value="f"><input type="hidden" name="oq" value="" disabled="disabled">
 				</form>
 
@@ -365,14 +370,14 @@
 				<!--yt2009_login_insert-->
 			</div>
 			<div id="masthead-nav-user">
-				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
-				<a href="/my_history">History</a>
-				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload"><span>Upload</span></a>
+				<a href="/my_subscriptions?masthead=1">lang_subs_btn</a>
+				<a href="/my_history">lang_history_btn</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload"><span>lang_upload_btn</span></a>
 			</div>
 			<div id="masthead-nav-main">
-				<a href="/">Home</a>
-				<a href="/videos">Videos</a>
-				<a href="/channels">Channels</a>
+				<a href="/">lang_home</a>
+				<a href="/videos">lang_videos</a>
+				<a href="/channels">lang_channels</a>
 			</div>
 			<div id="masthead-end"></div>
 
@@ -429,17 +434,18 @@
 							</div>
 
 							<div style="float:left;padding:0.4em;">
-								<div class="channel-title outer-box-color" style="display:none" id="channel_title">
+								<div class="channel-title outer-box-color" id="channel_title">
+									yt2009_channel_name
 								</div>
-								<div class="channel-title outer-box-color" style="padding:9px 0 0 0" id="channel_base_title">yt2009_channel_name's Channel</div>
+								<div class="channel-title outer-box-color" style="font-size: 11px;" id="channel_base_title">lang_channel_headername_prefix yt2009_channel_namelang_channel_headername_suffix</div>
 							</div>
 
 							<div style="float:left;padding-top:10px;_display:inline" id="subscribe-buttons">
 								<div id="subscribe_user_playlist_navigator" class="subscribe-div yt2009-subscribe-button-hook" onclick="subscribe();">
-									<a class="yt-button yt-button-urgent" id="" style="" href="#"><span>Subscribe</span></a>
+									<a class="yt-button yt-button-urgent" id="" style="" href="#"><span>lang_subscribe</span></a>
 								</div>
 								<div id="unsubscribeDiv" class="yt2009-unsubscribe-button-hook" onclick="unsubscribe();">
-									<a class="yt-button" id="" href="#"><span>Unsubscribe</span></a>
+									<a class="yt-button" id="" href="#"><span>lang_unsubscribe</span></a>
 								</div>
 
 							</div>
@@ -451,10 +457,10 @@
 						<table>
 							<tbody>
 								<tr>
-									<td><a class="navbar-tab inner-box-link-color navbar-tab-selected" id="playnav-navbar-tab-all" onclick="switchTab('all', this)">All</a></td>
-									<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-uploads" onclick="switchTab('uploads', this)">Uploads</a></td>
-									<!--yt2009_favorites_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-favorites" onclick="openPlaylist(document.querySelector('.yt2009_favorites_id_div'), 'favorites')">Favorites</a><div class="hid yt2009_favorites_id_div" data-id="yt2009_favorites_id_value"></div></td>yt2009_favorites_remove_end-->
-									<!--yt2009_playlists_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-playlists" onclick="switchTab('playlists', this)">Playlists</a></td>yt2009_playlists_remove_end-->
+									<td><a class="navbar-tab inner-box-link-color navbar-tab-selected" id="playnav-navbar-tab-all" onclick="switchTab('all', this)">lang_playnav_all</a></td>
+									<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-uploads" onclick="switchTab('uploads', this)">lang_playnav_videos</a></td>
+									<!--yt2009_favorites_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-favorites" onclick="openPlaylist(document.querySelector('.yt2009_favorites_id_div'), 'favorites')">lang_playnav_favorites</a><div class="hid yt2009_favorites_id_div" data-id="yt2009_favorites_id_value"></div></td>yt2009_favorites_remove_end-->
+									<!--yt2009_playlists_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-playlists" onclick="switchTab('playlists', this)">lang_playnav_playlists_top</a></td>yt2009_playlists_remove_end-->
 								</tr>
 							</tbody>
 						</table>
@@ -496,7 +502,7 @@
 																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('info')">
 																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-info"></div>
 																		<div class="playnav-bottom-link" id="info-bottom-link">
-																			<a href="#">Info</a>
+																			<a href="#">lang_playnav_info</a>
 																		</div>
 																		<div class="spacer">&nbsp;</div>
 																	</td>
@@ -524,7 +530,7 @@
 																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('comments')">
 																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-comments"></div>
 																		<div class="playnav-bottom-link" id="comments-bottom-link">
-																			<a href="#">Comments</a>
+																			<a href="#">lang_playnav_comments</a>
 																		</div>
 																		<div class="spacer">&nbsp;</div>
 																	</td>
@@ -552,7 +558,7 @@
 																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('favorite')">
 																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-favorite"></div>
 																		<div class="playnav-bottom-link" id="favorite-bottom-link">
-																			<a href="#">Favorite</a>
+																			<a href="#">lang_playnav_favorite</a>
 																		</div>
 																		<div class="spacer">&nbsp;</div>
 																	</td>
@@ -580,7 +586,7 @@
 																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('share')">
 																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-share"></div>
 																		<div class="playnav-bottom-link" id="share-bottom-link">
-																			<a href="#">Share</a>
+																			<a href="#">lang_playnav_share</a>
 																		</div>
 																		<div class="spacer">&nbsp;</div>
 																	</td>
@@ -608,7 +614,7 @@
 																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('playlists')">
 																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-playlists"></div>
 																		<div class="playnav-bottom-link" id="playlists-bottom-link">
-																			<a href="#">Playlists</a>
+																			<a href="#">lang_playnav_playlists_btn</a>
 																		</div>
 																		<div class="spacer">&nbsp;</div>
 																	</td>
@@ -636,7 +642,7 @@
 																	<td class="panel-tab-title-cell" onclick="playnav_switchPanel('flag')">
 																		<div class="playnav-panel-tab-icon yt2009_black" id="panel-icon-flag"></div>
 																		<div class="playnav-bottom-link" id="flag-bottom-link">
-																			<a href="#">Flag</a>
+																			<a href="#">lang_playnav_flag</a>
 																		</div>
 																		<div class="spacer">&nbsp;</div>
 																	</td>
@@ -671,7 +677,7 @@
 													<div id="ratingWrapper">
 														<div class="floatL">
 															<div id="ratingMessage" class="floatL">
-																<div id="defaultRatingMessage"><span class="smallText">yt2009_head_video_ratings ratings</span></div>
+																<div id="defaultRatingMessage"><span class="smallText"> lang_ratings_prefix yt2009_head_video_ratings lang_ratings_suffix</span></div>
 															</div>
 															<div id="ratingStars" class="floatL">
 																<button class="master-sprite ratingL ratingL-4.0"
@@ -688,9 +694,9 @@
 												</div>
 												<div id="playnav-curvideo-info-line">
 
-													From: <span id="playnav-curvideo-channel-name">yt2009_channel_name</span>&nbsp;|
+													lang_playnav_from <span id="playnav-curvideo-channel-name">yt2009_channel_name</span>&nbsp;|
 													yt2009_head_video_upload&nbsp;|
-													<span id="playnav-curvideo-view-count">yt2009_head_video_views</span>
+													<span id="playnav-curvideo-view-count">lang_views_prefix yt2009_head_video_views lang_views_suffix</span>
 												</div>
 
 												<div class="cb"></div>
@@ -699,7 +705,7 @@
 													<div id="playnav-curvideo-description">yt2009_head_video_short_description</div>
 												</div>
 
-												<a href="/watch?v=yt2009_head_video_id" id="playnav-watch-link">View comments, related videos, and more</a>
+												<a href="/watch?v=yt2009_head_video_id" id="playnav-watch-link">lang_playnav_showvideo</a>
 												<div id="playnav-curvideo-controls">
 												</div>
 
@@ -712,30 +718,30 @@
 											<div id="playnav-panel-favorite" class="hid" style="color: black;">
 												<div class="favorite-panel">
 													<div class="favorite-added">
-														<p>This video has been <b>added</b> to your <a href="/my_favorites" target="_blank">Favorites.</a> (<a href="#" onclick="favorite_undo();">Undo</a>)</a></p>
+														lang_playnav_fav_added
 													</div>
 													<div class="favorite-remove hid">
-														<p>This video has been <b>removed</b> from your <a href="/my_favorites" target="_blank">Favorites.</a> (<a href="#" onclick="favorite_video();">Undo</a>)</a></p>
+														lang_playnav_fav_removed
 													</div>
 												</div>
 											</div>
 											<div id="playnav-panel-share" class="hid scrollable"></div>
 											<div id="playnav-panel-playlists" class="hid">
 												<div id="addToPlaylistDiv" class="watch-more-action" style="padding: 0px 8px 5px 3px;">
-													<h2>Add to Playlist</h2>
+													<h2>lang_playnav_playlist_add</h2>
 													<select class="playlists-options" style="display: inline-block;"></select>
 													<div class="playlist-add" style="display: inline-block;">
-														<a class="yt-button" id="playlist-add-btn" href="#"><span>Add</span></a>
+														<a class="yt-button" id="playlist-add-btn" href="#"><span>lang_playnav_add_btn</span></a>
 													</div>
 													<div class="playlist-create" style="display: none;">
-														<span>Playlist Name: </span>
+														<span>lang_playnav_playlist_name</span>
 														<input type="text" class="playlist-name-input" autocomplete="off" spellcheck="false"/>
-														<a class="yt-button" id="playlist-create-btn" href="#"><span>Add</span></a>
+														<a class="yt-button" id="playlist-create-btn" href="#"><span>lang_playnav_add_btn</span></a>
 													</div>
 												</div>
 												<div id="addToPlaylistResult" class="watch-action-result" style="display: none;">
-													The video has been added to your playlist.
-													<div class="close" style="float: right;"><a href="#" title="close this layer" onclick="playlistResultBack();">close</a></div>
+													lang_playnav_playlist_added
+													<div class="close" style="float: right;"><a href="#" title="close this layer" onclick="playlistResultBack();">lang_playnav_close</a></div>
 												</div>
 											</div>
 											<div id="playnav-panel-flag" class="hid">nie</div>
@@ -755,12 +761,12 @@
 													<div id="playnav-play-all-items" class="inner-scrollbox">
 														<div class="playnav-playlist-header">
 															<a style="text-decoration:none" class="title title-text-color">
-																<span id="playnav-playlist-all-all-title" class="title">Uploads</span>
+																<span id="playnav-playlist-all-all-title" class="title">lang_playnav_videos</span>
 															</a>
 														</div>
 														<!--yt2009_all_scrollbox_uploads-->
 														<div class="playnav-play-column-all">
-															<div class="playnav-more"><a class="channel-cmd" href="#" onclick="switchTab('uploads', $('#playnav-navbar-tab-uploads'))">see more</a></div>
+															<div class="playnav-more"><a class="channel-cmd" href="#" onclick="switchTab('uploads', $('#playnav-navbar-tab-uploads'))">lang_playnav_more</a></div>
 														</div>
 														<div class="spacer">&nbsp;</div>
 														<div class="scrollbox-separator">
@@ -775,7 +781,7 @@
 													<div id="playnav-play-all-items" class="inner-scrollbox">
 														<div class="playnav-playlist-header">
 															<a style="text-decoration:none" class="title title-text-color">
-																<span id="playnav-playlist-uploads-all-title" class="title">Uploads</span>
+																<span id="playnav-playlist-uploads-all-title" class="title">lang_playnav_videos</span>
 															</a>
 														</div>
 														<!--yt2009_uploads-->
@@ -833,18 +839,18 @@
 							<div style="position:relative;width:170px;">
 								<div>
 									<div id="subscribe_user_profile" class="subscribe-div yt2009-subscribe-button-hook" onclick="subscribe();">
-										<a class="yt-button yt-button-urgent" id="" href="#"><span>Subscribe</span></a>
+										<a class="yt-button yt-button-urgent" id="" href="#"><span>lang_subscribe</span></a>
 									</div>
 									<div id="unsubscribeDiv" class="yt2009-unsubscribe-button-hook" onclick="unsubscribe();">
-										<a class="yt-button" id="" href="#"><span>Unsubscribe</span></a>
+										<a class="yt-button" id="" href="#"><span>lang_unsubscribe</span></a>
 									</div>
 
 									<div class="cb"></div>
 								</div>
 								<div style="padding:4px">
-									<span id="aProfileAddFriend" class="nowrap"><a href="#">Add as Friend</a>&nbsp;|&nbsp;</span>
-									<span class="nowrap"><a id="aProfileBlockUser" href="#">Block User</a>&nbsp;|&nbsp;</span>
-									<span class="nowrap"><a id="aProfileSendMsg" href="#">Send Message</a></span>
+									<span id="aProfileAddFriend" class="nowrap"><a href="#">lang_channel_addfriend</a>&nbsp;|&nbsp;</span>
+									<span class="nowrap"><a id="aProfileBlockUser" href="#">lang_channel_block</a>&nbsp;|&nbsp;</span>
+									<span class="nowrap"><a id="aProfileSendMsg" href="#">lang_channel_msg</a></span>
 								</div>
 							</div>
 
@@ -853,7 +859,7 @@
 					</div>
 
 					<div class="inner-box" id="user_profile">
-						<div style="float:left;" class="box-title title-text-color">Profile</div>
+						<div style="float:left;" class="box-title title-text-color">lang_channel_profile</div>
 						<div style="float:right;;_display:inline;white-space:nowrap">
 						</div>
 						<div class="cb"></div>
@@ -874,7 +880,7 @@
 
 					<div class="inner-box yt2009-subscriptions-mark" id="user_subscriptions">
 						<div style="zoom:1">
-							<div class="box-title title-text-color">Subscriptions (yt2009_subscriptions_count)</div>
+							<div class="box-title title-text-color">lang_channel_subscriptions (yt2009_subscriptions_count)</div>
 							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
 								<div style="float:right">
 								</div>
@@ -894,7 +900,7 @@
 								<div style="font-size: 12px; text-align: right; margin-top: 7px;">
 									<b><a name="channel-box-see-all"
 											href="#">
-											see all
+											lang_channel_all
 										</a></b>
 								</div>
 
@@ -929,7 +935,7 @@
 
 					<div class="inner-box yt2009-default-friends-mark" id="user_friends">
 						<div style="zoom:1">
-							<div class="box-title title-text-color">Friends (yt2009_friends_count)</div>
+							<div class="box-title title-text-color">lang_channel_friends (yt2009_friends_count)</div>
 							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
 								<div style="float:right">
 								</div>
@@ -946,7 +952,7 @@
 							</div>
 							<div>
 								<div style="font-size: 12px; text-align: right; margin-top: 7px;">
-									<b><a name="channel-box-see-all" href="#">see all</a></b>
+									<b><a name="channel-box-see-all" href="#">lang_channel_all</a></b>
 								</div>
 
 							</div>
@@ -956,7 +962,7 @@
 
 					<div class="inner-box" id="user_comments">
 						<div style="zoom:1">
-							<div class="box-title title-text-color">Channel Comments <!--(yt2009_channel_comment_count)--></div>
+							<div class="box-title title-text-color">lang_channel_comments <!--(yt2009_channel_comment_count)--></div>
 							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
 								<div style="float:right">
 								</div>
@@ -973,7 +979,7 @@
 									</tbody>
 								</table>
 							</div>
-							<div id="user-comments-login-add-comment" style="font-size: 12px; margin-top: 10px" class="alignC"><a href="#">Add Comment</a></div>
+							<div id="user-comments-login-add-comment" style="font-size: 12px; margin-top: 10px" class="alignC"><a href="#">lang_channel_comment_add</a></div>
 						</div>
 						<div class="clear"></div>
 					</div>

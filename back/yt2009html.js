@@ -12,6 +12,7 @@ const yt2009search = require("./yt2009search");
 const yt2009ryd = require("./cache_dir/ryd_cache_manager");
 const yt2009waybackwatch = require("./cache_dir/wayback_watchpage")
 const yt2009templates = require("./yt2009templates");
+const yt2009languages = require("./language_data/language_engine")
 const yt2009exports = require("./yt2009exports")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
@@ -449,7 +450,7 @@ module.exports = {
                 ``)
         }
 
-        code = require("./yt2009loginsimulate")(flags, code)
+        code = require("./yt2009loginsimulate")(flags, code, true)
 
         // handling flag
         
@@ -693,6 +694,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             if(!englishLanguageComment) {
                                 commentTime = commentTime.replace(/[^0-9]/g, "") + " months ago"
                             }
+                            commentTime = yt2009utils.relativeTimeCreate(
+                                commentTime, yt2009languages.get_language(req)
+                            )
                             // add comment
                             commentsHTML += yt2009templates.videoComment(
                                 comment.authorUrl,
@@ -847,6 +851,26 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         + " " + temp.getDate()
                         + ", " + temp.getFullYear()
         }
+
+        // upload date language handle
+        let userLang = yt2009languages.get_language(req)
+        let upDateDay = uploadDate.split(" ")[1].replace(",", "")
+        let upDateMonth = uploadDate.split(" ")[0]
+        let upDateYear = uploadDate.split(" ")[2]
+        let languageUpDateRule = yt2009languages.raw_language_data(userLang)
+                                                .watchpageUploadDate
+
+        if(!languageUpDateRule) {
+            languageUpDateRule = yt2009languages.raw_language_data("en")
+                                                .watchpageUploadDate
+        }
+        uploadDate = languageUpDateRule.dateFormat.replace(
+            "[day]", upDateDay
+        ).replace(
+            "[monthcode]", languageUpDateRule.monthcodes[upDateMonth]
+        ).replace(
+            "[year]", upDateYear
+        )
 
 
         let channelIcon = data.author_img;
@@ -1036,7 +1060,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         )
 
         // ukryj widoczne od razu przyciski sign in jak jesteśmy zalogowani
-        if(code.includes("Sign Out")) {
+        if(code.includes("Sign Out") || code.includes("lang_signout")) {
             code = code.split("yt2009-signin-hide").join("hid")
         }
 
@@ -1107,6 +1131,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
     
                 if(!futurePass) return;
                 // sam html
+                commentTime = yt2009utils.relativeTimeCreate(
+                    commentTime, yt2009languages.get_language(req)
+                )
                 comments_html += yt2009templates.videoComment(
                     comment.authorUrl,
                     commentPoster,

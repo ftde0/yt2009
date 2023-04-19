@@ -245,7 +245,7 @@ module.exports = {
         return `
     <div class="inner-box yt2009-${sectionName}-mark" id="user_${sectionName.toLowerCase()}">
         <div style="zoom:1">
-            <div class="box-title title-text-color">${utils.firstUppercase(sectionName)} (yt2009_${sectionName}_count)</div>
+            <div class="box-title title-text-color">lang_channel_${sectionName} (yt2009_${sectionName}_count)</div>
             <div style="float:right;zoom:1;_display:inline;white-space:nowrap">
                 <div style="float:right">
                 </div>
@@ -534,13 +534,13 @@ module.exports = {
     "allScrollboxPlaylistHead": `
     <div class="playnav-playlist-header">
         <a style="text-decoration:none" class="title title-text-color">
-            <span id="playnav-playlist-all-all-title" class="title">Playlists</span>
+            <span id="playnav-playlist-all-all-title" class="title">lang_playnav_playlists_top</span>
         </a>
     </div>
     `,
     "allScrollboxPlaylistEnd": `
     <div class="playnav-play-column-all">
-        <div class="playnav-more"><a class="channel-cmd" href="#" onclick="switchTab('playlists', $('#playnav-navbar-tab-playlists'))">see more</a></div>
+        <div class="playnav-more"><a class="channel-cmd" href="#" onclick="switchTab('playlists', $('#playnav-navbar-tab-playlists'))">lang_playnav_more</a></div>
     </div>
     <div class="spacer">&nbsp;</div>
     <div class="scrollbox-separator">
@@ -551,7 +551,7 @@ module.exports = {
         <div id="playnav-play-all-items" class="inner-scrollbox">
             <div class="playnav-playlist-header">
                 <a style="text-decoration:none" class="title title-text-color">
-                    <span id="playnav-playlist-playlists-all-title" class="title">Playlists</span>
+                    <span id="playnav-playlist-playlists-all-title" class="title">lang_playnav_playlists_top</span>
                 </a>
             </div>`,
     "playlistScrollboxEnd": `
@@ -561,7 +561,7 @@ module.exports = {
         </div>
     </div>
     </div>`,
-    "playnavPlaylist": function(playlist, protocol) {
+    "playnavPlaylist": function(playlist, protocol, useLanguage) {
         return `
         <div class="playnav-item playnav-playlist" onclick="openPlaylist(this)" data-id="${playlist.id}">
             <div class="content">
@@ -571,7 +571,7 @@ module.exports = {
                 </div>
                 <div class="playnav-video-info">
                     <a href="#" class="playnav-item-title ellipsis"><span>${playlist.name}</span></a>
-                    <div class="metadata">${playlist.videos} videos</div>
+                    <div class="metadata">${useLanguage ? "lang_playnav_playlist_videos_prefix" : ""}${playlist.videos}${useLanguage ? "lang_playnav_playlist_videos_suffix" : " videos"}</div>
                 </div>
             </div>
         </div>`

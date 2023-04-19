@@ -25,7 +25,7 @@ const base_code_logged_out = `
 	<a href="#">Sign In</a>
 </span>`
 
-module.exports = function(req, code) {
+module.exports = function(req, code, returnNoLang) {
     let flags = req.query && req.query.flags ? req.query.flags + ":" : ""
     try {
         req.headers.cookie.split(";").forEach(cookie => {
@@ -56,9 +56,24 @@ module.exports = function(req, code) {
     }
 
     if(loggedInUsername) {
-        code = code.replace("<!--yt2009_login_insert-->", base_code_logged_in.split("yt2009_username").join(decodeURIComponent(loggedInUsername).split("<").join("&lt;").split(">").join("&gt;")))
+        code = code.replace(
+            "<!--yt2009_login_insert-->",
+            base_code_logged_in.split("yt2009_username").join(
+                require("./yt2009utils").xss(
+                    decodeURIComponent(loggedInUsername)
+                )
+            )
+        )
     } else {
         code = code.replace("<!--yt2009_login_insert-->", base_code_logged_out)
+    }
+
+    // languages via hl param/lang cookie
+    if(returnNoLang) {
+        code = code.replace(`Sign Out`, "lang_signout_btn")
+        code = code.replace(`Create Account`, "lang_create_btn")
+        code = code.replace(`>or<`, ">lang_or<")
+        code = code.replace(`Sign In`, "lang_sign_btn")
     }
 
     return code;

@@ -4,6 +4,7 @@ const dominant_color = require("./dominant_color")
 const yt2009utils = require("./yt2009utils");
 const yt2009html = require("./yt2009html");
 const yt2009constants = require("./yt2009constants.json")
+const yt2009languages = require("./language_data/language_engine")
 const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
 const wayback_channel = require("./cache_dir/wayback_channel")
@@ -72,6 +73,10 @@ module.exports = {
                 } else {
                     getAdditionalSections(data, flags, () => {
                         applyHTML(data, flags, (html => {
+                            html = yt2009languages.apply_lang_to_code(html, req)
+                            if(html.includes(` (0)</div>`)) {
+                                html = html.split(` (0)</div>`).join(`</div>`)
+                            }
                             res.send(html)
                         }), req, flashMode)
                     })
@@ -419,8 +424,14 @@ module.exports = {
 
         // wayback_features init
         let wayback_settings = ""
+        let channelUrl = req.originalUrl.split("?")[0]
+                                        .split("&")[0]
+                                        .split("#")[0]
+        if(channelUrl.startsWith("/")) {
+            channelUrl = channelUrl.replace("/", "")
+        }
         if(flags.includes("wayback_features")
-        && data.url.includes("user/")) {
+        && channelUrl.includes("user/")) {
             wayback_settings = decodeURIComponent(
                 flags.split("wayback_features")[1].split(";")[0]
             )
@@ -502,8 +513,8 @@ module.exports = {
         // shows_tab
         if(flags.includes("shows_tab")) {
             code = code.replace(
-                `<a href="/channels">Channels</a>`,
-                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a>`,
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
 
@@ -545,14 +556,19 @@ module.exports = {
                                        .splice(0, 10)
         scrollbox_all_videos.forEach(video => {
             let views = yt2009utils.viewFlags(video.views, flags)
+            views = yt2009utils.playnavViewCount(
+                views, yt2009languages.get_language(req)
+            )
             let ratings_est = yt2009utils.estRating(views)
             let upload_date = yt2009utils.timeFlags(video.upload, flags)
-            videoUploadDates[video.id] = upload_date
+            videoUploadDates[video.id] = upload_date;
             scrollbox_all_html += templates.playnavVideo(
                 video,
                 video_index,
                 views,
-                upload_date,
+                yt2009utils.relativeTimeCreate(
+                    upload_date, yt2009languages.get_language(req)
+                ),
                 ratings_est,
                 req.protocol
             )
@@ -568,6 +584,9 @@ module.exports = {
         video_index = 0;
         scrollbox_videos.forEach(video => {
             let views = yt2009utils.viewFlags(video.views, flags)
+            views = yt2009utils.playnavViewCount(
+                views, yt2009languages.get_language(req)
+            )
             let ratings_est = yt2009utils.estRating(views)
             let upload_date = yt2009utils.timeFlags(video.upload, flags)
             videoUploadDates[video.id] = upload_date
@@ -575,7 +594,9 @@ module.exports = {
                 video,
                 video_index,
                 views,
-                upload_date,
+                yt2009utils.relativeTimeCreate(
+                    upload_date, yt2009languages.get_language(req)
+                ),
                 ratings_est,
                 req.protocol
             )
@@ -591,8 +612,9 @@ module.exports = {
         login_simulate
         =======
         */
-        code = require("./yt2009loginsimulate")(flags, code)
-
+        let returnNoLang = req.headers.cookie.includes("lang=") || req.query.hl || false
+        code = require("./yt2009loginsimulate")(flags, code, returnNoLang)
+        
         /*
         =======
         header video
@@ -603,6 +625,7 @@ module.exports = {
         if(data.videos[0]) {
             let video = data.videos[0]
             let views = yt2009utils.viewFlags(video.views, flags)
+                                   .replace(" views", "")
             let rating_est = yt2009utils.estRating(views)
 
             // metadata
@@ -620,7 +643,10 @@ module.exports = {
             )
             code = code.replace(
                 "yt2009_head_video_upload",
-                videoUploadDates[video.id]
+                yt2009utils.relativeTimeCreate(
+                    videoUploadDates[video.id],
+                    yt2009languages.get_language(req)
+                )
             )
 
             // use video comments as channel comments
@@ -869,7 +895,7 @@ module.exports = {
             // "all" scrollbox playlists
             JSON.parse(JSON.stringify(playlists)).splice(0, 5).forEach(playlist => {
                 all_scrollbox_playlists_html += templates.playnavPlaylist(
-                    playlist, req.protocol
+                    playlist, req.protocol, true
                 )
             })
             all_scrollbox_playlists_html += templates.allScrollboxPlaylistEnd
@@ -890,7 +916,7 @@ module.exports = {
                     )
                 }
                 playlists_scrollbox_html += templates.playnavPlaylist(
-                    playlist, req.protocol
+                    playlist, req.protocol, true
                 )
             })
             playlists_scrollbox_html += templates.playlistScrollboxEnd
@@ -932,7 +958,12 @@ module.exports = {
             if(fullHTML) {
                 html += `\n${templates.channelSectionHTMLEnd()}`
             }
-            code = code.split(`yt2009_${sectionName}_count`, realCount)
+            if(realCount !== 0) {
+                code = code.split(`yt2009_${sectionName}_count`, realCount)
+            } else {
+                code = code.split(`(yt2009_${sectionName}_count)`, ``)
+            }
+
             return html;
         }
 
@@ -942,8 +973,10 @@ module.exports = {
         =======
         */
         if(flags.includes("wayback_features")
-        && data.url.includes("user/")) {
-            wayback_channel.read(data.url, (waybackData => {
+        && channelUrl.includes("user/")) {
+            wayback_channel.read(
+                channelUrl,
+                (waybackData => {
 
                 /*
                 =======
@@ -951,8 +984,14 @@ module.exports = {
                 =======
                 */
                 if(wayback_settings.includes("basic")) {
-                    code = code.split(`yt2009_channel_avatar`)
-                                .join(waybackData.avatarUrl)
+                    if(waybackData.avatarUrl) {
+                        code = code.split(`yt2009_channel_avatar`)
+                                    .join(waybackData.avatarUrl)
+                    } else {
+                        code = code.split("yt2009_channel_avatar")
+                                   .join(channelAvatar)
+                    }
+                    
                     
                     let customCSS = ""
                     if(typeof(waybackData.customCSS) == "string") {

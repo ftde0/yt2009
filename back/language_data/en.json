@@ -1,4 +1,49 @@
 {
+    "relativeTimeRules": {
+        "minutes": {
+            "1": "minute",
+            "2+": "minutes"
+        },
+        "hours": {
+            "1": "hour",
+            "2+": "hours"
+        },
+        "days": {
+            "1": "day",
+            "2+": "days"
+        },
+        "weeks": {
+            "1": "week",
+            "2+": "weeks"
+        },
+        "months": {
+            "1": "month",
+            "2+": "months"
+        },
+        "years": {
+            "1": "year",
+            "2-4": "years"
+        },
+        "prefix": "",
+        "suffix": " ago"
+    },
+    "watchpageUploadDate": {
+        "dateFormat": "[monthcode] [day], [year]",
+        "monthcodes": {
+            "Jan": "Jan",
+            "Feb": "Feb",
+            "Mar": "Mar",
+            "Apr": "Apr",
+            "May": "May",
+            "Jun": "Jun",
+            "Jul": "Jul",
+            "Aug": "Aug",
+            "Sep": "Sep",
+            "Oct": "Oct",
+            "Nov": "Nov",
+            "Dec": "Dec"
+        }
+    },
     "subscribe": "Subscribe",
     "unsubscribe": "Unsubscribe",
     "home": "Home",
@@ -9,6 +54,7 @@
     "create_btn": "Create Account",
     "or": "or",
     "sign_btn": "Sign In",
+    "signout_btn": "Sign Out",
     "subs_btn": "Subscriptions",
     "history_btn": "History",
     "upload_btn": "Upload",
@@ -69,5 +115,46 @@
     "footer_showloc": "Show locations",
     "footer_language": "Current Language:",
     "footer_showlang": "Show languages",
-    "footer_copyright": "&copy; 2009 YouTube, LLC"
+    "footer_copyright": "&copy; 2009 YouTube, LLC",
+    "footer_worldwide": "Worldwide",
+    "footer_langname": "English",
+    "playnav_all": "All",
+    "playnav_videos": "Uploads",
+    "playnav_favorites": "Favorites",
+    "playnav_playlists_top": "Playlists",
+    "playnav_info": "Info",
+    "playnav_comments": "Comments",
+    "playnav_favorite": "Favorite",
+    "playnav_share": "Share",
+    "playnav_playlists_btn": "Playlists",
+    "playnav_flag": "Flag",
+    "playnav_showvideo": "View comments, related videos, and more",
+    "playnav_playlist_videos_prefix": "",
+    "playnav_playlist_videos_suffix": " videos",
+    "playnav_from": "From: ",
+    "playnav_fav_added": "<p>This video has been <b>added</b> to your <a href=\"/my_favorites\" target=\"_blank\">Favorites.</a> (<a href=\"#\" onclick=\"favorite_undo();\">Undo</a>)</a></p>",
+    "playnav_fav_removed": "<p>This video has been <b>removed</b> from your <a href=\"/my_favorites\" target=\"_blank\">Favorites.</a> (<a href=\"#\" onclick=\"favorite_video();\">Undo</a>)</a></p>",
+    "playnav_playlist_add": "Add to Playlist",
+    "playnav_playlist_name": "Playlist Name: ",
+    "playnav_playlist_added": "The video has been added to your playlist.",
+    "playnav_more": "see more",
+    "playnav_viewcount_prefix": "",
+    "playnav_viewcount_suffix": " views",
+    "playnav_close": "close",
+    "playnav_add_btn": "Add",
+    "channel_addfriend": "Add as Friend",
+    "channel_block": "Block User",
+    "channel_msg": "Send Message",
+    "channel_profile": "Profile",
+    "channel_friends": "Friends",
+    "channel_comments": "Channel Comments",
+    "channel_comment_add": "Add comment",
+    "channel_subscriptions": "Subscriptions",
+    "channel_subscribers": "Subscribers",
+    "channel_all": "see all",
+    "channel_customcss_textfit": "",
+    "channel_headername_prefix": "",
+    "channel_headername_suffix": "'s Channel",
+    "channel_field_name": "Name",
+    "channel_field_description": "Description"
 }

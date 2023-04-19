@@ -8,22 +8,31 @@ const langs = {
 
 module.exports = {
     "apply_lang_to_code": function(code, req) {
-        let lang = langs.en
-        if(typeof(req) == "string") {
-            lang = langs[req] || langs.en
-        }
-        if((req.headers.cookie || "").includes("lang=")) {
-            let langName = req.headers.cookie.split("lang=")[1].split(";")[0]
-            lang = langs[langName] || langs.en
-        }
-        if(req.query.hl) {
-            lang = langs[req.query.hl] || langs.en
-        }
+        let lang = langs[this.get_language(req)] || langs.en
 
         for(let name in lang) {
             code = code.split(`lang_${name}`).join(lang[name])
         }
 
         return code;
+    },
+
+    "get_language": function(req) {
+        let lang = "en";
+        if(typeof(req) == "string") {
+            lang = req;
+        }
+        if((req.headers.cookie || "").includes("lang=")) {
+            let langName = req.headers.cookie.split("lang=")[1].split(";")[0]
+            lang = langName
+        }
+        if(req.query.hl) {
+            lang = req.query.hl;
+        }
+        return lang;
+    },
+
+    "raw_language_data": function(lang) {
+        return langs[lang] || langs["en"]
     }
 }

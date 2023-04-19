@@ -823,5 +823,58 @@ module.exports = {
              })
             .pipe(writeStream)
         }
+    },
+
+    "relativeTimeCreate": function(baseString, language) {
+        let relativeTimeRules = require("./language_data/language_engine")
+                                .raw_language_data(language).relativeTimeRules
+        if(!relativeTimeRules) {
+            relativeTimeRules = require("./language_data/language_engine")
+                                .raw_language_data("en").relativeTimeRules
+        }
+        
+        let timeValue = parseInt(baseString.split(" ")[0])
+        
+        let timeType = baseString.split(" ")[1].toLowerCase();
+        if(!timeType.endsWith("s")) {
+            timeType += "s"
+        }
+
+        // get time rule and apply it
+        let timeRule = relativeTimeRules[timeType];
+        let timeText = ""
+        for(let rule in timeRule) {
+            // just one value
+            if(!rule.includes("-")
+            && !rule.includes("+")
+            && timeValue == rule) {
+                timeText = timeRule[rule]
+            }
+            // range of values
+            if(rule.includes("-")
+            && timeValue >= parseInt(rule.split("-")[0])
+            && timeValue <= parseInt(rule.split("-")[1])) {
+                timeText = timeRule[rule]
+            }
+            // number and higher (+)
+            if(rule.includes("+")&& parseInt(rule) <= timeValue) {
+                timeText = timeRule[rule]
+                break;
+            }
+        }
+
+        // create relative time string
+        let resultText = relativeTimeRules.prefix + timeValue
+                        + " " + timeText + relativeTimeRules.suffix
+        return resultText;
+    },
+
+    "playnavViewCount": function(views, language) {
+        let lang = require("./language_data/language_engine")
+                       .raw_language_data(language);
+
+        return lang.playnav_viewcount_prefix
+               + this.countBreakup(this.bareCount(views))
+               + lang.playnav_viewcount_suffix;
     }
 }

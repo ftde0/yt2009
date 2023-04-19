@@ -43,7 +43,19 @@
 			if(naturalHeight(element) <= 90) {
 				// 404 image
 				var id = element.parentNode.getAttribute("href").split("?v=")[1]
-				document.querySelector("[data-id=\"" + id + "\"]").className += " hid"
+				try {
+					document.querySelector("[data-id=\"" + id + "\"]").className += " hid"
+				}
+				catch(error) {
+					// old browser syntax
+					var videos = document.getElementsByTagName("*")
+					for(var video in videos) {
+						if(videos[video].nodeName
+						&& videos[video].getAttribute("data-id") == id) {
+							videos[video].className += " hid"
+						}
+					}
+				}
 			}
 		}
 	</script>

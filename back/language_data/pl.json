@@ -1,4 +1,54 @@
 {
+    "relativeTimeRules": {
+        "minutes": {
+            "1": "minuta",
+            "2-4": "minuty",
+            "5+": "minut"
+        },
+        "hours": {
+            "1": "godzina",
+            "2-4": "godziny",
+            "5+": "godzin"
+        },
+        "days": {
+            "1": "dzień",
+            "2+": "dni"
+        },
+        "weeks": {
+            "1": "tydzień",
+            "2-4": "tygodnie",
+            "5+": "tygodni"
+        },
+        "months": {
+            "1": "miesiąc",
+            "2-4": "miesiące",
+            "5+": "miesięcy"
+        },
+        "years": {
+            "1": "rok",
+            "2-4": "lata",
+            "5+": "lat"
+        },
+        "prefix": "",
+        "suffix": " temu"
+    },
+    "watchpageUploadDate": {
+        "dateFormat": "[day] [monthcode] [year]",
+        "monthcodes": {
+            "Jan": "sty",
+            "Feb": "lut",
+            "Mar": "mar",
+            "Apr": "kwi",
+            "May": "maj",
+            "Jun": "cze",
+            "Jul": "lip",
+            "Aug": "sie",
+            "Sep": "wrz",
+            "Oct": "paź",
+            "Nov": "lis",
+            "Dec": "gru"
+        }
+    },
     "subscribe": "Subskrybuj",
     "unsubscribe": "Unsubscribe",
     "home": "Strona główna",
@@ -9,6 +59,7 @@
     "create_btn": "Utwórz konto",
     "or": "lub",
     "sign_btn": "Zaloguj się",
+    "signout_btn": "Wyloguj się",
     "subs_btn": "Subskrypcje",
     "history_btn": "Historia",
     "upload_btn": "Prześlij film",
@@ -69,5 +120,46 @@
     "footer_showloc": "Wybierz lokalizację",
     "footer_language": "Język:",
     "footer_showlang": "Wybierz język",
-    "footer_copyright": "&copy; 2009 YouTube, LLC"
+    "footer_copyright": "&copy; 2009 YouTube, LLC",
+    "footer_worldwide": "Cały świat",
+    "footer_langname": "Polski",
+    "playnav_all": "Wszystkie",
+    "playnav_videos": "Przesłane filmy",
+    "playnav_favorites": "Ulubione",
+    "playnav_playlists_top": "Listy odtwarzania",
+    "playnav_info": "Informacje",
+    "playnav_comments": "Komentarze",
+    "playnav_favorite": "Ulubione",
+    "playnav_share": "Prześlij",
+    "playnav_playlists_btn": "Playlisty",
+    "playnav_flag": "Zgłoś",
+    "playnav_showvideo": "Wyświetlaj komentarze, podobne filmy i nie tylko",
+    "playnav_playlist_videos_prefix": "",
+    "playnav_playlist_videos_suffix": " filmów",
+    "playnav_from": "Od: ",
+    "playnav_fav_added": "<p>Ten film został <b>dodany</b> do Twoich <a href=\"/my_favorites\" target=\"_blank\">Ulubionych.</a> (<a href=\"#\" onclick=\"favorite_undo();\">Cofnij</a>)</a></p>",
+    "playnav_fav_removed": "<p>Ten film został <b>usunięty</b> z Twoich <a href=\"/my_favorites\" target=\"_blank\">Ulubionych.</a> (<a href=\"#\" onclick=\"favorite_video();\">Cofnij</a>)</a></p>",
+    "playnav_playlist_add": "Dodaj do listy odtwarzania",
+    "playnav_playlist_name": "Nazwa playlisty: ",
+    "playnav_playlist_added": "Ten film został dodany do Twojej listy odtwarzania.",
+    "playnav_more": "zobacz więcej",
+    "playnav_viewcount_prefix": "Wyświetlenia: ",
+    "playnav_viewcount_suffix": "",
+    "playnav_close": "zamknij",
+    "playnav_add_btn": "Dodaj",
+    "channel_addfriend": "Dodaj jako przyjaciela",
+    "channel_block": "Zablokuj użytkownika",
+    "channel_msg": "Wyślij wiadomość",
+    "channel_profile": "Profil",
+    "channel_friends": "Przyjaciele",
+    "channel_comments": "Komentarze kanału",
+    "channel_comment_add": "Dodaj komentarz",
+    "channel_subscriptions": "Subskrypcje",
+    "channel_subscribers": "Widzowie",
+    "channel_all": "zobacz wszystko",
+    "channel_customcss_textfit": "#playnav-navbar {padding: 10px 5px !important;}",
+    "channel_headername_prefix": "Kanał użytkownika ",
+    "channel_headername_suffix": "",
+    "channel_field_name": "Nazwa",
+    "channel_field_description": "Opis"
 }

@@ -50,7 +50,7 @@ function section_fill(code, section_name, section_content, flags, protocol) {
     temp_code = temp_code.split(`/yt2009_${section_name}_thumbnail`)
                          .join(`${protocol}://i.ytimg.com/vi/${section_content.id}/hqdefault.jpg`)
     temp_code = temp_code.split(`yt2009_${section_name}_title`)
-                         .join(title)
+                         .join(title.trim())
     temp_code = temp_code.split(`yt2009_${section_name}_time`)
                          .join(section_content.time)
     temp_code = temp_code.split(`yt2009_${section_name}_views`)

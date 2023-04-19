@@ -332,6 +332,7 @@ if(location.href.indexOf("watch") !== -1) {
                 catch(error) {}
             }
             document.querySelector("#watch-vid-title").style.width = "960px"
+            document.getElementById("player-toggle-switch").className += " watch-wide-mode"
             $("#watch-this-vid").style.width = "960px"
             $("#watch-this-vid").style.height = "565px"
         } else {
@@ -345,6 +346,9 @@ if(location.href.indexOf("watch") !== -1) {
                 catch(error) {}
             }
             document.querySelector("#watch-vid-title").style.width = "640px"
+            document.getElementById("player-toggle-switch")
+                    .className = document.getElementById("player-toggle-switch")
+                                         .className.replace("watch-wide-mode", "")
             $("#watch-this-vid").style.width = ""
             $("#watch-this-vid").style.height = ""
         }
@@ -668,4 +672,192 @@ function new_layout_leave() {
         document.cookie = "unflip=1; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
     }
     location.href = location.href.replace("&flip=1", "")
+}
+
+
+/*
+======
+video response
+======
+*/
+// expander button
+var responseExpander = document.querySelector(".yt2009-video-response-expander")
+var videoResponsesLoaded = false;
+responseExpander.onclick = function() {
+    if(responseExpander.parentNode.className
+        .indexOf("yt-uix-expander-collapsed") !== -1) {
+        responseExpander.parentNode.className = responseExpander.parentNode
+                                                .className.replace(
+                                                    "collapsed", "expanded"
+                                                )
+
+        if(!videoResponsesLoaded) {
+            loadVideoResponses();
+        }
+    } else {
+        responseExpander.parentNode.className = responseExpander.parentNode
+                                                .className.replace(
+                                                    "expanded", "collapsed"
+                                                )
+    }
+}
+
+// fetch our response list
+function loadVideoResponses() {
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("POST", "/videoresponse_load")
+    try {
+        r.send(document.querySelector(".watch-vid-ab-title").innerHTML)
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                videoResponsesLoaded = true;
+                document.querySelector("#watch-video-responses-children").innerHTML = r.responseText
+            }
+        }
+    }
+    catch(error) {
+        videoResponsesLoaded = true;
+        document.querySelector("#watch-video-responses-children").innerHTML = "h?"
+        console.log(error)
+    }
+    
+}
+
+// video response navigation with arrows
+var videoResponseMargin = 0;
+function responseNavigateLeft() {
+    var tempMargin = 0;
+    var x = setInterval(function() {
+        tempMargin += 40;
+        videoResponseMargin += 40;
+        $(".video-bar-long-box").style.marginLeft = videoResponseMargin + "px"
+        if(tempMargin >= 560) {
+            clearInterval(x)
+        }
+    }, 20)
+}
+
+function responseNavigateRight() {
+    var tempMargin = 0;
+    var x = setInterval(function() {
+        tempMargin -= 40;
+        videoResponseMargin -= 40;
+        $(".video-bar-long-box").style.marginLeft = videoResponseMargin + "px"
+        if(tempMargin <= -560) {
+            clearInterval(x)
+        }
+    }, 20)
+}
+
+
+/*
+======
+embeds
+======
+*/
+var embed_settings = {
+    "color1": "b1b1b1",
+    "color2": "cfcfcf",
+    "width": "425",
+    "height": "344",
+    "flash_player": true,
+    "add_related_html": false,
+    "add_border": false,
+    "no_controls_fade": false
+}
+
+// load
+function show_embed() {
+    $("#watch-customize-embed-div").style.display = "block"
+    if(!document.querySelector("#watch-customize-embed")) {
+        // request
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        r.open("GET", "/embed_generate")
+        r.send(null)
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                $("#watch-customize-embed-div").innerHTML = r.responseText
+            }
+        }
+    }
+}
+
+// code update
+function embed_update_code() {
+    var codeblock = $("#embed_code")
+    var id = $("#watch-url-field").value.split("?v=")[1]
+    var site = location.protocol.replace(":", "") + '://' + location.host
+    var attributes = "?color1=" + embed_settings.color1 + "&color2=" + embed_settings.color2
+    if(embed_settings.add_related_html) {
+        attributes += "&server_fill_related=1"
+    }
+    if(!embed_settings.flash_player) {
+        $(".embed-no-controls-fade-check").className = "embed-no-controls-fade-check"
+    } else {
+        $(".embed-no-controls-fade-check").className = "embed-no-controls-fade-check hid"
+    }
+    if(embed_settings.no_controls_fade) {
+        attributes += "&no_controls_fade=1"
+    }
+    var code = '<iframe width="' + embed_settings.width + '" height="' + embed_settings.height + '" src="' + site + '/embed/' + id + attributes + '" allowfullscreen></iframe>' // html5
+    if(embed_settings.flash_player) {
+        code = '<object width="' + embed_settings.width + '" height="' + embed_settings.height + '"><param name="movie" value="' + site + '/embedF/' + id + attributes + '"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="' + site + '/embedF/' + id + attributes + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="' + embed_settings.width + '" height="' + embed_settings.height + '"></embed></object>' // flash player
+    }
+
+
+    codeblock.value = code
+}
+
+// colors
+function switchColorEmbed(element) {
+    var colorPickers = document.getElementById(
+        "watch-customize-embed-theme-swatches"
+    ).getElementsByTagName("a")
+    for(var c in colorPickers) {
+        if(colorPickers[c].className
+        && colorPickers[c].className.indexOf("embed-radio-link") !== -1) {
+            colorPickers[c].className = colorPickers[c].className.replace(
+                "selected", ""
+            )
+        }
+    }
+    element.className += " selected"
+    embed_settings.color1 = element.getAttribute("data-color1")
+    embed_settings.color2 = element.getAttribute("data-color2")
+
+    embed_update_code();
+}
+
+// sizes
+function switchSize(width, height, element) {
+    embed_settings.width = width;
+    embed_settings.height = height;
+    
+    var sizePickers = document.getElementsByTagName("div")
+    for(var c in sizePickers) {
+        if(sizePickers[c].className
+        && sizePickers[c].className.indexOf("watch-embed-radio-box") !== -1) {
+            sizePickers[c].className = sizePickers[c].className.replace(
+                "selected", ""
+            )
+        }
+    }
+    element.getElementsByTagName("div")[0].className += " selected"
+
+    embed_update_code();
+}
+
+// hide the embed creator
+function close_embed() {
+    $("#watch-customize-embed-div").style.display = "none"
 }
