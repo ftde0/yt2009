@@ -715,13 +715,22 @@ module.exports = {
                     watch_arg = req.headers.cookie.split("alt_swf_arg=")[1]
                                                   .split(";")[0]
                 }
+
+                
+                let flashUrl = `${watch_url}?${watch_arg}=${video.id}&`
+                + `iv_module=http%3A%2F%2F`
+                + `${config.ip}%3A${config.port}%2Fiv_module.swf`;
+                if(req.headers.cookie.includes("f_h264=on")) {
+                    let fmtMap = "5/0/7/0/0"
+                    let fmtUrls = `5|http://${config.ip}:${
+                        config.port
+                    }/channel_fh264_getvideo?v=${video.id}`
+                    flashUrl += `&fmt_map=${encodeURIComponent(fmtMap)}`
+                    flashUrl += `&fmt_url_map=${encodeURIComponent(fmtUrls)}`
+                }
                 code = code.replace(
                     "<!--yt2009_player-->",
-                    templates.flashObject(
-                        `${watch_url}?${watch_arg}=${video.id}&`
-                        + `iv_module=http%3A%2F%2F`
-                        + `${config.ip}%3A${config.port}%2Fiv_module.swf`
-                    )
+                    templates.flashObject(flashUrl)
                 )
             }
         } else {

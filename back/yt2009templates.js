@@ -796,5 +796,63 @@ module.exports = {
         }
         return `<source src="${mp4Path}" type="video/mp4"></source>
         <source src="${ogvPath}" type="video/ogg"></source>`
+    },
+    "xmlSubListBegin": `<?xml version="1.0" encoding="utf-8" ?>
+<transcript_list docid="1">`,
+    "xmlSubListTrack": function(code, name, index) {
+        return `<track id="${index}" name="${code}" kind="xml" lang_code="${code}" lang_original="${name}" lang_translated="${name}" ${index == 0 ? `lang_default="true"` : ""}/>`
+    },
+    "xmlListEnd": `</transcript_list>`,
+    "playerCssHDBtn": `
+    <style>
+    /*fixy css pod przycisk HQ*/
+    .volume_container {
+        right: 98px !important;
+    }
+    .timer {
+        right: 135px !important;
+    }
+    .volume_popout {
+        right: 98px !important;
+    }
+    </style>
+    `,
+    "playerHDBtnJS": function(id, use720p) {
+        return `
+        //exp_hq
+        seekbarRemoveWidth = 245;
+        adjustSeekbarWidth();
+        var hqPlaying = false;
+
+        // hd/hq playback
+        $(".video_controls .hq").addEventListener("click", function() {
+            video_pause();
+
+            if(!hqPlaying) {
+                hqPlaying = true;
+                $("video").innerHTML = "";
+                var length = seconds_to_time(Math.floor(video.duration))
+                $("video").src = "/${use720p ? "exp_hd" : "get_480"}?video_id=${id}"
+                setTimeout(function() {
+                    $(".video_controls .timer").innerHTML = "0:00 / " + length;
+                    showLoadingSprite();
+                }, 500)
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
+                video_play()
+            } else {
+                $("video").src = "/assets/${id}.mp4";
+                hqPlaying = false;
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
+            }
+        }, false)
+        
+        // fallback do 360p
+        $("video").addEventListener("error", function() {
+            if(hqPlaying) {
+                $("video").src = "/assets/${id}.mp4";
+                hqPlaying = false;
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
+            }
+        }, false)`
     }
 }

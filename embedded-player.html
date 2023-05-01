@@ -27,8 +27,33 @@
 			display: none;
 		}
 	</style>
+	<!--yt2009_style_hq_button-->
 
 	<link rel="stylesheet" href="/assets/site-assets/html5-player.css">
+
+	<style>
+		/*
+		transparent hd/hq
+		*/
+		
+		.video_controls .hq {
+			background-position: 0px -48px !important;
+		}
+
+		.video_controls .hq:hover,
+		.video_controls .hq.enabled {
+			background-position: -31px -48px !important;
+		}
+
+		.video_controls .hd {
+			background-position: -62px -48px !important;
+		}
+
+		.video_controls .hd:hover,
+		.video_controls .hd.enabled {
+			background-position: -93px -48px !important;
+		}
+	</style>
 
 	<style>
 		/*
@@ -52,11 +77,19 @@
 		</div>
 		<div class="player_additions_popout">
 			<span class="annotations none"></span>
-			<span class="cc none"></span>
-			<div class="annotations-tooltip player-tooltip hid">
-				<span class="tooltip-end"></span>
-				<span class="main-text">Loading...</span>
-			</div>
+			<span class="cc none">
+				<div class="triangle-container">
+					<span class="triangle"></span>
+				</div>
+			</span>
+			<span class="captions_popup" style="display: none;">
+				<div class="captions_popup_container">
+					<h2>Caption Actions</h2>
+					<h2>Caption Selection</h2>
+					<ul class="captions_selection">
+					</ul>
+				</div>
+			</span>
 		</div>
 		<div class="video_controls">
 			<span class="play_btn"></span>
@@ -72,6 +105,7 @@
 			<div class="volume_container">
 				<span class="volume_button"></span>
 			</div>
+			<!--yt2009_hq_btn-->
 			<span class="fullscreen"></span>
 			<span class="player_additions"></span>
 			<span class="flashing-btn pause hid"
@@ -97,6 +131,8 @@
 		initPlayer(document, true)
 		//yt2009-no-controls-fade
 		//yt2009-annotation-redirect
+		//yt2009-exp-hq-btn
+		//yt2009-autoadditions
 	</script>
 
 	<!--autoplay_hook-->

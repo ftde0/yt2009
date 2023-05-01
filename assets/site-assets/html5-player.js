@@ -9,6 +9,9 @@ var annotationsTimeIndex = {}
 var annotationsRemoveTime = {}
 var annotationsEnabled = false;
 var annotationsRedirect = false;
+var captionsTimeIndex = {};
+var captionsLangIndex = {};
+var captionsEnabled = false;
 var browserModernFeatures = false;
 
 function initPlayer(parent, fullscreenEnabled) {
@@ -213,6 +216,7 @@ function initPlayer(parent, fullscreenEnabled) {
                     non_css_anim_remove(player_add_popout, "bottom", 25, -51)
                     $(".annotations-tooltip").className
                     = "annotations-tooltip player-tooltip hid"
+                    $(".captions_popup").style.display = "none"
                 }
 
                 // revert animacji fullscreen do 1 klatki
@@ -840,7 +844,10 @@ player_add_popout.addEventListener("mouseout", function(e) {
     var mouse_left = e.pageX || e.clientX;
     var mouse_top = e.pageY || e.clientY;
     if(player_add_popout_debounce
-    || checkBounds(player_add_popout, mouse_left, mouse_top)) return;
+    || checkBounds(player_add_popout, mouse_left, mouse_top)
+    || (checkBounds($(".captions_popup"), mouse_left, mouse_top)
+    && $(".captions_popup").style.display == "block")) return;
+    $(".captions_popup").style.display = "none"
     player_add_popout_debounce = true;
     non_css_anim_remove(player_add_popout, "bottom", 25, -51)
     setTimeout(function() {
@@ -1360,6 +1367,216 @@ function annotationsMain() {
 }
 annotationsSwitch.addEventListener("click", annotationsMain, false)
 
+// captions
+var captionsSwitch = $(".player_additions_popout .cc")
+var ccListLoaded = false;
+
+// main function to fetch available caption languages
+function captionsMain() {
+    var videoId = ""
+    if(location.href.indexOf("v=") !== -1) {
+        videoId = location.href.split("v=")[1].split("#")[0].split("&")[0]
+    } else if(location.href.indexOf("embed/") !== -1) {
+        videoId = location.href.split("embed/")[1].split("?")[0].split("#")[0]
+    }
+    captionsEnabled = !captionsEnabled
+    if(captionsEnabled) {
+        // fetch captions list
+        var r = new XMLHttpRequest();
+        r.open("GET", "/timedtext?v=" + videoId + "&type=list&json=1")
+        r.setRequestHeader("is-embed", location.href.indexOf("embed") !== -1)
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            var langs = JSON.parse(r.responseText)
+            captionsLangIndex = langs;
+
+            // load english captions as default
+            if(langs["en"]) {
+                loadCaptions(videoId, "en")
+                placeCaptions();
+            } else {
+                var i = 0;
+                var firstLang = ""
+                for(var h in langs) {
+                    if(i == 0) {
+                        firstLang = h;
+                    }
+                    i++;
+                }
+                if(firstLang) {
+                    loadCaptions(videoId, firstLang)
+                    placeCaptions();
+                }
+            }
+        }, false)
+    } else {
+        // show ui disabled and remove previous captions
+        $(".player_additions_popout .cc").className += " none"
+        var s = document.querySelectorAll(".caption")
+        for(var e in s) {
+            try {
+                s[e].parentNode.removeChild(s[e])
+            }
+            catch(error) {}
+        }
+    }
+}
+
+// place all captions into menu
+function placeCaptions() {
+    var videoId = ""
+    if(location.href.indexOf("v=") !== -1) {
+        videoId = location.href.split("v=")[1].split("#")[0].split("&")[0]
+    } else if(location.href.indexOf("embed/") !== -1) {
+        videoId = location.href.split("embed/")[1].split("?")[0].split("#")[0]
+    }
+    var s = $(".captions_selection")
+    var index = 0;
+    for(var lang in captionsLangIndex) {
+        var li = document.createElement("li")
+        li.setAttribute("lang", lang)
+        var name = captionsLangIndex[lang].name;
+        if(name.length > 17) {
+            name = name.substring(0, 16) + "..."
+        }
+        li.innerHTML = "<span class=\"circle\"></span>"
+                     + "<p>" + name + "</p>";
+        li.setAttribute("onclick", "loadCaptions(\"" + videoId
+                                    + "\", \"" + lang + "\")")
+        if(lang == "en" || index == 0) {
+            li.querySelector(".circle").className += " selected"
+        }
+        s.appendChild(li)
+        index++;
+    }
+}
+
+// fetch captions and place them with interval
+var currentCaptionInterval;
+function loadCaptions(id, language) {
+    try {
+        // cleanup from previous captions
+        clearInterval(currentCaptionInterval);
+        var currentCaptions = mainElement.querySelectorAll(".caption");
+        for(var c in currentCaptions) {
+            try {
+                currentCaptions[c].parentNode.removeChild(currentCaptions[c])
+            }
+            catch(error) {}
+        }
+        try {
+            if(mainElement.querySelector(".circle.selected")) {
+                mainElement.querySelector(".circle.selected")
+                           .className = "circle"
+                mainElement.querySelector("[lang=\"" + language + "\"] .circle")
+                           .className += " selected"
+            }
+        }
+        catch(error) {}
+    }
+    catch(error) {}
+    ccListLoaded = true;
+    var m = mainElement;
+    if(mainElement == document) {
+        m = $(".embed-container")
+    }
+    var r = new XMLHttpRequest();
+    r.open("GET", "/timedtext?v=" + id + "&type=track&lang=" + language + "&json=1")
+    r.setRequestHeader("is-embed", location.href.indexOf("embed") !== -1)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        // captions loaded, proper icon
+        $(".player_additions_popout .cc").className = "cc"
+
+        // show language name on top left
+        var langElement = document.createElement("p")
+        langElement.className = "caption topleft"
+        langElement.innerHTML = captionsLangIndex[language].name;
+        langElement.style.fontSize = m.getBoundingClientRect()
+                                    .width / 40 + "px";
+        m.appendChild(langElement);
+        setTimeout(function() {
+            langElement.parentNode.removeChild(langElement)
+        }, 3000)
+
+        // renderer main
+        var cc = JSON.parse(r.responseText)
+        captionsTimeIndex = cc;
+
+        currentCaptionInterval = setInterval(function() {
+            if(!captionsEnabled) {
+                clearInterval(currentCaptionInterval)
+                return;
+            }
+
+            var videoTime = Math.floor(video.currentTime * 10) / 10;
+            for(var c in cc) {
+                if(cc[c].start <= videoTime
+                && cc[c].end >= videoTime) {
+                    renderCaption(cc[c])
+                }
+            }
+        }, 50)
+    }, false)
+}
+
+// render caption
+function renderCaption(caption) {
+    var m = mainElement;
+    if(mainElement == document) {
+        m = $(".embed-container")
+    }
+    // create a caption container where lines are individually placed
+    // that removes unnecessary background color on multiline text
+    // just like on flash player
+    if(document.querySelector("[start=\"" + caption.start + "\"]")) return;
+    var captionContainer = document.createElement("div")
+    captionContainer.className = "caption-container"
+    captionContainer.setAttribute("start", caption.start)
+    captionContainer.setAttribute("end", caption.end)
+    caption.text.split("<br>").forEach(function(text) {
+        var c = document.createElement("p")
+        c.className = "caption"
+        c.innerHTML = text;
+        captionContainer.appendChild(c)
+        c.style.fontSize = m.getBoundingClientRect().width / 40 + "px"
+    })
+
+    // append container
+    m.appendChild(captionContainer)
+
+    if(browserModernFeatures) {
+        captionContainer.className += " modern"
+    } else {
+        captionContainer.style.left = 
+                    (m.getBoundingClientRect().width / 2)
+                    - (captionContainer.getBoundingClientRect().width / 2) + "px"
+    }
+
+    // remove on end time
+    var x = setInterval(function() {
+        var videoTime = Math.floor(video.currentTime * 10) / 10;
+        if(!captionsEnabled) {
+            clearInterval(x)
+            return;
+        }
+        if(videoTime > caption.end
+        || videoTime < caption.start) {
+            captionContainer.parentNode.removeChild(captionContainer);
+            clearInterval(x);
+            return;
+        }
+    }, 100)
+}
+
+// hover-over caption selection ui
+function captionSelectShowUi() {
+    if(!ccListLoaded) return;
+    $(".captions_popup").style.display = "block"
+}
+
+$(".cc .triangle-container").addEventListener("mouseover", captionSelectShowUi, false)
+$(".cc .triangle").addEventListener("mouseover", captionSelectShowUi, false)
 
 // switch back fullscreen sprite when exited externally
 try {

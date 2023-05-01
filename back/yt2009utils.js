@@ -440,6 +440,12 @@ module.exports = {
             }, 120000)
         }
 
+        // embed endpoints
+        if((req.headers["referrer"] || "").includes("embed/")
+        && req.headers["is-embed"]) {
+            tr = true;
+        }
+
         if(config.env == "dev") {
             tr = true;
         }

@@ -204,6 +204,14 @@ function switchVideo(video) {
     
     var id = video.id.split("-").splice(2, video.id.split("-").length).join("-")
 
+    var videoUrl = customPlayerUrl + '?' + customPlayerArg + '=' + id
+    if(document.cookie.indexOf("f_h264=on") !== -1) {
+        var fmtMap = "5/0/7/0/0"
+        var fmtUrls = "5|http://" + location.host + "/channel_fh264_getvideo?v=" + id
+        videoUrl += "&fmt_map=" + encodeURIComponent(fmtMap)
+        videoUrl += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+    }
+
     $("#playnav-curvideo-title").innerHTML = document.querySelector(".video-title-" + id).innerHTML
     $("#playnav-curvideo-info-line").innerHTML = "From: " + $(".yt2009-name").innerHTML + " | " + document.querySelector(".video-meta-" + id).innerHTML.replace(" - ", " | ")
     $("#playnav-curvideo-description").innerHTML = " "
@@ -212,10 +220,10 @@ function switchVideo(video) {
     $(".playnav-mvlf9xls").innerHTML = '\
     <div class="for-some-reason-ie6-doesnt-work-without-this hid">h</div>\
     <object width="640" height="385">\
-    <param class="fl" name="movie" value="' + customPlayerUrl + '?' + customPlayerArg + '=' + id + '"></param>\
+    <param class="fl" name="movie" value="' + videoUrl + '"></param>\
     <param name="allowFullScreen" value="true"></param>\
     <param name="allowscriptaccess" value="always"></param>\
-    <embed src="' + customPlayerUrl + '?' + customPlayerArg + '=' + id + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>\
+    <embed src="' + videoUrl + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>\
     </object>'
     $("#playnav-watch-link").setAttribute("href", "/watch?v=" + id)
 

@@ -23,6 +23,7 @@ const yt2009_cps = require("./yt2009cps")
 const yt2009_constant = require("./yt2009constants.json")
 const yt2009_languages = require("./language_data/language_engine")
 const yt2009_quicklist = require("./yt2009quicklistserver")
+const yt2009_captions = require("./yt2009captions")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -301,8 +302,11 @@ subtitles
 ======
 */
 app.get("/timedtext", (req, res) => {
-    // to-be-implemented, subtitles for flash
-    res.send(fs.readFileSync("../media/test.xml"))
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.status(403).send()
+        return;
+    }
+    yt2009_captions.main(req, res)
 })
 
 
@@ -504,11 +508,37 @@ app.get("/swf/apiplayer.swf", (req, res) => {
 })
 
 app.get("/get_video_info", (req, res) => {
-    if(!yt2009_utils.isAuthorized(req)) {
-        res.redirect("/unauth.htm")
-        return;
-    }
     yt2009.fetch_video_data(req.query.video_id, (data => {
+        let qualities = require("./cache_dir/qualitylist_cache_manager")
+                        .read()[req.query.video_id] || [];
+        let fmt_list = ""
+        let fmt_stream_map = ""
+        let fmt_map = ""
+        qualities.forEach(quality => {
+            switch(quality) {
+                case "720p": {
+                    fmt_list += "22/1280x720/9/0/115,"
+                    fmt_map += "22/2000000/9/0/115,"
+                    fmt_stream_map += `22|http://${config.ip}:${
+                        config.port
+                    }/exp_hd?video_id=${req.query.video_id},`
+                    break;
+                }
+                case "480p": {
+                    fmt_list += "35/854x480/9/0/115,"
+                    fmt_map += "35/0/9/0/115,"
+                    fmt_stream_map +=  `35|http://${config.ip}:${
+                        config.port
+                    }/get_480?video_id=${req.query.video_id},`
+                    break;
+                }
+            }
+        })
+        fmt_list += "5/640x360/9/0/115"
+        fmt_map += "5/0/7/0/0"
+        fmt_stream_map += `5|http://${config.ip}:${
+            config.port
+        }/assets/${data.id}.mp4`
 res.send(`status=ok
 length_seconds=1
 keywords=a
@@ -524,13 +554,16 @@ allow_ratings=1
 hl=en
 ftoken=
 allow_embed=1
-fmt_map=34%2F0%2F9%2F0%2F115%2C5%2F0%2F7%2F0%2F0
+fmt_map=${encodeURIComponent(fmt_map)}
+fmt_url_map=${encodeURIComponent(fmt_stream_map)}
 token=amogus
 plid=amogus
 track_embed=0
 author=${data.author_name}
 title=${data.title}
-video_id=${req.query.video_id}`.split("\n").join("&"))
+video_id=${req.query.video_id}
+fmt_list=${encodeURIComponent(fmt_list)}
+fmt_stream_map=${encodeURIComponent(fmt_stream_map)}`.split("\n").join("&"))
     }), "", "", false, false)
 })
 
@@ -710,6 +743,21 @@ channel_endpoints.forEach(channel_endpoint => {
 
 app.get("/playnav_get_comments", (req, res) => {
     yt2009_channels.playnav_get_comments(req, res)
+})
+
+app.get("/channel_fh264_getvideo", (req, res) => {
+    if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
+        yt2009_utils.saveMp4(req.query.v, (vid) => {
+            let vidLink = vid.replace("../", "/")
+            if(vidLink.includes("assets/")) {
+                vidLink += ".mp4"
+            }
+            res.redirect(vidLink)
+        })
+    } else {
+        res.redirect("/assets/" + req.query.v + ".mp4")
+    }
+    
 })
 
 /*

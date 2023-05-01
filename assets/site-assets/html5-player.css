@@ -517,3 +517,141 @@
 .flashing-btn.pause {
     background-image: url("/player-imgs/pause-btn-flashing.png");
 }
+
+.caption-container {
+    text-align: center;
+    position: absolute;
+    bottom: 30px;
+}
+
+.caption {
+    font-size: 16px;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    font-weight: 600;
+    padding: 2px 3px;
+    user-select: none;
+    display: inline-block;
+    margin: 0px !important;
+}
+
+.caption.topleft {
+    left: 5%;
+    top: 5%;
+    position: absolute;
+}
+
+.caption-container.modern {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.cc:hover .triangle-container {
+    background-color: #bbbbbb;
+}
+
+.cc:hover {
+    background-color: #999999;
+}
+
+.cc .triangle-container {
+    position: absolute;
+    right: 26px;
+    width: 14px;
+    height: 21px;
+    top: 0px;
+}
+
+.cc .triangle-container:hover {
+    background-color: #999999;
+}
+
+.cc .triangle-container:hover .triangle {
+    background-position: -126px -24px;
+}
+
+.cc .triangle {
+    position: absolute;
+    width: 5px;
+    height: 8px;
+    background-image: url("/player-imgs/additions-buttons.png");
+    background-position: -126px -33px;
+    right: 5px;
+    top: 6px;
+}
+
+.cc.none .triangle {
+    visibility: hidden;
+}
+
+.captions_popup {
+    position: absolute;
+    right: 45px;
+    bottom: 0px;
+    width: 145px;
+    min-height: 70px;
+    background-image: url("/player-imgs/captions-popup-base.png");
+    background-size: contain;
+}
+
+.captions_popup_container {
+    position: relative;
+    width: 129px;
+    min-height: 52px;
+    top: 2px;
+    left: 2px;
+    border: 1px #a9aaa9 solid;
+    padding: 6px 5px;
+    margin-bottom: 3px;
+    padding-bottom: 3px;
+}
+
+.captions_popup_container * {
+    margin: 3px 0px!important;
+    font-size: 13px;
+}
+
+.captions_popup_container h2:first-child {
+    margin-top: 0px !important;
+}
+
+.captions_popup_container li {
+    height: 16px;
+    padding: 1px 2px;
+}
+
+.captions_popup_container li:hover {
+    background: #333333;
+}
+
+.captions_popup_container li .circle {
+    visibility: hidden;
+    width: 7px;
+    height: 7px;
+    border-radius: 50px;
+    -moz-border-radius: 50px;
+    -webkit-border-radius: 50px;
+    position: relative;
+    top: 2px;
+    background: black;
+    float: left;
+    margin-left: 2px !important;
+}
+
+.captions_popup_container li .circle.selected {
+    visibility: visible;
+}
+
+.captions_popup_container li p {
+    margin-top: 1px !important;
+    position: relative;
+    left: 5px;
+}
+
+.captions_popup_container li:hover .circle {
+    background: white;
+}
+
+.captions_popup_container li:hover p {
+    color: white;
+}

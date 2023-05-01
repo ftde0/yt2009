@@ -1616,6 +1616,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
                 }
                 
+                flash_url += `&cc_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fsubtitle-module.swf`
                 
                 code = code.replace(
                     `<!--yt2009_f-->`,
@@ -1650,56 +1651,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         || qualityList.includes("480p"))
         && !config.fallbackMode) {
             let use720p = qualityList.includes("720p")
-            code = code.replace(`<!--yt2009_style_hq_button-->`, `
-            <style>
-            /*fixy css pod przycisk HQ*/
-            .volume_container {
-                right: 98px !important;
-            }
-            .timer {
-                right: 135px !important;
-            }
-            .volume_popout {
-                right: 98px !important;
-            }
-            </style>
-            `)
-            code = code.replace(`//yt2009-exp-hq-btn`, `
-            //exp_hq
-            seekbarRemoveWidth = 245;
-            adjustSeekbarWidth();
-            var hqPlaying = false;
-
-            // hd/hq playback
-            $(".video_controls .hq").addEventListener("click", function() {
-                video_pause();
-
-                if(!hqPlaying) {
-                    hqPlaying = true;
-                    $("video").innerHTML = "";
-                    var length = seconds_to_time(Math.floor(video.duration))
-                    $("video").src = "/${use720p ? "exp_hd" : "get_480"}?video_id=${data.id}"
-                    setTimeout(function() {
-                        $(".video_controls .timer").innerHTML = "0:00 / " + length;
-                        showLoadingSprite();
-                    }, 500)
-                    $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
-                    video_play()
-                } else {
-                    $("video").src = "/assets/${data.id}.mp4";
-                    hqPlaying = false;
-                    $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
-                }
-            }, false)
-            
-            // fallback do 360p
-            $("video").addEventListener("error", function() {
-                if(hqPlaying) {
-                    $("video").src = "/assets/${data.id}.mp4";
-                    hqPlaying = false;
-                    $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
-                }
-            }, false)`)
+            code = code.replace(
+                `<!--yt2009_style_hq_button-->`,
+                yt2009templates.playerCssHDBtn   
+            )
+            code = code.replace(
+                `//yt2009-exp-hq-btn`,
+                yt2009templates.playerHDBtnJS(data.id, use720p)
+            )
 
             // 720p
             if(use720p) {
@@ -1731,6 +1690,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             code = code.replace(
                 "//yt2009-always-annotations",
                 "annotationsMain();"
+            )
+        }
+
+        // always_captions
+        if(flags.includes("always_captions") && !useFlash) {
+            code = code.replace(
+                "//yt2009-always-captions",
+                "captionsMain();"
             )
         }
 

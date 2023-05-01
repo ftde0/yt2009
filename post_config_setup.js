@@ -71,7 +71,8 @@ const cacheFiles = {
     "video_exists_cache.json": {},
     "watched_now.json": [],
     "wayback_channel_cache.json": {},
-    "wayback_watch_cache.json": {}
+    "wayback_watch_cache.json": {},
+    "captions_cache.json": {}
 }
 console.log("creating cache files")
 for(let file in cacheFiles) {
@@ -84,6 +85,7 @@ for(let file in cacheFiles) {
 }
 
 fs.mkdirSync("./back/cache_dir/annotations/")
+fs.mkdirSync("./back/cache_dir/subtitles/")
 
 /*
 =======

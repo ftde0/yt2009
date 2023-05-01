@@ -153,9 +153,24 @@ module.exports = function(req, res) {
                 border: 1px #${color1} solid;
             }
             .video_controls .volume_container,
-            .video_controls .player_additions {
+            .video_controls .player_additions,
+            .video_controls .hq {
                 border-left: 1px #${color1} solid;
                 border-right: 1px #${color1} solid;
+            }
+
+            .video_controls .loaded {
+                top: 1px;
+                background-position: 0px -1px;
+            }
+
+            .video_controls .elapsed {
+                top: 0px;
+                background-position: 0px -1px;
+            }
+
+            .video_controls .seek, .video_controls .elapsed, .video_controls .loaded {
+                height: 7px !important;
             }
         `
 
@@ -236,6 +251,39 @@ module.exports = function(req, res) {
         }
     }
 
+    // exp_hd=1
+    let videoQualities = require("./cache_dir/qualitylist_cache_manager")
+                         .read()[id] || []
+    if(((req.headers.cookie || "").includes("exp_hd")
+    || req.query.exp_hd == 1)
+    && (videoQualities.includes("720p")
+    || videoQualities.includes("480p"))) {
+        let use720p = videoQualities.includes("720p")
+        code = code.replace(
+            `<!--yt2009_style_hq_button-->`,
+            templates.playerCssHDBtn.replace("98px", "99px")
+        )
+        code = code.replace(
+            `//yt2009-exp-hq-btn`,
+            templates.playerHDBtnJS(id, use720p)
+        )
+        // 720p
+        if(use720p) {
+            code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq hd"></span>`)
+        } else {
+            // 480p
+            code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
+        }
+    }
+
+    // auto_additions=1
+    if(req.query.auto_additions == 1) {
+        code = code.replace(
+            `//yt2009-autoadditions`,
+            `annotationsMain();captionsMain();`
+        )
+    }
+
     // download the video if needed, also convert to ogv in case of ff<=25
     if(fs.existsSync(`../assets/${id}.mp4`)
     && !fs.existsSync(`../assets/${id}.ogg`)
@@ -273,37 +321,6 @@ module.exports = function(req, res) {
                 
             }, 250)
         })
-        
-        /*writeStream.on("finish", () => {
-            setTimeout(function() {
-                if(waitForOgv) {
-                    child_process.exec(templates.createFffmpegOgg(id),
-                    (error, stdout, stderr) => {
-                        res.send(code.replace(
-                            "mp4_files",
-                            templates.embedVideoSources(id)
-                        ))
-                    })
-                } else {
-                    res.send(code.replace(
-                        "mp4_files",
-                        templates.embedVideoSources(id)
-                    ))
-                }
-                
-            }, 250)
-        })
-
-        
-
-        ytdl(`https://youtube.com/watch?v=${id}`, {
-            "quality": 18
-        })
-        .on("error", (error) => {
-            res.send("[yt2009] nie można pobrać filmu / can't download the video")
-            console.log(error)
-        })
-        .pipe(writeStream)*/
     } else {
         res.send(code.replace(
             "mp4_files",
