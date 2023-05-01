@@ -14,7 +14,7 @@
             "2+": "dana"
         },
         "weeks": {
-            "1": "nedeljе",
+            "1": "nedelju",
             "2-4": "nedelje",
             "5+": "nedelja"
         },
@@ -24,7 +24,7 @@
             "5+": "meseci"
         },
         "years": {
-            "1": "godinе",
+            "1": "godinu",
             "2-4": "godine",
             "5+": "godina"
         },
