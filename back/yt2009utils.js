@@ -441,9 +441,19 @@ module.exports = {
         }
 
         // embed endpoints
+        let embed_endpoints_whitelist = [
+            "/timedtext",
+            "/exp_hd",
+            "/get_480",
+            "/json_annotations"
+        ]
         if((req.headers["referrer"] || "").includes("embed/")
         && req.headers["is-embed"]) {
-            tr = true;
+            embed_endpoints_whitelist.forEach(endpoint => {
+                if(req.originalUrl.includes(endpoint)) {
+                    tr = true;
+                }
+            })
         }
 
         if(config.env == "dev") {

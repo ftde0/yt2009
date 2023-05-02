@@ -1577,6 +1577,7 @@ function captionSelectShowUi() {
 
 $(".cc .triangle-container").addEventListener("mouseover", captionSelectShowUi, false)
 $(".cc .triangle").addEventListener("mouseover", captionSelectShowUi, false)
+captionsSwitch.addEventListener("click", captionsMain, false)
 
 // switch back fullscreen sprite when exited externally
 try {
