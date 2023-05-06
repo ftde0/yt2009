@@ -228,7 +228,7 @@ function switchVideo(video) {
     $("#playnav-watch-link").setAttribute("href", "/watch?v=" + id)
 
     if(navigator.userAgent.indexOf("MSIE") == -1) {
-        video.className = "playnav-item playnav-video selected"
+        video.className = "playnav-item playnav-video selected playnav-item-selected"
     }
     
 }

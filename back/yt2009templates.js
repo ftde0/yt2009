@@ -508,7 +508,8 @@ module.exports = {
     },
     "playnavVideo": function(video, video_index, views, upload_date, ratings, protocol) {
         return `
-        <div class="playnav-item playnav-video ${video_index == 0 ? "selected" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this)">
+        <div class="playnav-item playnav-video ${video_index == 0 ? "selected playnav-item-selected" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this)">
+            <div id="playnav-video-play-${video.id}-selector" class="selector"></div>
             <div class="content">
                 <div class="playnav-video-thumb link-as-border-color">
                     <a class="video-thumb-90 no-quicklist" href="#"><img title="${video.title.split('"').join("&quot;")}" src="${video.thumbnail.replace("http", protocol)}" class="vimg90 yt-uix-hovercard-target" alt="${video.title.split('"').join("&quot;")}"></a>

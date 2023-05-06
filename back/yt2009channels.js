@@ -4,6 +4,7 @@ const dominant_color = require("./dominant_color")
 const yt2009utils = require("./yt2009utils");
 const yt2009html = require("./yt2009html");
 const yt2009constants = require("./yt2009constants.json")
+const yt2009search = require("./yt2009search")
 const yt2009languages = require("./language_data/language_engine")
 const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
@@ -61,6 +62,10 @@ module.exports = {
                     "mode": "cors"
                 }).then(r => {r.json().then(r => {
                     this.parse_main_response(r, flags, (data) => {
+                        if(!data) {
+                            res.send(`[yt2009] channel not found`)
+                            return;
+                        }
                         sendResponse(data)
                     })
                 })})
@@ -97,6 +102,10 @@ module.exports = {
 
         // basic extract
         let data = {}
+        if(!r.metadata) {
+            callback(false)
+            return;
+        }
         data.name = r.metadata.channelMetadataRenderer.title
         data.id = r.header.c4TabbedHeaderRenderer.channelId
         data.url = r.metadata.channelMetadataRenderer.channelUrl
@@ -419,6 +428,7 @@ module.exports = {
         let code = channel_code;
         let stepsRequiredToCallback = 0;
         let requireMoreFetch = false;
+        let videosSource = data.videos;
         let stepsTaken = 0;
         let channelCommentCount = 0;
 
@@ -548,64 +558,225 @@ module.exports = {
         =======
         */
 
-        let scrollbox_all_html = ``
-        let video_index = 0;
-        let videoUploadDates = {}
-        // "All" scrollbox
-        let scrollbox_all_videos = JSON.parse(JSON.stringify(data.videos))
-                                       .splice(0, 10)
-        scrollbox_all_videos.forEach(video => {
-            let views = yt2009utils.viewFlags(video.views, flags)
-            views = yt2009utils.playnavViewCount(
-                views, yt2009languages.get_language(req)
+        function videosRender() {
+            let scrollbox_all_html = ``
+            let videoUploadDates = {}
+            let video_index = 0;
+            // "All" scrollbox
+            let scrollbox_all_videos = JSON.parse(JSON.stringify(videosSource))
+                                        .splice(0, 10)
+            scrollbox_all_videos.forEach(video => {
+                let views = yt2009utils.viewFlags(video.views, flags)
+                views = yt2009utils.playnavViewCount(
+                    views, yt2009languages.get_language(req)
+                )
+                let ratings_est = yt2009utils.estRating(views)
+                let upload_date = yt2009utils.timeFlags(video.upload, flags)
+                videoUploadDates[video.id] = upload_date;
+                scrollbox_all_html += templates.playnavVideo(
+                    video,
+                    video_index,
+                    views,
+                    yt2009utils.relativeTimeCreate(
+                        upload_date, yt2009languages.get_language(req)
+                    ),
+                    ratings_est,
+                    req.protocol
+                )
+                video_index++;
+            })
+            code = code.replace(
+                "<!--yt2009_all_scrollbox_uploads-->",
+                scrollbox_all_html
             )
-            let ratings_est = yt2009utils.estRating(views)
-            let upload_date = yt2009utils.timeFlags(video.upload, flags)
-            videoUploadDates[video.id] = upload_date;
-            scrollbox_all_html += templates.playnavVideo(
-                video,
-                video_index,
-                views,
-                yt2009utils.relativeTimeCreate(
-                    upload_date, yt2009languages.get_language(req)
-                ),
-                ratings_est,
-                req.protocol
+            // "Videos" scrollbox
+            let scrollbox_videos_html = ``
+            let scrollbox_videos = JSON.parse(JSON.stringify(videosSource))
+            video_index = 0;
+            scrollbox_videos.forEach(video => {
+                let views = yt2009utils.viewFlags(video.views, flags)
+                views = yt2009utils.playnavViewCount(
+                    views, yt2009languages.get_language(req)
+                )
+                let ratings_est = yt2009utils.estRating(views)
+                let upload_date = yt2009utils.timeFlags(video.upload, flags)
+                videoUploadDates[video.id] = upload_date
+                scrollbox_videos_html += templates.playnavVideo(
+                    video,
+                    video_index,
+                    views,
+                    yt2009utils.relativeTimeCreate(
+                        upload_date, yt2009languages.get_language(req)
+                    ),
+                    ratings_est,
+                    req.protocol
+                )
+                video_index++;
+            })
+            code = code.replace(
+                "<!--yt2009_uploads-->",
+                scrollbox_videos_html
             )
-            video_index++;
-        })
-        code = code.replace(
-            "<!--yt2009_all_scrollbox_uploads-->",
-            scrollbox_all_html
-        )
-        // "Videos" scrollbox
-        let scrollbox_videos_html = ``
-        let scrollbox_videos = JSON.parse(JSON.stringify(data.videos))
-        video_index = 0;
-        scrollbox_videos.forEach(video => {
-            let views = yt2009utils.viewFlags(video.views, flags)
-            views = yt2009utils.playnavViewCount(
-                views, yt2009languages.get_language(req)
-            )
-            let ratings_est = yt2009utils.estRating(views)
-            let upload_date = yt2009utils.timeFlags(video.upload, flags)
-            videoUploadDates[video.id] = upload_date
-            scrollbox_videos_html += templates.playnavVideo(
-                video,
-                video_index,
-                views,
-                yt2009utils.relativeTimeCreate(
-                    upload_date, yt2009languages.get_language(req)
-                ),
-                ratings_est,
-                req.protocol
-            )
-            video_index++;
-        })
-        code = code.replace(
-            "<!--yt2009_uploads-->",
-            scrollbox_videos_html
-        )
+
+
+            /*
+            =======
+            header video
+            =======
+            */
+            let watch_url = "/watch.swf"
+            let watch_arg = "video_id"
+            if(videosSource[0]) {
+                let video = videosSource[0]
+                let views = yt2009utils.viewFlags(video.views, flags)
+                                    .replace(" views", "")
+                let rating_est = yt2009utils.estRating(views)
+
+                // metadata
+                code = code.replace("yt2009_head_video_title", video.title)
+                code = code.replace("yt2009_head_video_views", views)
+                code = code.replace("yt2009_head_video_ratings", rating_est)
+                code = code.split("yt2009_head_video_id").join(video.id)
+
+                code = code.replace(
+                    "yt2009_head_video_short_description",
+                    yt2009html.get_video_description(video.id)
+                            .split("\n")
+                            .splice(0, 3)
+                            .join("<br>")
+                )
+                code = code.replace(
+                    "yt2009_head_video_upload",
+                    yt2009utils.relativeTimeCreate(
+                        videoUploadDates[video.id],
+                        yt2009languages.get_language(req)
+                    )
+                )
+
+                // use video comments as channel comments
+                // if not overriden by wayback_features
+                let comments_html = ``
+                if(saved_channel_comments[video.id]
+                && flags.includes("exp_fill_comments")
+                && !wayback_settings.includes("comments")) {
+                    let comments = saved_channel_comments[video.id]
+                    let count = 0;
+                    comments.forEach(comment => {
+                        try {
+                            if (comment.content.includes("video")) return;
+                            let showComment = true;
+                            yt2009constants.comments_remove_future_phrases.forEach(phrase => {
+                                if(comment.content.split("\n")[0].includes(phrase)) {
+                                    showComment = false
+                                }
+                            })
+                            let authorAvatar = yt2009utils.fakeAvatarFlags(
+                                yt2009utils.saveAvatar(
+                                    comment.authorAvatar
+                                ),
+                                flags
+                            )
+                            let authorName = yt2009utils.textFlags(
+                                comment.authorName,
+                                flags,
+                                comment.authorUrl
+                            )
+
+                            if(showComment) {
+                                comments_html += templates.channelComment(
+                                    comment.authorUrl,
+                                    authorAvatar,
+                                    authorName,
+                                    yt2009utils.timeFlags(comment.time, flags),
+                                    comment.content.split("\n")[0]
+                                )
+                                count++;
+                            }
+                        }
+                        catch(error) {}
+                    })
+                    
+                    code = code.replace(`<!--yt2009_comments-->`, comments_html)
+                    code = code.replace(`yt2009_channel_comment_count`, count)
+                }
+
+                // determine the used player (html5/flash)
+                // and use it in playnav
+                if(!flashMode) {
+                    code = code.replace(
+                        "<!--yt2009_player-->",
+                        templates.html5Embed(video.id, "yt2009_playhead")
+                    )
+                } else {
+                    // fmode~!!
+                    if(req.headers.cookie.includes("alt_swf_path=")) {
+                        watch_url = decodeURIComponent(
+                            req.headers.cookie.split("alt_swf_path=")[1]
+                                            .split(";")[0]
+                        )
+                    }
+                    if(req.headers.cookie.includes("alt_swf_arg=")) {
+                        watch_arg = req.headers.cookie.split("alt_swf_arg=")[1]
+                                                    .split(";")[0]
+                    }
+
+                    
+                    let flashUrl = `${watch_url}?${watch_arg}=${video.id}&`
+                    + `iv_module=http%3A%2F%2F`
+                    + `${config.ip}%3A${config.port}%2Fiv_module.swf`;
+                    if(req.headers.cookie.includes("f_h264=on")) {
+                        let fmtMap = "5/0/7/0/0"
+                        let fmtUrls = `5|http://${config.ip}:${
+                            config.port
+                        }/channel_fh264_getvideo?v=${video.id}`
+                        flashUrl += `&fmt_map=${encodeURIComponent(fmtMap)}`
+                        flashUrl += `&fmt_url_map=${encodeURIComponent(fmtUrls)}`
+                    }
+                    code = code.replace(
+                        "<!--yt2009_player-->",
+                        templates.flashObject(flashUrl)
+                    )
+                }
+            } else {
+                // no videos
+                code = code.replace(
+                    `id="playnav-body"`, `id="playnav-body" class="hid"`
+                )
+                code = code.replace(
+                    `id="playnav-navbar"`, `id="playnav-navbar" class="hid"`
+                )
+                code = code.replace(
+                    `id="playnav-navbar-toggle"`,
+                    `id="playnav-navbar-toggle" class="hid"`
+                )
+                code = code.replace(
+                    `<div id="playnav-navbar"`,
+                    `<div style="float:left;padding-top: 1.2em" class="inner-box">
+                ${yt2009utils.xss(data.name)} has no videos available.</div><div id="playnav-navbar"`
+                )
+                code = code.replace(
+                    `//[yt2009-hook-no-videos]`,
+                    `$("#channel-body").style.height = window.innerHeight - 78 + "px"`
+                )
+                code = code.replace(
+                    `yt2009_channel_comment_count`,
+                    channelCommentCount
+                )
+
+                if(!wayback_settings.includes("comments")) {
+                    stepsTaken++;
+                    setTimeout(function() {
+                        if(stepsRequiredToCallback == stepsTaken) {
+                            try {callback(code)}catch(error) {}
+                        }
+                    }, 500)
+                }
+            }
+        }
+
+        if(!flags.includes("only_old")) {
+            videosRender();
+        }
 
         /*
         =======
@@ -614,160 +785,6 @@ module.exports = {
         */
         let returnNoLang = req.headers.cookie.includes("lang=") || req.query.hl || false
         code = require("./yt2009loginsimulate")(flags, code, returnNoLang)
-        
-        /*
-        =======
-        header video
-        =======
-        */
-        let watch_url = "/watch.swf"
-        let watch_arg = "video_id"
-        if(data.videos[0]) {
-            let video = data.videos[0]
-            let views = yt2009utils.viewFlags(video.views, flags)
-                                   .replace(" views", "")
-            let rating_est = yt2009utils.estRating(views)
-
-            // metadata
-            code = code.replace("yt2009_head_video_title", video.title)
-            code = code.replace("yt2009_head_video_views", views)
-            code = code.replace("yt2009_head_video_ratings", rating_est)
-            code = code.split("yt2009_head_video_id").join(video.id)
-
-            code = code.replace(
-                "yt2009_head_video_short_description",
-                yt2009html.get_video_description(video.id)
-                          .split("\n")
-                          .splice(0, 3)
-                          .join("<br>")
-            )
-            code = code.replace(
-                "yt2009_head_video_upload",
-                yt2009utils.relativeTimeCreate(
-                    videoUploadDates[video.id],
-                    yt2009languages.get_language(req)
-                )
-            )
-
-            // use video comments as channel comments
-            // if not overriden by wayback_features
-            let comments_html = ``
-            if(saved_channel_comments[video.id]
-            && flags.includes("exp_fill_comments")
-            && !wayback_settings.includes("comments")) {
-                let comments = saved_channel_comments[video.id]
-                let count = 0;
-                comments.forEach(comment => {
-                    try {
-                        if (comment.content.includes("video")) return;
-                        let showComment = true;
-                        yt2009constants.comments_remove_future_phrases.forEach(phrase => {
-                            if(comment.content.split("\n")[0].includes(phrase)) {
-                                showComment = false
-                            }
-                        })
-                        let authorAvatar = yt2009utils.fakeAvatarFlags(
-                            yt2009utils.saveAvatar(
-                                comment.authorAvatar
-                            ),
-                            flags
-                        )
-                        let authorName = yt2009utils.textFlags(
-                            comment.authorName,
-                            flags,
-                            comment.authorUrl
-                        )
-
-                        if(showComment) {
-                            comments_html += templates.channelComment(
-                                comment.authorUrl,
-                                authorAvatar,
-                                authorName,
-                                yt2009utils.timeFlags(comment.time, flags),
-                                comment.content.split("\n")[0]
-                            )
-                            count++;
-                        }
-                    }
-                    catch(error) {}
-                })
-                
-                code = code.replace(`<!--yt2009_comments-->`, comments_html)
-                code = code.replace(`yt2009_channel_comment_count`, count)
-            }
-
-            // determine the used player (html5/flash)
-            // and use it in playnav
-            if(!flashMode) {
-                code = code.replace(
-                    "<!--yt2009_player-->",
-                    templates.html5Embed(video.id, "yt2009_playhead")
-                )
-            } else {
-                // fmode~!!
-                if(req.headers.cookie.includes("alt_swf_path=")) {
-                    watch_url = decodeURIComponent(
-                        req.headers.cookie.split("alt_swf_path=")[1]
-                                          .split(";")[0]
-                    )
-                }
-                if(req.headers.cookie.includes("alt_swf_arg=")) {
-                    watch_arg = req.headers.cookie.split("alt_swf_arg=")[1]
-                                                  .split(";")[0]
-                }
-
-                
-                let flashUrl = `${watch_url}?${watch_arg}=${video.id}&`
-                + `iv_module=http%3A%2F%2F`
-                + `${config.ip}%3A${config.port}%2Fiv_module.swf`;
-                if(req.headers.cookie.includes("f_h264=on")) {
-                    let fmtMap = "5/0/7/0/0"
-                    let fmtUrls = `5|http://${config.ip}:${
-                        config.port
-                    }/channel_fh264_getvideo?v=${video.id}`
-                    flashUrl += `&fmt_map=${encodeURIComponent(fmtMap)}`
-                    flashUrl += `&fmt_url_map=${encodeURIComponent(fmtUrls)}`
-                }
-                code = code.replace(
-                    "<!--yt2009_player-->",
-                    templates.flashObject(flashUrl)
-                )
-            }
-        } else {
-            // no videos
-            code = code.replace(
-                `id="playnav-body"`, `id="playnav-body" class="hid"`
-            )
-            code = code.replace(
-                `id="playnav-navbar"`, `id="playnav-navbar" class="hid"`
-            )
-            code = code.replace(
-                `id="playnav-navbar-toggle"`,
-                `id="playnav-navbar-toggle" class="hid"`
-            )
-            code = code.replace(
-                `<div id="playnav-navbar"`,
-                `<div style="float:left;padding-top: 1.2em" class="inner-box">
-            ${yt2009utils.xss(data.name)} has no videos available.</div><div id="playnav-navbar"`
-            )
-            code = code.replace(
-                `//[yt2009-hook-no-videos]`,
-                `$("#channel-body").style.height = window.innerHeight - 78 + "px"`
-            )
-            code = code.replace(
-                `yt2009_channel_comment_count`,
-                channelCommentCount
-            )
-
-            if(!wayback_settings.includes("comments")) {
-                stepsTaken++;
-                setTimeout(function() {
-                    if(stepsRequiredToCallback == stepsTaken) {
-                        try {callback(code)}catch(error) {}
-                    }
-                }, 500)
-            }
-        }
 
         /*
         =======
@@ -939,6 +956,38 @@ module.exports = {
             )
         }
 
+        // only_old
+        let onlyOldVideos = []
+        if(flags.includes("only_old")) {
+            stepsRequiredToCallback++;
+            let only_old = yt2009search.handle_only_old(flags)
+            let query = `"${data.name}" ${only_old}`
+            yt2009search.get_search(query, flags, "", (results => {
+                // throw actual results into data.videos
+                // they use the same value names!! no parsing necessary
+                results.forEach(result => {
+                    if(result.type == "video"
+                    && (data.name.includes(
+                        result.author_name.split(" ").join("")
+                    ) || data.name == result.author_name)) {
+                        onlyOldVideos.push(result)
+                    }
+                })
+                // main and render
+                videosSource = onlyOldVideos;
+                // if no videos with only_old and at least one without it,
+                // use default
+                if(!onlyOldVideos[0] && data.videos[0]) {
+                    videosSource = data.videos;
+                }
+                videosRender();
+                stepsTaken++
+                if(stepsTaken == stepsRequiredToCallback) {
+                    try{callback(code)}catch(error){}
+                }
+            }), yt2009utils.get_used_token(req), false)
+        }
+
         /*
         =======
         wayback_features render section
@@ -1006,6 +1055,17 @@ module.exports = {
                     if(typeof(waybackData.customCSS) == "string") {
                         customCSS = waybackData.customCSS
                     }
+
+                    let innerBoxColor = ""
+                    if(customCSS.includes(".inner-box-colors { background")) {
+                        try {
+                            innerBoxColor = customCSS.split(
+                                            ".inner-box-colors { background")[1]
+                                            .split("}")[0].split(":")[1].trim()
+                        }
+                        catch(error) {}
+                    }
+
                     code = code.replace(
                         `<!--yt2009_wayback_channel_custom_css-->`,
                         `<style type="text/css"
@@ -1016,8 +1076,8 @@ module.exports = {
     
                         /*yt2009*/
                         .panel-tab-indicator-cell svg,
-                        .playnav-video.selected {
-                            fill: none;
+                        .playnav-video.selected{
+                            fill: ${innerBoxColor || "none"};
                             background: transparent;
                         }
                         </style>`

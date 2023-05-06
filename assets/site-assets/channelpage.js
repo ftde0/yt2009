@@ -48,11 +48,11 @@ function switchVideo(video) {
     // dodaj .selected z powrotem do innych wystąpień tego filmu
     e = document.querySelectorAll("#playnav-video-" + id)
     for(var sel in e) {
-        try {e[sel].className = "playnav-item playnav-video selected"}
+        try {e[sel].className = "playnav-item playnav-video selected playnav-item-selected"}
         catch(error) {console.log(error)}
     }
 
-    video.className = "playnav-item playnav-video selected"
+    video.className = "playnav-item playnav-video selected playnav-item-selected"
 
     // zmień kartę na info
     playnav_switchPanel("info")

@@ -198,10 +198,12 @@ if(useLocalStorage) {
 function morefrom_load() {
     var site = location.protocol.replace(":", "") + '://' + location.host
     site = $(".yt2009-channel-link").href.replace(site, "")
+    var name = $(".yt2009-channel-link").innerHTML
     // request
     var r = new XMLHttpRequest();
     r.open("GET", "/morefrom_load")
     r.setRequestHeader("channel", site)
+    r.setRequestHeader("name", name)
     r.setRequestHeader("source", location.href)
     r.send(null)
     r.addEventListener("load", function(e) {

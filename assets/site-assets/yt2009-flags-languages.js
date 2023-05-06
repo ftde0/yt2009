@@ -34,6 +34,7 @@ var languageData_EN = {
         "channel-exp-playlists": "adds support for playlists",
         "channel-fake-upload-date": "fake upload dates for videos (ex. 11 years ago -> 3 months ago)",
         "channel-index-contribute": "visited channels will be visible in /channels",
+        "channel-only-old": "will only show videos uploaded in the specified date range on channels (default before 2010-04-01)",
         "channel-realistic-view-count": "more realistic for 2009 view counts",
         "channel-remove-username-space": "removes spaces from usernames",
         "channel-use-ryd": "use data from Return YouTube Dislike (https://returnyoutubedislike.com/) for correct star ratings",
@@ -92,6 +93,7 @@ var languageData_EN = {
         "#i_all_pages": "these flags work with all pages. they may behave in a different way than the other ones.",
         "#i_save": "save",
         "#default-avatar-notice": "check default_avatar in /watch for possible values",
+        "#only-old-notice": "check only_old in /results for possible values",
 
         "#channel-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, ex. <code>fields+comments</code>.\
         you can also type <code>all</code> to use them all at once.<br>\
@@ -112,6 +114,7 @@ var languageData_EN = {
         "watch-default-avatar-input": "mode",
         "watch-wayback-features-input": "mode",
         "channel-default-avatar-input": "mode",
+        "channel-only-old-input": "check possible values",
         "channel-wayback-features-input": "mode",
         "global-login-simulate-input": "username",
         "results-only-old-input": "check possible values"

@@ -6,6 +6,8 @@ const ytdl = require("ytdl-core")
 const dominant_color = require("./dominant_color")
 const config = require("./config.json")
 const tokens = config.tokens || ["amogus"]
+const logged_tokens = config.logged_tokens || []
+const templocked_tokens = config.templocked_tokens || []
 let ip_uses_flash = []
 
 module.exports = {
@@ -417,8 +419,16 @@ module.exports = {
                 if(cookie.trimStart().startsWith("auth=")) {
                     let userToken = cookie.trimStart()
                                     .replace("auth=", "")
-                    if(tokens.includes(userToken)) {
+                    if(tokens.includes(userToken)
+                    && !templocked_tokens.includes(userToken)) {
                         tr = true;
+                    }
+                    if(logged_tokens.includes(userToken)) {
+                        fs.appendFileSync(
+                            "./accessdata",
+                            `[${userToken}, ${new Date().toUTCString()}, ${
+                            req.ip.substring(0, 8)}...] ${req.originalUrl}\n`
+                        )
                     }
                 }
             })
@@ -459,6 +469,25 @@ module.exports = {
         if(config.env == "dev") {
             tr = true;
         }
+
+        return tr;
+    },
+
+
+    "isTemplocked": function(req) {
+        let tr = false;
+        try {
+            req.headers.cookie.split(";").forEach(cookie => {
+                if(cookie.trimStart().startsWith("auth=")) {
+                    let userToken = cookie.trimStart()
+                                    .replace("auth=", "")
+                    if(templocked_tokens.includes(userToken)) {
+                        tr = true;
+                    }
+                }
+            })
+        }
+        catch(error) {}
 
         return tr;
     },

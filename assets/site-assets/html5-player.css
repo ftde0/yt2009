@@ -655,3 +655,11 @@
 .captions_popup_container li:hover p {
     color: white;
 }
+
+.captions_selection {
+    padding-left: 0px !important;
+}
+
+.captions_selection, .captions_selection li {
+    list-style: none;
+}

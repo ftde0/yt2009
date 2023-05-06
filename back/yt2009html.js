@@ -635,13 +635,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             </a>`)
 
                             // more from
-                            if(code.split("More From: ").length >= 2) {
+                            if(code.split("lang_morefrom").length >= 2) {
                                 let currentUsername = code.
-                                                    split("More From: ")[1].
+                                                    split("lang_morefrom")[1].
                                                     split("\n")[0]
                                 code = code.replace(
-                                    `More From: ${currentUsername}`,
-                                    `More From: ${waybackData.authorName}`
+                                    `lang_morefrom${currentUsername}`,
+                                    `lang_morefrom${waybackData.authorName}`
                                 )
                             }
                         }

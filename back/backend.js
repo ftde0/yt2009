@@ -78,6 +78,10 @@ app.get('/node_modules/*', (req,res) => {
 
 app.get('/', (req,res) => {
     if(!yt2009_utils.isAuthorized(req)) {
+        if(yt2009_utils.isTemplocked(req)) {
+            res.redirect("/t.htm")
+            return;
+        }
         res.redirect("/auth.html")
         return;
     }
@@ -95,6 +99,10 @@ strona oglądania
 
 app.get("/watch", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
+        if(yt2009_utils.isTemplocked(req)) {
+            res.redirect("/t.htm")
+            return;
+        }
         res.redirect("/unauth.htm")
         return;
     }
@@ -233,38 +241,82 @@ more from: ładowanie na nowo
 ======
 */
 app.get("/morefrom_load", (req, res) => {
+    let channelFlags = req.headers.cookie || ""
+    if(channelFlags.includes("channel_flags")) {
+        channelFlags = channelFlags.split("channel_flags")[1]
+                       .split(";")[0]
+    }
+    let useOnlyOld = false;
+    let onlyOldQuery = ""
+    if(channelFlags.includes("only_old")) {
+        useOnlyOld = true;
+        onlyOldQuery = yt2009_search.handle_only_old(
+            channelFlags.split(":").join(";")
+        )
+    }
     let videosHTML = ``
-    yt2009_channels.main({"path": req.headers.channel, 
-    "headers": {"cookie": "auth=" + yt2009_utils.get_used_token(req)}, 
-    "query": {"f": 0}}, 
-    {"send": function(data) {
-        if(data.videos) {
-            data.videos.forEach(video => {
-                if(req.headers.source.includes(video.id)) return;
-                videosHTML += `
-                <div class="video-entry">
-                    <div class="v90WideEntry">
-                        <div class="v90WrapperOuter">
-                            <div class="v90WrapperInner">
-                                <a href="/watch?v=${video.id}" class="video-thumb-link" rel="nofollow"><img title="${video.title.split(`"`).join("&quot;")}" thumb="${req.protocol}://i.ytimg.com/vi/${video.id}/hqdefault.jpg" src="${req.protocol}://i.ytimg.com/vi/${video.id}/hqdefault.jpg" class="vimg90" qlicon="${video.id}" alt="${video.title.split(`"`).join("&quot;")}"></a>
-            
-                                <div class="addtoQL90"><a href="#" ql="${video.id}" title="Add Video to QuickList"><button title="" class="master-sprite QLIconImg"></button></a>
-                                    <div class="hid quicklist-inlist"><a href="#">Added to Quicklist</a></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="video-main-content">
-                        <div class="video-mini-title"><a href="/watch?v=${video.id}" rel="nofollow">${video.title}</a></div>
-                        <div class="video-view-count">${video.views}</div>
-                    </div>
-                    <div class="video-clear-list-left"></div>
-                </div>`
-                })
-        }
 
-        res.send(videosHTML)
-    }}, "", true)
+
+    // default videos (without only_old OR if no videos with only_old)
+    function fetchDefaultVideos() {
+        yt2009_channels.main({"path": req.headers.channel, 
+        "headers": {"cookie": "auth=" + yt2009_utils.get_used_token(req)},
+        "query": {"f": 0}}, 
+        {"send": function(data) {
+            if(data.videos) {
+                data.videos.forEach(video => {
+                    if(req.headers.source.includes(video.id)) return;
+                    videosHTML += yt2009_templates.relatedVideo(
+                        video.id, video.title, req.protocol, "",
+                        video.views, "#", "", channelFlags
+                    )
+                })
+            }
+    
+            res.send(videosHTML)
+        }}, "", true)
+    }
+
+    if(useOnlyOld) {
+        // use only_old as video source
+        if(!req.headers.name) {
+            res.status(400).send("no name header specified");
+            return;
+        }
+        let onlyOldVideos = []
+        let name = req.headers.name.trim()
+        let query = `"${name}" ${onlyOldQuery}`
+        yt2009_search.get_search(query, channelFlags, "", (results => {
+            // actual results
+            results.forEach(result => {
+                if(result.type == "video"
+                && (name.includes(
+                    result.author_name.split(" ").join("")
+                ) || name == result.author_name)) {
+                    onlyOldVideos.push(result)
+                }
+            })
+            if(!onlyOldVideos[0]) {
+                // no videos, fetch default
+                fetchDefaultVideos();
+                return;
+            } else {
+                // format only_old
+                onlyOldVideos.forEach(video => {
+                    if(req.headers.source.includes(video.id)) return;
+                    videosHTML += yt2009_templates.relatedVideo(
+                        video.id, video.title, req.protocol, "",
+                        video.views, "#", "", channelFlags
+                    )
+                })
+                res.send(videosHTML)
+            }
+        }), yt2009_utils.get_used_token(req), false)
+    } else {
+        // use default channel videos as video source
+        fetchDefaultVideos()
+    }
+
 })
 
 /*
@@ -372,6 +424,10 @@ wyszukiwarka
 
 app.get("/results", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
+        if(yt2009_utils.isTemplocked(req)) {
+            res.redirect("/t.htm")
+            return;
+        }
         res.redirect("/unauth.htm")
         return;
     }
@@ -706,6 +762,10 @@ let channel_endpoints = [
 channel_endpoints.forEach(channel_endpoint => {
     app.get(channel_endpoint, (req, res) => {
         if(!yt2009_utils.isAuthorized(req)) {
+            if(yt2009_utils.isTemplocked(req)) {
+                res.redirect("/t.htm")
+                return;
+            }
             res.redirect("/unauth.htm")
             return;
         }
@@ -1045,6 +1105,10 @@ osobny entry na yt2009_flags aby wspierać fmode
 */
 app.get("/yt2009_flags.htm", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
+        if(yt2009_utils.isTemplocked(req)) {
+            res.redirect("/t.htm")
+            return;
+        }
         res.redirect("/unauth.htm")
         return;
     }
