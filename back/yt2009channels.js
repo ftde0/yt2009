@@ -557,11 +557,12 @@ module.exports = {
         videos
         =======
         */
-
+        let scrollbox_all_html = ``
+        let videoUploadDates = {}
+        let video_index = 0;
+        let watch_url = "/watch.swf"
+        let watch_arg = "watch_arg"
         function videosRender() {
-            let scrollbox_all_html = ``
-            let videoUploadDates = {}
-            let video_index = 0;
             // "All" scrollbox
             let scrollbox_all_videos = JSON.parse(JSON.stringify(videosSource))
                                         .splice(0, 10)
@@ -624,8 +625,6 @@ module.exports = {
             header video
             =======
             */
-            let watch_url = "/watch.swf"
-            let watch_arg = "video_id"
             if(videosSource[0]) {
                 let video = videosSource[0]
                 let views = yt2009utils.viewFlags(video.views, flags)
