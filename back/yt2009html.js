@@ -1617,6 +1617,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
                 
                 flash_url += `&cc_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fsubtitle-module.swf`
+
+                // always_captions flash
+                if(flags.includes("always_captions")) {
+                    flash_url += "&cc_load_policy=1"
+                } else {
+                    flash_url += "&cc_load_policy=2"
+                }
                 
                 code = code.replace(
                     `<!--yt2009_f-->`,

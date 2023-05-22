@@ -22,7 +22,7 @@
         },
         "years": {
             "1": "year",
-            "2-4": "years"
+            "2+": "years"
         },
         "prefix": "",
         "suffix": " ago"

@@ -1603,3 +1603,27 @@ function showLoadingSprite() {
     .className = mainElement.querySelector(".html5-loading").className
                                                             .replace("hid", "")
 }
+
+
+// skipping
+var flashSkip = false;
+try {
+    mainElement.addEventListener("keydown", function(e) {
+        var skipAmount = 5;
+        if(flashSkip) {
+            skipAmount = video.duration / 10;
+        }
+        switch(e.keyCode) {
+            // arrow right
+            case 39: {
+                video.currentTime += skipAmount
+                break;
+            }
+            // arrow left
+            case 37: {
+                video.currentTime -= skipAmount
+            }
+        }
+    }, false)
+}
+catch(error) {}
