@@ -6,14 +6,6 @@ const channels = require("./yt2009channels")
 
 module.exports = {
     "get_search": function(req, res) {
-        if(!utils.isAuthorized(req)) {
-            res.send(`
-            <?xml version='1.0' encoding='UTF-8'?><feed></feed>`)
-            return;
-        }
-
-        console.log(req.originalUrl)
-
         req = utils.addFakeCookie(req)
 
         let flags = ""
