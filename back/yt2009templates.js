@@ -949,8 +949,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 <media:keywords></media:keywords>
                 <media:player url='http://www.youtube.com/watch?v=${id}'/>
                 <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/${id}/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
-                <media:thumbnail yt:name='poster' url='http://i.ytimg.comvi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
-                <media:thumbnail yt:name='default' url='http://i.ytimg.comvi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
+                <media:thumbnail yt:name='poster' url='http://i.ytimg.com/vi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
+                <media:thumbnail yt:name='default' url='http://i.ytimg.com/vi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
                 <yt:duration seconds='${length}'/>
                 <yt:videoid id='${id}'>${id}</yt:videoid>
                 <youTubeId id='${id}'>${id}</youTubeId>
