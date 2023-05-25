@@ -921,5 +921,48 @@ module.exports = {
         return lang.playnav_viewcount_prefix
                + this.countBreakup(this.bareCount(views))
                + lang.playnav_viewcount_suffix;
+    },
+
+    "relativeToAbsoluteApprox": function(relativeTime) {
+        let current = new Date()
+        let year = current.getFullYear()
+        let month = current.getMonth()
+        let day = current.getDate()
+
+        if(relativeTime.includes("year")) {
+            year -= parseInt(relativeTime.split(" ")[0])
+        } else if(relativeTime.includes("month")) {
+            month -= parseInt(relativeTime.split(" ")[0])
+            if(month < 1) {
+                year--;
+                month = current.getMonth()
+            }
+        } else if(relativeTime.includes("day")) {
+            day -= parseInt(relativeTime.split(" ")[0])
+            if(day < 1) {
+                month--;
+                day = current.getDate()
+                if(month < 1) {
+                    year--;
+                    month = current.getMonth()
+                }
+            }
+        }
+
+        return `${year}-${month}-${day}`
+    },
+
+    "approxSubcount": function(count) {
+        let c = parseInt(count);
+        if(count.includes("K")) {
+            c = c * 1000;
+        }
+        if(count.includes("M")) {
+            c = c * 1000000;
+        }
+        if(count.includes("B")) {
+            c = c * 1000000000;
+        }
+        return c;
     }
 }

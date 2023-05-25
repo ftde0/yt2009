@@ -88,7 +88,7 @@ module.exports = {
         })})
     },
 
-    "fetch_video_data": function(id, callback, userAgent, userToken, useFlash, resetCache) {
+    "fetch_video_data": function(id, callback, userAgent, userToken, useFlash, resetCache, disableDownload) {
         let waitForOgv = false;
 
         // if firefox<=25 wait for ogg, otherwise callback mp4
@@ -105,7 +105,7 @@ module.exports = {
                 console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
             }
 
-            if(!fs.existsSync(`../assets/${id}.mp4`)) {
+            if(!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload) {
                 yt2009utils.saveMp4(id, (path => {
                     callback(v)
                 }))
@@ -324,7 +324,7 @@ module.exports = {
                 
                 // zapisujemy mp4/ogg
 
-                if(!fs.existsSync(`../assets/${id}.mp4`) || config.fallbackMode) {
+                if(fs.existsSync(`../assets/${id}.mp4`) && !disableDownload || config.fallbackMode) {
                     function on_mp4_save_finish(path) {
                         setTimeout(function() {
                             if(waitForOgv) {
@@ -814,7 +814,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "views": yt2009utils.countBreakup(data.viewCount) + " views",
                     "uploaderName": data.author_name,
                     "uploaderUrl": data.author_url,
-                    "time": "",
+                    "time": data.length,
                     "category": data.category
                 })
                 videos_page.unshift({
@@ -823,7 +823,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "views": yt2009utils.countBreakup(data.viewCount) + " views",
                     "uploaderName": data.author_name,
                     "uploaderUrl": data.author_url,
-                    "time": "",
+                    "time": data.length,
                     "category": data.category
                 })
                 fs.writeFileSync("./cache_dir/watched_now.json",

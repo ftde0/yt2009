@@ -152,8 +152,8 @@ module.exports = {
     </author>
     <generator version='2.0' uri='http://gdata.youtube.com/'>YouTube data API</generator>
     <openSearch:totalResults>${resultCount}</openSearch:totalResults>
-    <openSearch:startIndex>0</openSearch:startIndex>
-    <openSearch:itemsPerPage>12</openSearch:itemsPerPage>`
+    <openSearch:startIndex>1</openSearch:startIndex>
+    <openSearch:itemsPerPage>${resultCount}</openSearch:itemsPerPage>`
     },
     "cpsSearchEntry": function(id, title, description, lengthSeconds, authorName) {
         let domainName = config.ip + ":" + config.port
@@ -888,5 +888,151 @@ module.exports = {
                     <div class="channel-clear-grid"></div>
                 </div>
             </div>`
+    },
+    "gdata_emptyfeed": `<?xml version='1.0' encoding='UTF-8'?>
+    <feed>
+        <id>http://gdata.youtube.com/feeds/api/standardfeeds/us/recently_featured</id>
+        <updated>2010-12-21T18:59:58.000-08:00</updated>
+        <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#video'/>
+        <title type='text'>vds</title>
+        <logo>http://www.youtube.com/img/pic_youtubelogo_123x63.gif</logo>
+        <author>
+            <name>YouTube</name>
+            <uri>http://www.youtube.com/</uri>
+        </author>
+        <generator version='2.0' uri='http://gdata.youtube.com/'>YouTube data API</generator>
+        <openSearch:totalResults>100</openSearch:totalResults>
+        <openSearch:startIndex>1</openSearch:startIndex>
+        <openSearch:itemsPerPage>25</openSearch:itemsPerPage>
+    </feed>`,
+    "gdata_feedStart": `<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns='http://www.w3.org/2005/Atom'
+xmlns:media='http://search.yahoo.com/mrss/'
+xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/'
+xmlns:gd='http://schemas.google.com/g/2005'
+xmlns:yt='http://gdata.youtube.com/schemas/2007'>
+    <id>http://gdata.youtube.com/feeds/api/standardfeeds/us/recently_featured</id>
+    <updated>2010-12-21T18:59:58.000-08:00</updated>
+    <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#video'/>
+    <title type='text'> </title>
+    <logo>http://www.youtube.com/img/pic_youtubelogo_123x63.gif</logo>
+    <author>
+        <name>YouTube</name>
+        <uri>http://www.youtube.com/</uri>
+    </author>
+    <generator version='2.0' uri='http://gdata.youtube.com/'>YouTube data API</generator>
+    <openSearch:totalResults>25</openSearch:totalResults>
+    <openSearch:startIndex>1</openSearch:startIndex>
+    <openSearch:itemsPerPage>25</openSearch:itemsPerPage>`,
+    "gdata_feedEnd": "\n</feed>",
+    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate) {
+        return `
+        <entry>
+            <id>http://${config.ip}:${config.port}/feeds/api/videos/${id}</id>
+            <youTubeId id='${id}'>${id}</youTubeId>
+            <published>${uploadDate ? new Date(uploadDate).toISOString() : ""}</published>
+            <updated>${uploadDate ? new Date(uploadDate).toISOString() : ""}</updated>
+            <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("")}</title>
+            <content type='text'>${description.split("<").join("").split(">").join("").split("&").join("")}</content>
+            <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>
+            <author>
+                <name>${author}</name>
+                <uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
+            </author>
+            <gd:comments>
+                <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/${id}/comments' countHint='530'/>
+            </gd:comments>
+            <media:group>
+                <media:category label='People &amp; Blogs' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>People</media:category>
+                <media:content url='http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>
+                <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("")}</media:description>
+                <media:keywords></media:keywords>
+                <media:player url='http://www.youtube.com/watch?v=${id}'/>
+                <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/${id}/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
+                <media:thumbnail yt:name='poster' url='http://i.ytimg.comvi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
+                <media:thumbnail yt:name='default' url='http://i.ytimg.comvi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
+                <yt:duration seconds='${length}'/>
+                <yt:videoid id='${id}'>${id}</yt:videoid>
+                <youTubeId id='${id}'>${id}</youTubeId>
+                <media:credit role='uploader' name='${author}'>${author}</media:credit>
+            </media:group>
+            <gd:rating average='5' max='5' min='1' numRaters='${Math.floor(views / 600)}' rel='http://schemas.google.com/g/2005#overall'/>
+            <yt:statistics favoriteCount="${Math.floor(views / 150)}" viewCount="${views}"/>
+            <yt:rating numLikes="${Math.floor(views / 100)}" numDislikes="${Math.floor(views / 1500)}"/>
+        </entry>`
+    },
+    "gdata_feedComment": function(id, authorName, comment, time) {
+        return `<entry gd:etag=' '>
+		<id>tag:youtube.com,2008:video:b:comment:c</id>
+		<published>${new Date(time).toISOString()}</published>
+		<updated>${new Date(time).toISOString()}</updated>
+		<category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#comment'/>
+		<title>...</title>
+		<content>${comment.split("<").join("").split(">").join("").split("&").join("").trim()}</content>
+		<link rel='related' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/${id}?v=2'/>
+		<link rel='alternate' type='text/html' href='http://www.youtube.com/watch?v=${id}'/>
+		<link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/${id}/comments/c?v=2'/>
+		<author>
+			<name>${authorName}</name>
+			<uri>http://gdata.youtube.com/feeds/api/users/${authorName}</uri>
+		</author>
+	</entry>`
+    },
+    "gdata_user": function(id, name, avatar, subs, videoCount) {
+        return `<?xml version='1.0' encoding='UTF-8'?>
+<entry
+    xmlns='http://www.w3.org/2005/Atom'
+    xmlns:media='http://search.yahoo.com/mrss/'
+    xmlns:gd='http://schemas.google.com/g/2005'
+    xmlns:yt='http://gdata.youtube.com/schemas/2007'>
+    <id>http://${config.ip}:${config.port}/feeds/api/users/${id}</id>
+    <published>2010-05-28T09:21:19.000-07:00</published>
+    <updated>2011-02-09T03:27:42.000-08:00</updated>
+    <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#userProfile'/>
+    <category scheme='http://gdata.youtube.com/schemas/2007/channeltypes.cat' term=''/>
+    <title type='text'>${name} Channel</title>
+    <content type='text'></content>
+    <link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/users/${id}'/>
+    <author>
+        <name>${name}</name>
+        <uri>http://gdata.youtube.com/feeds/api/users/${id}</uri>
+    </author>
+    <yt:age>1</yt:age>
+    <yt:description></yt:description>
+    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.favorites' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/favorites' countHint='7'/>-->
+    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.inbox' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/inbox'/>-->
+    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.playlists' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/playlists'/>-->
+    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.subscriptions' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/subscriptions' countHint='${subs}'/>-->
+    <gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.uploads' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/uploads' countHint='${videoCount}'/>
+    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.newsubscriptionvideos' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/newsubscriptionvideos'/>-->
+    <!--<yt:gender>m</yt:gender>-->
+    <!--<yt:location>IS</yt:location>-->
+    <yt:statistics lastWebAccess='2011-02-01T12:45:18.000-08:00' subscriberCount='${subs}' videoWatchCount='0' viewCount='0' totalUploadViews='0'/>
+    <media:thumbnail url='${avatar}'/>
+    <yt:username>${name}</yt:username>
+</entry>` 
+    },
+    "gdata_playlistEntry": function(userAt, playlistId, playlistName, vidCount) {
+        return `
+    <entry>
+		<id>http://${config.ip}:${config.port}/feeds/api/users/${userAt}/playlists/${playlistId}</id>
+        <content src='http://${config.ip}:${config.port}/feeds/api/playlists/${playlistId}' type='text'/>
+		<published>2010-05-28T09:21:19.000-07:00</published>
+		<updated>2010-05-28T09:21:19.000-07:00</updated>
+		<category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#playlistLink'/>
+		<title type='text'>${playlistName.split("<").join("").split(">").join("").split("&").join("").trim()}</title>
+        <yt:playlistId id='${playlistId}'>${playlistId}</yt:playlistId>
+		<content type='text'>None</content>
+		<link rel='related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${userAt}'/>
+		<link rel='alternate' type='text/html' href='http://www.youtube.com/view_play_list?p=${playlistId}'/>
+		<link rel='self' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${userAt}/playlists/${playlistId}'/>
+		<author>
+			<name>${userAt}</name>
+			<uri>http://${config.ip}:${config.port}/feeds/api/users/${userAt}</uri>
+		</author>
+		<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#playlist' href='http://${config.ip}:${config.port}/feeds/api/playlists/${playlistId}' countHint='${vidCount}'/>
+		<yt:description>None</yt:description>
+        <yt:countHint>${vidCount}</yt:countHint>
+	</entry>`
     }
 }

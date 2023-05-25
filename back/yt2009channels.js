@@ -26,6 +26,7 @@ module.exports = {
         // url parse
         let url = ""
         url = yt2009utils.channelUrlMarkup(req.path)
+        req = yt2009utils.addFakeCookie(req)
         // log if dev, use fmode
         let flashMode = (req.query.f == 1
                       || req.headers.cookie.includes("f_mode"))
@@ -232,7 +233,9 @@ module.exports = {
                         "upload": video.publishedTimeText.simpleText,
                         "thumbnail": "http://i.ytimg.com/vi/"
                                     + video.videoId
-                                    + "/hqdefault.jpg"
+                                    + "/hqdefault.jpg",
+                        "length": (video.lengthText || {"simpleText": "00:00"})
+                                  .simpleText
                     })
                 }
                 
@@ -257,7 +260,9 @@ module.exports = {
                             "upload": video.publishedTimeText.simpleText,
                             "thumbnail": "http://i.ytimg.com/vi/"
                                         + video.videoId
-                                        + "/hqdefault.jpg"
+                                        + "/hqdefault.jpg",
+                            "length": (video.lengthText || {"simpleText": "00:00"})
+                                      .simpleText
                         })
                     }
                 })
@@ -277,7 +282,10 @@ module.exports = {
                                 "upload": video.publishedTimeText.simpleText,
                                 "thumbnail": "http://i.ytimg.com/vi/"
                                             + video.videoId
-                                            + "/hqdefault.jpg"})
+                                            + "/hqdefault.jpg",
+                                "length": (video.lengthText || {"simpleText": "00:00"})
+                                          .simpleText
+                            })
                         }
                     })
                 }

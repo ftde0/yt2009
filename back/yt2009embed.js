@@ -301,7 +301,7 @@ module.exports = function(req, res) {
 
         utils.saveMp4(id, (path) => {
             setTimeout(function() {
-                if(path.includes("googlevideo")) {
+                if((path || "").includes("googlevideo")) {
                     id = path;
                 }
                 if(waitForOgv) {

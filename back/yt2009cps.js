@@ -29,14 +29,14 @@ module.exports = {
         let response = ``
         
         search.get_search(
-            req.query.q || "",
+            encodeURIComponent(req.query.q) || "",
             flags,
             "",
             (data => {
                 let videos = ``
                 let videosCount = 0;
                 data.forEach(video => {
-                    if(!video.type == "video") return;
+                    if(video.type !== "video") return;
                     videosCount++;
                     let author_name = video.author_name;
                     if(flags.includes("username_aciify")) {
@@ -50,12 +50,15 @@ module.exports = {
                     if(video.time) {
                         videoTime = utils.time_to_seconds(video.time)
                     }
-                    videos += templates.cpsSearchEntry(
+
+                    videos += templates.gdata_feedVideo(
                         video.id,
                         video.title,
-                        video.description,
+                        utils.asciify(author_name || ""),
+                        utils.bareCount(video.views),
                         videoTime,
-                        author_name
+                        "",
+                        utils.relativeToAbsoluteApprox(video.upload)
                     )
                 })
 

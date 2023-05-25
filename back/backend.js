@@ -641,10 +641,14 @@ app.get("/watch_queue", (req, res) => {
 
 /*
 ======
-cps.swf
+cps.swf/mobile videoinfo
 ======
 */
 app.get("/feeds/api/videos/", (req, res) => {
+    if(!req.query.q) {
+        yt2009_mobile.videoData(req, res)
+        return;
+    }
     yt2009_cps.get_search(req, res)
 })
 
@@ -1234,6 +1238,44 @@ app.get("/mobile/create_rtsp", (req, res) => {
         return;
     }
     yt2009_mobile.setup_rtsp(id, noSound, res)
+})
+
+/*
+======
+mobile (apk) endpoints
+======
+*/
+app.post("/youtube/accounts/registerDevice", (req, res) => {
+    res.send(`DeviceId=amogus
+DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=
+#yt2009 - devicekey created with aes secret from 2.3.4 apk`)
+})
+app.get("/feeds/api/standardfeeds/*", (req, res) => {
+    yt2009_mobile.feeds(req, res)
+})
+app.get("/feeds/api/videos/*/comments", (req, res) => {
+    yt2009_mobile.apkVideoComments(req, res)
+})
+app.get("/feeds/api/videos/*/related", (req, res) => {
+    yt2009_mobile.apkVideoRelated(req, res)
+})
+app.get("/feeds/api/videos/*", (req, res) => {
+    if(!req.query.q) {
+        yt2009_mobile.videoData(req, res)
+        return;
+    }
+})
+app.get("/feeds/api/users/*/uploads", (req, res) => {
+    yt2009_mobile.userVideos(req, res)
+})
+app.get("/feeds/api/users/*/playlists", (req, res) => {
+    yt2009_mobile.userPlaylists(req, res)
+})
+app.get("/feeds/api/users/*/favorites", (req, res) => {
+    yt2009_mobile.userFavorites(req, res)
+})
+app.get("/feeds/api/users/*", (req, res) => {
+    yt2009_mobile.userInfo(req, res)
 })
 
 /*
