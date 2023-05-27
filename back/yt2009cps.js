@@ -43,13 +43,18 @@ module.exports = {
                         videoTime = utils.time_to_seconds(video.time)
                     }
 
+                    let videoDescription = html.get_video_description(video.id)
+                    if(videoDescription.length == 0 && video.description) {
+                        videoDescription = video.description;
+                    }
+
                     videos += templates.gdata_feedVideo(
                         video.id,
                         video.title,
                         utils.asciify(author_name || ""),
                         utils.bareCount(video.views),
                         videoTime,
-                        "",
+                        videoDescription,
                         utils.relativeToAbsoluteApprox(video.upload)
                     )
                 })

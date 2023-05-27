@@ -194,7 +194,7 @@ module.exports = {
                     response += templates.gdata_feedVideo(
                         video.id,
                         video.title,
-                        utils.asciify(video.uploaderName),
+                        utils.asciify(authorName),
                         utils.bareCount(video.views),
                         utils.time_to_seconds(data.length || 0),
                         data.description,
@@ -264,9 +264,8 @@ module.exports = {
                             utils.asciify(video.creatorName),
                             utils.bareCount(video.views),
                             utils.time_to_seconds(video.length),
-                            "",
-                            "2010-" + (Math.floor(Math.random() * 11) + 1)
-                                    + "-" + (Math.floor(Math.random() * 25) + 1)
+                            yt2009html.get_video_description(video.id),
+                            utils.relativeToAbsoluteApprox(video.upload)
                         )
                     })
 
@@ -284,9 +283,8 @@ module.exports = {
                                 utils.asciify(video.creatorName),
                                 utils.bareCount(video.views),
                                 utils.time_to_seconds(video.length),
-                                "",
-                                "2010-" + (Math.floor(Math.random() * 11) + 1)
-                                        + "-" + (Math.floor(Math.random() * 25) + 1)
+                                yt2009html.get_video_description(video.id),
+                                utils.relativeToAbsoluteApprox(video.uploaded)
                             )
                         }
                     })

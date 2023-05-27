@@ -926,6 +926,20 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <openSearch:itemsPerPage>25</openSearch:itemsPerPage>`,
     "gdata_feedEnd": "\n</feed>",
     "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate) {
+        let rating = 4.5;
+        let ryd = require("./cache_dir/ryd_cache_manager")
+        if(ryd.readCache(id)) {
+            rating = ryd.readCache(id)
+        }
+        let ratingApproxDivide = 150;
+        if(views < 1000000) {
+            ratingApproxDivide = 15;
+        }
+        let likeCount = parseInt(views) / ratingApproxDivide * (rating / 5)
+        let dislikeCount = parseInt(views) / ratingApproxDivide * (1 - (rating / 5))
+        if(dislikeCount == 0) {
+            dislikeCount = likeCount * 0.00731
+        }
         return `
         <entry>
             <id>http://${config.ip}:${config.port}/feeds/api/videos/${id}</id>
@@ -958,7 +972,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             </media:group>
             <gd:rating average='5' max='5' min='1' numRaters='${Math.floor(views / 600)}' rel='http://schemas.google.com/g/2005#overall'/>
             <yt:statistics favoriteCount="${Math.floor(views / 150)}" viewCount="${views}"/>
-            <yt:rating numLikes="${Math.floor(views / 100)}" numDislikes="${Math.floor(views / 1500)}"/>
+            <yt:rating numLikes="${Math.floor(likeCount)}" numDislikes="${Math.floor(dislikeCount)}"/>
         </entry>`
     },
     "gdata_feedComment": function(id, authorName, comment, time) {
