@@ -12,6 +12,11 @@ module.exports = {
         if(req.headers.cookie.includes("search_flags")) {
             flags = req.headers.cookie.split("search_flags=")[1].split(";")[0]
         }
+        
+        if(req.query.q.includes("+only_old")) {
+            req.query.q = req.query.q.replace("+only_old", "")
+            flags += "only_old"
+        }
         /*
         =======
         create the search XML
@@ -53,7 +58,7 @@ module.exports = {
                     videos += templates.gdata_feedVideo(
                         video.id,
                         video.title,
-                        utils.asciify(author_name || ""),
+                        video.author_handle || utils.asciify(author_name || ""),
                         utils.bareCount(video.views),
                         videoTime,
                         videoDescription,

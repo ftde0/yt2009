@@ -224,6 +224,12 @@ module.exports = {
                                     .navigationEndpoint.browseEndpoint
                                     .canonicalBaseUrl;
 
+                    // check for author urls
+                    let userHandle = false
+                    if(author_url.startsWith("/@")) {
+                        userHandle = author_url.replace("/@", "")
+                    }
+
                     if(!author_url.startsWith("/channel")
                     && !author_url.startsWith("/user")
                     && !author_url.startsWith("/c/")) {
@@ -232,6 +238,7 @@ module.exports = {
                                                     .browseEndpoint.browseId
                     }
 
+                    // add video
                     resultsToCallback.push({
                         "type": "video",
                         "id": result.videoId,
@@ -244,6 +251,7 @@ module.exports = {
                         "time": result.lengthText.simpleText,
                         "author_name": result.ownerText.runs[0].text,
                         "author_url": author_url,
+                        "author_handle": userHandle,
                         "upload": uploadDate
                     })
                 }

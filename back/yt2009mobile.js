@@ -290,7 +290,7 @@ module.exports = {
                         response += templates.gdata_feedVideo(
                             video.id,
                             video.title,
-                            utils.asciify(video.creatorName),
+                            video.creatorHandle || utils.asciify(video.creatorName),
                             utils.bareCount(video.views),
                             utils.time_to_seconds(video.length),
                             cacheData.description || video.description || "-",
