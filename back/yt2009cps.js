@@ -48,6 +48,8 @@ module.exports = {
                         videoDescription = video.description;
                     }
 
+                    let data = html.get_cache_video(video.id)
+
                     videos += templates.gdata_feedVideo(
                         video.id,
                         video.title,
@@ -55,7 +57,9 @@ module.exports = {
                         utils.bareCount(video.views),
                         videoTime,
                         videoDescription,
-                        utils.relativeToAbsoluteApprox(video.upload)
+                        utils.relativeToAbsoluteApprox(video.upload),
+                        (data.tags || []).join() || "-",
+                        data.category || "-"
                     )
                 })
 

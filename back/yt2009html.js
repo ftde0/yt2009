@@ -2123,5 +2123,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         } else {
             return api_key;
         }
+    },
+
+    "get_cache_video": function(id) {
+        return cache.read()[id] || {}
     }
 }

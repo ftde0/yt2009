@@ -176,11 +176,7 @@ module.exports = {
 
     // apk feeds
     "feeds": function(req, res) {
-        if(!req.originalUrl.includes("recently_featured")) {
-            // send empty video feeds on other
-            // (most popular & most discussed) reqs
-            res.send(templates.gdata_feedStart + templates.gdata_feedEnd)
-        } else {
+        if(req.originalUrl.includes("featured")) {
             // send full feed on recently_featured
             // 25 recently watched
             let response = templates.gdata_feedStart
@@ -198,7 +194,9 @@ module.exports = {
                         utils.bareCount(video.views),
                         utils.time_to_seconds(data.length || 0),
                         data.description,
-                        data.upload
+                        data.upload,
+                        (data.tags || []).join(),
+                        data.category
                     )
                     videosAdded++;
                     if(videosAdded >= 25) {
@@ -207,6 +205,34 @@ module.exports = {
                     }
                 }, "", "", false, false, true)
             })
+        } else if(req.originalUrl.includes("most_popular")) {
+            // grab popular videos (100k+ views) from featured 25-50
+            // and put them into the feed
+            let response = templates.gdata_feedStart
+            if(yt2009html.featured().length > 25) {
+                yt2009html.featured().slice(25, 50).forEach(video => {
+                    yt2009html.fetch_video_data(video.id, (data) => {
+                        if(utils.bareCount(video.views) > 100000) {
+                            response += templates.gdata_feedVideo(
+                                video.id,
+                                video.title,
+                                utils.asciify(video.uploaderName),
+                                utils.bareCount(video.views),
+                                utils.time_to_seconds(data.length || 0),
+                                data.description,
+                                data.upload,
+                                (data.tags || []).join(),
+                                data.category
+                            )
+                        }
+                    }, "", "", false, false, true)
+                })
+            }
+            response += templates.gdata_feedEnd
+            res.send(response)
+        } else {
+            // send empty video feeds on other requests
+            res.send(templates.gdata_feedStart + templates.gdata_feedEnd)
         }
     },
 
@@ -224,7 +250,8 @@ module.exports = {
                 utils.bareCount(data.viewCount),
                 utils.time_to_seconds(data.length || 0),
                 data.description,
-                data.upload
+                data.upload,
+                data.keywords.join()
             )
             res.send(response)
         }, "", "", false, false, true)
@@ -258,14 +285,18 @@ module.exports = {
                 "fake_upload_dates:;realistic_view_count", ((html, rawData) => {
                     // add search videos
                     rawData.forEach(video => {
+                        let cacheData = yt2009html.get_cache_video(video.id)
+
                         response += templates.gdata_feedVideo(
                             video.id,
                             video.title,
                             utils.asciify(video.creatorName),
                             utils.bareCount(video.views),
                             utils.time_to_seconds(video.length),
-                            yt2009html.get_video_description(video.id),
-                            utils.relativeToAbsoluteApprox(video.upload)
+                            cacheData.description || video.description || "-",
+                            utils.relativeToAbsoluteApprox(video.upload),
+                            (cacheData.tags || []).join() || "-",
+                            cacheData.category || "-"
                         )
                     })
 
@@ -276,6 +307,7 @@ module.exports = {
                         && video.uploaded.includes("years")
                         && video.id !== id
                         && !response.includes(video.id)) {
+                            //let data = yt2009html.get_cache_video(video.id)
                             // only 12 years or older & no repeats
                             response += templates.gdata_feedVideo(
                                 video.id,
@@ -366,6 +398,8 @@ module.exports = {
             let response = templates.gdata_feedStart;
 
             (data.videos || []).forEach(video => {
+                let cacheVideo = yt2009html.get_cache_video(video.id)
+
                 response += templates.gdata_feedVideo(
                     video.id,
                     video.title,
@@ -373,7 +407,9 @@ module.exports = {
                     utils.bareCount(video.views),
                     utils.time_to_seconds(video.length || "0:00"),
                     yt2009html.get_video_description(video.id),
-                    utils.relativeToAbsoluteApprox(video.upload)
+                    utils.relativeToAbsoluteApprox(video.upload),
+                    (cacheVideo.tags || []).join() || "-",
+                    cacheVideo.category || "-"
                 )
             })
 

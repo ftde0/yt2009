@@ -925,7 +925,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <openSearch:startIndex>1</openSearch:startIndex>
     <openSearch:itemsPerPage>25</openSearch:itemsPerPage>`,
     "gdata_feedEnd": "\n</feed>",
-    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate) {
+    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category) {
+        // rating
         let rating = 4.5;
         let ryd = require("./cache_dir/ryd_cache_manager")
         if(ryd.readCache(id)) {
@@ -940,12 +941,31 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         if(dislikeCount == 0) {
             dislikeCount = likeCount * 0.00731
         }
+
+        // tags/keywords
+        let unduplicateKeywordList = []
+        let oldKeywords = (keywords || "").replace(/[^a-zA-Z0-9\,]/g, "").trim()
+        oldKeywords.split(",").forEach(keyword => {
+            if(keyword.length > 0
+            && keyword.length < 11
+            && unduplicateKeywordList.length < 8
+            && !unduplicateKeywordList.includes(keyword.toLowerCase())) {
+                unduplicateKeywordList.push(keyword.toLowerCase())
+            }
+        })
+        if(unduplicateKeywordList.length == 0) {
+            unduplicateKeywordList.push("-")
+        }
+
+        // category names
+        category = (category || "-").split("&").join("&amp;")
         return `
         <entry>
             <id>http://${config.ip}:${config.port}/feeds/api/videos/${id}</id>
             <youTubeId id='${id}'>${id}</youTubeId>
             <published>${uploadDate ? new Date(uploadDate).toISOString() : ""}</published>
             <updated>${uploadDate ? new Date(uploadDate).toISOString() : ""}</updated>
+            <category scheme="http://gdata.youtube.com/schemas/2007/categories.cat" label="${category}" term="${category}">${category}</category>
             <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("")}</title>
             <content type='text'>${description.split("<").join("").split(">").join("").split("&").join("")}</content>
             <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>
@@ -957,10 +977,10 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/${id}/comments' countHint='530'/>
             </gd:comments>
             <media:group>
-                <media:category label='People &amp; Blogs' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>People</media:category>
+                <media:category label='${category}' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>${category}</media:category>
                 <media:content url='http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>
                 <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("")}</media:description>
-                <media:keywords></media:keywords>
+                <media:keywords>${unduplicateKeywordList.join(", ")}</media:keywords>
                 <media:player url='http://www.youtube.com/watch?v=${id}'/>
                 <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/${id}/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
                 <media:thumbnail yt:name='poster' url='http://i.ytimg.com/vi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
@@ -982,7 +1002,11 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 		<updated>${new Date(time).toISOString()}</updated>
 		<category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#comment'/>
 		<title>...</title>
-		<content>${comment.split("<").join("").split(">").join("").split("&").join("").trim()}</content>
+		<content>${comment.split("<br>").join("\n")
+                          .split("<").join("")
+                          .split(">").join("")
+                          .split("&").join("")
+                          .trim()}</content>
 		<link rel='related' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/${id}?v=2'/>
 		<link rel='alternate' type='text/html' href='http://www.youtube.com/watch?v=${id}'/>
 		<link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/${id}/comments/c?v=2'/>

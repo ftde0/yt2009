@@ -375,7 +375,8 @@ module.exports = {
                         "views": viewCount,
                         "creatorUrl": result.author_url,
                         "creatorName": authorName,
-                        "upload": result.upload
+                        "upload": result.upload,
+                        "description": result.description
                     })
                 }
             })
