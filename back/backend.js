@@ -1268,6 +1268,9 @@ app.get("/feeds/api/videos/*", (req, res) => {
 app.get("/feeds/api/users/*/uploads", (req, res) => {
     yt2009_mobile.userVideos(req, res)
 })
+app.get("/feeds/api/users/*/playlists/*", (req, res) => {
+    yt2009_mobile.userPlaylistStart(req, res)
+})
 app.get("/feeds/api/users/*/playlists", (req, res) => {
     yt2009_mobile.userPlaylists(req, res)
 })

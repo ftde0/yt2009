@@ -251,7 +251,8 @@ module.exports = {
                 utils.time_to_seconds(data.length || 0),
                 data.description,
                 data.upload,
-                data.keywords.join()
+                (data.tags || []).join(),
+                data.category
             )
             res.send(response)
         }, "", "", false, false, true)
@@ -426,16 +427,17 @@ module.exports = {
             // once we get the id, check if we have playlists and send those
             let response = templates.gdata_feedStart
             let playlists = require("./cache_dir/channel_cache").read("playlist")
-            /*if(playlists[userId]) {
+            if(playlists[userId]) {
                 playlists[userId].forEach(playlist => {
                     response += templates.gdata_playlistEntry(
                         id,
                         playlist.id,
                         playlist.name,
-                        playlist.videos || 1
+                        playlist.videos || 1,
+                        ""
                     )
                 })
-            }*/ // crashes the app for some fake reason??
+            }
             response += templates.gdata_feedEnd;
             res.send(response)
         })
@@ -519,5 +521,57 @@ module.exports = {
                 res.send(response)
             }
         }, true)
+    },
+
+    // apk user playlist (/users/NAME/playlists/PLAYLISTID)
+    "userPlaylistStart": function(req, res) {
+        let user = req.originalUrl.split("/users/")[1]
+                                  .split("/playlists")[0]
+        let playlistId = req.originalUrl.split("/playlists/")[1]
+                                        .split("?")[0]
+        require("./yt2009playlists").parsePlaylist(playlistId, (data) => {
+            let response = templates.gdata_feedStart
+            // playlist metadata
+            response += templates.gdata_userPlaylistStart(
+                playlistId,
+                data.name,
+                (data.videos[0] || {"id": ""}).id,
+                user,
+                utils.relativeToAbsoluteApprox(data.lastUpdate),
+                utils.bareCount(data.videoCount)
+            )
+
+            // list known videos
+            data.videos.forEach(video => {
+                // use user handle if present
+                let videoAuthor = video.uploaderName
+                if(video.uploaderUrl.includes("/@")) {
+                    videoAuthor = video.uploaderUrl.replace("/@", "")
+                }
+
+                // have full video data?
+                let videoCacheData = yt2009html.get_cache_video(video.id)
+
+                // fill
+                response += templates.gdata_feedVideo(
+                    video.id,
+                    video.title,
+                    videoAuthor,
+                    utils.bareCount(
+                        videoCacheData.viewCount
+                        || Math.floor(Math.random() * 4050200).toString()
+                    ),
+                    utils.time_to_seconds(video.time),
+                    videoCacheData.description || "",
+                    videoCacheData.upload || "2009",
+                    (videoCacheData.tags || []).join() || "-",
+                    videoCacheData.category || "-"
+                )
+            })
+
+            // finalize
+            response += templates.gdata_feedEnd
+            res.send(response)
+        })
     }
 }

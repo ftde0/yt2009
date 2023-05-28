@@ -1050,27 +1050,27 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <yt:username>${name}</yt:username>
 </entry>` 
     },
-    "gdata_playlistEntry": function(userAt, playlistId, playlistName, vidCount) {
+    "gdata_playlistEntry": function(author, playlistId, playlistName, vidCount, summary) {
         return `
     <entry>
-		<id>http://${config.ip}:${config.port}/feeds/api/users/${userAt}/playlists/${playlistId}</id>
-        <content src='http://${config.ip}:${config.port}/feeds/api/playlists/${playlistId}' type='text'/>
-		<published>2010-05-28T09:21:19.000-07:00</published>
-		<updated>2010-05-28T09:21:19.000-07:00</updated>
+	    <id>http://${config.ip}:${config.port}/feeds/api/users/${author}/playlists/${playlistId}</id>
+        <playlistId>${playlistId}</playlistId>
+        <yt:playlistId>${playlistId}</yt:playlistId>
+		<published>2008-08-25T10:05:58.000-07:00</published>
+		<updated>2008-08-27T22:37:59.000-07:00</updated>
 		<category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#playlistLink'/>
 		<title type='text'>${playlistName.split("<").join("").split(">").join("").split("&").join("").trim()}</title>
-        <yt:playlistId id='${playlistId}'>${playlistId}</yt:playlistId>
-		<content type='text'>None</content>
-		<link rel='related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${userAt}'/>
-		<link rel='alternate' type='text/html' href='http://www.youtube.com/view_play_list?p=${playlistId}'/>
-		<link rel='self' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${userAt}/playlists/${playlistId}'/>
+		<content type='text' src='http://${config.ip}:${config.port}/feeds/api/users/${author}/playlists/${playlistId}'>None</content>
+		<link rel='related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${author}'/>
+		<link rel='alternate' type='text/html' href='http://${config.ip}:${config.port}/view_play_list?p=${playlistId}'/>
+		<link rel='self' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${author}/playlists/${playlistId}'/>
 		<author>
-			<name>${userAt}</name>
-			<uri>http://${config.ip}:${config.port}/feeds/api/users/${userAt}</uri>
+			<name>${author}</name>
+			<uri>http://${config.ip}:${config.port}/feeds/api/users/${author}</uri>
 		</author>
 		<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#playlist' href='http://${config.ip}:${config.port}/feeds/api/playlists/${playlistId}' countHint='${vidCount}'/>
-		<yt:description>None</yt:description>
-        <yt:countHint>${vidCount}</yt:countHint>
+		<yt:description>None</yt:description> 
+		<summary>${summary}</summary>
 	</entry>`
     },
     "gdata_activityEntry": function(type, author, title, id, timestamp) {
@@ -1087,5 +1087,26 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 			<uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
 		</author>
 	</entry>`
+    },
+    "gdata_userPlaylistStart": function(playlistId, playlistName, firstVideoId, author, updateDate, videoCount) {
+        return `<category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#playlistLink'/>
+        <category scheme='http://gdata.youtube.com/schemas/2007/tags.cat' term='${playlistName}'/>
+        <title>${playlistName.split("<").join("").split(">").join("").split("&").join("").trim()}</title>
+        <summary></summary>
+        <content type='application/atom+xml;type=feed' src='http://${config.ip}:${config.port}/feeds/api/playlists/${playlistId}'/>
+        <link rel='related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${author}'/>
+        <link rel='self' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/users/${author}/playlists/${playlistId}'/>
+        <author>
+            <name>${author}</name>
+            <uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
+        </author>
+        <yt:countHint>${videoCount}</yt:countHint>
+        <media:group>
+            <media:thumbnail url='http://i.ytimg.com/vi/${firstVideoId}/default.jpg' height='90' width='120' yt:name='default'/>
+            <media:thumbnail url='http://i.ytimg.com/vi/${firstVideoId}/hqdefault.jpg' height='360' width='480' yt:name='hqdefault'/>
+            <yt:duration seconds='${videoCount * (Math.floor(Math.random() * 100) + 120)}'/>
+        </media:group>
+        <yt:playlistId>${playlistId}</yt:playlistId>
+        <playlistId>${playlistId}</playlistId>`
     }
 }
