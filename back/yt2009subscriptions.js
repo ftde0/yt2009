@@ -132,7 +132,7 @@ module.exports = {
     },
 
 
-    "fetch_new_videos": function(req, res) {
+    "fetch_new_videos": function(req, res, sendRawData) {
         let url = req.headers.url;
 
         // pierwotne checki
@@ -144,7 +144,7 @@ module.exports = {
             return;
         }
 
-        if(!utils.isAuthorized(req)) {
+        if(!utils.isAuthorized(req) && !sendRawData) {
             res.send("")
             return;
         }
@@ -162,6 +162,12 @@ module.exports = {
 
         if(saved_subscription_data[url]
         && Math.floor(Date.now() / 1000) - saved_subscription_data[url].time <= 86400) {
+            if(sendRawData) {
+                res.send(
+                    JSON.parse(JSON.stringify(saved_subscription_data[url]))
+                )
+                return;
+            }
             res.send(this.parse_new_videos(
                 JSON.parse(JSON.stringify(saved_subscription_data[url])), flags
             ))
@@ -188,12 +194,18 @@ module.exports = {
                             "upload": video.publishedTimeText.simpleText,
                             "thumbnail": "//i.ytimg.com/vi/"
                                         + video.videoId
-                                        + "/hqdefault.jpg"
+                                        + "/hqdefault.jpg",
+                            "time": video.lengthText ?
+                                    video.lengthText.simpleText : "3:52"
                         })
                     }
                 })
 
                 saved_subscription_data[url] = JSON.parse(JSON.stringify(data))
+                if(sendRawData) {
+                    res.send(data)
+                    return;
+                }
                 res.send(this.parse_new_videos(data, flags))
             })
         }

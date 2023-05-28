@@ -1031,7 +1031,7 @@ app.get("/my_subscriptions", (req, res) => {
     yt2009_subs.apply(req, res)
 })
 app.get("/subscriptions_new_videos", (req, res) => {
-    yt2009_subs.fetch_new_videos(req, res)
+    yt2009_subs.fetch_new_videos(req, res, false)
 })
 app.get("/my_playlists", (req, res) => {
     yt2009_client_playlists.apply(req, res)
@@ -1276,6 +1276,9 @@ app.get("/feeds/api/users/*/favorites", (req, res) => {
 })
 app.get("/feeds/api/users/*", (req, res) => {
     yt2009_mobile.userInfo(req, res)
+})
+app.get("/feeds/api/events", (req, res) => {
+    yt2009_mobile.apkUserEvents(req, res)
 })
 
 /*

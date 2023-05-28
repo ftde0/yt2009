@@ -324,7 +324,7 @@ module.exports = {
                 
                 // zapisujemy mp4/ogg
 
-                if(fs.existsSync(`../assets/${id}.mp4`) && !disableDownload || config.fallbackMode) {
+                if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload) || config.fallbackMode) {
                     function on_mp4_save_finish(path) {
                         setTimeout(function() {
                             if(waitForOgv) {

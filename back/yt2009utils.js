@@ -932,6 +932,7 @@ module.exports = {
     },
 
     "relativeToAbsoluteApprox": function(relativeTime) {
+        relativeTime = relativeTime.replace("Streamed", "").trim()
         let current = new Date()
         let year = current.getFullYear()
         let month = current.getMonth()
@@ -945,7 +946,9 @@ module.exports = {
                 year--;
                 month = current.getMonth()
             }
-        } else if(relativeTime.includes("day")) {
+        } else if(relativeTime.includes("day")
+               || relativeTime.includes("hour")
+               || relativeTime.includes("minute")) {
             day -= parseInt(relativeTime.split(" ")[0])
             if(day < 1) {
                 month--;

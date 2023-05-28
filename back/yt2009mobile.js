@@ -485,5 +485,39 @@ module.exports = {
                 res.send(response)
             }
         })
+    },
+
+    // apk events
+    "apkUserEvents": function(req, res) {
+        if(!req.query.author) {
+            res.send("")
+            return;
+        }
+
+        // i do love being too lazy to develop this function properly
+        require("./yt2009subscriptions").fetch_new_videos({
+            "headers": {
+                "url": "/@" + req.query.author
+            },
+            "query": {
+                "flags": ""
+            }
+        }, {
+            "send": function(data) {
+                // anyway, we got videos to throw there
+                let response = templates.gdata_feedStart
+                data.videos.slice(0, 7).forEach(video => {
+                    response += templates.gdata_activityEntry(
+                        "video_uploaded",
+                        req.query.author,
+                        video.title,
+                        video.id,
+                        utils.relativeToAbsoluteApprox(video.upload)
+                    )
+                })
+                response += templates.gdata_feedEnd
+                res.send(response)
+            }
+        }, true)
     }
 }

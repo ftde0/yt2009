@@ -1072,5 +1072,20 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 		<yt:description>None</yt:description>
         <yt:countHint>${vidCount}</yt:countHint>
 	</entry>`
+    },
+    "gdata_activityEntry": function(type, author, title, id, timestamp) {
+        return `
+    <entry>
+		<id>tag:youtube.com,2008:video:${id}</id>
+		<updated>${timestamp ? new Date(timestamp).toISOString() : ""}</updated>
+		<category scheme='http://schemas.google.com/g/2005#kind' term='http://http://gdata.youtube.com/schemas/2007#userEvent'/>
+		<category scheme='http://gdata.youtube.com/schemas/2007/userevents.cat' term='${type}'/>
+		<title>${title.split("<").join("").split(">").join("").split("&").join("").trim()}</title>
+		<yt:videoid>${id}</yt:videoid>
+		<author>
+			<name>${author}</name>
+			<uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
+		</author>
+	</entry>`
     }
 }
