@@ -1322,5 +1322,7 @@ module.exports = {
             }
         }
         return croppedFeaturedChannels;
-    }
+    },
+
+    "get_cache": n_impl_yt2009channelcache
 }

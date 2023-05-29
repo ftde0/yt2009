@@ -22,6 +22,11 @@ module.exports = {
             )
         }
 
+        const config = require("./config.json")
+        site = site.split(
+            `yt2009_http_root_url`
+        ).join(`http://${config.ip}:${config.port}/`)
+
         if(req.query.f == 1 || req.headers.cookie.includes("f_mode")) {
             site = site.replace(`<!DOCTYPE html>`, templates.html4)
             //site = site.replace(`href="#" onclick="document.searchForm.submit(); return false;"`, `href="#"

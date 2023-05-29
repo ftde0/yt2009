@@ -423,70 +423,87 @@ module.exports = {
     "userPlaylists": function(req, res, sendRawData) {
         let id = req.originalUrl.split("/users/")[1]
                                 .split("/playlists")[0]
-        require("./cache_dir/userid_cache").read(id, (userId) => {
-            // once we get the id, check if we have playlists and send those
-            let response = templates.gdata_feedStart
-            let playlists = require("./cache_dir/channel_cache").read("playlist")
-            if(playlists[userId]) {
-                playlists[userId].forEach(playlist => {
-                    response += templates.gdata_playlistEntry(
-                        id,
-                        playlist.id,
-                        playlist.name,
-                        playlist.videos || 1,
-                        ""
-                    )
+        setTimeout(function() {
+            channels.main({"path": "/@" + id, 
+            "headers": {"cookie": ""},
+            "query": {"f": 0}}, 
+            {"send": function(data) {
+                channels.get_additional_sections(data, "", () => {
+                    let response = templates.gdata_feedStart
+                    let playlists = channels.get_cache.read("playlist")
+                    if(playlists[data.id]) {
+                        playlists[data.id].forEach(playlist => {
+                            response += templates.gdata_playlistEntry(
+                                id,
+                                playlist.id,
+                                playlist.name,
+                                playlist.videos || 1,
+                                ""
+                            )
+                        })
+                    }
+                    response += templates.gdata_feedEnd;
+                    res.send(response)
                 })
-            }
-            response += templates.gdata_feedEnd;
-            res.send(response)
-        })
+            }}, "", true)
+        }, 4000)
     },
 
     // apk user favorites
     "userFavorites": function(req, res) {
         let id = req.originalUrl.split("/users/")[1]
                                 .split("/playlists")[0]
-        require("./cache_dir/userid_cache").read(id, (userId) => {
-            // once we get the id, check if we have playlists and send those
-            let response = templates.gdata_feedStart
-            let playlists = require("./cache_dir/channel_cache").read("playlist")
-            let hasFavoritesPlaylist = false;
-
-            // check for Favorites playlist
-            if(playlists[userId]) {
-                playlists[userId].forEach(playlist => {
-                    if(playlist.name == "Favorites") {
-                        // we have one, fetch
-                        hasFavoritesPlaylist = true;
-                        yt2009playlists.parsePlaylist(playlist.id, (data => {
-                            // add videos (kinda limited data but workable)
-                            data.videos.forEach(video => {
-                                response += templates.gdata_feedVideo(
-                                    video.id,
-                                    video.title,
-                                    utils.asciify(video.uploaderName),
-                                    "",
-                                    "",
-                                    "",
-                                    ""
-                                )
-                            })
-
-                            // send response
-                            response += templates.gdata_feedEnd;
-                            res.send(response)
-                        }))
+        setTimeout(function() {
+            channels.main({"path": "/@" + id, 
+            "headers": {"cookie": ""},
+            "query": {"f": 0}}, 
+            {"send": function(data) {
+                channels.get_additional_sections(data, "", () => {
+                    let response = templates.gdata_feedStart
+                    let playlists = channels.get_cache.read("playlist")
+                    let hasFavoritesPlaylist = false;
+                    if(playlists[data.id]) {
+                        playlists[data.id].forEach(playlist => {
+                            if(playlist.name == "Favorites") {
+                                hasFavoritesPlaylist = true;
+                                yt2009playlists.parsePlaylist(playlist.id, (data => {
+                                    // add videos (kinda limited data but workable)
+                                    data.videos.forEach(video => {
+                                        let videoCache = yt2009html
+                                                        .get_cache_video(video.id)
+                                        response += templates.gdata_feedVideo(
+                                            video.id,
+                                            video.title,
+                                            utils.asciify(video.uploaderName),
+                                            utils.bareCount(
+                                                videoCache.viewCount
+                                                || Math.floor(
+                                                    Math.random() * 20000000
+                                                ).toString()
+                                            ),
+                                            videoCache.length
+                                            || Math.floor(Math.random() * 300),
+                                            "",
+                                            ""
+                                        )
+                                    })
+        
+                                    // send response
+                                    response += templates.gdata_feedEnd;
+                                    res.send(response)
+                                })) 
+                            }
+                        })
+                    }
+                    if(!hasFavoritesPlaylist) {
+                        // no favorites playlist, send empty feed
+                        response += templates.gdata_feedEnd;
+                        res.send(response)
+                        return;
                     }
                 })
-            }
-
-            if(!hasFavoritesPlaylist) {
-                // no favorites playlist, send empty feed
-                response += templates.gdata_feedEnd;
-                res.send(response)
-            }
-        })
+            }}, "", true)
+        }, 4000)
     },
 
     // apk events

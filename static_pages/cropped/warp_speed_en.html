@@ -3,23 +3,36 @@
 <h2>warp:</h2>
 <p>paste a video link here to generate a warp link - youtube browser removed in 2011.<br><br>more info: <a href="/watch?v=hA3X6xIloQI">click here</a><br><br>select a version:</p>
 
-<input type="radio" name="warp_type" class="radio" id="type_html5" onclick="setReplaceType('/warp')">
+<input type="radio" name="warp_type" class="radio" id="type_html5" onclick="setReplaceType('warp')">
 <label for="type_html5">html+js+css recreation</label><br>
-<input type="radio" name="warp_type" class="radio" id="type_swf" checked onclick="setReplaceType('/warp.swf')">
+<input type="radio" name="warp_type" class="radio" id="type_swf" checked onclick="setReplaceType('warp.swf')">
 <label for="type_swf">original flash version fixed to work with yt2009</label><br>
 
 <input type="text" autocomplete="off" spellcheck="false" placeholder="original video link" id="yt-video-link" style="width: 300px;"/><br>
 <input type="text" autocomplete="off" spellcheck="false" readonly placeholder="warp link for the selected version" id="yt-warp-link" style="width: 300px;" onclick="this.select()"/>
 
 <script>
-    var replace_text = "/warp.swf"
+    var http_address = "yt2009_http_root_url"
+    var replace_text = "warp.swf"
+
+    function getVideoId() {
+        var videoId = document.querySelector("#yt-video-link").value
+                              .split("v=")[1]
+                              .split("&")[0]
+                              .split("#")[0]
+        return videoId;
+    }
+
+    function getWarpLink() {
+        return http_address + replace_text + "?v=" + getVideoId()
+    }
 
     function setReplaceType(replace) {
         replace_text = replace;
-        document.querySelector("#yt-warp-link").value = document.querySelector("#yt-video-link").value.replace("/watch", replace_text)
+        document.querySelector("#yt-warp-link").value = getWarpLink()
     }
 
     document.querySelector("#yt-video-link").addEventListener("input", function() {
-        document.querySelector("#yt-warp-link").value = document.querySelector("#yt-video-link").value.replace("/watch", replace_text)
+        document.querySelector("#yt-warp-link").value = getWarpLink()
     }, false)
 </script>
