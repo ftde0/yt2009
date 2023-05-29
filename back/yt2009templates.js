@@ -1089,8 +1089,9 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 	</entry>`
     },
     "gdata_userPlaylistStart": function(playlistId, playlistName, firstVideoId, author, updateDate, videoCount) {
-        return `<category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#playlistLink'/>
-        <category scheme='http://gdata.youtube.com/schemas/2007/tags.cat' term='${playlistName}'/>
+        return `
+        <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#playlistLink'/>
+        <!--<category scheme='http://gdata.youtube.com/schemas/2007/tags.cat' term='d'/>-->
         <title>${playlistName.split("<").join("").split(">").join("").split("&").join("").trim()}</title>
         <summary></summary>
         <content type='application/atom+xml;type=feed' src='http://${config.ip}:${config.port}/feeds/api/playlists/${playlistId}'/>

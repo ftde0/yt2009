@@ -578,7 +578,7 @@ module.exports = {
                         videoCacheData.viewCount
                         || Math.floor(Math.random() * 4050200).toString()
                     ),
-                    utils.time_to_seconds(video.time),
+                    utils.time_to_seconds(video.time || "2:34"),
                     videoCacheData.description || "",
                     videoCacheData.upload || "2009",
                     (videoCacheData.tags || []).join() || "-",
