@@ -30,54 +30,69 @@ module.exports = {
             flags,
             "",
             (data => {
-                let videos = ``
-                let videosCount = 0;
+                let first3Videos = []
                 data.forEach(video => {
                     if(video.type !== "video") return;
-                    videosCount++;
-                    let author_name = video.author_name;
-                    if(flags.includes("username_aciify")) {
-                        author_name = utils.asciify(author_name)
+                    if(first3Videos.length < 3) {
+                        first3Videos.push(video.id)
                     }
-                    if(flags.includes("author_old_names")
-                    && video.author_url.includes("/user/")) {
-                        author_name = video.author_url.split("/user/")[1]
-                    }
-                    let videoTime = "0:00"
-                    if(video.time) {
-                        videoTime = utils.time_to_seconds(video.time)
-                    }
-
-                    let videoDescription = html.get_video_description(video.id)
-                    if(videoDescription.length == 0 && video.description) {
-                        videoDescription = video.description;
-                    }
-
-                    let cacheData = html.get_cache_video(video.id)
-
-                    videos += templates.gdata_feedVideo(
-                        video.id,
-                        video.title,
-                        video.author_handle || utils.asciify(author_name || ""),
-                        utils.bareCount(video.views),
-                        videoTime,
-                        videoDescription,
-                        cacheData.upload
-                        || utils.relativeToAbsoluteApprox(video.upload),
-                        (cacheData.tags || []).join() || "-",
-                        cacheData.category || "-"
-                    )
                 })
 
-                response =
-                templates.cpsSearchBegin(videosCount)
-                + "\n" + videos
-                + templates.cpsSearchEnd;
-
-                res.send(response)
+                // add videos when preloading done
+                html.bulk_get_videos(first3Videos, () => {
+                    addVideosToResponse(data)
+                })    
             }),
             utils.get_used_token(req) + "-cps",
             false
         )
+
+        function addVideosToResponse(data) {
+            let videos = ``
+            let videosCount = 0;
+            data.forEach(video => {
+                if(video.type !== "video") return;
+                videosCount++;
+                let author_name = video.author_name;
+                if(flags.includes("username_aciify")) {
+                    author_name = utils.asciify(author_name)
+                }
+                if(flags.includes("author_old_names")
+                && video.author_url.includes("/user/")) {
+                    author_name = video.author_url.split("/user/")[1]
+                }
+                let videoTime = "0:00"
+                if(video.time) {
+                    videoTime = utils.time_to_seconds(video.time)
+                }
+
+                let videoDescription = html.get_video_description(video.id)
+                if(videoDescription.length == 0 && video.description) {
+                    videoDescription = video.description;
+                }
+
+                let cacheData = html.get_cache_video(video.id)
+
+                videos += templates.gdata_feedVideo(
+                    video.id,
+                    video.title,
+                    video.author_handle || utils.asciify(author_name || ""),
+                    utils.bareCount(video.views),
+                    videoTime,
+                    videoDescription,
+                    cacheData.upload
+                    || utils.relativeToAbsoluteApprox(video.upload),
+                    (cacheData.tags || []).join() || "-",
+                    cacheData.category || "-"
+                )
+            })
+
+            response =
+            templates.cpsSearchBegin(videosCount)
+            + "\n" + videos
+            + templates.cpsSearchEnd;
+
+            res.send(response)
+        }
     }
 }

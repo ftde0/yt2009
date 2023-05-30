@@ -2127,5 +2127,23 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
     "get_cache_video": function(id) {
         return cache.read()[id] || {}
+    },
+
+    "bulk_get_videos": function(ids, callback) {
+        let processedVideos = 0;
+
+        let videos = JSON.parse(JSON.stringify(ids))
+        videos.forEach(video => {
+            this.fetch_video_data(video, () => {
+                processedVideos++;
+                if(processedVideos >= ids.length) {
+                    callback()
+                }
+            }, "", "", false, false, true)
+        })
+
+        if(videos.length == 0) {
+            callback();
+        }
     }
 }
