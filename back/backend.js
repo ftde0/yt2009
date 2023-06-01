@@ -1283,6 +1283,10 @@ app.get("/feeds/api/users/*", (req, res) => {
 app.get("/feeds/api/events", (req, res) => {
     yt2009_mobile.apkUserEvents(req, res)
 })
+app.get("/schemas/2007/categories.cat", (req, res) => {
+    res.send(fs.readFileSync("../assets/site-assets/gdata_categories.xml")
+               .toString())
+})
 
 /*
 ======
@@ -1373,6 +1377,93 @@ relay
 */
 app.get("/relay", (req, res) => {
     res.redirect("/relay/intro.htm")
+})
+
+/*
+======
+recommended section
+======
+*/
+app.get("/yt2009_recommended", (req, res) => {
+    let baseVids = req.headers.ids.split(",").slice(0, 3)
+    let processedVideos = 0;
+    let videoSuggestions = []
+    yt2009.bulk_get_videos(baseVids, () => {
+        baseVids.forEach(vid => {
+            setTimeout(function() {
+                // have video data, get related with exp_related
+                let videoData = yt2009.get_cache_video(vid)
+                let lookup_keyword = ""
+                if(!videoData.tags || !videoData.title) {
+                    processedVideos++;
+                    if(processedVideos == baseVids.length) {
+                        createSuggestionsResponse();
+                    }
+                    return;
+                }
+
+                // tags
+                videoData.tags.forEach(tag => {
+                    if(lookup_keyword.length < 9) {
+                        lookup_keyword += `${tag.toLowerCase()} `
+                    }
+                })
+                // first word from the title as backup
+                if(lookup_keyword.length < 9) {
+                    lookup_keyword = videoData.title.split(" ")[0]
+                }
+
+                // get!!
+                yt2009_search.related_from_keywords(
+                    lookup_keyword,
+                    vid,
+                    "",
+                    (html, rawData) => {
+                        rawData.forEach(video => {
+                            videoSuggestions.push(video)
+                        })
+                        processedVideos++;
+                        if(processedVideos == baseVids.length) {
+                            createSuggestionsResponse();
+                            return;
+                        }
+                    },
+                    req.protocol
+                )
+            }, Math.floor(Math.random() * 1000) + 300)
+        })  
+    })
+
+    function createSuggestionsResponse() {
+        // get 8 random videos from videoSuggestions
+        let filteredSuggestions = []
+        while(filteredSuggestions.length !== 8) {
+            let randomVideo = videoSuggestions[
+                Math.floor(Math.random() * videoSuggestions.length)
+            ]
+            if(!randomVideo) {
+                res.send("YT2009_NO_DATA")
+                return;
+            }
+            // regenerate if needed to avoid duplicates
+            while(JSON.stringify(filteredSuggestions)
+                      .includes(randomVideo.id)) {
+                randomVideo = videoSuggestions[
+                    Math.floor(Math.random() * videoSuggestions.length)
+                ]
+            }
+
+            filteredSuggestions.push(randomVideo)
+        }
+
+
+        // create and send html of filteredSuggestions
+        let response = ""
+        filteredSuggestions.forEach(video => {
+            response += yt2009_templates.recommended_videoCell(video)
+        })
+        res.send(response)
+    }
 })
 /*
 pizdec

@@ -216,35 +216,22 @@ module.exports = {
             })
         } else {
             // sort by most popular, then add
-            let index = 0;
             let baseVideos = JSON.parse(JSON.stringify(yt2009html.featured()))
-            let tempArray = []
 
-            baseVideos.forEach(video => {
-                if(tempArray.includes(
-                    parseInt(video.views.replace(/[^0-9]/g, ""))
-                )) return;
-                tempArray.push(parseInt(video.views.replace(/[^0-9]/g, "")))
+            // sort and filter videos for correct category etc
+            let sortedVideos = baseVideos.sort((a, b) => {
+                return utils.bareCount(b.views) - utils.bareCount(a.views)
             })
-
-            tempArray = tempArray.sort((a, b) => b - a)
-
-            let finalVideos = []
-            tempArray.forEach(viewCount => {
-                baseVideos.forEach(video => {
-                    if(viewCount == parseInt(video.views
-                                            .replace(/[^0-9]/g, ""))) {
-                        finalVideos.push(video)
-                    }
+            if(categoryNumber !== "0") { // category 0 - all categories
+                sortedVideos = sortedVideos.filter((v) => {
+                    return v.category == categoryName;
                 })
-            })
+            }
+            sortedVideos = sortedVideos.slice(0, 23)
 
-            finalVideos.forEach(video => {
-                if(video.category !== categoryName
-                && parseInt(categoryNumber) !== 0
-                || index > 23) return;
+            // add videos
+            sortedVideos.forEach(video => {
                 addVideo(video)
-                index++;
             })
         }
 

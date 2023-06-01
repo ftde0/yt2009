@@ -3,6 +3,7 @@ const ytsearch = require("./yt2009search")
 const channels = require("./yt2009channels")
 const utils = require("./yt2009utils")
 const templates = require("./yt2009templates")
+const videostab = require("./yt2009videos")
 const fs = require("fs")
 const child_process = require("child_process")
 const config = require("./config.json")
@@ -28,6 +29,23 @@ const ffmpeg_stream = [
     "-rtsp_transport udp",
     "$3"
 ]
+const categories = {
+    "Autos": "2",
+    "Comedy": "35",
+    "Education": "34",
+    "Entertainment": "24",
+    "Film": "1",
+    "Games": "33",
+    "Music": "31",
+    "News": "32",
+    "Nonprofit": "29",
+    "People": "22",
+    "Animals": "15",
+    "Tech": "28",
+    "Sports": "30",
+    "Travel": "19",
+    "Howto": "26",
+}
 
 const watchpage_html = fs.readFileSync("../mobile/watchpage.htm").toString();
 const search_html = fs.readFileSync("../mobile/search.htm").toString();
@@ -176,6 +194,15 @@ module.exports = {
 
     // apk feeds
     "feeds": function(req, res) {
+        // handle category feeds in a separate function
+        if(req.originalUrl.includes("most_viewed_")
+        || req.originalUrl.includes("most_discussed_")
+        || req.originalUrl.includes("top_rated_")
+        || req.originalUrl.includes("top_favorites_")) {
+            this.categoryFeeds(req, res)
+            return;
+        }
+        // default feeds
         if(req.originalUrl.includes("featured")) {
             // send full feed on recently_featured
             // 25 recently watched
@@ -590,5 +617,33 @@ module.exports = {
             response += templates.gdata_feedEnd
             res.send(response)
         })
+    },
+
+    "categoryFeeds": function(req, res) {
+        let categoryName = req.originalUrl.split("_")[2].split("?")[0]
+        let categoryNumber = categories[categoryName]
+        let videos = videostab.internal_getVideos({
+            "query": {
+                "c": categoryNumber,
+                "s": "mr"
+            }
+        }, "")
+        let response = templates.gdata_feedStart
+        videos.forEach(video => {
+            let cacheVideo = yt2009html.get_cache_video(video.id)
+            response += templates.gdata_feedVideo(
+                video.id,
+                video.title,
+                utils.asciify(video.uploaderName),
+                utils.bareCount(video.views),
+                utils.time_to_seconds(cacheVideo.length || "2:54"),
+                cacheVideo.description || "",
+                cacheVideo.upload || "Dec 23, 2009",
+                (cacheVideo.tags || []).join() || "-",
+                cacheVideo.category || ""
+            )
+        })
+        response += templates.gdata_feedEnd
+        res.send(response)
     }
 }

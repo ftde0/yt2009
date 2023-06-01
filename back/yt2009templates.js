@@ -1109,5 +1109,92 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         </media:group>
         <yt:playlistId>${playlistId}</yt:playlistId>
         <playlistId>${playlistId}</playlistId>`
+    },
+    "homepage_recommended": `<div id="feedmodule-REC" class="feedmodule-anchor">
+                    <div class="feedmodule-modheader" id="REC-titlebar">
+                        <div id="feed_recommended">
+                            <div class="fm2-title-border-box-gray yt-rounded">
+                                <div class="fm2-title">
+                                    <img class="img_feed_recommended master-sprite fm2-icon" src="/assets/site-assets/pixel-vfl73.gif">
+                                    <span class="fm2-titleText" id="feed_recommended-titleText">Recommended for You</span>
+                                </div>
+                                <div class="feedmodule-preamble yt2009-signin-hide" style="border-bottom: 1px dotted;" id="yt2009-rec-learn-more">
+                                    <a href="#">Learn More</a>
+                                </div>
+                                <div class="feedmodule-updown">
+                                    <span id="medit-REC" class="iyt-edit-link iyt-edit-link-gray">edit</span>
+                                    <span id="mup-REC" class="up-button">
+                                        <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif">
+                                    </span>
+                                    <span id="mdown-REC" class="down-button">
+                                        <img class="master-sprite img-php-down-arrow"  src="/assets/site-assets/pixel-vfl73.gif">
+                                    </span>
+                                    <span id="mclose-REC">
+                                        <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clear feedmodule-border-gray yt-rounded" id="feed_recommended-content">
+                        <div id="REC-data" class="feedmodule-data">
+                            <div id="logged_out_rec_learn_more_box" class="yt-rounded side-announcement-box" style="margin: 5px 10px 5px 5px; padding: 5px; display: none;">
+                                <div style="cursor: pointer; display:inline; float: right;" id="yt2009-rec-more-close"><img class="img-php-close-button master-sprite" style="background-position: -57px -712px;" src="/assets/site-assets/pixel-vfl73.gif"></div>
+                                <div style="color: black; padding-left: 5px;">
+                                    The "Recommended for You" module picks videos based on your viewing history. To see your <a href="/my_history">viewing history</a>, click on the History link at the top right of the page; if you want to clear your history and recommendations, click the "Clear Viewing History" button on that page.
+                                </div>
+                                <div style="color: black; padding-left: 5px; padding-right: 10px; margin-top: 10px;">
+                                    Remember, you will get better, more specific, and more consistent recommendations by <a href="#">logging in</a> (or <a href="#">signing up</a> for a YouTube account, if you don't already have one).
+                                </div>
+                            </div>
+                            <div class="feedmodule-body grid-view">
+                                <div id="recommended-loading-sprite"><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif" style="margin-left: 310px;margin-top: 30px;margin-bottom: 30px;"></div>
+                                <div class="clearL yt2009-cells-container" id="yt2009-recommended-cells-container">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                <script src="/assets/site-assets/homepage-recommended.js"></script>`,
+    "recommended_videoCell": function(video) {
+        return `<div class="video-cell" style="width:24.5%">
+        <div class="video-entry yt-uix-hovercard">
+            <div class="v120WideEntry">
+                <div class="v120WrapperOuter">
+                    <div class="v120WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="#" rel="nofollow"><img title="${video.title.split(`"`).join(`&quot;`)}" src="//i.ytimg.com/vi/${video.id}/default.jpg" class="vimg120 yt-uix-hovercard-target"></a>
+                        <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="Add Video to QuickList"><button class="master-sprite QLIconImg" title=""></button></a>
+                            <div class="hid quicklist-inlist"><a href="/my_quicklist">Added to <br> Quicklist</a></div>
+                        </div>
+                        <div class="video-time"><a id="video-run-time-${video.id}" href="/watch?v=${video.id}" rel="nofollow">${video.length}</a></div>
+                    </div>
+                </div>
+            </div>
+            <div class="video-main-content" id="video-main-content-${video.id}">
+                <div class="video-title ">
+                    <div class="video-short-title">
+                        <a id="video-short-title-${video.id}" href="/watch?v=${video.id}" class="yt-uix-hovercard-target" title="${video.title.split(`"`).join(`&quot;`)}" rel="nofollow">${video.title}</a>
+                    </div>
+                </div>
+                <div class="video-facets">
+                    <span id="video-average-rating-${video.id}" class="video-rating-list ">
+                        <div>
+                            <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
+                        </div>
+                    </span>
+                    <span id="video-added-time-${video.id}" class="video-date-added">${utils.genFakeDate()}</span>
+                    <span id="video-num-views-${video.id}" class="video-view-count">${video.views}</span>
+                    <span id="video-average-rating-${video.id}" class="video-rating-grid ">
+                        <div>
+                            <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
+                        </div>
+                    </span>
+                    <span class="video-username"><a id="video-from-username-${video.id}" class="hLink" href="${video.creatorUrl}">${utils.asciify(video.creatorName)}</a></span>
+                </div>
+            </div>
+            <div class="video-clear-list-left"></div>
+        </div>
+    </div>`
     }
 }

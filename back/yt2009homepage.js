@@ -158,6 +158,20 @@ module.exports = function(req, res) {
         )
     }
 
+    // recommended section groundwork
+    if((req.headers.cookie || "").includes("homepage_recommended")) {
+        code = code.replace(
+            `<!--yt2009_recommended-->`,
+            require("./yt2009templates").homepage_recommended
+        )
+        if((req.headers.cookie || "").includes("login_simulate")) {
+            code = code.replace(
+                `yt2009-signin-hide`,
+                `yt2009-signin-hide hid`
+            )
+        }
+    }
+
     // set <title> based on login_simulate
     let default_title = "YouTube - Broadcast Yourself."
     if((req.headers.cookie || "").includes("login_simulate")) {
