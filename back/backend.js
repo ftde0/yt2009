@@ -1265,6 +1265,16 @@ app.get("/feeds/api/videos/*", (req, res) => {
         return;
     }
 })
+app.get("/feeds/api/users/*/recommendations", (req, res) => {
+    res.redirect("/feeds/api/standardfeeds/recently_featured")
+})
+app.get("/feeds/api/users/default/*", (req, res) => {
+    if(req.headers["authorization"]) {
+        res.send(yt2009_templates.gdata_feedStart
+                + yt2009_templates.gdata_feedEnd)
+    }
+})
+
 app.get("/feeds/api/users/*/uploads", (req, res) => {
     yt2009_mobile.userVideos(req, res)
 })

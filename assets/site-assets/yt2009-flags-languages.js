@@ -41,7 +41,7 @@ var languageData_EN = {
         "channel-username-asciify": "remove special characters from usernames",
 
         "mainpage-fake-upload-date": "fake upload dates (ex. 11 years ago -> 3 months ago)",
-        "mainpage-homepage-recommended": "show a recommended section on the homepage based on the last 8 videos watched",
+        "mainpage-homepage-recommended": "show a recommended section on the homepage based on the last 3 videos watched",
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
         "mainpage-remove-username-space": "removes spaces from usernames",
         "mainpage-username-asciify": "remove special characters from usernames",

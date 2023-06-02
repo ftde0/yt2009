@@ -1159,12 +1159,12 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 </div>
                 <script src="/assets/site-assets/homepage-recommended.js"></script>`,
     "recommended_videoCell": function(video) {
-        return `<div class="video-cell" style="width:24.5%">
+        return `<div class="video-cell" style="width:24.5%" data-id="${video.id}">
         <div class="video-entry yt-uix-hovercard">
             <div class="v120WideEntry">
                 <div class="v120WrapperOuter">
-                    <div class="v120WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="#" rel="nofollow"><img title="${video.title.split(`"`).join(`&quot;`)}" src="//i.ytimg.com/vi/${video.id}/default.jpg" class="vimg120 yt-uix-hovercard-target"></a>
-                        <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="Add Video to QuickList"><button class="master-sprite QLIconImg" title=""></button></a>
+                    <div class="v120WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="${video.title.split(`"`).join(`&quot;`)}" src="//i.ytimg.com/vi/${video.id}/default.jpg" class="vimg120 yt-uix-hovercard-target"></a>
+                        <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="Add Video to QuickList" onclick="addToQuicklist('${video.id}', '${video.title.split(`'`).join("&quot;").split(`"`).join("&quot;")}', '${utils.asciify(video.creatorName)}')"><button class="master-sprite QLIconImg" title=""></button></a>
                             <div class="hid quicklist-inlist"><a href="/my_quicklist">Added to <br> Quicklist</a></div>
                         </div>
                         <div class="video-time"><a id="video-run-time-${video.id}" href="/watch?v=${video.id}" rel="nofollow">${video.length}</a></div>
