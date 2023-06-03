@@ -845,24 +845,27 @@ video response
 // expander button
 var responseExpander = $(".yt2009-video-response-expander")
 var videoResponsesLoaded = false;
-responseExpander.addEventListener("click", function() {
+function videoResponsesExpand() {
     if(responseExpander.parentNode.className
         .indexOf("yt-uix-expander-collapsed") !== -1) {
-        responseExpander.parentNode.className = responseExpander.parentNode
-                                                .className.replace(
-                                                    "collapsed", "expanded"
-                                                )
+        responseExpander.parentNode
+        .className = responseExpander.parentNode.className.replace(
+            "collapsed",
+            "expanded"
+        )
 
         if(!videoResponsesLoaded) {
             loadVideoResponses();
         }
     } else {
-        responseExpander.parentNode.className = responseExpander.parentNode
-                                                .className.replace(
-                                                    "expanded", "collapsed"
-                                                )
+        responseExpander.parentNode
+        .className = responseExpander.parentNode.className.replace(
+            "expanded",
+            "collapsed"
+        )
     }
-}, false)
+}
+responseExpander.addEventListener("click", videoResponsesExpand, false)
 
 // fetch our response list
 function loadVideoResponses() {

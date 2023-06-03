@@ -975,5 +975,23 @@ module.exports = {
             c = c * 1000000000;
         }
         return c;
+    },
+
+    "exp_related_keyword": function(tags, title) {
+        // have video data, get related with exp_related
+        let lookup_keyword = ""
+
+        // tags
+        tags.forEach(tag => {
+            if(lookup_keyword.length < 9) {
+                lookup_keyword += `${tag.toLowerCase()} `
+            }
+        })
+        // first word from the title as backup
+        if(lookup_keyword.length < 9) {
+            lookup_keyword = title.split(" ")[0]
+        }
+
+        return lookup_keyword;
     }
 }

@@ -1037,14 +1037,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     </author>
     <yt:age>1</yt:age>
     <yt:description></yt:description>
-    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.favorites' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/favorites' countHint='7'/>-->
-    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.inbox' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/inbox'/>-->
-    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.playlists' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/playlists'/>-->
-    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.subscriptions' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/subscriptions' countHint='${subs}'/>-->
     <gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.uploads' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/uploads' countHint='${videoCount}'/>
-    <!--<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.newsubscriptionvideos' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/newsubscriptionvideos'/>-->
-    <!--<yt:gender>m</yt:gender>-->
-    <!--<yt:location>IS</yt:location>-->
     <yt:statistics lastWebAccess='2011-02-01T12:45:18.000-08:00' subscriberCount='${subs}' videoWatchCount='0' viewCount='0' totalUploadViews='0'/>
     <media:thumbnail url='${avatar}'/>
     <yt:username>${name}</yt:username>
@@ -1196,5 +1189,51 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <div class="video-clear-list-left"></div>
         </div>
     </div>`
+    },
+    "videosFooterPaging": function(page, pages, url) {
+        let htmlBox = `
+        <div class="searchFooterBox">
+            <div class="pagingDiv">
+                <span class="pagerLabel smallText label">Pages: </span>`
+
+        // url for hrefs
+        let basePagingUrl = url
+        let pagingPart = [
+            "?p=" + page,
+            "&p=" + page
+        ]
+        pagingPart.forEach(urlPart => {
+            basePagingUrl = basePagingUrl.replace(urlPart, "")
+        })
+
+        let c = "&"
+        if(!basePagingUrl.includes("?")) {
+            c = "?"
+        }
+
+        // previous button
+        if(pages[0] > 1) {
+            htmlBox += `<a href="${basePagingUrl}${c}p=${page - 1}" class="pagerNotCurrent">Previous</a>`
+        }
+
+
+        // add <a> elements
+        pages.forEach(possiblePage => {
+            if(possiblePage == page) {
+                htmlBox += `<span class="pagerCurrent">${page}</span>`
+            } else {
+                htmlBox += `<a href="${basePagingUrl}${c}p=${possiblePage}" class="pagerNotCurrent">${possiblePage}</a>`
+            }
+        })
+
+        // next button
+        if(pages.includes(page + 1)) {
+            htmlBox += `<a href="${basePagingUrl}${c}p=${page + 1}" class="pagerNotCurrent">Next</a>`
+        }
+
+        htmlBox += `</div>
+        </div>`
+
+        return htmlBox;
     }
 }

@@ -179,6 +179,35 @@ module.exports = {
             }`
         )
 
+        // paging
+        let reqPage = parseInt(req.query.p) || 1
+        if(isNaN(reqPage)) {
+            reqPage = 1;
+        }
+        let estPageCount = Math.round(yt2009html.featured().length / 23)
+        let pageButtons = [
+            reqPage - 2,
+            reqPage - 1,
+            reqPage,
+            reqPage + 1,
+            reqPage + 2
+        ]
+        // fixup in case of negative/zero pages or more than estPageCount
+        pageButtons.forEach(pageNumber => {
+            if(pageNumber <= 0) {
+                pageButtons = pageButtons.filter(s => s !== pageNumber)
+                pageButtons.push(pageButtons[pageButtons.length - 1] + 1)
+            }
+            if(pageNumber > estPageCount) {
+                pageButtons = pageButtons.filter(s => s !== pageNumber)
+            }
+        })
+        
+        code = code.replace(
+            `<!--yt2009_paging-->`,
+            templates.videosFooterPaging(reqPage, pageButtons, req.originalUrl)
+        )
+
         // finalize
         code = require("./yt2009loginsimulate")(req, code)
         res.send(code)
@@ -187,6 +216,10 @@ module.exports = {
     "internal_getVideos": function(req, flags) {
         // category & sorting options
         let categoryNumber = req.query.c || "0"
+        let pageNumber = parseInt(req.query.p) || 1
+        if(isNaN(pageNumber)) {
+            pageNumber = 1;
+        }
         let categoryName = category_numbers[categoryNumber]
         let sortByPopular = true;
         if(req.query.s == "mr") {
@@ -207,7 +240,8 @@ module.exports = {
         if(!sortByPopular) {
             // no sorting (latest)
             let index = 0;
-            yt2009html.featured().forEach(video => {
+            let startIndex = 23 * (pageNumber - 1)
+            yt2009html.featured().slice(startIndex).forEach(video => {
                 if(video.category !== categoryName
                 && parseInt(categoryNumber) !== 0
                 || index > 23) return;
@@ -227,7 +261,9 @@ module.exports = {
                     return v.category == categoryName;
                 })
             }
-            sortedVideos = sortedVideos.slice(0, 23)
+
+            let startIndex = 23 * (pageNumber - 1)
+            sortedVideos = sortedVideos.slice(startIndex, startIndex + 23)
 
             // add videos
             sortedVideos.forEach(video => {

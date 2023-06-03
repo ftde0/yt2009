@@ -198,7 +198,8 @@ module.exports = {
         if(req.originalUrl.includes("most_viewed_")
         || req.originalUrl.includes("most_discussed_")
         || req.originalUrl.includes("top_rated_")
-        || req.originalUrl.includes("top_favorites_")) {
+        || req.originalUrl.includes("top_favorites_")
+        || req.originalUrl.includes("most_popular_")) {
             this.categoryFeeds(req, res)
             return;
         }
@@ -433,7 +434,10 @@ module.exports = {
                     video.title,
                     utils.asciify(data.name),
                     utils.bareCount(video.views),
-                    utils.time_to_seconds(video.length || "0:00"),
+                    utils.time_to_seconds(
+                        video.length
+                    ||  Math.floor(Math.random() * 240) + 60
+                    ),
                     yt2009html.get_video_description(video.id),
                     utils.relativeToAbsoluteApprox(video.upload),
                     (cacheVideo.tags || []).join() || "-",
