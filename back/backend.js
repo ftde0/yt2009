@@ -1246,7 +1246,12 @@ mobile (apk) endpoints
 ======
 */
 app.post("/youtube/accounts/registerDevice", (req, res) => {
-    res.send(`DeviceId=amogus
+    let deviceId = ""
+    while(deviceId.length !== 5) {
+        deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
+                    [Math.floor(Math.random() * 36)]
+    }
+    res.send(`DeviceId=${deviceId}
 DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=
 #yt2009 - devicekey created with aes secret from 2.3.4 apk`)
 })

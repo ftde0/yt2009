@@ -1016,7 +1016,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 		</author>
 	</entry>`
     },
-    "gdata_user": function(id, name, avatar, subs, videoCount) {
+    "gdata_user": function(id, name, avatar, subs, videoCount, channelViews, uploadViews) {
         return `<?xml version='1.0' encoding='UTF-8'?>
 <entry
     xmlns='http://www.w3.org/2005/Atom'
@@ -1037,8 +1037,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     </author>
     <yt:age>1</yt:age>
     <yt:description></yt:description>
-    <gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.uploads' href='http://gdata.youtube.com/feeds/api/users/ajaxsmellsdooky/uploads' countHint='${videoCount}'/>
-    <yt:statistics lastWebAccess='2011-02-01T12:45:18.000-08:00' subscriberCount='${subs}' videoWatchCount='0' viewCount='0' totalUploadViews='0'/>
+    <gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.uploads' href='http://gdata.youtube.com/feeds/api/users/${name}/uploads' countHint='${videoCount}'/>
+    <yt:statistics lastWebAccess='2011-02-01T12:45:18.000-08:00' subscriberCount='${subs}' videoWatchCount='1' viewCount='${channelViews}' totalUploadViews='${uploadViews}'/>
     <media:thumbnail url='${avatar}'/>
     <yt:username>${name}</yt:username>
 </entry>` 

@@ -406,12 +406,19 @@ module.exports = {
         "headers": {"cookie": ""},
         "query": {"f": 0}}, 
         {"send": function(data) {
+            let videoViewCount = 0;
+            (data.videos || []).forEach(video => {
+                videoViewCount += utils.bareCount(video.views)
+            })
+            let channelViewCount = Math.floor(videoViewCount / 90)
             res.send(templates.gdata_user(
                 id,
                 utils.asciify(data.name),
                 `http://${config.ip}:${config.port}/${data.avatar}`,
                 utils.approxSubcount(data.properties.subscribers || "0"),
-                (data.videos || []).length
+                (data.videos || []).length,
+                channelViewCount,
+                videoViewCount
             ))
         }}, "", true)
     },
