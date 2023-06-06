@@ -810,6 +810,18 @@ app.get("/playnav_get_comments", (req, res) => {
 })
 
 app.get("/channel_fh264_getvideo", (req, res) => {
+    if(req.headers["user-agent"].includes("Android")) {
+        let androidVersion = 9;
+        androidVersion = req.headers["user-agent"].split("Android")[1]
+                            .split(")")[0]
+        androidVersion = parseFloat(androidVersion)
+        // handle old android versions, go with standard method otherwise
+        if(!isNaN(androidVersion) && androidVersion < 4.2) {
+            ffmpegEncodeBaseline(req, res)
+            return;
+        }
+    }
+
     if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
         yt2009_utils.saveMp4(req.query.v, (vid) => {
             let vidLink = vid.replace("../", "/")
@@ -823,6 +835,61 @@ app.get("/channel_fh264_getvideo", (req, res) => {
     }
     
 })
+
+function ffmpegEncodeBaseline(req, res) {
+    req.query.v = req.query.v.replace(/[^a-zA-Z0-9+-+_]/g, "").substring(0, 11)
+    if(config.env == "dev") {
+        console.log(`baseline h264 req ${req.originalUrl}`)
+    }
+
+    // send file once everything done
+    function sendFile() {
+        let filePath = __dirname.replace("\\back", "\\assets")
+                                .replace("/back", "/assets")
+                       + "/" + req.query.v + "-baseline.mp4"
+        res.sendFile(filePath)
+    }
+
+    // reencode from standard mp4 to baseline mp4
+    function reencode() {
+        let stdFile = __dirname + "/../assets/" + req.query.v + ".mp4"
+        let targetFile = __dirname + "/../assets/" + req.query.v + "-baseline.mp4"
+        // those fps and bitrate values are too specific but they work.
+        // STAGEFRIGHT 1.1 I HATE YOU. I HOPE NOBODY HAS TO DEAL WITH THIS.
+        let ffmpegOptions = [
+            "-c:v libx264",
+            "-profile:v baseline",
+            "-preset ultrafast",
+            "-movflags +faststart",
+            "-b:v 1542k",
+            "-filter:v fps=23.98",
+            "-vf format=yuv420p"
+        ]
+
+        child_process.exec(
+            `ffmpeg -i ${stdFile} ${ffmpegOptions.join(" ")} ${targetFile}`,
+            (e, stdout, stderr) => {
+                sendFile()
+            }
+        )
+    }
+
+    // video exists (highly unlikely but maybe??), send immediately
+    if(fs.existsSync("../assets/" + req.query.v + "-baseline.mp4")) {
+        sendFile()
+        return;
+    }
+
+    if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
+        // standard mp4 doesn't exist, download and reencode
+        yt2009_utils.saveMp4(req.query.v, () => {
+            reencode()
+        })
+    } else {
+        // standard mp4 exists, reencode already
+        reencode()
+    }
+}
 
 /*
 ======
