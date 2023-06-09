@@ -185,6 +185,43 @@ function favorite_undo() {
     $("#watch-remove-faves").className += " hid"
     $("#watch-add-faves").className = "watch-action-result"
 }
+
+// more comments
+function onWatchCommentsShowMore() {
+    $("#watch-comments-show-more-td").style.display = "none"
+    var nextPage = parseInt($(".comments-container").getAttribute("data-page")) + 1
+    // request
+
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/get_more_comments")
+    r.setRequestHeader(
+        "page",
+        parseInt($(".comments-container").getAttribute("data-page"))
+    )
+    r.setRequestHeader("source", location.href)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            $("#watch-comments-show-more-td").style.display = "block"
+            // add html sent from server
+            $(".comments-container").innerHTML += r.responseText
+                                                .split(";yt_continuation=")[0]
+            $(".comments-container").setAttribute(
+                "data-continuation-token",
+                r.responseText.split(";yt_continuation=")[1]
+            )
+            // calc comment count + add page indicator
+            var commentCount = parseInt($("#watch-comment-count").innerHTML)
+                            + r.responseText.split("watch-comment-entry").length - 1
+            $("#watch-comment-count").innerHTML = commentCount
+            $(".comments-container").setAttribute("data-page", nextPage)
+        }
+    }
+}
 /*
 =======
 kanały

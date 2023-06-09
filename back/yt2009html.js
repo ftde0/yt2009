@@ -27,6 +27,7 @@ let api_key = ""
 let featured_videos = require("./cache_dir/watched_now.json")
 let videos_page = []
 let continuations_cache = {}
+let comment_page_cache = {}
 let saved_related_videos = {}
 
 module.exports = {
@@ -1921,10 +1922,68 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 })
             })
         }
-        
     },
 
+    "comment_paging": function(id, page, flags, callback) {
+        if(!comment_page_cache[id]) {
+            comment_page_cache[id] = {}
+        }
+        page = page + 1;
+        let completedPages = 0;
 
+        if(comment_page_cache[id][page]) {
+            // if we have the comment page, just callback it
+            callback(comment_page_cache[id][page])
+            return;
+        }
+
+        // otherwise fetch
+        // get first continuation
+        this.innertube_get_data(id, (data) => {
+            let sections = data.contents.twoColumnWatchNextResults
+                               .results.results.contents
+            sections.forEach(section => {
+                if(section.itemSectionRenderer) {
+                    if(section.itemSectionRenderer.sectionIdentifier
+                        !== "comment-item-section") return;
+                    
+                    let token = section.itemSectionRenderer.contents[0]
+                                .continuationItemRenderer
+                                .continuationEndpoint
+                                .continuationCommand.token
+                    recurse_fetch(token)
+                }
+            })
+        })
+
+        // get continuations one-by-one and group into pages
+        let request_continuation = this.request_continuation;
+        function recurse_fetch(continuation) {
+            request_continuation(continuation, id, flags, (comments) => {
+                comment_page_cache[id][completedPages + 1] = comments
+                completedPages++;
+                if(completedPages == page) {
+                    // if that was the final page, callback
+                    callback(comments)
+                } else {
+                    // go with the next page if not done
+                    // (as long as we get a new continuation, otherwise callback)
+                    let newContinuation = false
+                    comments.forEach(cmt => {
+                        if(cmt.continuation) {
+                            newContinuation = cmt.continuation;
+                        }
+                    })
+
+                    if(newContinuation) {
+                        recurse_fetch(newContinuation)
+                    } else {
+                        callback(comments)
+                    }
+                }
+            })
+        }
+    },
 
     "get_video_description": function(id) {
         let tr = ""

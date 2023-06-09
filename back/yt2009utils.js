@@ -62,10 +62,12 @@ module.exports = {
 
     
     "comments_parser": function(response, comment_flags) {
-        // parse komentarzy z json response
+        // parse comments from json response
         comment_flags = comment_flags.replace("#", "").split(";")
+        let gen_fake_date = this.genFakeDate
         let comments = []
         try {
+            // get to the comments themselves
             response.onResponseReceivedEndpoints.forEach(received => {
                 let endpoint = 
                 received.reloadContinuationItemsCommand
@@ -75,71 +77,10 @@ module.exports = {
                     && endpoint.slot == "RELOAD_CONTINUATION_SLOT_BODY")
                     || endpoint.continuationItems) {
 
-                    // dokopujemy się do komentarzy do filmu
+                    // upon getting parse
                     let raw_comments = endpoint.continuationItems
                     raw_comments.forEach(rawComment => {
-                        if(rawComment.commentThreadRenderer) {
-                            // parse
-                            let comment_path_short = rawComment
-                                                    .commentThreadRenderer
-                                                    .comment.commentRenderer
-                            let authorUrl = comment_path_short.authorEndpoint
-                                            .commandMetadata.webCommandMetadata
-                                            .url
-                            let commentContent = ""
-
-                            comment_path_short.contentText
-                            .runs.forEach(run => {
-                                commentContent += run.text + "\n"
-                            })
-
-                            let pass = true;
-                            let future = constants
-                                        .comments_remove_future_phrases
-
-                            if(comment_flags.includes("comments_remove_future")) {
-                                future.forEach(futureYear => {
-                                    if(commentContent.toLowerCase().includes(futureYear)) {
-                                        pass = false;
-                                    }
-                                }) 
-                            }
-
-                            let authorName = comment_path_short
-                                            .authorText.simpleText
-                            if(comment_flags.includes("remove_username_space")) {
-                                authorName = authorName.split(" ").join("")
-                            }
-                            if(comment_flags.includes("author_old_names") &&
-                                authorUrl.includes("/user/")) {
-                                authorName = authorUrl.split("/user/")[1]
-                            }
-                            if(authorName.startsWith("@")) {
-                                authorName = authorName.replace("@", "")
-                            }
-
-                            if(!pass) return;
-                            comments.push({
-                                "authorAvatar": comment_path_short
-                                                .authorThumbnail.thumbnails[1].url,
-                                "authorName": authorName,
-                                "authorUrl": authorUrl,
-                                "content": commentContent.split("\n\n").join("<br>"),
-                                "time": comment_flags.includes("fake_comment_dates")
-                                        ? this.genFakeDate()
-                                        : comment_path_short
-                                            .publishedTimeText.runs[0].text
-                            })
-                        } else if(rawComment.continuationItemRenderer) {
-                            // continuation token
-                            // (do fetchowania więcej komentarzy)
-                            comments.push({
-                                "continuation": rawComment
-                                                .continuationItemRenderer
-                                                .continuationEndpoint
-                                                .continuationCommand.token
-                            })
-                        }
+                        parseITComment(rawComment)
                     })
                 }
             })
@@ -148,6 +89,73 @@ module.exports = {
         catch(error) {
             console.log("[yt2009_error] comments parser error", error)
             return [];
+        }
+
+        // actually parse and send to the loop, saving a lil on idents
+        function parseITComment(rawComment) {
+            if(rawComment.commentThreadRenderer) {
+                // parse
+                let comment_path_short = rawComment.commentThreadRenderer
+                                                   .comment.commentRenderer
+                let authorUrl = comment_path_short.authorEndpoint.commandMetadata
+                                                  .webCommandMetadata.url
+                let commentContent = ""
+
+                comment_path_short.contentText.runs.forEach(run => {
+                    commentContent += run.text + "\n"
+                })
+
+                let pass = true;
+                let future = constants.comments_remove_future_phrases
+
+                if(comment_flags.includes("comments_remove_future")) {
+                    future.forEach(futureYear => {
+                        if(commentContent.toLowerCase().includes(futureYear)) {
+                            pass = false;
+                        }
+                    })
+                    if(commentContent.length >= 500) {
+                        pass = false;
+                    }
+
+                    commentContent = commentContent.replace(
+                        /\p{Other_Symbol}/gui, ""
+                    )
+                    commentContent = commentContent.split("🏻").join("")
+                }
+
+                let authorName = comment_path_short.authorText.simpleText
+                if(comment_flags.includes("remove_username_space")) {
+                    authorName = authorName.split(" ").join("")
+                }
+                if(comment_flags.includes("author_old_names")
+                && authorUrl.includes("/user/")) {
+                    authorName = authorUrl.split("/user/")[1]
+                }
+                if(authorName.startsWith("@")) {
+                    authorName = authorName.replace("@", "")
+                }
+
+                if(!pass) return;
+                comments.push({
+                    "authorAvatar": comment_path_short
+                                    .authorThumbnail.thumbnails[1].url,
+                    "authorName": authorName,
+                    "authorUrl": authorUrl,
+                    "content": commentContent.split("\n\n").join("<br>"),
+                    "time": comment_flags.includes("fake_comment_dates")
+                            ? gen_fake_date()
+                            : comment_path_short.publishedTimeText.runs[0].text
+                })
+            } else if(rawComment.continuationItemRenderer) {
+                // continuation token
+                // (for even more comment awesomeness)
+                comments.push({
+                    "continuation": rawComment.continuationItemRenderer
+                                              .continuationEndpoint
+                                              .continuationCommand.token
+                })
+            }
         }
     },
 

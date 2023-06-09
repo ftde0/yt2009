@@ -1235,5 +1235,17 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         </div>`
 
         return htmlBox;
+    },
+    "format_merge_command": function(f1, f2, f3) {
+        let cmd = [
+            "ffmpeg",
+            `-i "${f1}"`,
+            `-i "${f2}"`,
+            `-c:v copy -c:a copy`,
+            `-map 0:v -map 1:a`,
+            `-ab 192000`,
+            `"${f3}"`
+        ].join(" ")
+        return cmd;
     }
 }

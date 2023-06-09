@@ -7,7 +7,7 @@ yt2009 :D
 
 /*
 ======
-polyfille, naprawki stron i inne takie
+smaller functions, fixes to site original code etc (not sure if needed)
 ======
 */
 function $(element) {
@@ -53,23 +53,22 @@ function yt2009_search() {
 
 /*
 ======
-elementy ui
-
-dużo przestarzałych rzeczy/rozwiązań dla kompatybilności ze starszymi przeglądarkami (coś czego nie zrobiłem w 2019)
-target firefox 3.6 & chrome 6 na winxp - nie powiecie że nie ma klimatu jak takie coś działa na starej przeglądarce na starym os
+ui elements
+a lot of old function calls for compatibility with old browsers
+target firefox 3.6 & chrome 6 for winxp - quite a vibe that way
 ======
 */
 var useLocalStorage = window.localStorage ? true : false;
-// rozwijanie opisu
+// description expand/collapse
 var descriptionExpanded = false;
-// więcej
+// more info
 $("#watch-video-details-toggle-less").addEventListener("click", function() {
     $("#watch-video-details-inner-more").style.display = "block"
     $("#watch-video-details-toggle-more").style.display = "block"
     $("#watch-video-details-inner-less").style.display = "none"
     $("#watch-video-details-toggle-less").style.display = "none"
 }, false)
-// mniej
+// less info
 $("#watch-video-details-toggle-more").addEventListener("click", function() {
     $("#watch-video-details-inner-more").style.display = "none"
     $("#watch-video-details-toggle-more").style.display = "none"
@@ -77,67 +76,74 @@ $("#watch-video-details-toggle-more").addEventListener("click", function() {
     $("#watch-video-details-toggle-less").style.display = "block"
 }, false)
 
-// więcej komentarzy
+// more comments
 function onWatchCommentsShowMore() {
     $("#watch-comments-show-more-td").style.display = "none"
+    var nextPage = parseInt($(".comments-container").getAttribute("data-page")) + 1
     // request
     var r = new XMLHttpRequest();
     r.open("GET", "/get_more_comments")
-    r.setRequestHeader("continuation", $(".comments-container")
-                                    .getAttribute("data-continuation-token"))
+    r.setRequestHeader(
+        "page",
+        parseInt($(".comments-container").getAttribute("data-page"))
+    )
     r.setRequestHeader("url_flags", location.href)
     r.setRequestHeader("source", location.href)
     r.send(null)
     r.addEventListener("load", function(e) {
         $("#watch-comments-show-more-td").style.display = "block"
-        // dopełnianie htmla wysłanego z serwera
+        // add html sent from server
         $(".comments-container").innerHTML += r.responseText
-                                            .split(";yt_continuation=")[0]
+                                               .split(";yt_continuation=")[0]
         $(".comments-container").setAttribute(
             "data-continuation-token",
             r.responseText.split(";yt_continuation=")[1]
         )
-        // pełna liczba komentarzy
-        var commentCount = parseInt($("#watch-comment-count").innerHTML) + r.responseText.split("watch-comment-entry").length - 1
+        // calc comment count + add page indicator
+        var commentCount = parseInt($("#watch-comment-count").innerHTML)
+                         + r.responseText.split("watch-comment-entry").length - 1
         $("#watch-comment-count").innerHTML = commentCount
+        $(".comments-container").setAttribute("data-page", nextPage)
     }, false)
 }
 
-// rozwijanie/zwijanie related videos/more from
+// expand/collapse "more from"/"related videos"
 function toggleExpander(element) {
     if(element.className.indexOf("yt-uix-expander-collapsed") !== -1) {
-        // zwinięte, rozwijamy
+        // expand
         element.className = "yt-uix-expander-head"
         var className = element.parentNode.querySelector(".watch-discoverbox-body").className
         element.parentNode.querySelector(".watch-discoverbox-body").className = className.replace(" hid", "")
 
-        // fetch more from jak jest flaga always_morefrom a nie ma już tam filmów
+        // fetch "more from" if indicated needed by server
         if(document.querySelector(".yt2009-mark-morefrom-fetch")) {
             morefrom_load();
         }
     } else {
-        // rozwinięte, zwijamy
+        // collapse
         element.className = "yt-uix-expander-head yt-uix-expander-collapsed"
-        element.parentNode.querySelector(".watch-discoverbox-body").className += " hid"
+        element.parentNode.querySelector(".watch-discoverbox-body")
+               .className += " hid"
     }
 }
 
-// rozwijanie/zwijanie komentarzy
+// expand/collapse comments
 function toggleCommentsExpander(element) {
+    var expander = element.parentNode.querySelector(".yt-uix-expander-body")
     if(element.className.indexOf("yt-uix-expander-collapsed") !== -1) {
         element.className = "yt-uix-expander-head"
-        element.parentNode.querySelector(".yt-uix-expander-body").className = "yt-uix-expander-body"
+        expander.className = "yt-uix-expander-body"
     } else {
         element.className = "yt-uix-expander-head yt-uix-expander-collapsed"
-        element.parentNode.querySelector(".yt-uix-expander-body").className = "yt-uix-expander-body hid"
+        expander.className = "yt-uix-expander-body hid"
     }
 }
 
-// rozwijanie/zwijanie quicklisty
+// expand/collapse quicklist
 function toggleQuicklistExpander(element) {
     var ql = document.querySelector("#quicklist-panel")
     if(ql.className.indexOf("yt-uix-expander-collapsed") !== -1) {
-        // zwinięte, rozwijamy
+        // expand
         document.querySelector("#playlistContainer_QL").style.display = "block"
         document.querySelector("#quicklist-panel #watch-playlist-actions")
                 .style.display = "block"
@@ -145,7 +151,7 @@ function toggleQuicklistExpander(element) {
                         .split(" yt-uix-expander-collapsed")
                         .join("")
     } else {
-        // rozwinięte, zwijamy
+        // collapse
         document.querySelector("#playlistContainer_QL").style.display = "none"
         document.querySelector("#quicklist-panel #watch-playlist-actions")
                 .style.display = "none"
@@ -153,7 +159,7 @@ function toggleQuicklistExpander(element) {
     }
 }
 
-// dopisywanie do historii
+// append to history
 if(useLocalStorage) {
     // localstorage
     var currentId = $(".email-video-url").value.split("?v=")[1].split("&")[0].split("#")[0]
@@ -183,14 +189,21 @@ if(useLocalStorage) {
     })
 
     if(watchHistory.length > 4000) {
-        // backup historii aby można było usunąć
+        // history backup if needed
         document.cookie = "watch_history_backup_" + Date.now() + "=" + watchHistory + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
         document.cookie = "watch_history= ; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
         watchHistory = ""
     }
-    if(watchHistory.split(":").splice(0, 20).join(":").indexOf($(".email-video-url").value.split("?v=")[1]) == -1) {
-        watchHistory = encodeURIComponent($("#watch-vid-title h1").innerHTML) + "&" + $("#watch-view-count").innerHTML + "&" + $(".email-video-url").value.split("?v=")[1] + ":" + watchHistory;
-        document.cookie = "watch_history=" + watchHistory + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    if(watchHistory.split(":").splice(0, 20).join(":")
+                   .indexOf($(".email-video-url").value
+                   .split("?v=")[1]) == -1) {
+        watchHistory = encodeURIComponent($("#watch-vid-title h1").innerHTML)
+                       + "&" + $("#watch-view-count").innerHTML
+                       + "&" + $(".email-video-url").value.split("?v=")[1]
+                       + ":" + watchHistory;
+        document.cookie = "watch_history="
+                        + watchHistory
+                        + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
 }
 
@@ -207,10 +220,10 @@ function morefrom_load() {
     r.setRequestHeader("source", location.href)
     r.send(null)
     r.addEventListener("load", function(e) {
-        // dopełnianie htmla wysłanego z serwera
+        // add html sent from server
         $("#watch-channel-discoverbox").innerHTML += r.responseText
 
-        // usuwanie markingu aby nie pobierać za każdym razem
+        // remove indicator so it doesn't load all the time
         var mark = document.querySelector(".yt2009-mark-morefrom-fetch");
         mark.parentNode.removeChild(mark)
     }, false)
@@ -226,13 +239,17 @@ if(window.localStorage && !localStorage.subscriptions) {
     localStorage.subscriptions = "[]"
 }
 
+// SUBSCRIBE
 $("#subscribeDiv").addEventListener("click", function() {
     $("#subscribeDiv").style.display = "none"
     $("#unsubscribeDiv").style.display = "block"
 
     if(useLocalStorage) {
         // localstorage
-        var url = $(".yt2009-channel-link").href.replace(location.protocol + "//" + location.hostname + ":" + location.port, "")
+        var url = $(".yt2009-channel-link").href.replace(
+            location.protocol + "//" + location.hostname + ":" + location.port,
+            ""
+        )
         var creator = $(".yt2009-channel-link").innerHTML
         var subList = []
         subList = JSON.parse(localStorage.subscriptions)
@@ -242,7 +259,7 @@ $("#subscribeDiv").addEventListener("click", function() {
         })
         localStorage.subscriptions = JSON.stringify(subList)
     } else {
-        // dopisywanie do cookie
+        // cookie
         var sub = ""
         document.cookie.split(";").forEach(function(cookie) {
             if(cookie.indexOf("sublist=") !== -1) {
@@ -250,16 +267,28 @@ $("#subscribeDiv").addEventListener("click", function() {
             }
         })
 
-        sub = encodeURIComponent($(".yt2009-channel-link").href.replace(location.protocol + "//" + location.hostname + ":" + location.port, "")) + "&" + encodeURIComponent($(".yt2009-channel-link").innerHTML) + ":" + sub;
-        document.cookie = "sublist=" + sub + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        sub = encodeURIComponent(
+            $(".yt2009-channel-link").href.replace(
+                location.protocol + "//" + location.hostname + ":" + location.port,
+                ""
+            )
+        ) + "&" + encodeURIComponent($(".yt2009-channel-link").innerHTML
+        ) + ":" + sub;
+        document.cookie = "sublist="
+                        + sub
+                        + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
 }, false)
 
+// UNSUBSCRIBE
 $("#unsubscribeDiv").addEventListener("click", function() {
     $("#unsubscribeDiv").style.display = "none"
     $("#subscribeDiv").style.display = "block"
     var subscribeMethod = "cookie"
-    var url = $(".yt2009-channel-link").href.replace(location.protocol + "//" + location.hostname + ":" + location.port, "")
+    var url = $(".yt2009-channel-link").href.replace(
+        location.protocol + "//" + location.hostname + ":" + location.port,
+        ""
+    )
     try {
         JSON.parse(localStorage.subscriptions).forEach(function(sub) {
             if(sub.url == url) {
@@ -282,7 +311,7 @@ $("#unsubscribeDiv").addEventListener("click", function() {
         })
         localStorage.subscriptions = JSON.stringify(subList)
     } else {
-        // wywalanie z cookie
+        // cookie
         var sub = ""
         document.cookie.split(";").forEach(function(cookie) {
             if(cookie.indexOf("sublist=") !== -1) {
@@ -290,18 +319,32 @@ $("#unsubscribeDiv").addEventListener("click", function() {
             }
         })
 
-        sub = sub.replace(encodeURIComponent($(".yt2009-channel-link").href.replace(location.protocol + "//" + location.hostname + ":" + location.port, "")) + "&" + encodeURIComponent($(".yt2009-channel-link").innerHTML) + ":", "")
-        document.cookie = "sublist=" + sub + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        sub = sub.replace(
+            encodeURIComponent($(".yt2009-channel-link").href.replace(
+                location.protocol + "//" + location.hostname + ":" + location.port,
+                ""
+            ))
+            + "&" + encodeURIComponent($(".yt2009-channel-link").innerHTML)
+            + ":",
+            ""
+        )
+        document.cookie = "sublist="
+                        + sub
+                        + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
 }, false)
 
-// sprawdzamy czy twórca jest subskrybowany z localStorage
+// subscribed with localStor age? if so, show the Unsubscribe btn
 if(window.localStorage) {
     JSON.parse(localStorage.subscriptions).forEach(function(sub) {
         if(!sub.url) return;
-        var url = $(".yt2009-channel-link").href.replace(location.protocol + "//" + location.hostname + ":" + location.port, "")
-        if(sub.url.indexOf(url) !== -1 || url.indexOf(sub.url) !== -1) {
-            // jest zasubskrybowany już
+        var url = $(".yt2009-channel-link").href.replace(
+            location.protocol + "//" + location.hostname + ":" + location.port,
+            ""
+        )
+        if(sub.url.indexOf(url) !== -1
+        || url.indexOf(sub.url) !== -1) {
+            // susbribed!!!
             $("#subscribeDiv").style.display = "none"
             $("#unsubscribeDiv").style.display = "block"
         }
@@ -310,7 +353,7 @@ if(window.localStorage) {
 
 /*
 ======
-przyciski nad filmem
+buttons above the video
 ======
 */
 
@@ -501,7 +544,7 @@ function new_layout_leave() {
 
 /*
 ======
-karty pod filmem (favorite/share/playlists/flag)
+video cards (favorite/share/playlists/flag)
 ======
 */
 
@@ -520,7 +563,7 @@ function switchWatchTab(tabName) {
     }
     $("#watch-tab-" + tabName + "-body").className = "watch-tab-body watch-tab-sel"
 
-    // custom handling na karty jak potrzebny
+    // custom per-card handling
     switch(tabName) {
         case "favorite": {
             favorite_video();
@@ -531,12 +574,12 @@ function switchWatchTab(tabName) {
 
 /*
 ======
-dodawanie filmów do ulubionych
+favoriting videos
 ======
 */
 
 // kod taktycznie z kanałów zabrany
-// dodawanie
+// adding
 function favorite_video() {
     try {
         relayFavorite()
@@ -559,12 +602,17 @@ function favorite_video() {
                 "views": $("#watch-view-count").innerHTML
             })
 
-            // przy okazji usuń puste entry (usunięte z poziomu ui)
-            localStorage.favorites = JSON.stringify(favorites).split(",{}").join("")
+            // remove empty elements (removed using ui)
+            localStorage.favorites = JSON.stringify(favorites)
+                                         .split(",{}").join("")
         }
     } else {
         // cookie
-        var videoString = encodeURIComponent($(".watch-vid-ab-title").innerHTML + "&" + $("#watch-view-count").innerHTML + "&" + currentId)
+        var videoString = encodeURIComponent(
+            $(".watch-vid-ab-title").innerHTML
+            + "&" + $("#watch-view-count").innerHTML
+            + "&" + currentId
+        )
         document.cookie.split(";").forEach(function(cookie) {
             if(cookie.indexOf("favorites=") !== -1) {
                 favorites = cookie.trimLeft().replace("favorites=", "")
@@ -572,14 +620,16 @@ function favorite_video() {
         })
         if(favorites.indexOf(currentId) == -1) {
             favorites = videoString + ":" + favorites
-            document.cookie = "favorites=" + favorites + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            document.cookie = "favorites="
+                            + favorites
+                            + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
         }
     }
     $("#watch-add-faves").className += " hid"
     $("#watch-remove-faves").className = "watch-action-result"
 }
 
-// usuwanie
+// removing
 function favorite_undo() {
     var currentId = $(".email-video-url").value.split("?v=")[1]
     var favorites = ""
@@ -596,14 +646,20 @@ function favorite_undo() {
         localStorage.favorites = JSON.stringify(favorites)
     } else {
         // cookie
-        var videoString = encodeURIComponent($("#watch-vid-title h1").innerHTML + "&" + $("#watch-view-count").innerHTML + "&" + currentId) + ":"
+        var videoString = encodeURIComponent(
+            $("#watch-vid-title h1").innerHTML
+            + "&" + $("#watch-view-count").innerHTML
+            + "&" + currentId
+        ) + ":"
         document.cookie.split(";").forEach(function(cookie) {
             if(cookie.indexOf("favorites=") !== -1) {
                 favorites = cookie.trimLeft().replace("favorites=", "")
             }
         })
         favorites = favorites.replace(videoString, "")
-        document.cookie = "favorites=" + favorites + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        document.cookie = "favorites="
+                        + favorites
+                        + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
     $("#watch-remove-faves").className += " hid"
     $("#watch-add-faves").className = "watch-action-result"
@@ -611,17 +667,17 @@ function favorite_undo() {
 
 /*
 ======
-udostępnianie
+sharing
 ======
 */
-// więcej opcji
+// more options
 $("#watch-sharetab-options #more-options a").addEventListener("click", function() {
     $("#watch-sharetab-options #more-options").style.display = "none"
     $("#watch-share-services-collapsed").style.display = "none"
     $("#watch-share-services-expanded").style.display = ""
     $("#watch-sharetab-options #fewer-options").style.display = ""
 }, false)
-// mniej opcji
+// less options
 $("#watch-sharetab-options #fewer-options a").addEventListener("click", function() {
     $("#watch-sharetab-options #more-options").style.display = ""
     $("#watch-share-services-collapsed").style.display = ""
@@ -632,7 +688,7 @@ $("#watch-sharetab-options #fewer-options a").addEventListener("click", function
 
 /*
 ======
-embedy
+embeds
 ======
 */
 var embed_settings = {
@@ -677,8 +733,12 @@ function embed_update_code() {
     if(embed_settings.no_controls_fade) {
         attributes += "&no_controls_fade=1"
     }
-    var code = '<iframe width="' + embed_settings.width + '" height="' + embed_settings.height + '" src="' + site + '/embed/' + id + attributes + '" allowfullscreen></iframe>' // html5
+    var code = '<iframe width="' + embed_settings.width
+                + '" height="' + embed_settings.height
+                + '" src="' + site + '/embed/' + id + attributes
+                + '" allowfullscreen></iframe>' // html5
     if(embed_settings.flash_player) {
+        // i gave up trying to format this
         code = '<object width="' + embed_settings.width + '" height="' + embed_settings.height + '"><param name="movie" value="' + site + '/embedF/' + id + attributes + '"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="' + site + '/embedF/' + id + attributes + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="' + embed_settings.width + '" height="' + embed_settings.height + '"></embed></object>' // flash player
     }
 
@@ -718,7 +778,7 @@ function close_embed() {
 
 /*
 ======
-dodawanie filmów do playlist
+adding videos to playlists
 ======
 */
 
@@ -733,13 +793,13 @@ function updatePlaylists() {
             optionsHTML += "<option value=\"" + playlist.id + "\">" + playlist.name + "</option>"
         })
     
-        // pokaż tworzenie playlist jak nie mamy żadnej
+        // show the playlist create window if we don't have any
         if(optionsHTML == "") {
             $(".playlist-create").style.display = ""
             $(".playlist-add").style.display = "none"
         }
     } else {
-        // tworzymy entry do localStorage jak nie mamy
+        // create the localStorage playlists entry if we don't have any
         localStorage.playlistsIndex = "[]"
         $(".playlist-create").style.display = ""
         $(".playlist-add").style.display = "none"
@@ -755,7 +815,7 @@ var selectedOption = plDropdown.querySelectorAll("option")[0]
 // pokazujemy/ukrywamy .playlist-create
 // show/hide .playlist-create
 plDropdown.addEventListener("change", function() {
-    // które jest wybrane
+    // get selected option
     var options = plDropdown.querySelectorAll("option")
 
     for(var s in options) {
@@ -764,7 +824,7 @@ plDropdown.addEventListener("change", function() {
         }
     }
 
-    // ukrywamy/pokazujemy
+    // show/hide
     if(selectedOption.value == "override-createnew") {
         $(".playlist-create").style.display = ""
         $(".playlist-add").style.display = "none"
@@ -774,7 +834,7 @@ plDropdown.addEventListener("change", function() {
     }
 }, false)
 
-// dodaj obecny film do playlisty
+// add current video to the playlist
 function addPlaylistVideo(playlistId) {
     var currentId = $(".email-video-url").value.split("?v=")[1]
     var dateAdded = new Date().toString().split(" ")
@@ -829,7 +889,7 @@ $("#playlist-create-btn").addEventListener("click", function() {
     index.unshift({"id": playlistId, "name": $(".playlist-name-input").value})
     localStorage.playlistsIndex = JSON.stringify(index)
 
-    // aktualizacja opcji playlist aby pokazywała się nowa
+    // update playlists dropdown to show our new playlist
     updatePlaylists();
     $(".playlist-create").style.display = "none"
     $(".playlist-add").style.display = ""

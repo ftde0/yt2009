@@ -93,7 +93,7 @@ app.get('/', (req,res) => {
 
 /*
 ======
-strona oglądania
+watchpage
 ======
 */
 
@@ -127,7 +127,7 @@ app.get("/watch", (req, res) => {
         useFlash = true;
     }
 
-    // reset flag
+    // reset flags
     if(req.originalUrl.includes("resetflags=1")) {
         flags = ""
     }
@@ -136,9 +136,6 @@ app.get("/watch", (req, res) => {
     if(req.query.resetcache == "1") {
         resetCache = true;
     }
-
-    // sub lista
-    let subList = yt2009_utils.get_subscriptions(req);
 
     yt2009.fetch_video_data(id, (data) => {
         if(!data) {
@@ -237,7 +234,7 @@ app.post("/videoresponse_load", (req, res) => {
 
 /*
 ======
-more from: ładowanie na nowo
+more from: load section
 ======
 */
 app.get("/morefrom_load", (req, res) => {
@@ -321,14 +318,16 @@ app.get("/morefrom_load", (req, res) => {
 
 /*
 ======
-adnotacje
+annotations
 ======
 */
+
+// using html5
 app.get("/json_annotations", (req, res) => {
     yt2009_annotations.get(req, res)
 })
 
-// adnotacje f_mode
+// using f_mode
 app.get("/read2", (req, res) => {
     yt2009_annotations.getFmode(
         req.query.video_id,
@@ -339,7 +338,7 @@ app.get("/read2", (req, res) => {
     ))
 })
 
-// endpoint /profile używany przez adnotacje
+// /profile endpoint used by annotations
 app.get("/profile", (req, res) => {
     if(!req.query.user) {
         res.send("[yt2009] brak parametru user. / no user parameter.")
@@ -364,7 +363,7 @@ app.get("/timedtext", (req, res) => {
 
 /*
 ======
-generator embedów
+embed generator static
 ======
 */
 app.get("/embed_generate", (req, res) => {
@@ -418,7 +417,8 @@ app.get("/ryd_request", (req, res) => {
 
 /*
 ======
-wyszukiwarka
+search page
+some rework soon
 ======
 */
 
@@ -440,7 +440,7 @@ app.get("/results", (req, res) => {
         resetCache = true;
     }
 
-    // strony
+    // pages (needs rework)
     if(req.query.page) {
         params += "&page=" + req.query.page
     }
@@ -451,17 +451,12 @@ app.get("/results", (req, res) => {
                 flags += cookie.trimStart().replace("results_flags=", "")
                                             .split(":").join(";")
             }
-        })
-    }
-    catch(error) {}
-    flags += ";"
-    try {
-        req.headers.cookie.split(";").forEach(cookie => {
             if(cookie.trimStart().startsWith("global_flags=")) {
                 flags += cookie.trimStart().replace("global_flags=", "")
                                             .split(":").join(";")
             }
         })
+        flags += ";"
     }
     catch(error) {}
 
@@ -677,66 +672,66 @@ app.get("/generate_gradient", (req, res) => {
     const child_process = require("child_process")
     let color = req.query.c.substring(0, 6).replace(/[^0-9a-zA-Z]/g, "")
     if(fs.existsSync(`../player-imgs/embed-bgs/user-gen/${color}.png`)) {
-        // kolorek już mamy wygenerowany, callback
+        // callback generated gradient file
         res.redirect(`/player-imgs/embed-bgs/user-gen/${color}.png`)
     } else {
-        // generujemy na nowo
-        child_process.exec(`magick -size 1x25 gradient:"#ffffff"-"#${color}" ${__dirname}/../player-imgs/embed-bgs/user-gen/${color}.png`, (error, stdout, stderr) => {
+        // generate
+        let generateCommand = [
+            "magick",
+            "-size 1x25",
+            `gradient:"#ffffff"-"#${color}"`,
+            `${__dirname}/../player-imgs/embed-bgs/user-gen/${color}.png`
+        ]
+        child_process.exec(generateCommand.join(" "), (error, stdout, stderr) => {
             res.redirect(`/player-imgs/embed-bgs/user-gen/${color}.png`)
         })
     }
 })
 app.get("/embed_get_endscreen", (req, res) => {
-    let endscreen_html = `
-    <span class="endscreen-arrow-left" onclick="endscreen_section_change(-1)"></span>
-    <span class="endscreen-arrow-right" onclick="endscreen_section_change(1)"></span>
-    <div class="buttons yt-center">
-        <div class="button-share">
-            <img src="/player-imgs/share.png"/>
-            <h2 style="margin-top: 5px;">Share</h2>
-        </div>
-        <div class="button-replay" onclick="videoReplay();">
-            <img src="/player-imgs/replay.png"/>
-            <h2 style="margin-top: 5px;">Replay</h2>
-        </div>
-    </div>`
+    const endscreen_sections = [
+        `<div class="endscreen-section" style="opacity: 1;">`,
+        `<div class="endscreen-section hid" style="opacity: 0;">`
+    ]
+    let videoId = req.headers.source.split("embed/")[1].substring(0, 11)
+    let endscreen_html = yt2009_templates.html5Endscreen
 
     let endscreen_section_index = 0;
-    let endscreen_section_html = `              <div class="endscreen-section" style="opacity: 1;">
-    `
+    let endscreen_section_html = endscreen_sections[0]
 
-    yt2009.get_related_videos(req.headers.source.split("embed/")[1].substring(0, 11), (related) => {
+    yt2009.get_related_videos(videoId, (related) => {
+        // add all videos into sections (two videos per section)
         related.forEach(video => {
             if(yt2009_utils.time_to_seconds(video.length) >= 1800) return;
-            endscreen_section_html += `
-            <div class="endscreen-video" onclick="videoNav('${video.id}')">
-                <div class="endscreen-video-thumbnail">
-                    <img src="//i.ytimg.com/vi/${video.id}/hqdefault.jpg" width="80" height="65"/>
-                    <div class="video-time" style="float: right;"><a href="">${video.length}</a></div>
-                </div>
-                <div class="endscreen-video-info">
-                    <h3 style="max-width: 0px;overflow: hidden;" class="endscreen-video-title">${video.title.length > 80 ? video.title.substring(0, 80) + "..." : video.title}</h3>
-                    <h3 class="gr"style="height: 17px"></h3>
-                    <h3 class="gr">From: <span class="text-light">${video.creatorName}</span></h3>
-                    <h3 class="gr" style="margin-top: 2px !important;">Views: <span class="text-light">${video.views.replace(/[^0-9]/g, "")}</span></h3>
-                    <img src="/assets/site-assets/pixel-vfl73.gif" class="endscreen-video-star"/>
-                </div>
-            </div>`
-    
+            endscreen_section_html += yt2009_templates.endscreenVideo(
+                video.id,
+                req.protocol,
+                video.length,
+                video.title,
+                2,
+                video.creatorUrl,
+                video.creatorName,
+                video.views,
+                5,
+                ""
+            )
     
             endscreen_section_index++;
             if(endscreen_section_index % 2 == 0) {
-                endscreen_section_html += `
-                    </div>`
+                endscreen_section_html += `</div>`
                 endscreen_html += endscreen_section_html;
-                endscreen_section_html = `    
-                    <div class="endscreen-section hid"  style="opacity: 0;">
-        `
+                endscreen_section_html = endscreen_sections[1]
             }
         })
+
+
+        // finalize
         endscreen_html += `
         
         <style>
+        .endscreen-section {
+            margin-top: 15px;
+        }
+
         .endscreen-video, .gr {
             color: #4d4b46 !important;
         }
@@ -754,7 +749,7 @@ app.get("/embed_get_endscreen", (req, res) => {
 
 /*
 ======
-kanały
+channels
 ======
 */
 let channel_endpoints = [
@@ -773,6 +768,8 @@ channel_endpoints.forEach(channel_endpoint => {
             res.redirect("/unauth.htm")
             return;
         }
+
+        // flags
         let flags = decodeURIComponent(req.query.flags) || ""
         try {
             req.headers.cookie.split(";").forEach(cookie => {
@@ -781,12 +778,6 @@ channel_endpoints.forEach(channel_endpoint => {
                             .replace("channel_flags=", "")
                             .split(":").join(";")
                 }
-            })
-        }
-        catch(error) {}
-        flags += ";"
-        try {
-            req.headers.cookie.split(";").forEach(cookie => {
                 if(cookie.trimStart().startsWith("global_flags=")) {
                     flags += cookie.trimStart()
                             .replace("global_flags=", "")
@@ -795,12 +786,14 @@ channel_endpoints.forEach(channel_endpoint => {
             })
         }
         catch(error) {}
+        flags += ";"
     
         // reset flag
         if(req.originalUrl.includes("resetflags=1")) {
             flags = ""
         }
     
+        // handle by yt2009channels
         yt2009_channels.main(req, res, flags)
     })
 })
@@ -893,10 +886,11 @@ function ffmpegEncodeBaseline(req, res) {
 
 /*
 ======
-playlisty
+playlists
 ======
 */
 let playlist_endpoints = ["/playlist", "/view_play_list"]
+// view playlists
 playlist_endpoints.forEach(playlistEndpoint => {
     app.get(playlistEndpoint, (req, res) => {
         if(!yt2009_utils.isAuthorized(req)) {
@@ -910,6 +904,7 @@ playlist_endpoints.forEach(playlistEndpoint => {
     })
 })
 
+// playlists inside of channels
 app.get("/channel_get_playlist", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
         res.redirect("/unauth.htm")
@@ -978,12 +973,12 @@ app.get("/refetch_playlist_watch", (req, res) => {
 
 /*
 ======
-komentarze pod filmem
+video comments
 ======
 */
 app.get("/get_more_comments", (req, res) => {
-    let token = req.headers.continuation
     let id = req.headers.source.split("watch?v=")[1].split("&")[0]
+    let pageNumber = parseInt(req.headers.page)
     let flags = ""
     try {
         req.headers.cookie.split(";").forEach(cookie => {
@@ -997,40 +992,19 @@ app.get("/get_more_comments", (req, res) => {
 
     let comment_html = "";
 
-    yt2009.request_continuation(token, id, flags, (data) => {
+    yt2009.comment_paging(id, pageNumber, flags, (data) => {
         data.forEach(comment => {
             if(comment.continuation) {
                 comment_html += `;yt_continuation=${comment.continuation}`
             } else {
-                comment_html +=  `
-                <div class="watch-comment-entry">
-                    <div class="watch-comment-head">
-                        <div class="watch-comment-info">
-                            <a class="watch-comment-auth" href="${comment.authorUrl}" rel="nofollow">${comment.authorName}</a>
-                            <span class="watch-comment-time"> (${comment.time}) </span>
-                        </div>
-                        <div class="watch-comment-voting">
-                            <!--<span class="watch-comment-score watch-comment-gray">&nbsp;0</span>-->
-                            <a href="#"><button class="master-sprite watch-comment-down" title="Poor comment"></button></a>
-                            <a href="#"><button class="master-sprite watch-comment-up" title="Good comment"></button></a>
-                            <span class="watch-comment-msg"></span>
-                        </div>
-                        <span class="watch-comment-spam-bug">Marked as spam</span>
-                        <div class="watch-comment-action">
-                            <a>Reply</a>
-                        </div>
-                        <div class="clearL"></div>
-                    </div>
-        
-                    <div>
-                        <div class="watch-comment-body">
-                            <div>
-                                ${comment.content}
-                            </div>
-                        </div>
-                        <div></div>
-                    </div>
-                </div>`
+                comment_html += yt2009_templates.videoComment(
+                    comment.authorUrl,
+                    comment.authorName,
+                    comment.time,
+                    comment.content,
+                    flags,
+                    false
+                )
             }
         })
         res.send(comment_html)
@@ -1085,7 +1059,7 @@ app.get("/videos-rss", (req, res) => {
 
 /*
 ======
-historia, suby, ulubione, playlisty
+history, subscriptions, favorites, clientside playlists
 ======
 */
 app.get("/my_history", (req, res) => {
@@ -1107,7 +1081,7 @@ app.get("/my_playlists", (req, res) => {
 
 /*
 ======
-strony statyczne (np. z footera)
+static site (e.g. from the footer)
 ======
 */
 let static_sites = {
@@ -1138,7 +1112,7 @@ app.get("/toggle_f", (req, res) => {
 
 /*
 ======
-odmów dostępu jak ktoś bez autoryzacji próbuje wejść na strony typu index.htm
+reject access to template pages without authorization
 ======
 */
 let html_files = [
@@ -1171,7 +1145,7 @@ html_files.forEach(file => {
 
 /*
 ======
-osobny entry na yt2009_flags aby wspierać fmode
+yt2009_flags for fmode support
 ======
 */
 app.get("/yt2009_flags.htm", (req, res) => {
@@ -1207,20 +1181,22 @@ app.use(express.static("../"))
 
 /*
 ======
-legacy ustawianie autoryzacji (tylko pod testy)
+legacy authorization
+this used to be necessary for some extremely old browsers.
+nowadays pretty useless but leaving it for some extreme case scenario.
 ======
 */
 app.get("/test_only_legacy_cookie_auth", (req, res) => {
-    res.send(`<script>document.cookie = "auth=${req.query.token}; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT";</script>`)
+    res.send(`<script>document.cookie = "auth=${
+        req.query.token
+    }; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT";</script>`)
 })
 
 /*
 ======
-eksperymentalne 720p
+720p
 ======
 */
-
-const fetch = require("node-fetch")
 app.get("/exp_hd", (req, res) => {
     let id = req.query.video_id.substring(0, 11)
 
@@ -1234,7 +1210,11 @@ app.get("/exp_hd", (req, res) => {
             let videoFilename = `${__dirname}/../assets/${id}-hd-video.mp4`
             let audioFilename = `${__dirname}/../assets/${id}.mp4`
             let targetFilename = `${__dirname}/../assets/${id}-hd.mp4`
-            let cmd = `ffmpeg -i ${videoFilename} -i ${audioFilename} -c:v copy -c:a copy -map 0:v -map 1:a -ab 192000 ${targetFilename}`
+            let cmd = yt2009_templates.format_merge_command(
+                videoFilename,
+                audioFilename,
+                targetFilename
+            )
             child_process.exec(cmd, (error, stdout, stderr) => {
                 res.redirect(`/assets/${id}-hd.mp4`)
                 fs.unlinkSync(videoFilename)
@@ -1249,7 +1229,7 @@ app.get("/exp_hd", (req, res) => {
 
 /*
 ======
-480p (HQ) jako część exp_hd
+480p (HQ)
 ======
 */
 app.get("/get_480", (req, res) => {
@@ -1262,7 +1242,11 @@ app.get("/get_480", (req, res) => {
             let videoFilename = `${__dirname}/../assets/${id}-480-temp.mp4`
             let audioFilename = `${__dirname}/../assets/${id}.mp4`
             let targetFilename = `${__dirname}/../assets/${id}-480.mp4`
-            let cmd = `ffmpeg -i ${videoFilename} -i ${audioFilename} -c:v copy -c:a copy -map 0:v -map 1:a -ab 192000 ${targetFilename}`
+            let cmd = yt2009_templates.format_merge_command(
+                videoFilename,
+                audioFilename,
+                targetFilename
+            )
             child_process.exec(cmd, (error, stdout, stderr) => {
                 res.redirect(`/assets/${id}-480.mp4`)
                 fs.unlinkSync(videoFilename)
@@ -1372,7 +1356,7 @@ app.get("/schemas/2007/categories.cat", (req, res) => {
 
 /*
 ======
-zapisywanie clientside playlist aby dało się je odtwarzać
+save clientside playlist for playback
 ======
 */
 app.post("/create_playlist", (req, res) => {
@@ -1382,7 +1366,7 @@ app.post("/create_playlist", (req, res) => {
         return;
     }
 
-    // sprawdzamy czy już nie ma takiej playlisty, jak tak to wysyłamy id
+    // if this playlist exists, send it with its id
     let savedPlaylists = require("./cache_dir/playlist_cache_manager").read()
     for(let playlist in savedPlaylists) {
         if(savedPlaylists[playlist].custom_rawVideoIds == req.headers.videos) {
@@ -1393,7 +1377,7 @@ app.post("/create_playlist", (req, res) => {
 
     if(!c) return;
 
-    // metadane
+    // metadata
     let videos = req.headers.videos.split(";")
     if(videos[videos.length - 1].length == 0) {
         videos.pop();
@@ -1412,7 +1396,7 @@ app.post("/create_playlist", (req, res) => {
     dateAdded[1] += ","
     dateAdded = dateAdded.join(" ")
 
-    // tworzenie elementu
+    // create playlist readable by yt2009playlists
     let playlistObject = {
         "name": playlist_name.split("&lt;").join("<").split("&gt;").join(">"),
         "videos": [],
@@ -1425,7 +1409,7 @@ app.post("/create_playlist", (req, res) => {
         "custom_rawVideoIds": req.headers.videos
     }
 
-    // dodawanie filmów do playlisty
+    // add videos
     videos.forEach(video => {
         yt2009.fetch_video_data(video, (data => {
             playlistObject.videos.push({
@@ -1438,10 +1422,10 @@ app.post("/create_playlist", (req, res) => {
 
             playlistObject.videoCount = playlistObject.videos.length;
             if(videos.length == playlistObject.videos.length) {
-                // wszystkie filmy wrzucone, wysyłamy response
+                // send on everything
                 sendResponse();
             }
-        }), "", yt2009_utils.get_used_token(req), false)
+        }), "", yt2009_utils.get_used_token(req), false, false, true)
     })
 
     function sendResponse() {
