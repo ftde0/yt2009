@@ -764,7 +764,7 @@ module.exports = {
                 <a href="/watch?v=${video.id}" class="video-thumb"><img src="${video.thumbnail}"/></a>
                 <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
                 <div class="video-stats">
-                    <div class="video-stat"><span class="stat-upload">Added: ${uploadDate}</span></div>
+                    <div class="video-stat"><span class="stat-upload">${video.upload ? `Added: ${uploadDate}` : ""}</span></div>
                     <div class="video-stat"><span class="stat-views">Views: ${viewCount}</span></div>
                     <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>
                 </div>
@@ -1247,5 +1247,12 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             `"${f3}"`
         ].join(" ")
         return cmd;
-    }
+    },
+    "favoritepage_videocell_part": [function(pageNum) {
+        return `
+        <tbody id="videos" class="videos-page videos-page-${pageNum} ${pageNum !== 0 ? "hid" : ""}">
+            <tr>
+                <td colspan="2">
+        `
+    }, `</td></tr></tbody>`]
 }

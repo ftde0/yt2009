@@ -81,13 +81,19 @@ module.exports = {
 
         if(req.headers.source.includes("watch")) {
             // watchpage
-            video_id = req.headers.source.split("v=")[1].split("&")[0].split("#")[0]
+            video_id = req.headers.source.split("v=")[1]
+                                         .split("&")[0]
+                                         .split("#")[0]
         } else {
             // embed
-            video_id = req.headers.source.split("/embed/")[1].split("?")[0].split("#")[0]
+            video_id = req.headers.source.split("/embed/")[1]
+                                         .split("?")[0]
+                                         .split("#")[0]
         }
 
-        let annotations_url = `https://archive.org/download/${annotations_collection[video_id.substring(0, 1)]}/${video_id.substring(0, 2)}.tar/${video_id.substring(0, 3)}/${video_id}.xml`
+        let annotations_url = `https://archive.org/download/${
+            annotations_collection[video_id.substring(0, 1)]
+        }/${video_id.substring(0, 2)}.tar/${video_id.substring(0, 3)}/${video_id}.xml`
 
         annotations_manager.read(video_id, annotations_url, (xml) => {
             if(req.query.sendRaw == "1") {

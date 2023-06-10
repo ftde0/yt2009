@@ -8,7 +8,7 @@ yt2009, 2022.
 =======
 */
 
-// polyfille
+// polyfill
 if(!document.querySelector) {
     document.querySelector = function(name) {
         return polyfillSelectorAll(name, true)
@@ -16,6 +16,15 @@ if(!document.querySelector) {
     document.querySelectorAll = function(name) {
         return polyfillSelectorAll(name, false)
     }
+}
+
+function trimLeft(input) {
+    var temp = input;
+    while(temp.indexOf(" ") == 0) {
+        temp = temp.replace(" ", "")
+    }
+
+    return temp;
 }
 
 // document.querySelector
@@ -32,9 +41,9 @@ function polyfillSelectorAll(name, returnFirst) {
     var s = document.getElementsByTagName("*")
     for(var sel in s) {
         try {
-            if(s[sel][type].indexOf(name + " ") !== -1 ||
-            s[sel][type].indexOf(" " + name) !== -1 || 
-            s[sel][type] == name) {
+            if(s[sel][type].indexOf(name + " ") !== -1
+            || s[sel][type].indexOf(" " + name) !== -1
+            || s[sel][type] == name) {
                 elementList.push(s[sel])
             }
         }
@@ -53,9 +62,9 @@ function getElementsByClassName(element, className) {
     var s = element.getElementsByTagName("*")
     for(var sel in s) {
         try {
-            if(s[sel].className.indexOf(className + " ") !== -1 ||
-            s[sel].className.indexOf(" " + className) !== -1 || 
-            s[sel].className == className) {
+            if(s[sel].className.indexOf(className + " ") !== -1
+            || s[sel].className.indexOf(" " + className) !== -1
+            || s[sel].className == className) {
                 elementList.push(s[sel])
             }
         }
@@ -72,7 +81,7 @@ function $(element) {
     }
 }
 
-// elementy ui z &f=1
+// ui with &f=1
 
 /*
 =======
@@ -80,7 +89,7 @@ watchpage
 =======
 */
 if(location.href.indexOf("watch") !== -1) {
-    // opisy
+    // descriptions
     $("#watch-video-details-toggle-less").onclick = function() {
         $("#watch-video-details-inner-more").style.display = "block"
         $("#watch-video-details-toggle-more").style.display = "block"
@@ -95,7 +104,7 @@ if(location.href.indexOf("watch") !== -1) {
         $("#watch-video-details-toggle-less").style.display = "block"
     }
 
-    // udostępnianie
+    // sharing
     $("#more-options").onclick = function() {
         $("#more-options").style.display = "none"
         $("#watch-share-services-collapsed").style.display = "none"
@@ -108,9 +117,99 @@ if(location.href.indexOf("watch") !== -1) {
         $("#watch-share-services-expanded").style.display = "none"
         $("#fewer-options").style.display = "none"
     }
+
+    // save watched video to history
+    // only cookie approach
+    var watchHistory = ""
+    var cookies = document.cookie.split(";")
+    for(var c in cookies) {
+        if(cookies[c].indexOf("watch_history=") !== -1) {
+            watchHistory = trimLeft(cookies[c]).replace("watch_history=", "")
+        }
+    }
+    
+    if(watchHistory.length > 4000) {
+        // if we surpass the cookie limit (4KB) make a backup for use later and clear
+        document.cookie = "watch_history_backup_" + Date.now()
+                          + "=" + watchHistory
+                          + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        document.cookie = "watch_history= ; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        watchHistory = ""
+    }
+
+    var videoId = $(".email-video-url").value.split("?v=")[1]
+    if(watchHistory.indexOf(videoId) == -1) {
+        watchHistory = encodeURIComponent($(".watch-vid-ab-title").innerHTML)
+                       + "&" + $("#watch-view-count").innerHTML
+                       + "&" + $(".email-video-url").value.split("?v=")[1]
+                       + ":" + watchHistory;
+        document.cookie = "watch_history="
+                          + watchHistory
+                          + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    }
+
+    // widescreen and embed buttons
+    var playerWidescreen = false;
+    $("#watch-longform-player").onclick = function() {
+        playerWidescreen = !playerWidescreen
+        if(playerWidescreen) {
+            // turn on widescreen
+            var s = document.querySelectorAll(".fl")
+            for(var sel in s) {
+                try {
+                    s[sel].setAttribute("width", "960")
+                    s[sel].setAttribute("height", "565")
+                }
+                catch(error) {}
+            }
+            document.querySelector("#watch-vid-title").style.width = "960px"
+            var toggleSwitch = document.getElementById("player-toggle-switch")
+            toggleSwitch.className += " watch-wide-mode"
+            $("#watch-this-vid").style.width = "960px"
+            $("#watch-this-vid").style.height = "565px"
+        } else {
+            // turn off
+            var s = document.querySelectorAll(".fl")
+            for(var sel in s) {
+                try {
+                    s[sel].setAttribute("width", "640")
+                    s[sel].setAttribute("height", "385")
+                }
+                catch(error) {}
+            }
+            document.querySelector("#watch-vid-title").style.width = "640px"
+            var toggleSwitch = document.getElementById("player-toggle-switch")
+            toggleSwitch.className = toggleSwitch.className.replace(
+                "watch-wide-mode", ""
+            )
+            $("#watch-this-vid").style.width = ""
+            $("#watch-this-vid").style.height = ""
+        }
+    }
+
+
+    $("#watch-longform-popup").onclick = function() {
+        window.open("/embedF/" + videoId)
+    }
+
+
+    // playlist stuff
+    watchpage_initPlaylistsTab();
+    onPlaylistChange();
+    $(".playlists-options").onchange = onPlaylistChange;
+    $("#playlist-create-btn").onclick = function() {
+        var newId = playlistCreate();
+        playlistAdd(newId)
+        watchpage_initPlaylistsTab();
+    }
+    $("#playlist-add-btn").onclick = function() {
+        onPlaylistChange();
+        playlistAdd(plSelectedOption.getAttribute("value"));
+        watchpage_initPlaylistsTab();
+    }
 }
 
-// zmiana kart
+// switch tabs (/watch)
 function switchWatchTab(tabName) {
     // hide previously shown tab
     var e = document.querySelectorAll(".watch-tab-body")
@@ -146,11 +245,15 @@ function switchWatchTab(tabName) {
     }
 }
 
-// ulubione
+// add to favorites
 function favorite_video() {
     var currentId = $(".email-video-url").value.split("?v=")[1]
     var favorites = ""
-    var videoString = encodeURIComponent($(".watch-vid-ab-title").innerHTML + "&" + $("#watch-view-count").innerHTML + "&" + currentId)
+    var videoString = encodeURIComponent(
+        $(".watch-vid-ab-title").innerHTML
+        + "&" + $("#watch-view-count").innerHTML
+        + "&" + currentId
+    )
     var c = 0;
     var cookie = document.cookie.split(";")
     while(c !== cookie.length) {
@@ -161,7 +264,9 @@ function favorite_video() {
     }
     if(favorites.indexOf(currentId) == -1) {
         favorites = videoString + ":" + favorites
-        document.cookie = "favorites=" + favorites + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        document.cookie = "favorites="
+                          + favorites
+                          + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
     $("#watch-add-faves").className += " hid"
     $("#watch-remove-faves").className = "watch-action-result"
@@ -171,7 +276,9 @@ function favorite_video() {
 function favorite_undo() {
     var currentId = $(".email-video-url").value.split("?v=")[1]
     var favorites = ""
-    var videoString = encodeURIComponent($(".watch-vid-ab-title").innerHTML + "&" + $("#watch-view-count").innerHTML + "&" + currentId) + ":"
+    var videoString = encodeURIComponent($(".watch-vid-ab-title").innerHTML
+                      + "&" + $("#watch-view-count").innerHTML
+                      + "&" + currentId) + ":"
     var c = 0;
     var cookie = document.cookie.split(";")
     while(c !== cookie.length) {
@@ -181,7 +288,9 @@ function favorite_undo() {
         c += 1
     }
     favorites = favorites.replace(videoString, "")
-    document.cookie = "favorites=" + favorites + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    document.cookie = "favorites="
+                      + favorites
+                      + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     $("#watch-remove-faves").className += " hid"
     $("#watch-add-faves").className = "watch-action-result"
 }
@@ -222,274 +331,7 @@ function onWatchCommentsShowMore() {
         }
     }
 }
-/*
-=======
-kanały
-=======
-*/
 
-function switchVideo(video) {
-    var e = document.querySelectorAll(".playnav-video")
-    for(var sel in e) {
-        try {
-            if(e[sel].className.indexOf("sel") !== -1) {
-                e[sel].className = e[sel].className.replace(" selected", "")
-            }
-        }
-        catch(error) {}
-    }
-    
-    var id = video.id.split("-").splice(2, video.id.split("-").length).join("-")
-
-    var videoUrl = customPlayerUrl + '?' + customPlayerArg + '=' + id
-    if(document.cookie.indexOf("f_h264=on") !== -1) {
-        var fmtMap = "5/0/7/0/0"
-        var fmtUrls = "5|http://" + location.host + "/channel_fh264_getvideo?v=" + id
-        videoUrl += "&fmt_map=" + encodeURIComponent(fmtMap)
-        videoUrl += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
-    }
-
-    $("#playnav-curvideo-title").innerHTML = document.querySelector(".video-title-" + id).innerHTML
-    $("#playnav-curvideo-info-line").innerHTML = "From: " + $(".yt2009-name").innerHTML + " | " + document.querySelector(".video-meta-" + id).innerHTML.replace(" - ", " | ")
-    $("#playnav-curvideo-description").innerHTML = " "
-    $("#defaultRatingMessage").innerHTML = "<span class='smallText'>" + document.querySelector(".video-ratings-" + id).innerHTML + " ratings</span>"
-    // zmiana filmu z &f=1 (flash)
-    $(".playnav-mvlf9xls").innerHTML = '\
-    <div class="for-some-reason-ie6-doesnt-work-without-this hid">h</div>\
-    <object width="640" height="385">\
-    <param class="fl" name="movie" value="' + videoUrl + '"></param>\
-    <param name="allowFullScreen" value="true"></param>\
-    <param name="allowscriptaccess" value="always"></param>\
-    <embed src="' + videoUrl + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>\
-    </object>'
-    $("#playnav-watch-link").setAttribute("href", "/watch?v=" + id)
-
-    if(navigator.userAgent.indexOf("MSIE") == -1) {
-        video.className = "playnav-item playnav-video selected playnav-item-selected"
-    }
-    
-}
-
-// inna karta (all/uploads itp)
-
-function switchTab(tab_name, tabElement) {
-    var e = document.querySelectorAll(".yt2009-scrollbox")
-    for(var sel in e) {
-        try {
-            e[sel].className += " hid"
-        }
-        catch(error) {console.log(error)}
-    }
-
-    var s = document.querySelectorAll(".navbar-tab")
-    for(var sel in s) {
-        try {
-            s[sel].className = "navbar-tab inner-box-link-color"
-        }
-        catch(error) {}
-    }
-
-    tabElement.className = "navbar-tab inner-box-link-color navbar-tab-selected"
-    $(".scrollbox-" + tab_name).className = "outer-scrollbox yt2009-scrollbox scrollbox-" + tab_name
-}
-
-// playlisty w kanałach
-
-function openPlaylist(element, switchMode) {
-    if(!switchMode) {
-        switchMode = "playlists"
-    }
-
-    if(document.querySelector(".scrollbox-" + element.getAttribute("data-id"))) {
-        // pokaż jak już mamy
-        switchTab(element.getAttribute("data-id"), $("#playnav-navbar-tab-" + switchMode))
-    } else {
-        var r;
-        if (window.XMLHttpRequest) {
-            r = new XMLHttpRequest()
-        } else {
-            r = new ActiveXObject("Microsoft.XMLHTTP");
-        }
-        r.open("GET", "/channel_get_playlist")
-        r.setRequestHeader("id", element.getAttribute("data-id"))
-        r.send(null)
-        r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
-                var tab = document.createElement("div")
-                tab.className = "outer-scrollbox yt2009-scrollbox scrollbox-" + element.getAttribute("data-id") + " hid"
-                tab.style.overflowX = "hidden"
-                tab.innerHTML += "<div id=\"playnav-play-all-items\" class=\"inner-scrollbox\"><div class=\"playnav-playlist-header\"><a style=\"text-decoration:none\" class=\"title title-text-color\"><span id=\"playnav-playlist-playlists-all-title\" class=\"title\"> </span></a></div>"
-                tab.innerHTML += r.responseText
-                tab.innerHTML += "<div class=\"spacer\">&nbsp;</div><div class=\"scrollbox-separator\"><div class=\"outer-box-bg-as-border\"></div></div></div></div>";
-                $(".scrollbox-body").appendChild(tab)
-        
-                switchTab(element.getAttribute("data-id"), $("#playnav-navbar-tab-" + switchMode))
-            }
-        }
-    }
-}
-
-function trimLeft(input) {
-    var temp = input;
-    while(temp.indexOf(" ") == 0) {
-        temp = temp.replace(" ", "")
-    }
-
-    return temp;
-}
-
-
-// video page-specific things
-if(location.href.indexOf("watch") !== -1) {
-    // save watched video to history
-    // only cookie approach
-    var watchHistory = ""
-    var cookies = document.cookie.split(";")
-    for(var c in cookies) {
-        if(cookies[c].indexOf("watch_history=") !== -1) {
-            watchHistory = trimLeft(cookies[c]).replace("watch_history=", "")
-        }
-    }
-    
-    if(watchHistory.length > 4000) {
-        // if we surpass the cookie limit (4KB) make a backup for use later and clear
-        document.cookie = "watch_history_backup_" + Date.now() + "=" + watchHistory + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
-        document.cookie = "watch_history= ; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
-        watchHistory = ""
-    }
-    if(watchHistory.indexOf($(".email-video-url").value.split("?v=")[1]) == -1) {
-        watchHistory = encodeURIComponent($(".watch-vid-ab-title").innerHTML) + "&" + $("#watch-view-count").innerHTML + "&" + $(".email-video-url").value.split("?v=")[1] + ":" + watchHistory;
-        document.cookie = "watch_history=" + watchHistory + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
-    }
-
-    // widescreen and embed buttons
-    var playerWidescreen = false;
-    $("#watch-longform-player").onclick = function() {
-        playerWidescreen = !playerWidescreen
-        if(playerWidescreen) {
-            // turn on widescreen
-            var s = document.querySelectorAll(".fl")
-            for(var sel in s) {
-                try {
-                    s[sel].setAttribute("width", "960")
-                    s[sel].setAttribute("height", "565")
-                }
-                catch(error) {}
-            }
-            document.querySelector("#watch-vid-title").style.width = "960px"
-            document.getElementById("player-toggle-switch").className += " watch-wide-mode"
-            $("#watch-this-vid").style.width = "960px"
-            $("#watch-this-vid").style.height = "565px"
-        } else {
-            // turn off
-            var s = document.querySelectorAll(".fl")
-            for(var sel in s) {
-                try {
-                    s[sel].setAttribute("width", "640")
-                    s[sel].setAttribute("height", "385")
-                }
-                catch(error) {}
-            }
-            document.querySelector("#watch-vid-title").style.width = "640px"
-            document.getElementById("player-toggle-switch")
-                    .className = document.getElementById("player-toggle-switch")
-                                         .className.replace("watch-wide-mode", "")
-            $("#watch-this-vid").style.width = ""
-            $("#watch-this-vid").style.height = ""
-        }
-    }
-
-
-    $("#watch-longform-popup").onclick = function() {
-        var videoId = $(".email-video-url").value.split("?v=")[1];
-        window.open("/embedF/" + videoId)
-    }
-
-
-    // playlist stuff
-    watchpage_initPlaylistsTab();
-    onPlaylistChange();
-    $(".playlists-options").onchange = onPlaylistChange;
-    $("#playlist-create-btn").onclick = function() {
-        var newId = playlistCreate();
-        playlistAdd(newId)
-        watchpage_initPlaylistsTab();
-    }
-    $("#playlist-add-btn").onclick = function() {
-        onPlaylistChange();
-        playlistAdd(plSelectedOption.getAttribute("value"));
-        watchpage_initPlaylistsTab();
-    }
-}
-
-
-// playnav: panel switching
-function playnav_switchPanel(tabName) {
-    var currentTab = $(".panel-tab-selected")
-    currentTab.className = ""
-    $("#playnav-panel-" + (currentTab.id || "").replace("playnav-panel-tab-", "")).className = "hid"
-
-    // show the new tab
-    var tabLink = $("#playnav-panel-tab-" + tabName)
-    var tabContent = $("#playnav-panel-" + tabName)
-    tabLink.className = "panel-tab-selected"
-
-    tabContent.className = ""
-
-    // other functions to display the tabs correctly
-    switch(tabName) {
-        case "comments": {
-            get_video_comments();
-            break;
-        }
-        case "favorite": {
-            favorite_video();
-            break;
-        }
-    }
-}
-
-
-// playnav: embedded comments
-function get_video_comments() {
-    // obecny film
-    $("#playnav-panel-comments").innerHTML = '<img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">'
-    var currentId = document.querySelector(".fl").getAttribute("src").split("?video_id=")[1]
-
-    // request
-    var r;
-    if (window.XMLHttpRequest) {
-        r = new XMLHttpRequest()
-    } else {
-        r = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    r.open("GET", "/playnav_get_comments")
-    r.setRequestHeader("id", currentId)
-    r.send(null)
-    r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
-            $("#playnav-panel-comments").innerHTML = r.responseText
-        }
-    }
-}
-
-
-// playnav: favorite videos
-function favorite_video() {
-    var currentId = document.querySelector(".fl").getAttribute("src").split("?video_id=")[1]
-    var videoString = encodeURIComponent(document.querySelector(".video-title-" + currentId).innerHTML + "&" + document.querySelector(".video-meta-" + currentId).innerHTML.split(" views - ")[0] + "&" + currentId)
-    var cookies = document.cookie.split(";")
-    var favorites = ""
-    for(var c in cookies) {
-        if(cookies[c].indexOf("favorites=") !== -1) {
-            favorites = trimLeft(cookies[c]).replace("favorites=", "")
-        }
-    }
-    if(favorites.indexOf(currentId) == -1) {
-        favorites = videoString + ":" + favorites
-        document.cookie = "favorites=" + favorites + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
-    }
-}
 
 var plSelectedOption = false;
 // watchpage: add to playlist tab, read the playlist index, create one if non-existent
@@ -565,7 +407,8 @@ function playlistCreate() {
     }
 
     cookieIndex = encodeURIComponent(name + ";" + id) + ":" + cookieIndex
-    document.cookie = "playlist_index=" + cookieIndex + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    document.cookie = "playlist_index=" + cookieIndex
+                      + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 
     return id;
 }
@@ -578,12 +421,17 @@ function playlistAdd(id) {
     var viewCount = $("#watch-view-count").innerHTML
     var starRating = $(".ratingL").className.split(" ")[2].split("-")[1]
     var currentDate = new Date();
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    var months = ["Jan", "Feb", "Mar",
+                  "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep",
+                  "Oct", "Nov", "Dec"]
     var day = currentDate.getDate();
     if(day < 10) {
         day = "0" + day.toString();
     }
-    var addDate = months[currentDate.getMonth()] + " " + day + ", " + currentDate.getFullYear();
+    var addDate = months[currentDate.getMonth()] + " "
+                  + day + ", "
+                  + currentDate.getFullYear();
 
     var playlistData = ""
     var cookies = document.cookie.split(";")
@@ -594,8 +442,15 @@ function playlistAdd(id) {
     }
 
     if(playlistData.indexOf(currentId) == -1) {
-        playlistData = encodeURIComponent(encodeURIComponent(videoName) + ";" + currentId + ";" + viewCount + ";" + starRating + ";" + addDate) + ":" + playlistData
-        document.cookie = id + "=" + playlistData + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        playlistData = encodeURIComponent(
+            encodeURIComponent(videoName)
+            + ";" + currentId
+            + ";" + viewCount
+            + ";" + starRating
+            + ";" + addDate
+        ) + ":" + playlistData
+        document.cookie = id + "=" + playlistData
+                          + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
 
     $("#addToPlaylistResult").style.display = "block"
@@ -645,6 +500,231 @@ function toggleCommentsExpander(element) {
         getElementsByClassName(
             element.parentNode, "yt-uix-expander-body"
         )[0].className = "yt-uix-expander-body hid"
+    }
+}
+
+
+
+/*
+=======
+channels
+=======
+*/
+function switchVideo(video) {
+    var e = document.querySelectorAll(".playnav-video")
+    for(var sel in e) {
+        try {
+            if(e[sel].className.indexOf("sel") !== -1) {
+                e[sel].className = e[sel].className.replace(
+                    "selected", ""
+                ).replace(
+                    "playnav-item-selected", ""
+                )
+            }
+        }
+        catch(error) {}
+    }
+    
+    var id = video.id.split("-").splice(2, video.id.split("-").length).join("-")
+
+    var videoUrl = customPlayerUrl + '?' + customPlayerArg + '=' + id
+    if(document.cookie.indexOf("f_h264=on") !== -1) {
+        var fmtMap = "5/0/7/0/0"
+        var fmtUrls = "5|http://" + location.host
+                      + "/channel_fh264_getvideo?v=" + id
+        videoUrl += "&fmt_map=" + encodeURIComponent(fmtMap)
+        videoUrl += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+    }
+
+    var infoTitle = $("#playnav-curvideo-title")
+    var infoLine = $("#playnav-curvideo-info-line")
+    var videoMetadata = document.querySelector(".video-meta-" + id).innerHTML
+    infoTitle.innerHTML = document.querySelector(".video-title-" + id).innerHTML
+    infoLine.innerHTML = "From: " + $(".yt2009-name").innerHTML
+                         + " | " + videoMetadata.replace(" - ", " | ")
+    $("#playnav-curvideo-description").innerHTML = " "
+
+    var ratingMsg = $("#defaultRatingMessage")
+    var ratingCount = document.querySelector(".video-ratings-" + id).innerHTML
+    ratingMsg.innerHTML = "<span class='smallText'>"
+                          + ratingCount
+                          + " ratings</span>"
+
+    // flash video switch
+    $(".playnav-mvlf9xls").innerHTML = '\
+    <div class="for-some-reason-ie6-doesnt-work-without-this hid">h</div>\
+    <object width="640" height="385">\
+    <param class="fl" name="movie" value="' + videoUrl + '"></param>\
+    <param name="allowFullScreen" value="true"></param>\
+    <param name="allowscriptaccess" value="always"></param>\
+    <embed src="'+ videoUrl + '" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed>\
+    </object>'
+    $("#playnav-watch-link").setAttribute("href", "/watch?v=" + id)
+
+    if(navigator.userAgent.indexOf("MSIE") == -1) {
+        video.className = "playnav-item playnav-video selected playnav-item-selected"
+    }
+    
+}
+
+// other playnav tabs (all/uploads/playlists etc)
+function switchTab(tab_name, tabElement) {
+    var e = document.querySelectorAll(".yt2009-scrollbox")
+    for(var sel in e) {
+        try {
+            e[sel].className += " hid"
+        }
+        catch(error) {console.log(error)}
+    }
+
+    var s = document.querySelectorAll(".navbar-tab")
+    for(var sel in s) {
+        try {
+            s[sel].className = "navbar-tab inner-box-link-color"
+        }
+        catch(error) {}
+    }
+
+    tabElement.className = "navbar-tab inner-box-link-color navbar-tab-selected";
+    $(".scrollbox-" + tab_name).className = "outer-scrollbox "
+                                          + "yt2009-scrollbox "
+                                          + "scrollbox-" + tab_name
+}
+
+// channel playlists
+function openPlaylist(element, switchMode) {
+    if(!switchMode) {
+        switchMode = "playlists"
+    }
+
+    if(document.querySelector(".scrollbox-" + element.getAttribute("data-id"))) {
+        // just show if we already have playlists
+        switchTab(
+            element.getAttribute("data-id"),
+            $("#playnav-navbar-tab-" + switchMode)
+        )
+    } else {
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        r.open("GET", "/channel_get_playlist")
+        r.setRequestHeader("id", element.getAttribute("data-id"))
+        r.send(null)
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                var tab = document.createElement("div")
+                tab.className = "outer-scrollbox yt2009-scrollbox scrollbox-"
+                                + element.getAttribute("data-id")
+                                + " hid"
+                tab.style.overflowX = "hidden"
+                tab.innerHTML += '\
+    <div id="playnav-play-all-items" class="inner-scrollbox">\
+        <div class="playnav-playlist-header">\
+            <a style="text-decoration:none" class="title title-text-color">\
+                <span id="playnav-playlist-playlists-all-title" class="title">\
+                </span>\
+            </a>\
+        </div>'
+                tab.innerHTML += r.responseText
+                tab.innerHTML += '\
+        <div class=\"spacer\">&nbsp;</div>\
+        <div class=\"scrollbox-separator\">\
+        <div class=\"outer-box-bg-as-border\">\
+        </div></div></div>\
+    </div>';
+                $(".scrollbox-body").appendChild(tab)
+        
+                switchTab(
+                    element.getAttribute("data-id"),
+                    $("#playnav-navbar-tab-" + switchMode)
+                )
+            }
+        }
+    }
+}
+
+// playnav: panel switching
+function playnav_switchPanel(tabName) {
+    var currentTab = $(".panel-tab-selected")
+    currentTab.className = ""
+    $("#playnav-panel-" + (currentTab.id || "").replace("playnav-panel-tab-", "")).className = "hid"
+
+    // show the new tab
+    var tabLink = $("#playnav-panel-tab-" + tabName)
+    var tabContent = $("#playnav-panel-" + tabName)
+    tabLink.className = "panel-tab-selected"
+
+    tabContent.className = ""
+
+    // other functions to display the tabs correctly
+    switch(tabName) {
+        case "comments": {
+            get_video_comments();
+            break;
+        }
+        case "favorite": {
+            playnav_favorite_video();
+            break;
+        }
+    }
+}
+
+
+// playnav: embedded comments
+function get_video_comments() {
+    // obecny film
+    var l = '<img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">'
+    $("#playnav-panel-comments").innerHTML = l;
+    var currentId = document.getElementsByTagName("embed")[0]
+                            .getAttribute("src")
+                            .split("?")[1].split("=")[1]
+                            .split("&")[0]
+
+    // request
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/playnav_get_comments")
+    r.setRequestHeader("id", currentId)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            $("#playnav-panel-comments").innerHTML = r.responseText
+        }
+    }
+}
+
+
+// playnav: favorite videos
+function playnav_favorite_video() {
+    var currentId = document.getElementsByTagName("embed")[0]
+                            .getAttribute("src")
+                            .split("?")[1].split("=")[1]
+                            .split("&")[0]
+    var videoString = encodeURIComponent(
+        document.querySelector(".video-title-" + currentId).innerHTML
+        + "&" + document.querySelector(".video-meta-" + currentId)
+                        .innerHTML.split(" views - ")[0]
+        + "&" + currentId
+    )
+    var cookies = document.cookie.split(";")
+    var favorites = ""
+    for(var c in cookies) {
+        if(cookies[c].indexOf("favorites=") !== -1) {
+            favorites = trimLeft(cookies[c]).replace("favorites=", "")
+        }
+    }
+    if(favorites.indexOf(currentId) == -1) {
+        favorites = videoString + ":" + favorites
+        document.cookie = "favorites="
+                          + favorites
+                          + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
 }
 
@@ -729,21 +809,18 @@ video response
 var responseExpander = document.querySelector(".yt2009-video-response-expander")
 var videoResponsesLoaded = false;
 responseExpander.onclick = function() {
-    if(responseExpander.parentNode.className
-        .indexOf("yt-uix-expander-collapsed") !== -1) {
-        responseExpander.parentNode.className = responseExpander.parentNode
-                                                .className.replace(
-                                                    "collapsed", "expanded"
-                                                )
-
+    var responseParent = responseExpander.parentNode
+    if(responseParent.className.indexOf("yt-uix-expander-collapsed") !== -1) {
+        responseParent.className = responseParent.className.replace(
+            "collapsed", "expanded"
+        )
         if(!videoResponsesLoaded) {
             loadVideoResponses();
         }
     } else {
-        responseExpander.parentNode.className = responseExpander.parentNode
-                                                .className.replace(
-                                                    "expanded", "collapsed"
-                                                )
+        responseParent.className = responseParent.replace(
+            "expanded", "collapsed"
+        )
     }
 }
 
@@ -761,7 +838,8 @@ function loadVideoResponses() {
         r.onreadystatechange = function(e) {
             if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
                 videoResponsesLoaded = true;
-                document.querySelector("#watch-video-responses-children").innerHTML = r.responseText
+                document.querySelector("#watch-video-responses-children")
+                        .innerHTML = r.responseText
             }
         }
     }
