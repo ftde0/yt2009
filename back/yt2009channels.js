@@ -120,6 +120,11 @@ module.exports = {
                             .split("\n").join("<br>") || ""
         }
         data.videos = []
+        try {
+            data.videoCount = r.header.c4TabbedHeaderRenderer
+                               .videosCountText.runs[0].text
+        }
+        catch(error) {}
 
         // fetch videos tab
         let videosTabAvailable = false;
@@ -1324,5 +1329,43 @@ module.exports = {
         return croppedFeaturedChannels;
     },
 
-    "get_cache": n_impl_yt2009channelcache
+    "get_cache": n_impl_yt2009channelcache,
+
+    "fill_videocount": function(url, callback) {
+        // add video count to user caches without them
+        require("./cache_dir/userid_cache").read(url, (id) => {
+            // clean fetch the channel
+            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
+                yt2009html.get_api_key()
+            }`, {
+                "headers": yt2009constants.headers,
+                "referrer": "https://www.youtube.com/",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": JSON.stringify({
+                    "context": yt2009constants.cached_innertube_context,
+                    "browseId": id
+                }),
+                "method": "POST",
+                "mode": "cors"
+            }).then(r => {r.json().then(r => {
+                let videoCount = ""
+                try {
+                    videoCount = r.header.c4TabbedHeaderRenderer
+                                  .videosCountText.runs[0].text
+                }
+                catch(error) {}
+                if(n_impl_yt2009channelcache.read("main")[id]
+                && !n_impl_yt2009channelcache.read("main")[id].videoCount
+                && videoCount.length !== 0) {
+                    let newCache = JSON.parse(
+                        JSON.stringify(n_impl_yt2009channelcache.read("main")[id])
+                    )
+                    newCache.videoCount = videoCount
+                    n_impl_yt2009channelcache.write("main", id, newCache)
+                }
+
+                callback(videoCount)
+            })})
+        })
+    }
 }

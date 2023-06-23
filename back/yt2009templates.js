@@ -925,7 +925,13 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <openSearch:startIndex>1</openSearch:startIndex>
     <openSearch:itemsPerPage>25</openSearch:itemsPerPage>`,
     "gdata_feedEnd": "\n</feed>",
-    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category) {
+    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category, flags) {
+        // flag handling
+        if((flags || []).includes("realistic-view-count")
+        && views >= 100000) {
+            views = Math.floor(views / 90)
+        }
+
         // rating
         let rating = 4.5;
         let ryd = require("./cache_dir/ryd_cache_manager")
@@ -1016,7 +1022,25 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 		</author>
 	</entry>`
     },
-    "gdata_user": function(id, name, avatar, subs, videoCount, channelViews, uploadViews) {
+    "gdata_user": function(id, name, avatar, subs, videoCount, channelViews, uploadViews, flags) {
+        if(flags.includes("default-avatar-adapt")) {
+            let avatarUrl = avatar.replace(
+                `http://${config.ip}:${config.port}`,
+                ""
+            )
+            avatarUrl = __dirname + "/.." + avatarUrl
+            let isDefaultAvatar = require("./detect_default_avatar")(avatarUrl)
+            if(isDefaultAvatar) {
+                avatar = `http://${config.ip}:${config.port}/assets/site-assets/default.png`
+            }
+        }
+
+        if((videoCount || "").toString().includes("K")) {
+            videoCount = parseInt(videoCount) * 1000
+        } else if((videoCount || "").toString().includes("M")) {
+            videoCount = parseInt(videoCount) * 1000000
+        }
+
         return `<?xml version='1.0' encoding='UTF-8'?>
 <entry
     xmlns='http://www.w3.org/2005/Atom'

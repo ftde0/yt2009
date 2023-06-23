@@ -12,6 +12,15 @@ module.exports = {
         if(req.headers.cookie.includes("search_flags")) {
             flags = req.headers.cookie.split("search_flags=")[1].split(";")[0]
         }
+        if(req.headers["x-gdata-device"]) {
+            // flags for mobile
+            let mobileFlags = require("./yt2009mobileflags")
+                              .get_flags(req)
+                              .search;
+            if(mobileFlags.includes("only-old")) {
+                req.query.q += " +only_old"
+            }
+        }
         
         if(req.query.q.includes("+only_old")) {
             req.query.q = req.query.q.replace("+only_old", "")

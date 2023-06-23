@@ -24,6 +24,7 @@ const yt2009_constant = require("./yt2009constants.json")
 const yt2009_languages = require("./language_data/language_engine")
 const yt2009_quicklist = require("./yt2009quicklistserver")
 const yt2009_captions = require("./yt2009captions")
+const yt2009_mobileflags = require("./yt2009mobileflags")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -1352,6 +1353,18 @@ app.get("/feeds/api/events", (req, res) => {
 app.get("/schemas/2007/categories.cat", (req, res) => {
     res.send(fs.readFileSync("../assets/site-assets/gdata_categories.xml")
                .toString())
+})
+app.get("/mobile/connection_start", (req, res) => {
+    yt2009_mobileflags.request_session(req, res)
+})
+app.get("/mobile/get_sessions", (req, res) => {
+    yt2009_mobileflags.get_session(req, res)
+})
+app.post("/mobile/save_flags", (req, res) => {
+    yt2009_mobileflags.save_flags(req, res)
+})
+app.get("/mobile/get_flags", (req, res) => {
+    res.send(yt2009_mobileflags.get_flags(req));
 })
 
 /*

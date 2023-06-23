@@ -12,7 +12,7 @@ let ip_uses_flash = []
 
 module.exports = {
     "time_to_seconds": function(input) {
-        // czas na sekundy (np. 01:00:00 -> 3600)
+        // time to seconds (01:00:00 -> 3600)
         let tr = 0;
     
         if(typeof(input) == "number") return input;
@@ -46,7 +46,7 @@ module.exports = {
 
 
     "seconds_to_time": function(input) {
-        // sekundy do czasu (192 -> 3:12)
+        // seconds to time (192 -> 3:12)
 
         input = parseInt(input)
 

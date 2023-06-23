@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yt2009 app connection</title>
+    <link rel="stylesheet" href="app_style.css">
+</head>
+<body>
+    <div id="deviceid-get" class="panel">
+        <h1>yt2009 app connection</h1>
+        <h3>use this ui to first connect your mobile app, then set it up however you like.</h3>
+        <p id="initial-server-connect">waiting for server...</p>
+        <ul>
+            <li>wait for above text to say "ready"</li>
+            <li>start the mobile app <b>from the same IP</b> as the one you're using to view this page.
+                close if already open.</li>
+            <li>click the <b>check</b> button below to get your device id.</li>
+            <li>once the device id appears, click the <b>save</b> button next to it
+                to start changing flags.</li>
+        </ul>
+        <div id="devices">
+            <p>device id</p>
+            <button onclick="saveDeviceId();">save</button>
+        </div>
+        <button onclick="getDeviceId();">check</button>
+    </div>
+    <div id="flagspage" class="panel" style="display: none;">
+        <h1>yt2009 mobileflags</h1>
+        <p id="modify-msg">modifying for: device_id</p>
+        <div class="section watch-flags">
+            <h1>videos</h1>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-new-related">
+                <label for="watch-new-related">new_related</label>
+                <p class="subtext">show new videos within the Related section</p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-realistic-view-count">
+                <label for="watch-realistic-view-count">realistic_view_count</label>
+                <p class="subtext">adjust view counts to be more realistic for 2009 standards</p>
+            </div>
+        </div>
+        <div class="section search-flags">
+            <h1>search</h1>
+            <div class="checkbox">
+                <input type="checkbox" id="search-only-old">
+                <label for="search-only-old">only_old</label>
+                <p class="subtext">only show old videos in search results</p>
+            </div>
+        </div>
+        <div class="section channel-flags">
+            <h1>channels</h1>
+            <div class="checkbox">
+                <input type="checkbox" id="channel-default-avatar-adapt">
+                <label for="channel-default-avatar-adapt">default_avatar_adapt</label>
+                <p class="subtext">replace modern default avatars with a 2009 one</p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="channel-uploads-count">
+                <label for="channel-uploads-count">uploads_count</label>
+                <p class="subtext">show actual video count in the Uploaded section</p>
+            </div>
+        </div>
+        <button onclick="saveFlags();">save</button>
+    </div>
+    <script src="app_script.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+* {
+    padding: 0px 0px;
+    margin: 0px 0px;
+}
+body {
+    padding: 25px 25px;
+    font-family: sans-serif;
+}
+#initial-server-connect {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+button {
+    padding: 10px 10px;
+    font-size: 20px;
+    margin-top: 25px;
+}
+#devices {
+    display: none;
+    border: 1px black solid;
+    padding: 5px 5px;
+}
+#devices button {
+    margin: 0px;
+}
+#devices * {
+    display: inline-block
+}
+.section {
+    margin: 20px 0px;
+}
+.section h1 {
+    margin-bottom: 15px;
+}
+.subtext {
+    font-size: 15px;
+    margin-bottom: 5px;
+}
