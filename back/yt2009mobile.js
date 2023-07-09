@@ -205,7 +205,10 @@ module.exports = {
             return;
         }
         // default feeds
-        if(req.originalUrl.includes("featured")) {
+        if(req.originalUrl.includes("featured")
+        || (req.originalUrl.includes("most_discussed")
+        && req.headers["user-agent"]
+        && req.headers["user-agent"].includes("/4.1"))) {
             // send full feed on recently_featured
             // 25 recently watched
             let response = templates.gdata_feedStart

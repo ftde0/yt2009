@@ -986,6 +986,9 @@ app.get("/get_more_comments", (req, res) => {
             if(cookie.trimStart().startsWith("watch_flags=")) {
                 flags += cookie.trimStart().replace("watch_flags=", "").split(":").join(";")
             }
+            if(cookie.trimStart().startsWith("global_flags=")) {
+                flags += cookie.trimStart().replace("global_flags=", "")
+            }
         })
         flags += req.headers.url_flags.split("flags=")[1].split("&")[0];
     }
