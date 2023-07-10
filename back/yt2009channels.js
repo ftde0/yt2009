@@ -574,7 +574,7 @@ module.exports = {
         let videoUploadDates = {}
         let video_index = 0;
         let watch_url = "/watch.swf"
-        let watch_arg = "watch_arg"
+        let watch_arg = "video_id"
         function videosRender() {
             // "All" scrollbox
             let scrollbox_all_videos = JSON.parse(JSON.stringify(videosSource))
@@ -733,10 +733,12 @@ module.exports = {
                     }
 
                     
-                    let flashUrl = `${watch_url}?${watch_arg}=${video.id}&`
-                    + `iv_module=http%3A%2F%2F`
-                    + `${config.ip}%3A${config.port}%2Fiv_module.swf`;
+                    let flashUrl = `${watch_url}?${watch_arg}=${video.id}`
                     if(req.headers.cookie.includes("f_h264=on")) {
+                        flashUrl += "%2Fmp4"
+                    }
+                    if(req.headers.cookie.includes("f_h264=on")
+                    && watch_url == "/watch.swf") {
                         let fmtMap = "5/0/7/0/0"
                         let fmtUrls = `5|http://${config.ip}:${
                             config.port
@@ -744,9 +746,18 @@ module.exports = {
                         flashUrl += `&fmt_map=${encodeURIComponent(fmtMap)}`
                         flashUrl += `&fmt_url_map=${encodeURIComponent(fmtUrls)}`
                     }
+                    if(watch_url == "/watch.swf") {
+                        flashUrl += `&iv_module=http%3A%2F%2F`
+                        + `${config.ip}%3A${config.port}%2Fiv_module.swf`;
+                    }
                     code = code.replace(
                         "<!--yt2009_player-->",
                         templates.flashObject(flashUrl)
+                    )
+                    code = code.replace(
+                        `//yt2009-f-custom-player`,
+                        `var customPlayerUrl = "${watch_url}";
+                        var customPlayerArg = "${watch_arg}"`
                     )
                 }
             } else {
@@ -816,11 +827,6 @@ module.exports = {
             code = code.replace(
                 `onclick="document.searchForm.submit();"`,
                 `onclick="document.searchForm.submit();" style="width: 40px;"`
-            )
-            code = code.replace(
-                `//yt2009-f-custom-player`,
-                `var customPlayerUrl = "${watch_url}";
-                var customPlayerArg = "${watch_arg}"`
             )
             code = code.replace(
                 `<!--yt2009_f-->`,

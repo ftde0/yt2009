@@ -116,7 +116,7 @@ module.exports = {
             
         } else if(cache.read()[id] && waitForOgv && !resetCache) {
             if(!fs.existsSync(`../assets/${id}.ogg`)) {
-                // robimy ogg przed callbackiem
+                // if needed, export to ogv before callback
                 child_process.exec(yt2009templates.createFffmpegOgg(id),
                 (error, stdout, stderr) => {
                     let v = cache.read()[id]
@@ -126,7 +126,7 @@ module.exports = {
                     callback(v)
                 })
             } else {
-                // mamy ogg, możemy spokojnie callbackować
+                // if ogg needed but already there, callback
                 let v = cache.read()[id]
                 if(config.env == "dev") {
                     console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
@@ -134,7 +134,7 @@ module.exports = {
                 callback(v)
             }
         } else {
-            // w przeciwnym wypadku fetch
+            // fetch otherwise
             if(config.env == "dev") {
                 console.log(`(${userToken}) ${id} clean fetch ${Date.now()} ${resetCache ? "(cache reset)" : ""}`)
             }
@@ -155,7 +155,7 @@ module.exports = {
                     return;
                 }
 
-                // podstawowe dane
+                // basic data
                 data["description"] = videoData.videoDetails.shortDescription
                 data["viewCount"] = videoData.videoDetails.viewCount
                 data["author_name"] = videoData.videoDetails.author;
@@ -176,7 +176,7 @@ module.exports = {
                 if(!data.author_url.startsWith("/c/")
                 && !data.author_url.startsWith("/user/")
                 && !data.author_url.startsWith("/channel")) {
-                    // niefajny uploader url, fallbackujemy na /channel/id
+                    // fallback to /channel/ (may get changed in the future)
                     data.author_url = "/channel/" + videoData.contents
                                                     .twoColumnWatchNextResults
                                                     .results.results
@@ -187,7 +187,7 @@ module.exports = {
                                                     .browseEndpoint.browseId
                 }
 
-                // reszta podstawowych danych
+                // more basic data
                 data["author_img"] = ""
                 try {
                     data["author_img"] = videoData.contents
@@ -220,7 +220,7 @@ module.exports = {
                 data["category"] = videoData.microformat
                                     .playerMicroformatRenderer.category
 
-                // related filmy
+                // "related" videos
 
                 let related = []
                 try {
@@ -267,7 +267,7 @@ module.exports = {
                     }
                 })
 
-                // zapisujemy zdjęcie kanału
+                // save channel image
 
                 let fname = data.author_img.split("/")
                             [data.author_img.split("/").length - 1]
@@ -290,7 +290,7 @@ module.exports = {
                     callback(data)
                 }
 
-                // fetch komentarzy
+                // fetch comments
 
                 try {
                     let sections = videoData.contents.twoColumnWatchNextResults
@@ -323,9 +323,10 @@ module.exports = {
                     }
                 }
                 
-                // zapisujemy mp4/ogg
+                // save mp4/ogv
 
-                if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload) || config.fallbackMode) {
+                if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload)
+                || config.fallbackMode) {
                     function on_mp4_save_finish(path) {
                         setTimeout(function() {
                             if(waitForOgv) {
@@ -360,21 +361,6 @@ module.exports = {
                     yt2009utils.saveMp4(id, (path => {
                         on_mp4_save_finish(path)
                     }))
-                    /*let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
-                    writeStream.on("finish", () => {
-                        on_mp4_save_finish();
-                    })
-
-                   
-   
-                    ytdl(`https://youtube.com/watch?v=${id}`, {
-                        "quality": 18
-                    })
-                    .on("error", (error) => {
-                         callback(false)
-                         return;
-                     })
-                    .pipe(writeStream)*/
                     
                 } else {
                     data["mp4"] = `/assets/${id}`
@@ -391,11 +377,10 @@ module.exports = {
 
 
     "applyWatchpageHtml": function(data, req, callback, qualityList) {
-        // dane zcallbackowane z fetch_video_data wrzucamy do odpowiednich miejsc w htmlu
+        // apply data from fetch_video_data to html
         let code = watchpage_code;
         let requiredCallbacks = 1;
         let callbacksMade = 0;
-        // kolejka endscreen
         let endscreen_queue = []
 
         // basic data
@@ -793,7 +778,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
         if(flags.includes("homepage_contribute") &&
             uploadJS.getFullYear() <= 2010) {
-            // zakładka "videos being watched now" strona główna i /videos
+            // add to "videos being watched now" and /videos
             let go = true;
             featured_videos.slice(0, 23).forEach(vid => {
                 if(vid.id == data.id) {
@@ -961,7 +946,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         // if flash player is used
         // hide the html5 js, fix the layout, put a flash player
-        let env = process.platform == "win32" ? "dev" : "prod"
+        let env = config.env
         let swfFilePath = "/watch.swf"
         let swfArgPath = "video_id"
         if(req.headers.cookie.includes("alt_swf_path")) {
@@ -974,7 +959,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 req.headers.cookie.split("alt_swf_arg=")[1].split(";")[0]
             )
         }
-        let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module-${env}.swf`
+        let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}`
+        if((req.headers["cookie"] || "").includes("f_h264")) {
+            flash_url += "%2Fmp4"
+        }
+        flash_url += `&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module-${env}.swf`
         if(useFlash) {
             code = code.replace(
                 `<!DOCTYPE HTML>`,
@@ -1077,7 +1066,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }
 
 
-            // podłóż html
+            // add html
             data.comments.forEach(comment => {
                 if(comment.continuation) {
                     continuationFound = true;
@@ -1087,7 +1076,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     )
                     return;
                 }
-                // flagi
+                // flags
                 let commentTime = comment.time;
                 if(flags.includes("fake_comment_dates")) {
                     commentTime = yt2009utils.genFakeDate();
@@ -1151,11 +1140,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
         
 
-        // token kontynuacji
+        // continuation token
         code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
         code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
 
-        // podkładanie podobnych filmów
+        // add related videos
         let related_html = ""
         let related_index = 0;
         data.related.forEach(video => {
@@ -1303,6 +1292,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
             if(endscreen_version !== 1) {
                 // alt endscreen css
+                // the endsceen currently seen on the html5 player was initially
+                // a "alt" endscreen, the primary one being the 2008 endscreen.
+                // may be enabled by setting endscreen_version to 1
+                // but i haven't touched it since aug 2022 so no promises
                 endscreen_html += `
                 
                 <style>
@@ -1329,7 +1322,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         // fmode endscreen
         function render_endscreen_f() {
             if(req.headers["user-agent"].includes("MSIE")
-            || req.headers["user-agent"].includes("Goanna")) return "";
+            || req.headers["user-agent"].includes("Goanna")
+            || !flash_url.includes("/watch.swf")) return "";
             let rv_url = ""
             let related_index = 0;
             endscreen_queue.forEach(video => {
@@ -1363,7 +1357,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         
 
 
-        // tagi
+        // tags
         let tags_html = ""
         data.tags.forEach(tag => {
             tags_html += `<a href="#" class="hLink" style="margin-right: 5px;">${
@@ -1372,7 +1366,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         })
         code = code.replace("video_tags_html", tags_html)
 
-        // przycisk sub
+        // sub button
         let subscribed = false;
         subscribeList.forEach(sub => {
             if(data.author_url == sub.url) {
@@ -1381,7 +1375,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         })
 
         if(subscribed) {
-            // pokaż unsubscribe (mamy sub)
+            // show unsubscribe
             code = code.replace(
                 `data-yt2009-unsubscribe-button`,
                 ""
@@ -1391,7 +1385,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `class="hid"`
             )
         } else {
-            // na odwrót
+            // show subscribe
             code = code.replace(
                 `data-yt2009-unsubscribe-button`,
                 `class="hid"`
@@ -1402,7 +1396,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
-        // autoplay flaga
+        // autoplay flag
         if(flags.includes("autoplay") && !useFlash) {
             code = code.replace(`<!--yt2009_hook_autoplay_flag-->`, `
             
@@ -1420,7 +1414,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             </script>`)
         }
 
-        // flaga exp_ryd / use_ryd
+        // exp_ryd / use_ryd
         let useRydRating = "4.5"
         let endRating = "4.5"
         if(flags.includes("exp_ryd") || flags.includes("use_ryd")) {
@@ -1474,7 +1468,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
             })
         } else {
-            // oceny użytkowników
+            // other frontend user ratings
             let userRating = yt2009userratings.read(data.id, true)
             let avgRating = yt2009utils.custom_rating_round(
                 (userRating + parseFloat(useRydRating)) / 2
@@ -1492,7 +1486,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
-        // udostępnianie
+        // sharing
         let shareBehaviorServices = constants.shareBehaviorServices
         
         function createShareHTML(sites) {
@@ -1503,7 +1497,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             </div>
             <div id="watch-share-services-collapsed">
             `
-            // 3 pierwsze
+            // 3 first
             let collapsed_index = 0;
             for(let site in sites) {
                 if(collapsed_index <= 3) {
@@ -1532,7 +1526,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             <div id="watch-share-services-expanded" style="display: none;">
             `
 
-            // reszta
+            // rest
             for(let site in sites) {
                 let link = sites[site].replace(
                     `%title%`, 
@@ -1593,7 +1587,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         flash_url += "&flip=1"
                     }
                 }
-                if((req.headers["cookie"] || "").includes("f_h264")) {
+                if((req.headers["cookie"] || "").includes("f_h264")
+                && flash_url.includes("/watch.swf")) {
                     // create format maps and urls for the 2009 player
                     // 22 - hd720
                     // 35 - "large" - hq - 480p
@@ -1714,18 +1709,18 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             requiredCallbacks++;
             let exp_related_html = ""
             let lookup_keyword = ""
-            // tagi
+            // tags
             data.tags.forEach(tag => {
                 if(lookup_keyword.length < 9) {
                     lookup_keyword += `${tag.toLowerCase()} `
                 }
             })
-            // jako backup pierwsze słowo z tytułu
+            // or the first word from the title
             if(lookup_keyword.length < 9) {
                 lookup_keyword = data.title.split(" ")[0]
             }
             
-            // wyszukiwanie
+            // get
             yt2009search.related_from_keywords(
                 lookup_keyword, data.id, flags, (html, rawData) => {
                     rawData.forEach(video => {
@@ -1743,7 +1738,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     })
                     exp_related_html += html;
 
-                    // na koniec stare related filmy od yt
+                    // add old defualt "related" videos at the end
                     data.related.forEach(video => {
                         if(parseInt(video.uploaded.split(" ")[0]) >= 12
                         && video.uploaded.includes("years")
@@ -1815,7 +1810,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
-        // banery kanałów
+        // channel banners
         yt2009channelcache.getSmallBanner(data.author_url, (file => {
             if(file && file !== "no") {
                 code = code.replace(

@@ -529,6 +529,7 @@ function switchVideo(video) {
 
     var videoUrl = customPlayerUrl + '?' + customPlayerArg + '=' + id
     if(document.cookie.indexOf("f_h264=on") !== -1) {
+        videoUrl += "%2Fmp4"
         var fmtMap = "5/0/7/0/0"
         var fmtUrls = "5|http://" + location.host
                       + "/channel_fh264_getvideo?v=" + id
@@ -682,6 +683,8 @@ function get_video_comments() {
                             .getAttribute("src")
                             .split("?")[1].split("=")[1]
                             .split("&")[0]
+    currentId = currentId.replace("%2Fmp4", "")
+                         .replace("/mp4", "")
 
     // request
     var r;

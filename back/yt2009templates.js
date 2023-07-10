@@ -1099,7 +1099,9 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 		<category scheme='http://gdata.youtube.com/schemas/2007/userevents.cat' term='${type}'/>
 		<title>${title.split("<").join("").split(">").join("").split("&").join("").trim()}</title>
 		<yt:videoid>${id}</yt:videoid>
-		<author>
+        <yt:username>${author}</yt:username>
+        <yt:groupId>0</yt:groupId>
+        <author>
 			<name>${author}</name>
 			<uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
 		</author>

@@ -13,7 +13,7 @@ const config = require("./config.json")
 
 module.exports = {
     "get_video": function(req, res) {
-        // info o głównym filmie - tym na samym środku jak włączamy warp
+        // main video data - sent when warp.swf is started
         if(!utils.isAuthorized(req)) {
             res.send("");
             return;
@@ -24,13 +24,33 @@ module.exports = {
         }
 
         yt2009main.fetch_video_data(req.query.video_id, (data) => {
-            res.send(`<?xml version="1.0" encoding="utf-8"?><ut_response status="ok"><video><author>${data.author_name}</author><id>${req.query.video_id}</id><title>${data.title}</title><length_seconds>${data.length}</length_seconds><rating_avg>5</rating_avg><rating_count>1</rating_count><description>.</description><view_count>1</view_count><upload_time>1</upload_time><comment_count>1</comment_count><tags> </tags><url>http://www.youtube.com/watch?v=${req.query.video_id}</url><thumbnail_url>http://i.ytimg.com/vi/${req.query.video_id}/default.jpg</thumbnail_url><embed_status>ok</embed_status><allow_ratings>yes</allow_ratings></video></ut_response>`)
+            res.send(`
+<?xml version="1.0" encoding="utf-8"?>
+<ut_response status="ok">
+    <video>
+        <author>${data.author_name}</author>
+        <id>${req.query.video_id}</id>
+        <title>${data.title}</title>
+        <length_seconds>${data.length}</length_seconds>
+        <rating_avg>5</rating_avg>
+        <rating_count>1</rating_count>
+        <description>.</description>
+        <view_count>1</view_count>
+        <upload_time>1</upload_time>
+        <comment_count>1</comment_count>
+        <tags> </tags>
+        <url>http://www.youtube.com/watch?v=${req.query.video_id}</url>
+        <thumbnail_url>http://i.ytimg.com/vi/${req.query.video_id}/default.jpg</thumbnail_url>
+        <embed_status>ok</embed_status>
+        <allow_ratings>yes</allow_ratings>
+    </video>
+</ut_response>`)
         }, req.headers["user-agent"], utils.get_used_token(req))
     },
 
 
     "get_related": function(req, res) {
-        // related filmy - ta sekcja jest tu dzięki próbom i błędom ale jest
+        // warp related videos
         if(!utils.isAuthorized(req)) {
             res.send("");
             return;
@@ -46,86 +66,26 @@ module.exports = {
         <video_list>`
         let video_index = 1;
 
-        if(req.query.related == "1") {
-            yt2009wayback.read(
-                req.query.video_id,
-                (data) => {
-                    if(data.related.length >= 1) {
-                        let actual_exist = []
-                        let video_check_table = []
-                        data.related.forEach(video => {
-                            if(utils.time_to_seconds(video.time) >= 900) return;
-                            video_check_table.push(video)
-                        })
+        yt2009main.fetch_video_data(req.query.video_id, (data) => {
+            yt2009search.related_from_keywords(
+                utils.exp_related_keyword(data.tags, data.title),
+                req.query.video_id, "", (html, related) => {
+                    related.forEach(v => {
+                        videos_xml += yt2009templates.warpVideo(
+                            v.id,
+                            v.title,
+                            v.length,
+                            v.creatorHandle || v.creatorName,
+                            video_index
+                        )
 
+                        video_index++
+                    })
 
-                        video_check_table.forEach(video => {
-                            setTimeout(function() {
-                                video_exists.read(video.id, (exists) => {
-                                    if(exists) {
-                                        actual_exist.push(video)
-                                    }
-
-                                    video_check_table = video_check_table
-                                                    .filter(s => s !== video)
-                                    if(video_check_table.length == 0) {
-                                        after_check()
-                                    }
-                                })
-                            }, 150 + Math.floor(Math.random() * 1000))
-                        })
-
-                        function after_check() {
-                            console.log("done")
-                            actual_exist.forEach(video => {
-                                videos_xml += yt2009templates.warpVideo(
-                                    video.id,
-                                    video.title,
-                                    video.time,
-                                    video.uploaderName,
-                                    video_index
-                                )
-    
-                                video_index++
-                            })
-
-                            videos_xml += `</video_list></ut_response>`
-                            res.send(videos_xml)
-                        }  
-                    } else {
-                        useDefaultRelated()
-                    }
-                },
-                false
-            )
-        } else {
-            useDefaultRelated();
-        }
-
-        function useDefaultRelated() {
-            yt2009main.get_related_videos(req.query.video_id, (videos) => {
-                // każdy film do xmla
-                videos.forEach(video => {
-                    if(utils.time_to_seconds(video.length) >= 900) return;
-    
-                    videos_xml += yt2009templates.warpVideo(
-                        video.id,
-                        video.title,
-                        video.length,
-                        video.creatorName,
-                        video_index
-                    )
-                    video_index++;
-                })
-    
-                videos_xml += `</video_list></ut_response>`
-    
-                res.send(videos_xml)
-            })
-        }
-
-        
-        
+                    videos_xml += `</video_list></ut_response>`
+                    res.send(videos_xml)
+            }, "http")
+        }, req.headers["user-agent"], utils.get_used_token(req), false, false, true)
     },
 
     // handling /get_video (flv)
@@ -134,8 +94,10 @@ module.exports = {
             res.send("")
             return;
         }
-        if(req.query.fmt == 5) {
-            res.redirect(`../assets/${req.query.video_id}.mp4`)
+        if(req.query.fmt == 5
+        || req.query.video_id.includes("/mp4")) {
+            req.query.video_id = req.query.video_id.replace("/mp4", "")
+            res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
             return;
         }
         this.vid_flv(req.query.video_id, () => {
@@ -144,21 +106,19 @@ module.exports = {
     },
 
     "vid_flv": function(id, callback) {
-        // zdobywamy plik flv - takiego chce flash player
+        // get a flv file needed by flash
 
-        // sprawdzamy kilka rzeczy żeby zaoszczędzić czasu najpierw
-
-        // mamy flv?
+        // have flv?
         if(fs.existsSync(`../assets/${id}.flv`)) {
             callback()
         } else if(fs.existsSync(`../assets/${id}.mp4`)
                 && !fs.existsSync(`../assets/${id}.flv`)) {
-            // mamy mp4, ale nie mamy flv - konwertujemy
+            // have mp4 but no flv, convert
             convert_mp4_to_flv(id, () => {
                 callback()
             })
         } else {
-            // nie mamy mp4 ani flv - pobieramy i konwertujemy
+            // neither available - download and convert
             let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
 
             writeStream.on("finish", () => {

@@ -560,6 +560,7 @@ app.get("/swf/apiplayer.swf", (req, res) => {
 })
 
 app.get("/get_video_info", (req, res) => {
+    req.query.video_id = req.query.video_id.replace("/mp4", "")
     yt2009.fetch_video_data(req.query.video_id, (data => {
         let qualities = require("./cache_dir/qualitylist_cache_manager")
                         .read()[req.query.video_id] || [];
