@@ -828,6 +828,8 @@ responseExpander.onclick = function() {
 }
 
 // fetch our response list
+var videoResponseCount = 0;
+var vrPage = 0;
 function loadVideoResponses() {
     var r;
     if (window.XMLHttpRequest) {
@@ -843,6 +845,8 @@ function loadVideoResponses() {
                 videoResponsesLoaded = true;
                 document.querySelector("#watch-video-responses-children")
                         .innerHTML = r.responseText
+                videoResponseCount = r.responseText.split("video-bar-item")
+                                      .length - 1;
             }
         }
     }
@@ -858,6 +862,11 @@ function loadVideoResponses() {
 var videoResponseMargin = 0;
 function responseNavigateLeft() {
     var tempMargin = 0;
+    vrPage--;
+    if(vrPage < 0) {
+        vrPage = 0;
+        return;
+    }
     var x = setInterval(function() {
         tempMargin += 40;
         videoResponseMargin += 40;
@@ -870,6 +879,11 @@ function responseNavigateLeft() {
 
 function responseNavigateRight() {
     var tempMargin = 0;
+    vrPage++;
+    if(vrPage >= Math.round(videoResponseCount / 4)) {
+        vrPage--
+        return;
+    }
     var x = setInterval(function() {
         tempMargin -= 40;
         videoResponseMargin -= 40;

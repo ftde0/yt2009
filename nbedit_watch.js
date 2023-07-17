@@ -928,6 +928,8 @@ function videoResponsesExpand() {
 responseExpander.addEventListener("click", videoResponsesExpand, false)
 
 // fetch our response list
+var videoResponseCount = 0;
+var vrPage = 0;
 function loadVideoResponses() {
     var r = new XMLHttpRequest();
     r.open("POST", "/videoresponse_load")
@@ -936,6 +938,8 @@ function loadVideoResponses() {
         r.addEventListener("load", function(e) {
             videoResponsesLoaded = true;
             $("#watch-video-responses-children").innerHTML = r.responseText
+            videoResponseCount = r.responseText.split("video-bar-item")
+                                  .length - 1;
         }, false)
     }
     catch(error) {
@@ -950,6 +954,11 @@ function loadVideoResponses() {
 var videoResponseMargin = 0;
 function responseNavigateLeft() {
     var tempMargin = 0;
+    vrPage--;
+    if(vrPage < 0) {
+        vrPage = 0;
+        return;
+    }
     var x = setInterval(function() {
         tempMargin += 40;
         videoResponseMargin += 40;
@@ -962,6 +971,11 @@ function responseNavigateLeft() {
 
 function responseNavigateRight() {
     var tempMargin = 0;
+    vrPage++;
+    if(vrPage >= Math.round(videoResponseCount / 4)) {
+        vrPage--
+        return;
+    }
     var x = setInterval(function() {
         tempMargin -= 40;
         videoResponseMargin -= 40;

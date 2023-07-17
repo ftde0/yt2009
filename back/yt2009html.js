@@ -611,7 +611,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         // name
                         if(waybackData.authorName
                         && !waybackData.authorName
-                            .toLowerCase().includes("subscribe")) {
+                            .toLowerCase().includes("subscribe")
+                        && waybackData.authorName
+                           .replace(/[^a-zA-Z0-9]/g, "").trim()) {
                             code = code.replace(`yt2009-channel-link`,
                                             `original-yt2009-channel-link hid`)
                             code = code.replace(`<!--yt2009_author_wayback-->`, `
@@ -690,7 +692,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 commentTime,
                                 comment.content,
                                 flags,
-                                true
+                                true,
+                                comment.likes || Math.floor(Math.random() * 2)
                             )
                         })
                         commentsHTML += `<!--Default YT comments below.-->`
@@ -737,11 +740,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 .toLowerCase()
                                 .includes("playlist")) return;
                             let views = "lang_views_prefix" + yt2009utils.countBreakup(
-                                parseInt(video.viewCount.replace(/[^0-9]/g, ""))
+                                parseInt(yt2009utils.bareCount(video.viewCount))
                             ) + "lang_views_suffix"
                             if(isNaN(
-                                parseInt(video.viewCount.replace(/[^0-9]/g, "")))
-                            ) {
+                                parseInt(yt2009utils.bareCount(video.viewCount))
+                            )) {
                                 views = ""
                             }
                                         
@@ -1057,6 +1060,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         // comments
         let comments_html = ""
         let unfilteredCommentCount = 0;
+        let topLike = 0;
         if(data.comments) {
 
             // hide show more comments if less than 21
@@ -1064,6 +1068,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             if(data.comments.length !== 21) {
                 code = code.replace("yt2009_hook_more_comments", "hid")
             }
+
+            // top like count
+            let likeCounts = []
+            data.comments.forEach(c => {
+                if(c.likes) {
+                    likeCounts.push(c.likes)
+                }
+            })
+            likeCounts = likeCounts.sort((a, b) => b - a)
+            topLike = likeCounts[0]
 
 
             // add html
@@ -1124,13 +1138,19 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 commentTime = yt2009utils.relativeTimeCreate(
                     commentTime, yt2009languages.get_language(req)
                 )
+                // like count clarif
+                let presentedLikeCount = Math.floor((comment.likes / topLike) * 10)
+                if(topLike < 10) {
+                    presentedLikeCount = comment.likes
+                }
                 comments_html += yt2009templates.videoComment(
                     comment.authorUrl,
                     commentPoster,
                     commentTime,
                     commentContent,
                     flags,
-                    true
+                    true,
+                    presentedLikeCount
                 )
     
                 unfilteredCommentCount++;

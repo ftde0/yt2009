@@ -7,9 +7,18 @@ const utils = require("./yt2009utils")
 const config = require("./config.json")
 
 module.exports = {
-    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage) {
+    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes) {
         if(commentTime.includes("in playlist")) {
             commentTime = commentTime.split("in playlist")[0]
+        }
+        let likeColor = "gray"
+        let likePrefix = ""
+        if(likes > 0) {
+            likeColor = "green"
+            likePrefix = "+"
+        } else if(likes < 0) {
+            likeColor = "red"
+            likePrefix = "-"
         }
         return `<div class="watch-comment-entry">
             <div class="watch-comment-head">
@@ -18,7 +27,7 @@ module.exports = {
                     <span class="watch-comment-time"> (${commentTime}) </span>
                 </div>
                 <div class="watch-comment-voting">
-                    <!--<span class="watch-comment-score watch-comment-gray">&nbsp;0</span>-->
+                    <span class="watch-comment-score watch-comment-${likeColor}">${likePrefix}${likes || 0}</span>
                     <a href="#"><button class="master-sprite watch-comment-down${flags.includes("login_simulate") ? "-hover" : ""}" title="Poor comment"></button></a>
                     <a href="#"><button class="master-sprite watch-comment-up${flags.includes("login_simulate") ? "-hover" : ""}" title="Good comment"></button></a>
                     <span class="watch-comment-msg"></span>

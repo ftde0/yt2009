@@ -222,10 +222,10 @@ app.post("/videoresponse_load", (req, res) => {
 
         responsesHTML += `\n${yt2009_templates.videoResponsesEnd}`
         if(responseCount == 0) {
-            responsesHTML = `No Video Responses.
-            <!--that text is just an approximation of how it would
-             have been in 2009. but if you know how it actually
-              did let me know. thanks!!-->`
+            responsesHTML = `<div id="watch-video-responses-none">
+            This video has <b>no Responses</b>.
+            Be the first to <a class="bold" href="#">Post a Video Response</a>.
+            </div>`
         }
         res.send(responsesHTML)
     }, 

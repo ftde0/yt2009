@@ -137,6 +137,20 @@ module.exports = {
                 }
 
                 if(!pass) return;
+
+                // comment like count from yt
+                let likeCount = false;
+                if(comment_path_short.voteCount
+                && comment_path_short.voteCount.simpleText) {
+                    likeCount = comment_path_short.voteCount.simpleText
+                    if(likeCount.includes("K")) {
+                        likeCount = parseFloat(likeCount) * 1000
+                    } else if(likeCount.includes("M")) {
+                        likeCount = parseFloat(likeCount) * 1000000
+                    }
+                    likeCount = parseInt(likeCount)
+                }
+
                 comments.push({
                     "authorAvatar": comment_path_short
                                     .authorThumbnail.thumbnails[1].url,
@@ -145,7 +159,8 @@ module.exports = {
                     "content": commentContent.split("\n\n").join("<br>"),
                     "time": comment_flags.includes("fake_comment_dates")
                             ? gen_fake_date()
-                            : comment_path_short.publishedTimeText.runs[0].text
+                            : comment_path_short.publishedTimeText.runs[0].text,
+                    "likes": likeCount
                 })
             } else if(rawComment.continuationItemRenderer) {
                 // continuation token

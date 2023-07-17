@@ -189,6 +189,15 @@ module.exports = {
             }
             catch(error) {}
 
+            let likeCount = 0;
+            let likeSelector = comment.querySelector(`
+                .watch-comment-score,
+                .comments-rating-positive
+            `)
+            if(likeSelector) {
+                likeCount = parseInt(likeSelector.innerText)
+            }
+
             let postTimeSelector = comment.querySelector(`
             .commentHead .smallText,
             .watch-comment-time,
@@ -205,7 +214,8 @@ module.exports = {
                 "authorName": commentAuthorName,
                 "authorUrl": commentAuthorUrl,
                 "time": postTime,
-                "content": content
+                "content": content,
+                "likes": likeCount
             })
         })
 
@@ -243,12 +253,29 @@ module.exports = {
                                 .video-time span,
                                 .video-time`).innerText : ""
             try {
-                relatedElement.uploaderName = video.querySelector(`
-                                            .video-username a,
-                                            .stat .yt-user-name,
-                                            .stat.attribution,
-                                            .stat:last-child:not(.view-count),
-                                            .stat:not(.view-count)`).innerText
+                let unSelector = video.querySelector(`
+                    .video-username a,
+                    .stat .yt-user-name,
+                    .stat.attribution,
+                    .stat:not(.view-count)
+                `)
+                let stats = video.querySelectorAll(".stat")
+                if(stats.length >= 2
+                && !video.querySelector(".stat.view-count")) {
+                    let lastStat = stats[stats.length - 1]
+                    if(lastStat.innerText.includes("by ")
+                    || isNaN(utils.bareCount(lastStat.innerText))
+                    || utils.bareCount(lastStat.innerText)
+                    < utils.bareCount(stats[0].innerText)) {
+                        relatedElement.uploaderName = utils.asciify(
+                            lastStat.innerText
+                        )
+                    }
+                } else {
+                    relatedElement.uploaderName = utils.asciify(
+                        unSelector.innerText
+                    )
+                }
             }
             catch(error) {
                 relatedElement.uploaderName = ""
@@ -269,11 +296,29 @@ module.exports = {
             }
             relatedElement.uploaderUrl = uploaderUrl
 
+            // related view count
             try {
-                relatedElement.viewCount = video.querySelector(`
-                                .view-count,
-                                .video-view-count,
-                                .stat.view-count`).innerText
+                let vcSelector = video.querySelector(`
+                    .view-count,
+                    .video-view-count,
+                    .stat.view-count,
+                    .stat:nth-child(1)
+                `)
+                if(vcSelector) {
+                    relatedElement.viewCount = vcSelector.innerText
+                } else {
+                    let stats = video.querySelectorAll(".stat")
+                    if(stats.length >= 2) {
+                        if(parseInt(utils.bareCount(stats[0].innerText))
+                        < parseInt(utils.bareCount(stats[1].innerText))) {
+                            // view count on stats[1]
+                            relatedElement.viewCount = stats[1].innerText
+                        } else {
+                            // view count on stats[0]
+                            relatedElement.viewCount = stats[0].innerText
+                        }
+                    }
+                }
             }
             catch(error) {
                 console.log(error)
