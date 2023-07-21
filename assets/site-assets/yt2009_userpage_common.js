@@ -1,7 +1,11 @@
+// further code quality improvements in the future,
+// minor changes for now
+// 2023-07-21
+
 // zmiana strony
 // 2009 style
 function switchPage(num) {
-    // obecna otwarta strona
+    // currently open page
     var currentPage = 0;
     var tempIndex = 0;
 
@@ -17,7 +21,7 @@ function switchPage(num) {
         tempIndex++;
     }
 
-    // którą stronę otworzyć
+    // what page to open
     var targetPage = 0;
 
     if(num == "l") {
@@ -28,9 +32,10 @@ function switchPage(num) {
         targetPage = currentPage + num;
     }
 
-    if(targetPage == -1 || !document.querySelector(".videos-page-" + targetPage)) return;
+    if(targetPage == -1
+    || !document.querySelector(".videos-page-" + targetPage)) return;
 
-    // ukryj pozostałe strony
+    // hide other pages
     for(var sel in s) {
         try {
             s[sel].className += " hid"
@@ -38,29 +43,31 @@ function switchPage(num) {
         catch(error) {}
     }
 
-    // pokaż target
+    // show target
     s[targetPage].className = s[targetPage].className.split("hid").join("")
 
-    // update numerków
-    document.querySelector("#yt2009-page-n1").innerHTML = "Page " + (targetPage + 1) + " - " + s.length
-    document.querySelector("#yt2009-page-n2").innerHTML = "Page " + (targetPage + 1) + " - " + s.length
+    var pString = "Page " + (targetPage + 1) + " - " + s.length
+    // update page numbers
+    document.querySelector("#yt2009-page-n1").innerHTML= pString;
+    document.querySelector("#yt2009-page-n2").innerHTML = pString
 }
 
-// czyszczenie historii
+// clear history
 function viewingHistoryClear() {
-    document.cookie = "watch_history=; Path=/; expires=Fri, 31 Dec 2009 23:59:59 GMT"
+    var c = "watch_history=; Path=/; expires=Fri, 31 Dec 2009 23:59:59 GMT"
+    document.cookie = c;
     localStorage.watch_history = "[]"
     location.reload();
 }
 
-// przeglądanie sub kanałów
+// browse subscribed channels
 function switchChannel(element) {
     var url = element.getAttribute("data-url")
     var username = element.querySelector(".name").innerHTML
 
     var videos_element = document.querySelector(".yt2009-video-list-hook")
 
-    // classname .selected, wywal z innych, daj na element
+    // classname .selected, remove from others, add to needed ones
     var s = document.querySelectorAll(".channel-subfolder.selected")
     for(var sel in s) {
         try {
@@ -72,24 +79,24 @@ function switchChannel(element) {
     
     element.className += " selected"
 
-    // animacja ładowania
+    // loading anim
     videos_element.innerHTML = "<img src=\"/assets/site-assets/icn_loading_animated-vfl24663.gif\" style=\"text-align: center;padding: 50px 50px;position: relative;left: 300px;\">"
 
 
-    // fetch nowych filmów dla wybranej osoby
+    // fetch new videos
     var r = new XMLHttpRequest();
     r.open("GET", "/subscriptions_new_videos")
     r.setRequestHeader("url", url)
     r.send(null)
     r.addEventListener("load", function(e) {
-        // dopełnianie htmla wysłanego z serwera
+        // html sent from server
         videos_element.innerHTML = r.responseText
 
         document.querySelector(".yt2009-sub-header").innerHTML = "<div class=\"pager\"></div><a href=\"" + url + "\"><h2>" + username + "</h2></a>"
     }, false)
 }
 
-// podkładanie nowych danych z localStorage
+// clear localstorage data
 if(window.localStorage) {
     if(location.href.indexOf("my_subscriptions") !== -1) {
         subscription_handle();
@@ -130,7 +137,7 @@ if(window.localStorage) {
         }
     }
 
-    // podłóż htmla
+    // add html
     if(!document.querySelector(".videos-page-0")) {
         prepNewPage();
     }
@@ -138,7 +145,7 @@ if(window.localStorage) {
     storageObject.reverse().forEach(function(video) {
         if(!video.id) return;
         if(current_page_item_count >= current_page_items_max) {
-            // tworzymy nową stronę na rzeczy
+            // create new pages
             current_page_items_max = 20;
             current_page_item_count = 0;
             prepNewPage();
@@ -163,7 +170,7 @@ if(window.localStorage) {
     })
 }
 
-// nowa strona
+// new page
 function prepNewPage() {
     pageShift(1)
 
@@ -174,39 +181,50 @@ function prepNewPage() {
     newPage.parentNode = document.querySelector("#table")
 
     if(!document.querySelector("#table").outerHTML) {
-        // jak przeglądarka nie ma outerHTML (np. stare ff) to symulujemy
-        document.querySelector("#table").innerHTML = document.querySelector("#table").innerHTML.split("</thead>").join('</thead><tbody id="videos" class="videos-page videos-page-0">' + newPage.innerHTML + '</tbody>')
+        // if browser doesn't have outerhtml (old ff for example) simulate
+        var html = document.querySelector("#table").innerHTML
+                   .split("</thead>")
+                   .join('</thead><tbody id="videos" class="videos-page videos-page-0">'
+                        + newPage.innerHTML + '</tbody>'
+                    )
+        document.querySelector("#table").innerHTML = html
     } else {
-        document.querySelector("#table").innerHTML = document.querySelector("#table").innerHTML.split("</thead>").join("</thead>" + newPage.outerHTML)
+        var html = document.querySelector("#table").innerHTML
+                   .split("</thead>")
+                   .join("</thead>" + newPage.outerHTML)
+        document.querySelector("#table").innerHTML = html
     }
 
     
-
-
-    // update numerków
+    // update numbers
     try {
+        var pageString = "Page 1 - " + s.length
         var s = document.querySelectorAll(".videos-page")
-        document.querySelector("#yt2009-page-n1").innerHTML = "Page 1 - " + s.length
-        document.querySelector("#yt2009-page-n2").innerHTML = "Page 1 - " + s.length
+        document.querySelector("#yt2009-page-n1").innerHTML = pageString
+        document.querySelector("#yt2009-page-n2").innerHTML = pageString
     }
     catch(error) {}
 }
 
-// shift każdej strony o number w dół
+// shift each page 1 number
 function pageShift(number) {
     var s = document.querySelectorAll(".videos-page")
     for(var sel in s) {
         try {
             if(s[sel].className) {
-                var pageNumber = s[sel].className.split("videos-page-")[1].trimRight();
-                s[sel].className = "videos-page videos-page-" + (parseInt(pageNumber) + number) + " hid"
+                var pageNumber = s[sel].className
+                                 .split("videos-page-")[1]
+                                 .trimRight();
+                s[sel].className = "videos-page videos-page-"
+                                 + (parseInt(pageNumber) + number)
+                                 + " hid"
             }
         }
         catch(error) {}
     }
 }
 
-// wybieranie/odwybieranie wszystkiego
+// select/unselect all
 function selectAllItems() {
     var s = document.querySelectorAll('input[type="checkbox"]')
     for(var sel in s) {
@@ -221,7 +239,7 @@ function deselectAllItems() {
     }
 }
 
-// subskrypcje z localStorage
+// localstorage subs
 function subscription_handle() {
     var html = ""
     JSON.parse(localStorage.subscriptions).forEach(function(sub) {
@@ -236,12 +254,17 @@ function subscription_handle() {
     document.querySelector(".secondary-subscription-list").innerHTML += html
 }
 
-// playlisty z localStorage
+// localstorage playlists
 function playlists_handle() {
-    // dodawanie podfolderów na index
+    // add index subfolders
     var playlistIndex = JSON.parse(localStorage.playlistsIndex)
     playlistIndex.forEach(function(playlist) {
-        document.querySelector(".subfolder-container").innerHTML += "<div class=\"subfolder\" data-id=\"" + playlist.id + "\" onclick=\"show_playlist_localstorage(this)\"><a class=\"name\" href=\"#\">" + playlist.name + "</a></div>"
+        document.querySelector(".subfolder-container").innerHTML +=
+        "<div class=\"subfolder\" data-id=\""
+        + playlist.id
+        + "\" onclick=\"show_playlist_localstorage(this)\"><a class=\"name\" href=\"#\">"
+        + playlist.name
+        + "</a></div>"
     })
 
     if(document.querySelector(".subfolder")) {
@@ -250,13 +273,13 @@ function playlists_handle() {
     }
 }
 
-// zmienianie playlisty
+// switch playlist
 function show_playlist_localstorage(playlist) {
-    // pokaż poprawnie .selected
+    // show .selected
     document.querySelector(".subfolder.selected").className = "subfolder"
     playlist.className = "subfolder selected"
 
-    // dodajemy filmy
+    // render videos
     var playlistId = playlist.getAttribute("data-id")
     var playlistVideos = JSON.parse(localStorage["playlist-" + playlistId])
     var playlistVideosHTML = ""
@@ -295,11 +318,12 @@ function show_playlist_localstorage(playlist) {
     document.querySelector(".yt2009-videos-insert").innerHTML = playlistVideosHTML
 }
 
-// przycisk play all
+// play all
+// create a playlist with our videos with the server
 if(document.querySelector("#playlist-btn-play")) {
     document.querySelector("#playlist-btn-play")
     .addEventListener("click", function() {
-        // dane do requesta
+        // request data
         var playlistName = document.querySelector(".subfolder.selected")
                             .innerHTML;
         var videos = ""
@@ -313,8 +337,8 @@ if(document.querySelector("#playlist-btn-play")) {
         }
     
         // a request creating a playlist ID. once we get that,
-        //redirect to the watchpage with a
-        //&list= parameter containing our custom ID
+        // redirect to the watchpage with a
+        // &list= parameter containing our custom ID
         var r = new XMLHttpRequest();
         r.open("POST", "/create_playlist")
         r.setRequestHeader("videos", videos)
@@ -327,7 +351,7 @@ if(document.querySelector("#playlist-btn-play")) {
         }, false)
     }, false)
     
-    // usuwanie z playlisty wybranego filmu
+    // remove picked video(s) from the playlist
     document.querySelector("#playlist-btn-remove")
             .addEventListener("click", function() {
         var playlistId = document.querySelector(".subfolder.selected")
@@ -337,23 +361,61 @@ if(document.querySelector("#playlist-btn-play")) {
             if(s[sel].checked && s[sel].getAttribute("data-videoid")) {
                 var videoElement = {}
     
-                var playlistVideos = JSON.parse(localStorage["playlist-" + playlistId])
+                var playlistVideos = JSON.parse(
+                    localStorage["playlist-" + playlistId]
+                )
                 playlistVideos.forEach(function(video) {
                     if(video.id == s[sel].getAttribute("data-videoid")) {
                         videoElement = video;
                     }
                 })
     
-                localStorage["playlist-" + playlistId] = localStorage["playlist-" + playlistId].replace(JSON.stringify(videoElement), "")
+                localStorage["playlist-" + playlistId] = localStorage[
+                    "playlist-" + playlistId
+                ].replace(JSON.stringify(videoElement), "")
     
                 // poprawianie jsona
-                localStorage["playlist-" + playlistId] = localStorage["playlist-" + playlistId].replace("[,", "[").replace(",]", "]")
+                localStorage["playlist-" + playlistId] = localStorage[
+                    "playlist-" + playlistId
+                ].replace("[,", "[").replace(",]", "]")
             }
         }
     
-        // update playlisty
+        // update the playlist
         show_playlist_localstorage(
             document.querySelector(".subfolder.selected")
         )
     }, false)
+}
+
+// clear quicklist
+function quicklistClear() {
+    localStorage.quicklistVids = "[]"
+    location.reload()
+}
+
+function removeSelectedFromQuicklist() {
+    // get the list of selected videos
+    var videoIds = []
+    var s = document.querySelectorAll(".video")
+    for(var e in s) {
+        try {
+            if(s[e].querySelector(".checkbox").checked) {
+                videoIds.push(s[e].querySelector(".checkbox").value)
+            }
+        }
+        catch(error) {console.log(error)}
+    }
+
+    // remove em
+    var ql = JSON.parse(localStorage.quicklistVids)
+    ql.forEach(vid => {
+        if(videoIds.indexOf(vid.id) !== -1) {
+            ql = ql.filter(function(s) {
+                return s !== vid
+            })
+        }
+    })
+    localStorage.quicklistVids = JSON.stringify(ql)
+    location.reload()
 }

@@ -132,7 +132,7 @@ function initPlayer(parent, fullscreenEnabled) {
     }
 
     if(parent == document) {
-        // zjeżdżamy z playera
+        // mouse out of the player
         var mousein = true;
         mainElement.addEventListener("mouseout", function(e) {
             var x = e.pageX || e.clientX;
@@ -150,7 +150,7 @@ function initPlayer(parent, fullscreenEnabled) {
             setTimeout(function() {
                 mousein = false;
                 controlsFadeProgress = false;
-                // revert animacji fullscreen do 1 klatki
+                // revert fullscreen animation to 1st frame
                 if(fullscreenEnabled) {
                     $(".video_controls .fullscreen")
                     .style.backgroundPosition = "0px 0px"
@@ -172,7 +172,7 @@ function initPlayer(parent, fullscreenEnabled) {
             }
         }, false)
 
-        // wjeżdżamy na player
+        // mouse on the player
         non_css_anim_add($(".video_controls"), "bottom", -23, 0);
         mainElement.addEventListener("mouseover", function() {
             lastMouseMovement = Math.floor(Date.now() / 1000)
@@ -184,7 +184,7 @@ function initPlayer(parent, fullscreenEnabled) {
             }, 400)
         }, false)
     } else {
-        // ukrywaj/pokazuj kontrolki zjeżdżając z video
+        // hide/show controls on mousein/mouseout
         var controlsFadeProgress = false;
         var videoControlsShown = true;
         $("#watch-player-div").addEventListener("mouseout", function(e) {
@@ -202,7 +202,7 @@ function initPlayer(parent, fullscreenEnabled) {
                 controlsFadeProgress = false;
                 mousedown = false;
 
-                // ukryj głośność też jakby się miała zglitchować
+                // hide volume if it were to get glitched
                 
                 if(volume_up) {
                     volume_up = false;
@@ -211,7 +211,7 @@ function initPlayer(parent, fullscreenEnabled) {
                     non_css_anim_remove(volume_panel, "bottom", 25, -64)
                 }
 
-                // i player_additions
+                // player_additions
                 if(player_add_popout.style.bottom == "25px") {
                     non_css_anim_remove(player_add_popout, "bottom", 25, -51)
                     $(".annotations-tooltip").className
@@ -219,7 +219,7 @@ function initPlayer(parent, fullscreenEnabled) {
                     $(".captions_popup").style.display = "none"
                 }
 
-                // revert animacji fullscreen do 1 klatki
+                // revert fullscreen animation to 1st frame
                 if(fullscreenEnabled) {
                     $(".video_controls .fullscreen")
                     .style.backgroundPosition = "0px 0px"
@@ -460,9 +460,9 @@ function adjustSeekbarWidth() {
                                         + "px;}"
     }
     
-    // gif ładowania
+    // loading gif
     if(document.querySelector(".html5-loading")) {
-        // -16 z połowy wymiarów gifa (32x32)
+        // -16 from half the gif size (32x32)
         $(".html5-loading").style.left = video.getBoundingClientRect().width / 2
                                             - 16 + "px"
         $(".html5-loading").style.top = video.getBoundingClientRect().height / 2
@@ -490,7 +490,7 @@ window.addEventListener("resize", adjustSeekbarWidth, false);
 video.addEventListener("resize", adjustSeekbarWidth, false);
 adjustSeekbarWidth();
 
-// sekundy do czasu (np. 300 -> 5:00)
+// seconds to time (300 -> 5:00)
 function seconds_to_time(input) {
     var minutes = 0;
     var seconds = 0;
@@ -507,10 +507,10 @@ function seconds_to_time(input) {
 }
 
 
-// przesuwanie po filmie
+// scrolling through the video
 var mousedown = false;
-// ktoś wymyślił żeby e.button na mousemove zwracało 0
-// jak jest wciśnięty przycisk i jak nie jest w tym samym czasie
+// someone thought that e.button on mousemove should return 0 regardless if
+// a button is pressed or not
 
 function mousedownf() {
     mousedown = true;
@@ -543,7 +543,7 @@ elapsedbar.addEventListener("mouseup", mouseup, false)
 loadedbar.addEventListener("mousedown", mousedownf, false)
 $(".video_controls .seek_btn").addEventListener("mouseup", mouseup, false)
 
-// zwykłe kliknięcie
+// normal click
 function click_seek(e) {
     mousedown = true;
     videoSeek(e)
@@ -554,10 +554,9 @@ seekbar.addEventListener("click", click_seek, false)
 elapsedbar.addEventListener("click", click_seek, false)
 loadedbar.addEventListener("click", click_seek, false)
 
-// głośność
+// volume
 
-// najeżdżając na ikonę pokaż (taką "animacją"
-// bo żyjemy w 2009 i nie mamy animacji w css) panel .volume_popout
+// hovering over the volume icon show (using an "animation" .volume_popout
 video.volume = 1;
 var volume_btn = $(".video_controls .volume_container")
 var volume_panel = $(".volume_popout")
@@ -579,9 +578,9 @@ volume_btn.addEventListener("mouseover", function() {
     catch(error) {}
 }, false)
 
-// zjeżdżając z .volume_popout zrób znowu animację
-// (chyba że poszło tylko dlatego, że jesteśmy na główce, co sprawdzamy boundsami)
-// dajcie wrócić do nowych standardów pls
+// show the animation again when mouse out of the volume
+// (unless that fired because the user hovered over the volume head,
+// which we check by bounds)
 volume_panel.addEventListener("mouseout", function(e) {
     var mouse_left = e.pageX || e.clientX;
     var mouse_top = e.pageY || e.clientY;
@@ -595,14 +594,13 @@ volume_panel.addEventListener("mouseout", function(e) {
     }, 500)
     volume_panel_mousedown = false;
 
-    // zapisujemy głośność dopiero tu
-    // aby nie zapisywać przy najmniejszych zmianach cały czas
+    // save the volume
     document.cookie = "volume=" 
                     + video.volume 
                     + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; SameSite=Lax"
 }, false)
 
-// sprawdzamy czy kursor nie zjechał na lewo od przycisku głośności (.timer)
+// check if the cursor went to the left (.timer)
 $(".timer").addEventListener("mouseover", function() {
     if(parseInt(volume_panel.style.bottom) >= 10) {
         volume_up = false;
@@ -615,8 +613,8 @@ $(".timer").addEventListener("mouseover", function() {
     }
 }, false)
 
-// i na prawo (fullscreen)
-// albo na lewo od player_additions
+// or the right (fullscreen)
+// or just in case .player_additions
 if(document.querySelector(".fullscreen")) {
     $(".fullscreen").addEventListener("mouseover", function() {
         volume_up = false;
@@ -633,8 +631,8 @@ if(document.querySelector(".fullscreen")) {
     }, false)
 }
 
-// kontrola głośności - hookujemy się do volume_panel a volume_head po prostu przesuwamy zgodnie
-// zmniejsza to precyzję wymaganą od użytkownika
+// volume control - hook up to .volume_panel and move there
+// doesn't require the user to hold the volume head at all times
 var volume_panel_mousedown = false;
 
 volume_panel.addEventListener("mousedown", function() {
@@ -649,43 +647,42 @@ volume_panel.addEventListener("mousemove", function(e) {
                 - window.scrollY 
                 - volume_panel.getBoundingClientRect().top;
     if(!volume_panel_mousedown) return;
-    if(mouseY <= 5 || mouseY >= 58) return;
+    if(mouseY <= 10 || mouseY >= 54) return;
 
     volume_head.style.top = mouseY - 5 + "px";
-    video.volume = 1 - ((mouseY - 5) / 63)
+    video.volume = Math.max(1 - ((mouseY - 10) / 40), 0)
 
     if(mouseY >= 55) {
         video.volume = 0;
     }
 
-    // odciszamy jak muted
+    // unmute
     if(muted) {
         $(".volume_button").className = "volume_button"
     }
 
-    // width kontrolki bazując na volume
-    $(".volume_button").style.width = (16 + (10 * video.volume)) + "px"
+    // volume icon width based on volume
+    $(".volume_button").style.width = (16 + (16 * video.volume)) + "px"
 }, false)
 
-// auto-ustawianie zapisanej głośności jak mamy
+// auto-set last saved volume
 var volume = 1;
 document.cookie.split(";").forEach(function(cookie) {
     if(cookie.indexOf("volume=") !== -1) {
         volume = parseFloat(cookie.trimLeft().replace("volume=", ""))
         volume_head.style.top = 50 - (volume * 50) + "px";
         video.volume = volume;
-        $(".volume_button").style.width = (16 + (10 * video.volume)) + "px"
+        $(".volume_button").style.width = (16 + (16 * video.volume)) + "px"
     }
 })
 
-// mute po kliknięciu głośności.
-// zapisujemy od razu ostatnią głośność przed tym żeby można było
-/// włączać-wyłączać mute i głośność się zapisywała, jak w flash playerze
+// mute after volume button click
+// save the last volume before the mute so the volume is the same after unmute
 var muted = false;
 volume_btn.addEventListener("click", function() {
     muted = !muted;
     if(muted) {
-        // wyciszamy
+        // mute
         volume = video.volume;
 
         volume_head.style.top = "49px"
@@ -693,7 +690,7 @@ volume_btn.addEventListener("click", function() {
         $(".volume_button").style.width = "29px"
         $(".volume_button").className += " muted"
     } else {
-        // odciszamy
+        // unmute
         $(".volume_button").className = "volume_button"
         video.volume = volume;
         volume_head.style.top = 50 - (volume * 50) + "px";
@@ -702,7 +699,7 @@ volume_btn.addEventListener("click", function() {
     }
 }, false)
 
-// timeupdate emit jak załadujemy trochę filmu
+// timeupdate emit once a bit of the video is loaded
 video.addEventListener("canplay", function() {
     setTimeout(function() {
         timeUpdate();
@@ -839,7 +836,7 @@ player_add_btn.addEventListener("mouseover", function() {
     }, 400)
 }, false)
 
-// zjeżdżanie z dodatków
+// mouse out of the additions
 player_add_popout.addEventListener("mouseout", function(e) {
     var mouse_left = e.pageX || e.clientX;
     var mouse_top = e.pageY || e.clientY;
@@ -862,7 +859,7 @@ var seekbarElements = $(".seek, .elapsed, .loaded, .seek_btn")
 for(var s in seekbarElements) {
     if(seekbarElements[s].className) {
 
-        // pokazywanie czasu po najechaniu na seekbar
+        // show the time popup after seekbar hover
         seekbarElements[s].addEventListener("mousemove", function(e) {
             if(seekMoveDebounce) return;
             seekMoveDebounce = true;
@@ -873,8 +870,7 @@ for(var s in seekbarElements) {
             var offsetX = e.pageX || e.clientX
             var offsetY = $(".seek").getBoundingClientRect().top - 31
 
-            // jak ktoś zapyta skąd wziąłem 16 to powiem że nie wiem
-            // bo to wsm prawda XD
+            // if someone asks me why 16 i'll tell them idk but it works
             if(mainElement !== document) {
                 offsetX -= mainElement.getBoundingClientRect().left + 16
                 offsetY -= mainElement.getBoundingClientRect().top
@@ -887,7 +883,7 @@ for(var s in seekbarElements) {
             $(".seek_time").style.top = offsetY + "px"
             $(".seek_time").style.left = offsetX + "px"
             
-            // poprawnie zaznaczony czas do innerHTML
+            // time to innerHTML
             var time_hovered = (
                 (e.pageX - seekbar.getBoundingClientRect().left)
                 / seekbar.getBoundingClientRect().width
@@ -900,7 +896,7 @@ for(var s in seekbarElements) {
         }, false)
 
 
-        // ukrywanie czasu
+        // hide the time popup
         seekbarElements[s].addEventListener("mouseout", function(e) {
             $(".seek_time").className = "seek_time hid"
         }, false)
