@@ -670,7 +670,10 @@ var volume = 1;
 document.cookie.split(";").forEach(function(cookie) {
     if(cookie.indexOf("volume=") !== -1) {
         volume = parseFloat(cookie.trimLeft().replace("volume=", ""))
-        volume_head.style.top = 50 - (volume * 50) + "px";
+        volume_head.style.top = (40 - (volume * 40) + 5) + "px";
+        if(volume == 0) {
+            volume_head.style.top = "48px"
+        }
         video.volume = volume;
         $(".volume_button").style.width = (16 + (16 * video.volume)) + "px"
     }

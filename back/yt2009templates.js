@@ -1289,5 +1289,55 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <tr>
                 <td colspan="2">
         `
-    }, `</td></tr></tbody>`]
+    }, `</td></tr></tbody>`],
+    "listview_video": function(v, index) {
+        return `
+    <tr id="video-${v.id}" class="video ${index % 2 == 0 ? "even" : "odd"}">
+        <td class="column-check first"><input type="checkbox" value="${v.id}"></td>
+        <td class="column-details">
+            <div class="video-panel">
+                <div class="video-details" style="margin: 0 0 10px 130px;">
+                    <div class="video-image" style="position: absolute; margin-left: -130px;overflow: hidden;height: 78px;">
+                        <a class="video-thumb-120 no-quicklist" href="/watch?v=${v.id}"><img title="${v.title.split("\"").join("&quot;")}" src="//i.ytimg.com/vi/${v.id}/hqdefault.jpg" class="vimg120 yt-uix-hovercard-target" style="margin-top: -6px" alt="${v.title.split("\"").join("&quot;")}"></a>
+                    </div>
+                    <div class="video-title">
+                        <div class="clipper">
+                            <a href="/watch?v=${v.id}">${v.title}</a>
+                        </div>
+                    </div>
+                    <p id="video-description-${v.id}" class="video-description-expanded"><span>${
+                        v.description.length > 140
+                        ? v.description.split("\n")[0].substring(0, 140) + "..."
+                        : v.description
+                    }</span></p>
+                    <div class="video-stats">
+                        <div class="video-stat">
+                            Added: <span class="stat-date-added">${v.upload}</span>
+                        </div>
+                        <div class="video-stat">
+                            Time: <span class="stat-duration">${utils.seconds_to_time(v.length)}</span>
+                        </div>
+                        <div class="video-stat">
+                            Owner: <a href="${v.author_url}" class="stat-username">${utils.asciify(v.author_name)}</a>
+                        </div>
+                    </div>
+                    <div class="video-stats">
+                        <div class="video-stat">
+                            Views: <span class="stat-views">${utils.countBreakup(utils.bareCount(v.viewCount))}</span>
+                        </div>
+                        <div class="video-stat">
+                            Rating: <span class="stat-rating"><img class="yt-rating-4.5" src="/assets/site-assets/pixel-vfl73.gif" alt="4.5"></span>
+                        </div>
+                    </div>
+                    <div style="clear: both;"></div>
+                    <div class="video-buttons">
+                        <a class="yt-button" id="" href="/watch?v=${v.id}"><span>Play</span></a>
+                    </div>
+                </div>
+                <div class="video-buttons-ext">
+                </div>
+            </div>
+        </td>
+    </tr>`
+    }
 }

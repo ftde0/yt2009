@@ -1548,6 +1548,40 @@ app.get("/yt2009_recommended", (req, res) => {
         res.send(response)
     }
 })
+
+/*
+======
+userpage list view
+======
+*/
+app.get("/userpage_expand_view", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.headers.videos) {
+        res.sendStatus(400)
+        return;
+    }
+    // get all video data
+    let videos = req.headers.videos.split(",")
+    if(videos[videos.length - 1] == "") {
+        videos = videos.slice(0, videos.length - 1)
+    }
+    let response = ``
+    yt2009.bulk_get_videos(videos, () => {
+        setTimeout(function() {
+            let videoIndex = 0;
+            videos.forEach(v => {
+                v = yt2009.get_cache_video(v)
+                response += yt2009_templates.listview_video(v, videoIndex)
+                videoIndex++
+            })
+
+            res.send(response)
+        }, 100)
+    })
+})
 /*
 pizdec
 */
