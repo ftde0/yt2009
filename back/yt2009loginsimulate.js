@@ -13,7 +13,10 @@ const base_code_logged_in = `
             </span>
         </span>
     </span>
-    <span class="utility-item"><button class="master-sprite img-general-messages" title="Inbox"></button></span>
+    <span class="utility-item">
+        <button class="master-sprite img-general-messages" title="Inbox"></button>
+        <a href="/inbox" class="notif-count hid">(0)</a>
+    </span>
     <span class="utility-item"><a href="#">Sign Out</a></span>
 </div>
 `
@@ -24,6 +27,17 @@ const base_code_logged_out = `
 	<span class="utility-joiner">or</span>
 	<a href="#">Sign In</a>
 </span>`
+
+function embedRelay(req) {
+    if(req.headers
+    && (req.headers.cookie || "").includes("login_simulate")
+    && (req.headers.cookie || "").includes("relay_key")) {
+        return `
+        <script src="/assets/site-assets/relay-notifications.js"></script>`
+    } else {
+        return ``
+    }
+}
 
 module.exports = function(req, code, returnNoLang) {
     let flags = req.query && req.query.flags ? req.query.flags + ":" : ""
@@ -62,7 +76,7 @@ module.exports = function(req, code, returnNoLang) {
                 require("./yt2009utils").xss(
                     decodeURIComponent(loggedInUsername)
                 )
-            )
+            ) + embedRelay(req)
         )
     } else {
         code = code.replace("<!--yt2009_login_insert-->", base_code_logged_out)

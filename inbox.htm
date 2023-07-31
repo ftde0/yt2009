@@ -1,0 +1,293 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="en">
+<head>
+	<title>YouTube - Broadcast Yourself.</title>
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-the-rest-vfl120680.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-my_account_base-vfl153434.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-my_videos-vfl121286.css">
+	<style type="text/css">
+		#mymedia #messages-new-playlist,
+		#mymedia #messages-addto-playlist {
+			margin-bottom: 10px;
+		}
+		#mymedia #dialog-new-playlist,
+		#mymedia #dialog-addto-playlist {
+			width: 350px;
+		}
+		#mymedia #addto-playlist-checklist {
+			height: 100px;
+			overflow: auto;
+			border: 1px solid #999;
+		}
+		#mymedia #expand-view .video-details .video-title {
+			margin-bottom: 10px;
+		}
+		#mymedia #expand-view .video-details .video-title a {
+			color: #03c;
+			font-size: 14px;
+			font-weight: bold;
+			text-decoration: none;
+		}
+		#mymedia .sort-field {
+			border-left: 1px solid #666;
+			margin-left: 8px;
+			padding-left: 8px;
+		}
+		#mymedia .sort-field-first {
+			margin-left: 8px;
+		}
+		#mymedia a.sort-field,
+		#mymedia a.sort-field-first {
+			text-decoration: none;
+		}
+	</style>
+	<link rel="stylesheet" href="/assets/site-assets/inbox_css.css">
+</head>
+<body class="date-20091117 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead" class="">
+			<a href="/">
+				<button id="logo" class="master-sprite" title=""></button>
+			</a>
+			<div id="masthead-search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
+					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" value="" maxlength="128">
+					<input id="search-type-masthead" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document['searchForm'].submit()"><span>Search</span></a>
+				</form>
+			</div>
+			<div id="masthead-utility">
+				<!--yt2009_login_insert-->
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/my_subscriptions?feature=mhw4">Subscriptions</a>
+				<a href="/my_history?feature=mhw4">History</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload?feature=mhw4"><span>Upload</span></a>
+			</div>
+			<div id="masthead-nav-main">
+				<a href="/">Home</a>
+				<a href="/videos?feature=mhw4">Videos</a>
+				<a href="/channels">Channels</a>
+			</div>
+			<div id="masthead-end"></div>
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091117 video-info ">
+		<!-- begin top section -->
+		<div id="mymedia">
+			<div class="page-heading">
+				<div>
+					<div id="my-account-header">
+						<h1>
+							<span class="yt-menulink yt-menulink-primary" id="" style="" onmouseenter="this.className += ' yt-menulink-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menulink-primary-hover', '');"><a class="yt-menulink-btn yt-button yt-button-primary" href="/account" onclick="">My Account</a><a class="yt-menulink-arr" href="/account" onclick=""></a>
+								<ul class="yt-menulink-menu">
+									<li><a href="/inbox?folder=messages&amp;action_message=1" onclick="">Inbox</a></li>
+									<li><a href="/my_videos" onclick="">Videos, Favorites, and Playlists</a></li>
+									<li><a href="/my_subscriptions" onclick="">Subscriptions</a></li>
+									<li><a href="/address_book" onclick="">Address Book</a></li>
+									<li><a href="/account" onclick="">Account Settings</a></li>
+									<li><a href="/my_profile" onclick="">My Channel</a></li>
+									<li><a href="/my_videos_insight" onclick="">Insight: Statistics and Data</a></li>
+								</ul>
+							</span>
+							&nbsp;<span class="subSep">/</span>&nbsp;
+							<span>Inbox</span>
+						</h1>
+					</div>
+				</div>
+			</div>
+			<div id="nav-pane">
+				<div class="header">
+					<div class="action-button" id="button-new">
+						<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick=""><span>Compose</span></a>
+						</span>
+					</div>
+				</div>
+				<div id="list-pane">
+					<div class="folder selected general" onclick="openGeneral(this)">
+						<div class="no-msgs">
+							<span class="name" href="#">Inbox</span>
+						</div>
+						<div class="msgs hid">
+							<a class="name" href="#">Inbox</a>
+							<span class="count">(0)</span>
+						</div>
+					</div>
+					<div class="folder subfolder" onclick="openEmpty(this)"><span class="name" href="#">Personal Messages</span></div>
+					<div class="folder subfolder shared" onclick="openShared(this)">
+						<div class="no-msgs">
+							<span class="name" href="#">Shared with You</span>
+						</div>
+						<div class="msgs hid">
+							<a class="name" href="#">Shared with You</a>
+							<span class="count">(0)</span>
+						</div>
+					</div>
+					<div class="folder subfolder comments" onclick="openComments(this)">
+						<div class="no-msgs">
+							<span class="name" href="#">Comments</span>
+						</div>
+						<div class="msgs hid">
+							<a class="name" href="#">Comments</a>
+							<span class="count">(0)</span>
+						</div>
+					</div>
+					<div class="folder subfolder" onclick="openEmpty(this)"><span class="name" href="#">Friend Invites</span></div>
+					<div class="folder subfolder" onclick="openEmpty(this)"><span class="name" href="#">Video Responses</span></div>
+					<div class="folder"><span class="name" href="#">Sent</span></div>
+					<br>
+					<div class="folder"><a class="name" href="#">Address Book</a></div>
+				</div>
+			</div>
+			<div id="view-pane">
+				<div class="header">
+					<h2>Inbox</h2>
+				</div>
+				<div class="splitter">
+					<div class="view">
+						<div class="actions" style="height: 26px;">
+							<img class="img-action-arrow" src="/assets/site-assets/pixel-vfl73.gif" style="float: left; vertical-align: middle; margin-right: 5px; margin-top: 5px;" />
+							<div class="action-button" id="button-delete" style="float: left">
+								<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');" onclick="deleteSelected();"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="return false;"><span>Delete</span></a></a>
+								</span>
+							</div>
+						</div>
+						<div id="messages" class="yt-message-panel hidden"></div>
+						<div id="grid-view">
+							<table id="table">
+								<thead>
+									<tr id="headings">
+										<td id="heading-check" class="first heading">
+											<div><input id="all-items-checkbox" type="checkbox" onclick="if (this.checked == true) { selectAllItems('videos'); } else { deselectAllItems('videos'); };" /></div>
+										</td>
+										<td id="heading-from" class="heading">
+											<div>From</div>
+										</td>
+										<td id="heading-subject" class="heading">
+											<div>Subject</div>
+										</td>
+										<td id="heading-date" class="heading">
+											<div>Date</div>
+										</td>
+										<td id="heading-filter" class="heading">
+											<div>
+											</div>
+										</td>
+									</tr>
+								</thead>
+								<tbody>
+									<td id="compose-cell" colspan="2" valign="top" height="100%">
+										<div id="message_reading">
+											<div id="message-pane">
+												<table width="100%">
+													<tbody>
+														<tr>
+															<td colspan="5" valign="middle" align="center"><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif" style="padding-top:150px;"></td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</td>
+								</tbody>
+							</table>
+						</div>
+						<div class="footer">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="promos" class="clear">
+		</div>
+		<div id="footer">
+			<div class="search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="footer-search-form">
+					<input id="footer-search-term" class="search-term" name="search_query" type="text">
+					<input id="search-type-footer" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document['footer-search-form'].submit();"><span>Search</span></a>
+				</form>
+			</div>
+			<div class="links">
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<th>YouTube</th>
+						<th>Programs</th>
+						<th>Help</th>
+						<th>Policy</th>
+						<th>Discover</th>
+					</tr>
+					<tr>
+						<td><a href="/t/contact_us">Contact Us</a></td>
+						<td><a href="/t/advertising">Advertising</a></td>
+						<td><strong><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US">Get Help</a></strong></td>
+						<td><a href="/t/privacy">Privacy Policy</a></td>
+						<td><a href="/mobile">YouTube on Your Phone</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://www.googlestore.com/youtube">YouTube Store</a></td>
+						<td><a href="http://code.google.com/apis/youtube/overview.html">Developers</a></td>
+						<td><a href="/t/yt_handbook_home">YouTube Handbook</a></td>
+						<td><a href="/t/terms">Terms of Service</a></td>
+						<td><a href="/youtubeonyoursite">YouTube on Your Site</a></td>
+					</tr>
+					<tr>
+						<td><a href="/press_room">Press Room</a></td>
+						<td><a href="/partners">Partnerships</a></td>
+						<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">Community Help Forums</a></td>
+						<td><a href="/t/dmca_policy">Copyright Notices</a></td>
+						<td><a href="/youtubeonyourtv">YouTube on Your TV</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://ytbizblog.blogspot.com/">Business Blog</a></td>
+						<td><a href="/t/content_management">Content Management</a></td>
+						<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">Safety Center</a></td>
+						<td><a href="/t/community_guidelines">Community Guidelines</a></td>
+						<td><a href="/t/rss_feeds">YouTube RSS Feeds</a></td>
+					</tr>
+					<tr>
+						<td><a href="/blog">YouTube Blog</a></td>
+						<td></td>
+						<td><a href="/t/creators_corner">Creator's Corner</a></td>
+						<td></td>
+						<td><a href="/testtube">TestTube</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="region-and-language-pickers">
+				<div class="google-home">
+					<a href="http://www.google.com/webmasters/igoogle/youtube.html">Add YouTube to your Google homepage</a>
+				</div>
+				<div class="region-picker-box">
+					<span class="region-label">Current Location:</span>
+					<strong class="region-title">Worldwide</strong>
+					<a href="#" onclick="yt.www.masthead.loadPicker('region-picker'); return false;">Show locations</a>
+					<div id="region-picker-container">
+						<div id="region-picker-loading" style="display: none">Loading...</div>
+					</div>
+				</div>
+				<div class="language-picker-box">
+					<span class="language-label">Current Language:</span>
+					<strong class="language-title">English</strong>
+					<a href="#" onclick="yt.www.masthead.loadPicker('language-picker'); return false;">Show languages</a>
+					<div id="language-picker-container">
+						<div id="language-picker-loading" style="display: none">Loading...</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="copyright">
+			&copy; 2009 YouTube, LLC
+		</div>
+		<!-- end bottom section -->
+	</div>
+	<div>
+	</div>
+	<a name="pageBottom"></a>
+</body>
+</html>

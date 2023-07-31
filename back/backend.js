@@ -25,6 +25,7 @@ const yt2009_languages = require("./language_data/language_engine")
 const yt2009_quicklist = require("./yt2009quicklistserver")
 const yt2009_captions = require("./yt2009captions")
 const yt2009_mobileflags = require("./yt2009mobileflags")
+const yt2009_inbox = require("./yt2009inbox")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -1064,7 +1065,7 @@ app.get("/videos-rss", (req, res) => {
 
 /*
 ======
-history, subscriptions, favorites, clientside playlists
+history, subscriptions, favorites, clientside playlists, inbox
 ======
 */
 app.get("/my_history", (req, res) => {
@@ -1081,6 +1082,9 @@ app.get("/subscriptions_new_videos", (req, res) => {
 })
 app.get("/my_playlists", (req, res) => {
     yt2009_client_playlists.apply(req, res)
+})
+app.get("/inbox", (req, res) => {
+    yt2009_inbox.apply(req, res)
 })
 
 

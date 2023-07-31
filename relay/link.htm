@@ -77,24 +77,6 @@
 				<span id="ytname-option3">handle</span>
 			</a>
 		</div>
-		<div id="relay-settings" class="hid">
-			<hr>
-			<p>use this panel to adjust relay to your liking.</p>
-			<input type="checkbox" id="relay-create-favorites"
-					title="create a Favorites playlist on your YouTube account for yt2009 to add videos to when you click the Favorite button.">
-			<label for="relay-create-favorites">create_favorites</label><br>
-			<input type="checkbox" id="relay-playlists-sync"
-					title="bring over YouTube playlists to yt2009.">
-			<label for="relay-playlists-sync">relay_playlists_sync</label><br>
-			<input type="checkbox" id="relay-sub-sync"
-					title="bring over YouTube subscriptions to yt2009. also subscribes channels on your real YouTube account when clicked through yt2009.">
-			<label for="relay-sub-sync">relay_sub_sync</label><br>
-			<a class="yt-button yt-button-primary"
-				href="#" onclick="apply_relay_settings()">
-				<span>save</span>
-			</a>
-			<p id="relay-sync-status">relay syncing status: &lt;sync not started&gt;, save to start</p>
-		</div>
 
 		<!-- end bottom section -->
 	</div>
@@ -184,8 +166,9 @@
 						.innerHTML = res.handle.replace("@", "")
 				document.getElementById("use-login-simulate-name")
 						.className = ""
-				document.getElementById("relay-settings")
-						.className = ""
+
+				// playlists
+				appendPlaylists(res.playlists)
 			}, false)
 			function setError() {
 				document.getElementById("yt-account").innerHTML =

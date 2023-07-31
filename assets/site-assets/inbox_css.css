@@ -1,0 +1,105 @@
+/*
+code matched from half-working archives of mid-2010 inbox and videos from 2009.
+
+resources:
+http://web.archive.org/web/20100725215724/http://www.youtube.com/inbox
+https://www.youtube.com/watch?v=iaNFp2ZC2hA
+https://www.youtube.com/watch?v=uR70ak_xWgM
+https://www.youtube.com/watch?v=Qv4TZfrBmYY
+
+don't expect 100% accuracy as it isn't original yt code
+but an attempt was made.
+*/
+#message_reading, .view {
+    min-height: 600px;
+}
+#heading-from, .from {
+    width: 130px;
+    min-width: 130px;
+}
+#heading-subject, .subject {
+    width: 389px;
+    min-width: 389px;
+    max-width: 389px;
+}
+#heading-date, .date {
+    width: 175px;
+    min-width: 175px;
+}
+#headings {
+    width: 750px;
+    display: block;
+}
+.message.even {
+    background-color: #f3f3f3;
+}
+.message.closed {
+    height: 25px;
+    cursor: pointer;
+}
+.message.open {
+    cursor: pointer;
+}
+.message .check {
+    padding: 2px 4px;
+    width: 25px;
+    max-width: 25px;
+}
+.empty {
+    color: #555;
+    margin-top: 20px;
+    text-align: center;
+}
+.folder {
+    cursor: pointer;
+}
+.message.open .collapsed {
+    display: none;
+}
+.message.open .expanded {
+    display: table-cell;
+}
+.message.closed .expanded {
+    display: none;
+}
+.from img {
+    display: block;
+    overflow: hidden;
+    border: 3px double #999;
+    width: 55px;
+    height: 55px;
+    margin-top: 5px;
+}
+.open .check {
+    vertical-align: top;
+}
+.open .check input {
+    margin-top: 4px;
+}
+.open .subject {
+    vertical-align: top;
+    padding-top: 4px;
+}
+.from.expanded, .date.expanded {
+    vertical-align: top;
+}
+.v120WideEntry {
+    float: left;
+    margin-right: 5px;
+}
+.video-main-content {
+    width: 265px;
+    max-width: 265px;
+    float: left;
+    overflow: hidden;
+}
+.video-description {
+    color: #000;
+    height: 65px;
+}
+.date.expanded {
+    padding-top: 5px;
+}
+.subject.expanded #button-delete {
+    margin-bottom: 7px;
+}

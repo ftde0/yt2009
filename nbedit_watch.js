@@ -1100,6 +1100,7 @@ function commentSend() {
     btn.setAttribute("value", "Adding comment...")
     r.addEventListener("load", function(e) {
         btn.setAttribute("value", "Comment Posted!")
+        $(".comments-container").innerHTML += r.responseText;
     }, false)
 }
 
