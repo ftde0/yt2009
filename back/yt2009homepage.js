@@ -192,16 +192,27 @@ module.exports = function(req, res) {
 
 
     // fallback notification
+    let addNotice = false;
+    let noticeText = "";
     if(require("./config.json").fallbackMode) {
-        let fallbackNotice = "yt2009 was loaded in fallback mode."
+        addNotice = true;
+        noticeText = "yt2009 was loaded in fallback mode."
                            + " it may have happened after multiple"
                            + " failed restarts. some features may not"
                            + " work correctly."
+    }
+
+    if(require("./config.json").customHomepageText) {
+        addNotice = true;
+        noticeText = require("./config.json").customHomepageText
+    }
+
+    if(addNotice) {
         code = code.replace(
             `<!--yt2009_notify-->`,
             `<div id="error-box" class="errorBox">
-        ${fallbackNotice}
-    </div>`
+                ${noticeText}
+            </div>`
         )
     }
 

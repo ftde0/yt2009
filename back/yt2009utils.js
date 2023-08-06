@@ -454,7 +454,8 @@ module.exports = {
                     && !templocked_tokens.includes(userToken)) {
                         tr = true;
                     }
-                    if(logged_tokens.includes(userToken)) {
+                    if(logged_tokens.includes(userToken)
+                    || logged_tokens.includes("*")) {
                         fs.appendFileSync(
                             "./accessdata",
                             `[${userToken}, ${new Date().toUTCString()}, ${
