@@ -1533,11 +1533,17 @@ app.get("/yt2009_recommended", (req, res) => {
                 return;
             }
             // regenerate if needed to avoid duplicates
-            while(JSON.stringify(filteredSuggestions)
-                      .includes(randomVideo.id)) {
+            // use loopLimit to prevent the whole frontend from hanging up
+            // in a while loop
+            let loopCount = 0;
+            let loopLimit = 30;
+            while(
+                JSON.stringify(filteredSuggestions).includes(randomVideo.id)
+                && loopCount !== loopLimit) {
                 randomVideo = videoSuggestions[
                     Math.floor(Math.random() * videoSuggestions.length)
                 ]
+                loopCount++;
             }
 
             filteredSuggestions.push(randomVideo)

@@ -1432,6 +1432,7 @@ function placeCaptions() {
     var s = $(".captions_selection")
     var index = 0;
     for(var lang in captionsLangIndex) {
+        if(document.querySelector("li[lang=\"" + lang + "\"]")) return;
         var li = document.createElement("li")
         li.setAttribute("lang", lang)
         var name = captionsLangIndex[lang].name;
