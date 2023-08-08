@@ -15,7 +15,7 @@ let saved_searches = {}
 
 module.exports = {
     "get_search": function(query, flags, params, callback, token, resetCache) {
-        // request wyszukiwania i handlowanie flag
+        // request search and flag handling
         flags = decodeURIComponent(flags)
         query = decodeURIComponent(query)
         if(flags.includes("only_old")) {
@@ -35,7 +35,7 @@ module.exports = {
         }
 
         if(cache.read()[query] && !resetCache) {
-            // cached dane
+            // cached data
             callback(cache.read()[query])
             if(config.env == "dev") {
                 console.log(`(${token}) ${query} from cache ${Date.now()}`)
@@ -76,7 +76,7 @@ module.exports = {
     },
 
     "apply_search_html": function(results, query, flags, url, protocol, params, userAgent) {
-        // aplikujemy wyniki z get_search na htmla
+        // apply get_search results to html
         let code = search_code;
         let results_html = ``
         let search_type = "all"
@@ -112,7 +112,7 @@ module.exports = {
                     let video = result;
 
 
-                    // flagi
+                    // flags
                     let uploadDate = video.upload
 
                     let onlyOld = "before:2010-04-01"

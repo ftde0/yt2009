@@ -27,6 +27,7 @@ var languageData_EN = {
 
 
         "channel-author-old-names": "if the creator has a /user/ link, use the name from it instead of their current name.",
+        "channel-auto-user": "always try to redirect to a /user/ url if one can be found",
         "channel-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "channel-default-color": "use the default gray color instead of taking one from the banner",
         "channel-exp-fill-comments": "fill the channel comments section with comments from the top video",

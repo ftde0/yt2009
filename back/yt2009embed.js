@@ -64,7 +64,7 @@ function flash_handler(req, res) {
 
 
 module.exports = function(req, res) {
-    // czy to flash?
+    // flash?
     if(req.originalUrl.includes("embedF")) {
         flash_handler(req, res);
         return;
@@ -74,7 +74,7 @@ module.exports = function(req, res) {
     let watchflags = "";
     let code = embed_code;
 
-    // autoryzacja
+    // authorized?
     if(utils.isAuthorized(req)) {
         if(config.env == "dev") {
             console.log(`(${utils.get_used_token(req)}) embed ${id}`)
@@ -96,7 +96,7 @@ module.exports = function(req, res) {
         }
     }
 
-    // kolorki
+    // colors
     let colorways = {
         "b1b1b1-cfcfcf": "default",
         "3a3a3a-999999": 'url("/player-imgs/embed-bgs/dark.png")',
@@ -206,7 +206,7 @@ module.exports = function(req, res) {
     }
     catch(error) {}
 
-    // flaga autoplay
+    // flag autoplay
     watchflags += ";"
     if(watchflags.includes("autoplay")) {
         code = code.replace(
@@ -215,7 +215,7 @@ module.exports = function(req, res) {
         )
     }
 
-    // flaga annotation_redirect
+    // flag annotation_redirect
     if((req.headers.cookie || "").includes("annotation_redirect")) {
         code = code.replace(
             `//yt2009-annotation-redirect`,
@@ -228,7 +228,7 @@ module.exports = function(req, res) {
         return;
     }
 
-    // flaga no_controls_fade
+    // flag no_controls_fade
     if((req.headers.cookie || "").includes("no_controls_fade")
     || req.originalUrl.includes("no_controls_fade=1")) {
         code = code.replace(
@@ -239,7 +239,7 @@ module.exports = function(req, res) {
 
     let waitForOgv = false;
 
-    // jeśli mamy do czynienia z firefoxem <=25, czekamy na ogg, inaczej callbackujemy mp4
+    // if firefox <= 25 wait for ogv, callback mp4 otherwise
     if(req.headers["user-agent"].includes("Firefox/")
     && !config.fallbackMode) {
         let ffVersion = parseInt(
@@ -297,8 +297,6 @@ module.exports = function(req, res) {
         })
     }
     if(!fs.existsSync(`../assets/${id}.mp4`) || config.fallbackMode) {
-        let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
-
         utils.saveMp4(id, (path) => {
             setTimeout(function() {
                 if((path || "").includes("googlevideo")) {

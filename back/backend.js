@@ -790,8 +790,14 @@ channel_endpoints.forEach(channel_endpoint => {
         }
         catch(error) {}
         flags += ";"
+
+        // autouser
+        if(flags.includes("auto_user")) {
+            yt2009_channels.autoUserHandle(req, res, flags)
+            return;
+        }
     
-        // reset flag
+        // reset flags
         if(req.originalUrl.includes("resetflags=1")) {
             flags = ""
         }
@@ -1209,7 +1215,7 @@ app.get("/test_only_legacy_cookie_auth", (req, res) => {
 app.get("/exp_hd", (req, res) => {
     let id = req.query.video_id.substring(0, 11)
 
-    // callback mp4 jak już mamy
+    // callback mp4 if we already have one
     if(fs.existsSync(`../assets/${id}-hd.mp4`)) {
         res.redirect(`/assets/${id}-hd.mp4`)
     } else {
@@ -1270,7 +1276,7 @@ app.get("/get_480", (req, res) => {
 
 /*
 ======
-basic mobilny widok
+basic mobile view
 ======
 */
 
@@ -1592,6 +1598,41 @@ app.get("/userpage_expand_view", (req, res) => {
         }, 100)
     })
 })
+
+/*
+======
+experimental: wordlist search
+======
+*/
+if(fs.existsSync("../wordlist.txt")) {
+    const wordlist = fs.readFileSync("../wordlist.txt").toString().split("\n")
+    const charsRegex = /[-"'&_+=?!.,]/g
+    app.get("/suggest", (req, res) => {
+        let q = req.query.q.toLowerCase();
+        let matching = []
+        let response = ``
+        // add to matching array
+        wordlist.forEach(w => {
+            if((w.toLowerCase().startsWith(q)
+            || w.replace(charsRegex, "")
+                .split("  ").join(" ").startsWith(q))
+            && matching.length <= 10) {
+                matching.push(w.toLowerCase())
+            }
+        })
+        matching = matching.sort()
+
+        // add from matching array to response
+        matching.forEach(m => {
+            response += `
+            <tr class="google-ac-a">
+                <td class="google-ac-c">${m}</td>
+                <td class="google-ac-d"></td>
+            </tr>`
+        })
+        res.send(response)
+    })
+}
 /*
 pizdec
 */

@@ -40,12 +40,13 @@ module.exports = {
             )
         }
 
-        // czytamy sub
+        // read cookie sublist
         let subList = utils.get_subscriptions(req)
         let sidebarSubList = ``
 
         subList.forEach(sub => {
-            // !sub.name nie działało. czm? nie wiem.
+            // !sub.name didn't work. idk why.
+            // PUT INTO TEMPLATES SOON
             if(sub.name.toString() !== "undefined") {
                 sidebarSubList += `<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="${sub.url}"><a class="name" href="#">${sub.name}</a></div>`
             }
@@ -135,12 +136,12 @@ module.exports = {
     "fetch_new_videos": function(req, res, sendRawData) {
         let url = req.headers.url;
 
-        // pierwotne checki
+        // initial check
         if(!url.startsWith("/channel/")
         && !url.startsWith("/user/")
         && !url.startsWith("/c/")
         && !url.startsWith("/@")) {
-            res.send("[yt2009] niepoprawny url kanału")
+            res.send("[yt2009] invalid channel url")
             return;
         }
 

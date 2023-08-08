@@ -11,6 +11,7 @@ const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manag
 const wayback_channel = require("./cache_dir/wayback_channel")
 const templates = require("./yt2009templates")
 const config = require("./config.json")
+const userid_cache = require("./cache_dir/userid_cache")
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
@@ -23,6 +24,14 @@ let featured_channels = require("./cache_dir/public_channel_listing.json")
 
 module.exports = {
     "main": function(req, res, flags, sendRawData) {
+        let requestTime = 0;
+        let timingData = ""
+        let timing = setInterval(function() {
+            requestTime += 0.1
+        }, 100)
+        function writeTimingData(stage) {
+            timingData += stage + " finish at: " + requestTime.toFixed(2) + "\n"
+        }
         // url parse
         let url = ""
         url = yt2009utils.channelUrlMarkup(req.path)
@@ -38,11 +47,13 @@ module.exports = {
         let applyHTML = this.applyHTML
         let getAdditionalSections = this.get_additional_sections
 
-        require("./cache_dir/userid_cache").read(url, (id) => {
+        userid_cache.read(url, (id) => {
+            writeTimingData("userid get")
             // read from cache
             if((n_impl_yt2009channelcache.read("main")[url]
             || n_impl_yt2009channelcache.read("main")[id])
             && req.query.resetcache !== "1") {
+                writeTimingData("cache retrieve")
                 sendResponse(
                     n_impl_yt2009channelcache.read("main")[id]
                     || n_impl_yt2009channelcache.read("main")[url]
@@ -62,11 +73,13 @@ module.exports = {
                     "method": "POST",
                     "mode": "cors"
                 }).then(r => {r.json().then(r => {
+                    writeTimingData("clean innertube fetch")
                     this.parse_main_response(r, flags, (data) => {
                         if(!data) {
                             res.send(`[yt2009] channel not found`)
                             return;
                         }
+                        writeTimingData("main response parse")
                         sendResponse(data)
                     })
                 })})
@@ -78,12 +91,16 @@ module.exports = {
                     res.send(data)
                 } else {
                     getAdditionalSections(data, flags, () => {
+                        writeTimingData("getAdditionalSections")
                         applyHTML(data, flags, (html => {
+                            writeTimingData("applyHTML")
                             html = yt2009languages.apply_lang_to_code(html, req)
                             if(html.includes(` (0)</div>`)) {
                                 html = html.split(` (0)</div>`).join(`</div>`)
                             }
+                            html = html.replace("yt2009_timings", timingData)
                             res.send(html)
+                            clearInterval(timing)
                         }), req, flashMode)
                     })
                 }
@@ -110,6 +127,10 @@ module.exports = {
         data.name = r.metadata.channelMetadataRenderer.title
         data.id = r.header.c4TabbedHeaderRenderer.channelId
         data.url = r.metadata.channelMetadataRenderer.channelUrl
+        if(r.header.c4TabbedHeaderRenderer.channelHandleText) {
+            data.handle = r.header.c4TabbedHeaderRenderer
+                           .channelHandleText.runs[0].text
+        }
         data.properties = {
             "name": r.metadata.channelMetadataRenderer.title,
             "subscribers": r.header.c4TabbedHeaderRenderer.subscriberCountText
@@ -474,6 +495,13 @@ module.exports = {
         let channelName = yt2009utils.textFlags(
             yt2009utils.xss(data.name), flags, data.url
         )
+        if(flags.includes("author_old_names")
+        && channelUrl.includes("user/")) {
+            channelName = channelUrl.split("user/")[1]
+                                    .split("?")[0]
+                                    .split("#")[0]
+            channelName = yt2009utils.xss(channelName)
+        }
         code = code.split("yt2009_channel_name").join(channelName)
 
         // channel avatar
@@ -1339,7 +1367,7 @@ module.exports = {
 
     "fill_videocount": function(url, callback) {
         // add video count to user caches without them
-        require("./cache_dir/userid_cache").read(url, (id) => {
+        userid_cache.read(url, (id) => {
             // clean fetch the channel
             fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
                 yt2009html.get_api_key()
@@ -1373,5 +1401,84 @@ module.exports = {
                 callback(videoCount)
             })})
         })
+    },
+
+    "autoUserHandle": function(req, res, flags) {
+        let url = req.originalUrl
+        if(url.includes("/user/")) {
+            // already a /user/ url, handle as normal
+            this.main(req, res, flags)
+            return;
+        }
+
+        // get user id
+        let userId = ""
+        if(url.includes("/channel/")) {
+            userId = url.split("/channel/")[1].split("?")[0].split("#")[0]
+            getUserHandle()
+        } else {
+            userid_cache.read(url, (id) => {
+                userId = id;
+                getUserHandle()
+            })
+        }
+
+        // then get the user's handle to try to get /user/ with it
+        let userHandle = ""
+        function getUserHandle() {
+            if(url.includes("@")) {
+                userHandle = url.split("@")[1].split("?")[0].split("#")[0]
+                compare()
+            } else {
+                // try to get handle from cache
+                if((n_impl_yt2009channelcache.read("main")[url]
+                &&  n_impl_yt2009channelcache.read("main")[url].handle)
+                || (n_impl_yt2009channelcache.read("main")[userId]
+                &&  n_impl_yt2009channelcache.read("main")[userId].handle)) {
+                    let cache = n_impl_yt2009channelcache.read("main")
+                    cache = cache[url] || cache[userId]
+                    userHandle = cache.handle.replace("@", "")
+                    compare()
+                    return;
+                }
+                // clean fetch for handle
+                else {
+                    fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
+                        yt2009html.get_api_key()
+                    }`, {
+                        "headers": yt2009constants.headers,
+                        "referrer": "https://www.youtube.com/",
+                        "referrerPolicy": "strict-origin-when-cross-origin",
+                        "body": JSON.stringify({
+                            "context": yt2009constants.cached_innertube_context,
+                            "browseId": userId
+                        }),
+                        "method": "POST",
+                        "mode": "cors"
+                    }).then(r => {r.json().then(r => {
+                        try {
+                            userHandle = r.header.c4TabbedHeaderRenderer
+                                          .channelHandleText.runs[0].text
+                        }
+                        catch(error) {}
+                        compare()
+                    })})
+                }
+            }
+        }
+
+        function compare() {
+            console.log(userHandle, userId)
+            userHandle = userHandle.replace("@", "")
+            userid_cache.read(`/user/${userHandle}`, (id) => {
+                if(userId == id) {
+                    // the same ids, redirect to /user/!!!
+                    res.redirect(`/user/${userHandle}`)
+                } else {
+                    // nah :(, continue with the request as normal
+                    require("./yt2009channels").main(req, res, flags, false)
+                }
+            })
+        }
     }
 }

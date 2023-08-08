@@ -27,6 +27,20 @@ module.exports = {
             `yt2009_http_root_url`
         ).join(`http://${config.ip}:${config.port}/`)
 
+        // experimental: wordlist-based search suggestions
+        // create the list in /wordlist.txt and separate suggestions
+        // by newlines to use.
+        if(fs.existsSync("../wordlist.txt")) {
+            site = site.replace(
+                `<!--wordlist_srch-->`,
+                `<script src="/assets/site-assets/search-suggestions.js"></script>`
+            )
+            site = site.replace(
+                `<!--yt2009_wordlist_css-->`,
+                `<link rel="stylesheet" href="/assets/site-assets/search-suggestions.css">`
+            )
+        }
+
         if(req.query.f == 1 || req.headers.cookie.includes("f_mode")) {
             site = site.replace(`<!DOCTYPE html>`, templates.html4)
             //site = site.replace(`href="#" onclick="document.searchForm.submit(); return false;"`, `href="#"

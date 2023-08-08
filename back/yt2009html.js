@@ -1052,7 +1052,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             yt2009utils.markupDescription(fullDescription)
         )
 
-        // ukryj widoczne od razu przyciski sign in jak jesteśmy zalogowani
+        // hide signin buttons if logged in
         if(code.includes("Sign Out") || code.includes("lang_signout")) {
             code = code.split("yt2009-signin-hide").join("hid")
         }

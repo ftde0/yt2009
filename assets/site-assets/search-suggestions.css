@@ -1,0 +1,44 @@
+.google-ac-m {
+    font-size: 13px;
+    font-family: "Arial", sans-serif;
+    cursor: default;
+    line-height: 17px;
+    border: 1px solid rgb(153, 153, 153);
+    background-color: white;
+    position: absolute;
+    z-index: 2;
+    width: 330px;
+    max-width: 330px;
+}
+
+.google-ac-m.empty {
+    height: 0px;
+    overflow: hidden;
+}
+
+.google-ac-a {
+    background-color: white;
+}
+
+.google-ac-c {
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: left;
+    padding-left: 3px;
+}
+
+.google-ac-d {
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 10px;
+    text-align: right;
+    color: rgb(102, 102, 102);
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.google-ac-b .google-ac-c,
+.google-ac-b .google-ac-d {
+    background-color: rgb(51, 102, 204);
+    color: white;
+}

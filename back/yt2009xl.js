@@ -282,7 +282,7 @@ module.exports = {
         let waitForOgv = false;
         let id = req.query.video_id || ""
 
-        // jeśli mamy do czynienia z firefoxem <=25, czekamy na ogg, inaczej callbackujemy mp4
+        // if firefox <= 25 wait for ogg, otherwise callback mp4
         if(req.headers["user-agent"].includes("Firefox/")) {
             let ffVersion = parseInt(req.headers["user-agent"].split("Firefox/")[1].split(" ")[0])
             if(ffVersion <= 25) {
@@ -290,42 +290,41 @@ module.exports = {
             }
         }
 
-        // pobieranie
+        // download
+        let ffmpegCommand = [
+            "ffmpeg",
+            `-i ${__dirname}/../assets/${id}.mp4`,
+            ` -b 1500k -ab 128000 -speed 2`,
+            `${__dirname}/../assets/${id}.ogg`
+        ]
         if(fs.existsSync(`../assets/${id}.mp4`)
         && !fs.existsSync(`../assets/${id}.ogg`)
         && waitForOgv) {
-            // ogg wymagane
-            child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {
+            // ogg required
+            child_process.exec(ffmpegCommand.join(" "),
+            (error, stdout, stderr) => {
                 res.redirect(`/xl/html5-embed/?video_id=${id}&v=ogg`)
             })
         }
         if(!fs.existsSync(`../assets/${id}.mp4`)) {
-            let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
-            
-            writeStream.on("finish", () => {
-                setTimeout(function() {
-                    if(waitForOgv) {
-                        child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {
-                            res.redirect(`/xl/html5-embed/?video_id=${id}&v=ogg`)
-                        })
-                    } else {
-                        res.redirect(`/xl/html5-embed/?video_id=${id}`)
-                    }
-                    
-                }, 250)
+            utils.saveMp4(id, (data) => {
+                if(!data) {
+                    res.send("[yt2009] can't download the video")
+                    return;
+                }
+                if(waitForOgv) {
+                    child_process.exec(ffmpegCommand.join(" "),
+                    (error, stdout, stderr) => {
+                        res.redirect(`/xl/html5-embed/?video_id=${id}&v=ogg`)
+                    })
+                } else {
+                    res.redirect(`/xl/html5-embed/?video_id=${id}`)
+                }
             })
-
-            ytdl(`https://youtube.com/watch?v=${id}`, {
-                "quality": 18
-            })
-            .on("error", (error) => {
-                res.send("[yt2009] nie można pobrać filmu / can't download the video")
-                console.log(error)
-            })
-            .pipe(writeStream)
         } else {
             if(waitForOgv) {
-                child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {
+                child_process.exec(ffmpegCommand.join(" "),
+                (error, stdout, stderr) => {
                     res.redirect(`/xl/html5-embed/?video_id=${id}&v=ogg`)
                 })
             } else {

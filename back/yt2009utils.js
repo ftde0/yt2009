@@ -467,7 +467,9 @@ module.exports = {
         }
         catch(error) {}
 
-        // przy endpointach z flasha, mamy limitowany dostęp bez tokena
+        // limited nontoken access for flash
+        // initially put it in iirc for some warp endpoint??
+        // will probably revamp/remove in the future
         if(req.headers["user-agent"] == "Shockwave Flash"
         && !ip_uses_flash[req.ip]) {
             ip_uses_flash[req.ip] = 1

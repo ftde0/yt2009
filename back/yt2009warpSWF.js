@@ -57,7 +57,9 @@ module.exports = {
         }
 
         if(config.env == "dev") {
-            console.log(`(${utils.get_used_token(req) + "_warp_swf"}) warp videos load (${req.query.video_id}, ${Date.now()})`)
+            console.log(`(${
+                utils.get_used_token(req) + "_warp_swf"
+            }) warp videos load (${req.query.video_id}, ${Date.now()})`)
         }
 
         let videos_xml = `
@@ -119,36 +121,24 @@ module.exports = {
             })
         } else {
             // neither available - download and convert
-            let writeStream = fs.createWriteStream(`../assets/${id}.mp4`)
-
-            writeStream.on("finish", () => {
-                setTimeout(function() {
-                    convert_mp4_to_flv(id, () => {
-                        callback()
-                    })
-                    convert_mp4_to_ogv(id)
-                }, 250)
-            })
-    
-            ytdl(`https://youtube.com/watch?v=${id}`, {
-                "quality": 18
-            })
-            .pipe(writeStream)
-            .on("error", (error) => {
-                callback()
-                console.log(`warp_flv: ${error}`)
+            utils.saveMp4(id, () => {
+                convert_mp4_to_flv(id, () => {
+                    callback()
+                })
             })
         }
 
+        let ffmpegCommandFlv = [
+            "ffmpeg",
+            `-i ${__dirname}/../assets/${id}.mp4`,
+            ` -b 1500k -ab 128000`,
+            `${__dirname}/../assets/${id}.flv`
+        ]
         function convert_mp4_to_flv(id, callback) {
-            child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 ${__dirname}/../assets/${id}.flv`, (error, stdout, stderr) => {
+            child_process.exec(ffmpegCommandFlv.join(" "),
+            (error, stdout, stderr) => {
                 callback()
             })
-        }
-
-        // konwertujemy do ogg w tle
-        function convert_mp4_to_ogv(id) {
-            child_process.exec(`ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`, (error, stdout, stderr) => {})
         }
     }
 }

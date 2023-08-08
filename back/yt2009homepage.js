@@ -151,7 +151,7 @@ module.exports = function(req, res) {
             `id="iyt-login-suggest-side-box" class="homepage-side-block"`,
             `id="iyt-login-suggest-side-box" class="homepage-side-block hid"`
         )
-        // pokaż dla nich inbox
+        // show inbox
         code = code.replace(
             `hid yt2009-login-only-box`,
             `yt2009-login-only-box`

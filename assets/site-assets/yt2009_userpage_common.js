@@ -618,5 +618,5 @@ if(document.querySelector("#view-toggle .grid-selected")) {
                     .className = "expand"
         }
 
-    })
+    }, false)
 }
