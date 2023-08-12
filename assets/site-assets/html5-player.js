@@ -382,7 +382,7 @@ function flash_middle_btn(buttonType) {
 // progress bar
 var seekbar = $(".video_controls .seek");
 var elapsedbar = $(".video_controls .elapsed");
-var loadedbar = $(".video_controls .loaded")
+var loadedbar = $(".video_controls .loaded");
 
 // going forward within the video
 function timeUpdate() {
@@ -1627,3 +1627,16 @@ try {
     }, false)
 }
 catch(error) {}
+
+// on mp4 error redirect to retryVideo
+video.querySelector("source").addEventListener("error", function() {
+    var videoId = video.querySelector("source").src
+                       .split("assets/")[1]
+                       .split(".mp4")[0]
+    video.src = "/retry_video?video_id=" + videoId
+    showLoadingSprite();
+
+    video.addEventListener("error", function() {
+        $(".html5-loading").className += " hid"
+    }, false)
+}, false)

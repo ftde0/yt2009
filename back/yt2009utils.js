@@ -898,6 +898,7 @@ module.exports = {
             })
             .on("error", (error) => {
                  callback(false)
+                 writeStream.close()
                  return;
              })
             .pipe(writeStream)

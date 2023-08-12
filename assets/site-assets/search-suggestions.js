@@ -39,7 +39,14 @@ window.addEventListener("resize", adjustTablePos, false)
 // events
 
 // remove the suggestions upon click
-document.body.addEventListener("click", function() {
+document.body.addEventListener("click", function(e) {
+    var mouseX = e.pageX || e.clientX;
+    var mouseY = e.pageY || e.clientY;
+    var inputBounds = searchInput.getBoundingClientRect()
+    if(mouseX >= inputBounds.left
+    && mouseX <= inputBounds.left + inputBounds.width
+    && mouseY >= inputBounds.top
+    && mouseY <= inputBounds.top + inputBounds.height) return;
     sTbody.innerHTML = ""
     sTable.className = "google-ac-m empty"
 }, false)

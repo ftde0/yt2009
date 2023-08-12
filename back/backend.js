@@ -1606,21 +1606,23 @@ experimental: wordlist search
 */
 if(fs.existsSync("../wordlist.txt")) {
     const wordlist = fs.readFileSync("../wordlist.txt").toString().split("\n")
-    const charsRegex = /[-"'&_+=?!.,]/g
+    const charsRegex = /[-"'&_+=?!.,\[\]:;\/\\|]/g
     app.get("/suggest", (req, res) => {
         let q = req.query.q.toLowerCase();
         let matching = []
         let response = ``
         // add to matching array
         wordlist.forEach(w => {
+            let wVisible = w.toLowerCase().replace(charsRegex, "")
             if((w.toLowerCase().startsWith(q)
             || w.replace(charsRegex, "")
                 .split("  ").join(" ").startsWith(q))
-            && matching.length <= 10) {
-                matching.push(w.toLowerCase())
+            && matching.length <= 10
+            && !matching.includes(wVisible)) {
+                matching.push(wVisible)
             }
         })
-        matching = matching.sort()
+        matching = matching.sort((a, b) => {return a.length - b.length})
 
         // add from matching array to response
         matching.forEach(m => {
@@ -1633,6 +1635,108 @@ if(fs.existsSync("../wordlist.txt")) {
         res.send(response)
     })
 }
+
+/*
+======
+retry video download using a different format id than 18 (360p)
+as sometimes it's not available
+(example: https://www.youtube.com/watch?v=auzfTPp4moA)
+======
+*/
+app.get("/retry_video", (req, res) => {
+    let id = req.query.video_id.substring(0, 11)
+                .replace(/[^a-zA-Z0-9+-+_]/g, "")
+
+    // check if there actually is a need to retry download
+    if(fs.existsSync(`../assets/${id}.mp4`)
+    && fs.statSync(`../assets/${id}.mp4`).size > 0) {
+        res.redirect(`/assets/${id}.mp4`)
+    }
+
+    if(fs.existsSync(`../assets/${id}.mp4`)
+    && fs.statSync(`../assets/${id}.mp4`).size == 0) {
+        fs.unlinkSync(`../assets/${id}.mp4`)
+    }
+
+    // retry if so
+    // get separate 360p video and audio and combine
+    let ytdl = require("ytdl-core")
+    
+    let v = ytdl.getInfo("https://www.youtube.com/watch?v=" + id)
+    let qualityItags = {}
+    let videoItag = ""
+    let audioItag = ""
+    v.then(v => {
+        v.formats.forEach(format => {
+            if(format.mimeType.includes("video/mp4")
+            && format.mimeType.includes("avc")
+            && format.height <= 360) {
+                qualityItags[format.qualityLabel] = format.itag;
+            } else if(format.mimeType.includes("audio/mp4")) {
+                audioItag = format.itag
+            }
+        })
+
+        // get highest video quality up to 360p (don't assume 360
+        // as it won't be available everywhere)
+        let qNames = []
+        for(let name in qualityItags) {
+            qNames.push(parseInt(name))
+        }
+        qNames = qNames.sort((a, b) => b - a)
+        videoItag = qualityItags[qNames[0] + "p"]
+
+        // download both
+        // call mergeFormats once both done
+        let vDownloaded = false;
+        let aDownloaded = false;
+
+        // video
+        let vStream = fs.createWriteStream(`../assets/${id}-v.mp4`)
+        vStream.on("finish", () => {
+            vDownloaded = true;
+            if(vDownloaded && aDownloaded) {
+                mergeFormats()
+            }
+        })
+        ytdl.downloadFromInfo(v, {"quality": videoItag})
+        .on("error", (error) => {
+            console.log("retry_video video: " + error)
+            res.sendStatus(404)
+            return;
+        })
+        .pipe(vStream)
+
+        // audio
+        let audioStream = fs.createWriteStream(`../assets/${id}-a.mp3`)
+        audioStream.on("finish", () => {
+            aDownloaded = true;
+            if(vDownloaded && aDownloaded) {
+                mergeFormats()
+            }
+        })
+        ytdl.downloadFromInfo(v, {"quality": audioItag})
+        .on("error", (error) => {
+            console.log("retry_video audio: " + error)
+            res.sendStatus(404)
+            return;
+        })
+        .pipe(audioStream)
+    })
+
+    function mergeFormats() {
+        let cmd = yt2009_templates.format_merge_command(
+            `${__dirname}/../assets/${id}-v.mp4`,
+            `${__dirname}/../assets/${id}-a.mp3`,
+            `${__dirname}/../assets/${id}.mp4`
+        )
+        child_process.exec(cmd, (error, stdout, stderr) => {
+            res.redirect(`/assets/${id}.mp4`)
+            fs.unlinkSync(`${__dirname}/../assets/${id}-v.mp4`)
+            fs.unlinkSync(`${__dirname}/../assets/${id}-a.mp3`)
+        })
+    }
+})
 /*
 pizdec
 */

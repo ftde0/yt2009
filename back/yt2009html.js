@@ -721,7 +721,53 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         && waybackData.related.length > 0) {
                         let relatedHTML = `<!--See a hidden video (.hid)?
                                             It was most likely hidden because
-                                            it's a dead link.-->`
+                                            it's a dead link.-->`;
+                        // try to get author prefix for related ("by ...") to rm
+                        let authorPrefix = ""
+                        // add shortened author names as "prefixes"
+                        let prefixes = []
+                        waybackData.related.forEach(video => {
+                            if(video.uploaderName.includes(" views")) {
+                                let viewCount = video.uploaderName
+                                let uploaderName = video.viewCount
+                                video.uploaderName = uploaderName;
+                                video.viewCount = viewCount;
+                            }
+                            prefixes.push(video.uploaderName.substring(0, 7))
+                        })
+                        let i = 0;
+                        // filter out EXACT same author names
+                        // (prevents author names being considered prefixes)
+                        prefixes.forEach(p => {
+                            i++;
+                            if(prefixes[i] == prefixes[i - 1]) {
+                                prefixes = prefixes.filter(s => s !== prefixes[i])
+                            }
+                        })
+                        // foreach and compare previous "prefix"
+                        // to narrow down the prefix's length and the actual value
+                        i = 0;
+                        prefixes.forEach(p => {
+                            i++;
+                            if(!prefixes[i]) return;
+                            let prefixLength = 7;
+                            while(prefixLength >= 2) {
+                                let u0Prefix = prefixes[i].substring(
+                                    0, prefixLength
+                                )
+                                let u1Prefix = prefixes[i - 1].substring(
+                                    0, prefixLength
+                                )
+                                if(u0Prefix == u1Prefix) {
+                                    authorPrefix = u0Prefix;
+                                    break;
+                                } else {
+                                    authorPrefix = ""
+                                }
+                                prefixLength--
+                            }
+                        })
+                        // continue as normal
                         waybackData.related.forEach(video => {
                             // check if uploadername and viewcount
                             // aren't swapped for whatever reason
@@ -756,7 +802,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 video.time,
                                 views,
                                 video.uploaderUrl ? video.uploaderUrl : "#",
-                                video.uploaderName,
+                                video.uploaderName.replace(authorPrefix, ""),
                                 flags
                             )
                         })
