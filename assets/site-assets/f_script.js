@@ -821,7 +821,7 @@ responseExpander.onclick = function() {
             loadVideoResponses();
         }
     } else {
-        responseParent.className = responseParent.replace(
+        responseParent.className = responseParent.className.replace(
             "expanded", "collapsed"
         )
     }

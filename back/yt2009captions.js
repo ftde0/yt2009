@@ -7,6 +7,7 @@ const templates = require("./yt2009templates")
 module.exports = {
     "main": function(req, res) {
         let id = req.query.v;
+        id = id.replace("/mp4", "")
         let type = req.query.type;
         let useJson = false;
         if(req.query.json) {
@@ -60,6 +61,7 @@ module.exports = {
     },
     
     "getCaptionFile": function(id, language, callback) {
+        id = id.replace("/mp4", "")
         let getLanguages = this.getLanguages;
         let retryCount = 0;
         function getFile(resetCache) {

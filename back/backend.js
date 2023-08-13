@@ -1478,6 +1478,10 @@ recommended section
 ======
 */
 app.get("/yt2009_recommended", (req, res) => {
+    if(!req.headers.ids) {
+        res.send("YT2009_NO_DATA")
+        return;
+    }
     let baseVids = req.headers.ids.split(",").slice(0, 3)
     let processedVideos = 0;
     let videoSuggestions = []

@@ -16,12 +16,16 @@ module.exports = {
             res.send("")
             return;
         }
+        req = utils.addFakeCookie(req)
         
         let code = page;
 
         // shows tab
         if(req.headers.cookie.includes("shows_tab")) {
-            code = code.replace(`<a href="/channels">Channels</a>`, `<a href="/channels">Channels</a><a href="#">Shows</a>`)
+            code = code.replace(
+                `<a href="/channels">Channels</a>`,
+                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+            )
         }
 
         code = require("./yt2009loginsimulate")(req, code);

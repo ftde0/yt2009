@@ -185,22 +185,14 @@ function prepNewPage() {
     newPage.className = "videos-page videos-page-0"
     newPage.id = "videos"
     newPage.innerHTML = '<tr><td colspan="2"></td></tr>'
-    newPage.parentNode = document.querySelector("#table")
-
-    if(!document.querySelector("#table").outerHTML) {
-        // if browser doesn't have outerhtml (old ff for example) simulate
-        var html = document.querySelector("#table").innerHTML
-                   .split("</thead>")
-                   .join('</thead><tbody id="videos" class="videos-page videos-page-0">'
-                        + newPage.innerHTML + '</tbody>'
-                    )
-        document.querySelector("#table").innerHTML = html
-    } else {
-        var html = document.querySelector("#table").innerHTML
-                   .split("</thead>")
-                   .join("</thead>" + newPage.outerHTML)
-        document.querySelector("#table").innerHTML = html
-    }
+    var html = document.querySelector("#table").innerHTML;
+    html = html.split("</thead>").join(
+        '</thead>\
+            <tbody id="videos" class="videos-page videos-page-0">\
+            <tr><td colspan="2"></td></tr>\
+        </tbody>'
+    )
+    document.querySelector("#table").innerHTML = html
 
     
     // update numbers
@@ -562,7 +554,7 @@ if(document.querySelector("#view-toggle .expand")) {
                 "#expand-view .videos-page-" + pageIndex
             ).innerHTML = r.responseText
         }, false)
-    })
+    }, false)
 }
 
 function expandViewFetchPage(page) {
