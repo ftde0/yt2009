@@ -311,10 +311,13 @@ module.exports = function(req, res) {
                         ))
                     })
                 } else {
-                    res.send(code.replace(
-                        "mp4_files",
-                        templates.embedVideoSources(id)
-                    ))
+                    try {
+                        res.send(code.replace(
+                            "mp4_files",
+                            templates.embedVideoSources(id)
+                        ))
+                    }
+                    catch(error) {}
                 }
                 
             }, 250)

@@ -663,6 +663,7 @@ volume_panel.addEventListener("mousemove", function(e) {
 
     // volume icon width based on volume
     $(".volume_button").style.width = (16 + (16 * video.volume)) + "px"
+    autofixVolumeBtn()
 }, false)
 
 // auto-set last saved volume
@@ -676,8 +677,15 @@ document.cookie.split(";").forEach(function(cookie) {
         }
         video.volume = volume;
         $(".volume_button").style.width = (16 + (16 * video.volume)) + "px"
+        autofixVolumeBtn()
     }
 })
+
+function autofixVolumeBtn() {
+    if(parseInt($(".volume_button").style.width) > 28) {
+        $(".volume_button").style.width = "28px"
+    }
+}
 
 // mute after volume button click
 // save the last volume before the mute so the volume is the same after unmute
@@ -1639,4 +1647,25 @@ video.querySelector("source").addEventListener("error", function() {
     video.addEventListener("error", function() {
         $(".html5-loading").className += " hid"
     }, false)
+}, false)
+
+// space=pause
+document.body.addEventListener("keydown", function(e) {
+    if(e.key !== " ") return;
+    if(e.target
+    && e.target.nodeName.toLowerCase() !== "textarea"
+    && e.target.nodeName.toLowerCase() !== "input") {
+        e.preventDefault();
+        if(video.ended) {
+            videoReplay()
+            return;
+        }
+        if(!video.paused) {
+            video_pause()
+            flash_middle_btn("pause")
+        } else {
+            video_play()
+            flash_middle_btn("play")
+        }
+    }
 }, false)

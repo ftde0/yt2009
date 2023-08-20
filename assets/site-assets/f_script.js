@@ -150,7 +150,7 @@ if(location.href.indexOf("watch") !== -1) {
 
     // widescreen and embed buttons
     var playerWidescreen = false;
-    $("#watch-longform-player").onclick = function() {
+    function switchWidescreen() {
         playerWidescreen = !playerWidescreen
         if(playerWidescreen) {
             // turn on widescreen
@@ -167,6 +167,8 @@ if(location.href.indexOf("watch") !== -1) {
             toggleSwitch.className += " watch-wide-mode"
             $("#watch-this-vid").style.width = "960px"
             $("#watch-this-vid").style.height = "565px"
+            var w = "widescreen=1; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            document.cookie = w;
         } else {
             // turn off
             var s = document.querySelectorAll(".fl")
@@ -184,7 +186,13 @@ if(location.href.indexOf("watch") !== -1) {
             )
             $("#watch-this-vid").style.width = ""
             $("#watch-this-vid").style.height = ""
+            var w = "widescreen=0; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            document.cookie = w;
         }
+    }
+    $("#watch-longform-player").onclick = switchWidescreen;
+    if(document.cookie.indexOf("widescreen=1") !== -1) {
+        switchWidescreen()
     }
 
 
@@ -569,7 +577,9 @@ function switchVideo(video) {
 }
 
 // other playnav tabs (all/uploads/playlists etc)
+var currentTab = "all"
 function switchTab(tab_name, tabElement) {
+    currentTab = tab_name
     var e = document.querySelectorAll(".yt2009-scrollbox")
     for(var sel in e) {
         try {
@@ -700,6 +710,128 @@ function get_video_comments() {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
             $("#playnav-panel-comments").innerHTML = r.responseText
         }
+    }
+}
+
+// playnav: grid view
+// switch the playnav view
+var currentView = "play"
+var ieGridCreated = false;
+function playnav_view(view) {
+    currentView = view;
+    var viewNames = [
+        document.getElementById("playnav-playview"),
+        document.getElementById("playnav-gridview")
+    ]
+    for(var viewName in viewNames) {
+        try {
+            var tView = viewNames[viewName]
+            tView.style.display = "none"
+            $("#" + tView.id.split("-")[1] + "-icon").className = "view-button"
+        }
+        catch(error) {}
+    }
+    $("#playnav-" + view + "view").style.display = "block"
+    $("#" + view + "view-icon").className = "view-button view-button-selected"
+
+    if(view !== "play") {
+        $("#playnav-player").style.display = "none"
+    } else {
+        $("#playnav-player").style.display = "block"
+    }
+
+    // prepare the grid view
+    if(view == "grid" && !$("#playnav-grid-content").innerText) {
+        // generate the grid view contents, its empty
+        // 3x8 table
+        var gridViewTable = document.createElement("table")
+        gridViewTable.className = "yt2009-grid-tb"
+        var rows = []
+        while(rows.length !== 8) {
+            var tr = document.createElement("tr")
+            gridViewTable.appendChild(tr)
+            rows.push(tr)
+        }
+
+        $("#playnav-grid-content").appendChild(gridViewTable)
+    }
+    grid_fillFromScrollbox();
+}
+
+// fill up the grid view
+function grid_fillFromScrollbox() {
+    if(currentView !== "grid"
+    || ieGridCreated) return;
+    var tableRowItems = {
+        "0,8,16": 0,
+        "1,9,17": 1,
+        "2,10,18": 2,
+        "3,11,19": 3,
+        "4,12,20": 4,
+        "5,13,21": 5,
+        "6,14,22": 6,
+        "7,15,23": 7
+    }
+
+    // put all grid elements to one array
+    var tableRows = []
+    var trs = document.getElementsByTagName("tr")
+    for(var tr in trs) {
+        if(trs[tr].tagName
+        && trs[tr].parentNode == $(".yt2009-grid-tb")) {
+            tableRows.push(trs[tr])
+            try {
+                trs[tr].innerHTML = ""
+            }
+            catch(error) {}
+        }
+    }
+    
+    // gather all items
+    var tItems = []
+    var pnavItems = document.getElementsByTagName("div")
+    if(navigator.userAgent.indexOf("MSIE") == -1) {
+        // non-ie: respects categories but DOESN'T WORK IN IE
+        // FOR WHATEVER REASON. EVEN MODERN VERSIONS OF IT.
+        // and no, it doesn't work any other way than this if.
+        for(var item in pnavItems) {
+            if(pnavItems[item].tagName
+            && pnavItems[item].className.indexOf("playnav-item") !== -1
+            && pnavItems[item].parentNode.parentNode.className.indexOf(
+                "scrollbox-" + currentTab
+            ) !== -1) {
+                tItems.push(pnavItems[item])
+            }
+        }
+    } else {
+        for(var item in pnavItems) {
+            if(pnavItems[item].tagName
+            && pnavItems[item].className.indexOf("playnav-item") !== -1) {
+                tItems.push(pnavItems[item])
+            }
+        }
+    }
+
+    // add items to correct rows accordingly with tableRowItems
+    for(var row in tableRowItems) {
+        var list = row.split(",")
+        for(var n in list) {
+            var rowItem = parseInt(list[n])
+            if(tItems[rowItem]) {
+                var e = tItems[rowItem].cloneNode(true)
+                e.className += " yt2009-grid-playnav-item"
+                var htmlRow = tableRows[tableRowItems[row]]
+                htmlRow.appendChild(e)
+            }
+        }
+    }
+
+    // ie is weird and it doesn't show any videos without this
+    // and it breaks on other browsers without that if!!! yay!!!
+    if(navigator.userAgent.indexOf("MSIE") !== -1) {
+        ieGridCreated = true;
+        var grid = $("#playnav-grid-content")
+        grid.innerHTML += '<div class="iefix hid">h</div>'
     }
 }
 

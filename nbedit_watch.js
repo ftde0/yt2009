@@ -361,7 +361,7 @@ buttons above the video
 var widescreen = false;
 var player_overlay = $("#watch-this-vid");
 var player_element = $("#watch-this-vid #watch-player-div");
-$("#watch-longform-player").addEventListener("click", function() {
+function switchWidescreen() {
     widescreen = !widescreen;
 
     if(widescreen) {
@@ -369,15 +369,21 @@ $("#watch-longform-player").addEventListener("click", function() {
         player_element.className = "flash-player widescreen"
         $("#watch-vid-title").className = "title longform widescreen"
         $("#player-toggle-switch").className = "reverse-tooltip-wrapper watch-wide-mode"
+        localStorage.widescreenEnabled = true
     } else {
         player_overlay.className = "yt-rounded"
         player_element.className = "flash-player"
         $("#watch-vid-title").className = "title longform"
         $("#player-toggle-switch").className = "reverse-tooltip-wrapper"
+        localStorage.removeItem("widescreenEnabled")
     }
 
     adjustSeekbarWidth();
-}, false)
+}
+$("#watch-longform-player").addEventListener("click", switchWidescreen, false)
+if(localStorage && localStorage.widescreenEnabled) {
+    switchWidescreen()
+}
 
 // popout
 $("#watch-longform-popup").addEventListener("click", function() {

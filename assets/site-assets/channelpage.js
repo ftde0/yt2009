@@ -499,92 +499,67 @@ function playnav_view(view) {
     // prepare the grid view
     if(view == "grid" && !$("#playnav-grid-content").innerText) {
         // generate the grid view contents, its empty
+        // 3x8 table
         var gridViewTable = document.createElement("table")
         gridViewTable.className = "yt2009-grid-tb"
-        var gridViewP1 = document.createElement("td");
-        var gridViewP2 = document.createElement("td");
-        var gridViewP3 = document.createElement("td");
-        var gridParts = [gridViewP1, gridViewP2, gridViewP3]
-        $("#playnav-grid-content").appendChild(gridViewTable)
-        
-        gridParts.forEach(function(part) {
-            part.className = "yt2009-grid-part"
-            gridViewTable.appendChild(part);
-        })
+        var rows = []
+        while(rows.length !== 8) {
+            var tr = document.createElement("tr")
+            gridViewTable.appendChild(tr)
+            rows.push(tr)
+        }
 
-        /*var gridViewScrollbox = document.createElement("div")
-        gridViewScrollbox.className = "outer-scrollbox scroll-grid-" + currentScrollbox;
-        gridViewScrollbox.innerHTML = $(".yt2009-scrollbox.scrollbox-" + currentScrollbox).innerHTML;
-        $("#playnav-" + view + "view #playnav-grid-content").appendChild(gridViewScrollbox)*/
+        $("#playnav-grid-content").appendChild(gridViewTable)
     }
     grid_fillFromScrollbox();
+}
+
+function nlToArray(nl) {
+    var array = []
+    var s = nl
+    for(var e in s) {
+        if(s[e].tagName) {
+            array.push(s[e])
+        }
+    }
+    return array;
 }
 
 // fill up the grid view
 function grid_fillFromScrollbox() {
     if(currentView !== "grid") return;
+    var tableRowItems = {
+        "0,8,16": 0,
+        "1,9,17": 1,
+        "2,10,18": 2,
+        "3,11,19": 3,
+        "4,12,20": 4,
+        "5,13,21": 5,
+        "6,14,22": 6,
+        "7,15,23": 7
+    }
     // clean up the grid
-    var gridParts = $(".yt2009-grid-part")
-    for(var part in gridParts) {
-        try {
-            part = gridParts[part]
-            part.innerHTML = ""
-        }
-        catch(error) {}
-    }
+    nlToArray(document.querySelectorAll(
+        ".yt2009-grid-tb tr"
+    )).forEach(function(tr) {
+        tr.innerHTML = ""
+    })
  
-    var items = []
-    var tItems = document.querySelectorAll(".yt2009-scrollbox.scrollbox-" + currentScrollbox + " .playnav-item")
-    for(var item in tItems) {
-        try {
-            if(tItems[item].getAttribute("class")) {
-                items.push(tItems[item])
+    // add items to correct rows accordingly with tableRowItems
+    var tItems = nlToArray(document.querySelectorAll(
+        ".yt2009-scrollbox.scrollbox-" + currentScrollbox + " .playnav-item"
+    ))
+    for(var row in tableRowItems) {
+        row.split(",").forEach(function(rowItem) {
+            rowItem = parseInt(rowItem)
+            if(tItems[rowItem]) {
+                var e = tItems[rowItem].cloneNode(true)
+                e.className += " yt2009-grid-playnav-item"
+                var htmlRow = nlToArray(document.querySelectorAll(
+                    ".yt2009-grid-tb tr"
+                ))[tableRowItems[row]]
+                htmlRow.appendChild(e)
             }
-        }
-        catch(error) {}
-    }
-
-    items.slice(0, 8).forEach(function(item) {
-        var e = item.cloneNode(true)
-        gridParts[0].appendChild(e)
-        e.className += " yt2009-grid-playnav-item"
-    })
-    gridView_positioningFix(gridParts[0])
-
-    items.slice(8, 16).forEach(function(item) {
-        var e = item.cloneNode(true)
-        gridParts[1].appendChild(e)
-        e.className += " yt2009-grid-playnav-item"
-    })
-    gridView_positioningFix(gridParts[1])
-
-    items.slice(16, 24).forEach(function(item) {
-        var e = item.cloneNode(true)
-        gridParts[2].appendChild(e)
-        e.className += " yt2009-grid-playnav-item"
-    })
-    gridView_positioningFix(gridParts[2])
-}
-
-// for whatever reason those gridview items go from the bottom instead of the top, so a workaround
-function gridView_positioningFix(gridPart) {
-    var gridItems = gridPart.querySelectorAll(".playnav-item")
-    var gridPartItemCount = 0;
-    for(var item in gridItems) {
-        try {
-            if(gridItems[item].innerHTML) {
-                gridPartItemCount++;
-            }
-        }
-        catch(error) {}
-    }
-
-    var leadTop = (8 - gridPartItemCount) * 68
-
-    for(var item in gridItems) {
-        try {
-            gridItems[item].style.top = "-" + leadTop + "px"
-        }
-        catch(error) {}
+        })
     }
 }

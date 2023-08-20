@@ -91,6 +91,7 @@
     height: 23px;
     top: 0px;
     cursor: pointer;
+    user-select: none;
 }
 
 .video_controls .volume_button {
@@ -119,6 +120,7 @@
     right: 68px;
     height: 64px;
     background-image: url("/player-imgs/volume-popup.png");
+    user-select: none;
 }
 
 .volume_popout .volume_head {
@@ -130,6 +132,7 @@
     width: 18px;
     height: 10px;
     cursor: pointer;
+    user-select: none;
 }
 
 .video_controls .hq {
