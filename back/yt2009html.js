@@ -2065,11 +2065,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 try {
                     let sections = data.contents.twoColumnWatchNextResults
                                         .results.results.contents
+                    let hasCommentsToken = false;
                     sections.forEach(section => {
                         if(section.itemSectionRenderer) {
                             if(section.itemSectionRenderer.sectionIdentifier
                                 !== "comment-item-section") return;
-                            
+                            hasCommentsToken = true;
                             let token = section.itemSectionRenderer.contents[0]
                                                 .continuationItemRenderer
                                                 .continuationEndpoint
@@ -2081,6 +2082,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             )
                         }
                     })
+
+                    if(!hasCommentsToken) {
+                        callback([])
+                    }
                 }
                 catch(error) {
                     callback([])

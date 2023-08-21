@@ -369,7 +369,7 @@ module.exports = {
         let callbacksRequired = 3;
         let callbacksMade = 0;
         function markCompleteStep() {
-            callbacksMade++;
+            callbacksMade++; 
             if(callbacksMade == callbacksRequired) {
                 callback()
             }
@@ -803,7 +803,7 @@ module.exports = {
                 code = code.replace(
                     `<div id="playnav-navbar"`,
                     `<div style="float:left;padding-top: 1.2em" class="inner-box">
-                ${yt2009utils.xss(data.name)} has no videos available.</div><div id="playnav-navbar"`
+                ${yt2009utils.xss(channelName)} has no videos available.</div><div id="playnav-navbar"`
                 )
                 code = code.replace(
                     `//[yt2009-hook-no-videos]`,
@@ -820,7 +820,7 @@ module.exports = {
                         if(stepsRequiredToCallback == stepsTaken) {
                             try {callback(code)}catch(error) {}
                         }
-                    }, 500)
+                    }, 100)
                 }
             }
         }
@@ -1002,7 +1002,11 @@ module.exports = {
             )
         }
 
-        // only_old
+        /*
+        =======
+        only_old
+        =======
+        */
         let onlyOldVideos = []
         if(flags.includes("only_old")) {
             stepsRequiredToCallback++;
@@ -1028,7 +1032,7 @@ module.exports = {
                 }
                 videosRender();
                 stepsTaken++
-                if(stepsTaken == stepsRequiredToCallback) {
+                if(stepsTaken >= stepsRequiredToCallback) {
                     try{callback(code)}catch(error){}
                 }
             }), yt2009utils.get_used_token(req), false)
@@ -1405,6 +1409,7 @@ module.exports = {
 
     "autoUserHandle": function(req, res, flags) {
         let url = req.originalUrl
+        let userHandle = ""
         if(url.includes("/user/")) {
             // already a /user/ url, handle as normal
             this.main(req, res, flags)
@@ -1424,7 +1429,6 @@ module.exports = {
         }
 
         // then get the user's handle to try to get /user/ with it
-        let userHandle = ""
         function getUserHandle() {
             if(url.includes("@")) {
                 userHandle = url.split("@")[1].split("?")[0].split("#")[0]
@@ -1468,7 +1472,6 @@ module.exports = {
         }
 
         function compare() {
-            console.log(userHandle, userId)
             userHandle = userHandle.replace("@", "")
             userid_cache.read(`/user/${userHandle}`, (id) => {
                 if(userId == id) {

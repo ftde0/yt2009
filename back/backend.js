@@ -1655,6 +1655,7 @@ app.get("/retry_video", (req, res) => {
     if(fs.existsSync(`../assets/${id}.mp4`)
     && fs.statSync(`../assets/${id}.mp4`).size > 0) {
         res.redirect(`/assets/${id}.mp4`)
+        return;
     }
 
     if(fs.existsSync(`../assets/${id}.mp4`)
@@ -1670,6 +1671,10 @@ app.get("/retry_video", (req, res) => {
     let qualityItags = {}
     let videoItag = ""
     let audioItag = ""
+    v.catch(error => {
+        res.sendStatus(404)
+        return;
+    })
     v.then(v => {
         v.formats.forEach(format => {
             if(format.mimeType.includes("video/mp4")
