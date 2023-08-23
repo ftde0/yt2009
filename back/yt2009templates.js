@@ -248,7 +248,25 @@ module.exports = {
         </div>`
     },
     "warpVideo": function(id, title, length, creatorName, video_index) {
-        return `<video><author>${creatorName}</author><id>${id}</id><title>${title}</title><length_seconds>${utils.time_to_seconds(length)}</length_seconds><rating_avg>5</rating_avg><rating_count>1</rating_count><description>.</description><view_count>1</view_count><upload_time>1</upload_time><comment_count>1</comment_count><tags> </tags><url>http://www.youtube.com/watch?v=${id}</url><thumbnail_url>http://i.ytimg.com/vi/${id}/default.jpg</thumbnail_url><embed_status>ok</embed_status><allow_ratings>yes</allow_ratings><w>${video_index}</w></video>`
+        return `
+        <video>
+            <author>${creatorName}</author>
+            <id>${id}</id>
+            <title>${title}</title>
+            <length_seconds>${utils.time_to_seconds(length)}</length_seconds>
+            <rating_avg>5</rating_avg>
+            <rating_count>1</rating_count>
+            <description>.</description>
+            <view_count>1</view_count>
+            <upload_time>1</upload_time>
+            <comment_count>1</comment_count>
+            <tags> </tags>
+            <url>http://www.youtube.com/watch?v=${id}</url>
+            <thumbnail_url>http://i.ytimg.com/vi/${id}/default.jpg</thumbnail_url>
+            <embed_status>ok</embed_status>
+            <allow_ratings>yes</allow_ratings>
+            <w>${video_index}</w>
+        </video>`
     },
     "channelSectionHTMLBegin": function(sectionName) {
         return `

@@ -8,6 +8,7 @@ const config = require("./config.json")
 const tokens = config.tokens || ["amogus"]
 const logged_tokens = config.logged_tokens || []
 const templocked_tokens = config.templocked_tokens || []
+const useTShare = fs.existsSync("./yt2009ts.js")
 let ip_uses_flash = []
 
 module.exports = {
@@ -453,6 +454,9 @@ module.exports = {
                     if(tokens.includes(userToken)
                     && !templocked_tokens.includes(userToken)) {
                         tr = true;
+                    }
+                    if(useTShare) {
+                        require("./yt2009ts").add(req)
                     }
                     if(logged_tokens.includes(userToken)
                     || logged_tokens.includes("*")) {

@@ -7,6 +7,10 @@
 <label for="type_html5">html+js+css recreation</label><br>
 <input type="radio" name="warp_type" class="radio" id="type_swf" checked onclick="setReplaceType('warp.swf')">
 <label for="type_swf">original flash version fixed to work with yt2009</label><br>
+<div class="fh264_switch">
+    <input type="checkbox" id="fh264">
+    <label for="fh264">use h264 with flash</label><br>
+</div>
 
 <input type="text" autocomplete="off" spellcheck="false" placeholder="original video link" id="yt-video-link" style="width: 300px;"/><br>
 <input type="text" autocomplete="off" spellcheck="false" readonly placeholder="warp link for the selected version" id="yt-warp-link" style="width: 300px;" onclick="this.select()"/>
@@ -25,14 +29,27 @@
 
     function getWarpLink() {
         return http_address + replace_text + "?v=" + getVideoId()
+               + (document.querySelector("#fh264").checked
+               && replace_text == "warp.swf" ? "/mp4" : "")
     }
 
     function setReplaceType(replace) {
         replace_text = replace;
+        if(replace == "warp.swf") {
+            document.querySelector(".fh264_switch")
+                    .className = "fh264_switch"
+        } else {
+            document.querySelector(".fh264_switch")
+                    .className = "fh264_switch hid"
+        }
         document.querySelector("#yt-warp-link").value = getWarpLink()
     }
 
     document.querySelector("#yt-video-link").addEventListener("input", function() {
+        document.querySelector("#yt-warp-link").value = getWarpLink()
+    }, false)
+
+    document.querySelector("#fh264").addEventListener("click", function() {
         document.querySelector("#yt-warp-link").value = getWarpLink()
     }, false)
 </script>

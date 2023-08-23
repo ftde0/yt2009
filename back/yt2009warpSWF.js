@@ -19,17 +19,19 @@ module.exports = {
             return;
         }
 
+        let video = req.query.video_id.replace("/mp4", "")
+
         if(config.env == "dev") {
             console.log(`(${utils.get_used_token(req) + "_warp_swf"}) warp init (${Date.now()})`)
         }
 
-        yt2009main.fetch_video_data(req.query.video_id, (data) => {
+        yt2009main.fetch_video_data(video, (data) => {
             res.send(`
 <?xml version="1.0" encoding="utf-8"?>
 <ut_response status="ok">
     <video>
         <author>${data.author_name}</author>
-        <id>${req.query.video_id}</id>
+        <id>${video}</id>
         <title>${data.title}</title>
         <length_seconds>${data.length}</length_seconds>
         <rating_avg>5</rating_avg>
@@ -39,13 +41,16 @@ module.exports = {
         <upload_time>1</upload_time>
         <comment_count>1</comment_count>
         <tags> </tags>
-        <url>http://www.youtube.com/watch?v=${req.query.video_id}</url>
-        <thumbnail_url>http://i.ytimg.com/vi/${req.query.video_id}/default.jpg</thumbnail_url>
+        <url>http://www.youtube.com/watch?v=${video}</url>
+        <thumbnail_url>http://i.ytimg.com/vi/${video}/default.jpg</thumbnail_url>
         <embed_status>ok</embed_status>
         <allow_ratings>yes</allow_ratings>
     </video>
 </ut_response>`)
-        }, req.headers["user-agent"], utils.get_used_token(req))
+        },
+        req.headers["user-agent"], 
+        utils.get_used_token(req),
+        false, false, true)
     },
 
 
@@ -56,10 +61,12 @@ module.exports = {
             return;
         }
 
+        let video = req.query.video_id.replace("/mp4", "")
+
         if(config.env == "dev") {
             console.log(`(${
                 utils.get_used_token(req) + "_warp_swf"
-            }) warp videos load (${req.query.video_id}, ${Date.now()})`)
+            }) warp videos load (${video}, ${Date.now()})`)
         }
 
         let videos_xml = `
@@ -68,10 +75,10 @@ module.exports = {
         <video_list>`
         let video_index = 1;
 
-        yt2009main.fetch_video_data(req.query.video_id, (data) => {
+        yt2009main.fetch_video_data(video, (data) => {
             yt2009search.related_from_keywords(
                 utils.exp_related_keyword(data.tags, data.title),
-                req.query.video_id, "", (html, related) => {
+                video, "", (html, related) => {
                     related.forEach(v => {
                         videos_xml += yt2009templates.warpVideo(
                             v.id,
@@ -97,7 +104,8 @@ module.exports = {
             return;
         }
         if(req.query.fmt == 5
-        || req.query.video_id.includes("/mp4")) {
+        || req.query.video_id.includes("/mp4")
+        || (req.headers.referer || "").includes("/mp4")) {
             req.query.video_id = req.query.video_id.replace("/mp4", "")
             res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
             return;
@@ -109,6 +117,12 @@ module.exports = {
 
     "vid_flv": function(id, callback) {
         // get a flv file needed by flash
+        let ffmpegCommandFlv = [
+            "ffmpeg",
+            `-i ${__dirname}/../assets/${id}.mp4`,
+            ` -b 1500k -ab 128000`,
+            `${__dirname}/../assets/${id}.flv`
+        ]
 
         // have flv?
         if(fs.existsSync(`../assets/${id}.flv`)) {
@@ -128,12 +142,6 @@ module.exports = {
             })
         }
 
-        let ffmpegCommandFlv = [
-            "ffmpeg",
-            `-i ${__dirname}/../assets/${id}.mp4`,
-            ` -b 1500k -ab 128000`,
-            `${__dirname}/../assets/${id}.flv`
-        ]
         function convert_mp4_to_flv(id, callback) {
             child_process.exec(ffmpegCommandFlv.join(" "),
             (error, stdout, stderr) => {

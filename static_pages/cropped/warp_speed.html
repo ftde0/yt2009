@@ -3,10 +3,14 @@
 <h2>warp:</h2>
 <p>wklej tu link do filmu, aby wygenerować link warp - wizualnej przeglądarki yt usuniętej w 2011.<br><br>więcej informacji: <a href="/watch?v=hA3X6xIloQI">kliknij tu.</a><br><br>wybierz wersję:</p>
 
-<input type="radio" name="warp_type" class="radio" id="type_html5" onclick="setReplaceType('warp')" disabled>
+<input type="radio" name="warp_type" class="radio" id="type_html5" onclick="setReplaceType('warp')">
 <label for="type_html5">rekreacja html+js+css</label><br>
 <input type="radio" name="warp_type" class="radio" id="type_swf" checked onclick="setReplaceType('warp.swf')">
 <label for="type_swf">oryginalna wersja flash, naprawiona aby działała z yt2009</label><br>
+<div class="fh264_switch">
+    <input type="checkbox" id="fh264">
+    <label for="fh264">używaj h264 z flash</label><br>
+</div>
 
 <input type="text" autocomplete="off" spellcheck="false" placeholder="oryginalny link do filmu" id="yt-video-link" style="width: 300px;"/><br>
 <input type="text" autocomplete="off" spellcheck="false" readonly placeholder="link warp do wybranej wersji" id="yt-warp-link" style="width: 300px;" onclick="this.select()"/>
@@ -25,14 +29,27 @@
 
     function getWarpLink() {
         return http_address + replace_text + "?v=" + getVideoId()
+               + (document.querySelector("#fh264").checked
+               && replace_text == "warp.swf" ? "/mp4" : "")
     }
 
     function setReplaceType(replace) {
         replace_text = replace;
+        if(replace == "warp.swf") {
+            document.querySelector(".fh264_switch")
+                    .className = "fh264_switch"
+        } else {
+            document.querySelector(".fh264_switch")
+                    .className = "fh264_switch hid"
+        }
         document.querySelector("#yt-warp-link").value = getWarpLink()
     }
 
     document.querySelector("#yt-video-link").addEventListener("input", function() {
+        document.querySelector("#yt-warp-link").value = getWarpLink()
+    }, false)
+
+    document.querySelector("#fh264").addEventListener("click", function() {
         document.querySelector("#yt-warp-link").value = getWarpLink()
     }, false)
 </script>
