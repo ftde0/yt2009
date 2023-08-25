@@ -1293,17 +1293,17 @@ app.get("/mobile/view_comment", (req, res) => {
     yt2009_mobile.view_comments(req, res)
 })
 app.get("/mobile/profile", (req, res) => {
-    //yt2009_mobile.create_watchpage(req, res)
-    res.send("łot")
+    yt2009_mobile.channels(req, res)
 })
-app.get("/mobile/create_rtsp", (req, res) => {
-    let id = req.query.v
-    let noSound = req.query.muted ? true : false
-    if(!id) {
-        res.send("no video id param, cannot start stream.")
-        return;
-    }
-    yt2009_mobile.setup_rtsp(id, noSound, res)
+let videoProcessEndpoints = [
+    "/mobile/create_rtsp",
+    "/mp4_144",
+    "/http_3gp"
+]
+videoProcessEndpoints.forEach(endpoint => {
+    app.get(endpoint, (req, res) => {
+        yt2009_mobile.video_process(req, res)
+    })
 })
 
 /*

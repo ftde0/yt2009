@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yt2009 mobile playback setup</title>
+    <link rel="stylesheet" href="app_style.css">
+</head>
+<body>
+    <h1>playback setup</h1>
+    <h3>set how videos should be played on mobile.<br>
+    click the correct option and your option will be saved automatically.</h3>
+    <button onclick="setPlayback('rtsp_mp4')">RTSP / H264 MP4</button><br>
+    <button onclick="setPlayback('rtsp_mp4_an')">RTSP / H264 MP4 (no audio)</button><br>
+    <button onclick="setPlayback('rtsp_3gp')">RTSP / 3GP</button><br>
+    <button onclick="setPlayback('rtsp_3gp_an')">RTSP / 3GP (no audio)</button><br>
+    <button onclick="setPlayback('http_mp4')">HTTP / H264 MP4</button><br>
+    <button onclick="setPlayback('http_mp4_144')">HTTP / H264 MP4 / 144P</button><br>
+    <button onclick="setPlayback('http_3gp')">HTTP / 3GP</button><br>
+    <h3 style="margin-top: 20px;">bonus: toggle old_experience: exp_related and only_old together.</h3>
+    <button onclick="setOld()">old_experience</button>
+    <script>
+        function setPlayback(type) {
+            var c = "mobile_playback=" + type + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            document.cookie = c;
+            alert("updated mobile playback type. refresh any open mobile pages for changes to take effect.")
+        }
+        function setOld() {
+            if(document.cookie.indexOf("old_experience") == -1) {
+                // enable
+                var c = "old_experience=1; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+                document.cookie = c;
+                alert("enabled")
+            } else {
+                // disable
+                var c = "old_experience=0; Path=/; expires=Fri, 31 Dec 2009 23:59:59 GMT"
+                document.cookie = c;
+                alert("disabled")
+            }
+        }
+    </script>
+</body>
+</html>

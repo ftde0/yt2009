@@ -14,18 +14,39 @@ const env = config.env
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 const ffmpeg_process_144 = [
     "ffmpeg",
-    "-i $1",
+    "-i \"$1\"",
     "-ac 1",
     "-acodec aac",
     "-c:v libx264",
     "-s 256x144",
-    "$2"
+    "\"$2\""
 ]
-const ffmpeg_stream = [
+const ffmpeg_process_3gp = [
+    "ffmpeg",
+    "-i \"$1\"",
+    "-c:a libopencore_amrnb",
+    "-c:v h263",
+    "-ac 1",
+    "-ar 8000",
+    "-s 176x144",
+    "\"$2\""
+]
+const ffmpeg_stream_mp4 = [
     "ffmpeg",
     "-re -i",
-    "$1",
+    "\"$1\"",
     "$2",
+    "-f rtsp",
+    "-rtsp_transport udp",
+    "$3"
+]
+const ffmpeg_stream_3gp = [
+    "ffmpeg",
+    "-re -i",
+    "\"$1\"",
+    "$2",
+    "-c:v h263",
+    "-c:a libopencore_amrnb",
     "-f rtsp",
     "-rtsp_transport udp",
     "$3"
@@ -52,6 +73,7 @@ const watchpage_html = fs.readFileSync("../mobile/watchpage.htm").toString();
 const search_html = fs.readFileSync("../mobile/search.htm").toString();
 const comments_html = fs.readFileSync("../mobile/view-comment.htm").toString();
 const homepage_html = fs.readFileSync("../mobile/mainpage.htm").toString()
+const channelpage_html = fs.readFileSync("../mobile/channel.htm").toString()
 
 module.exports = {
     // create the watch page
@@ -65,27 +87,66 @@ module.exports = {
 
             let code = watchpage_html;
             code = code.split(`yt2009_id`).join(data.id)
+            code = code.split(`yt2009_link`).join(
+                this.playback_link(req, data.id)
+            )
             code = code.replace(`yt2009_title`, data.title)
             code = code.replace(`yt2009_description`, data.description)
+            code = code.replace(
+                `yt2009_channel`,
+                "/mobile/profile?desktop_uri=" + encodeURIComponent(data.author_url)
+            )
             code = code.replace(`yt2009_length`, utils.seconds_to_time(data.length))
             code = code.replace(`yt2009_views`, data.viewCount + " views")
-            code = code.replace(`yt2009_user`, data.author_name)
+            if((req.headers.cookie || "").includes("old_experience=1")) {
+                code = code.replace(
+                    `yt2009_user`, utils.asciify(data.author_name)
+                )
+            } else {
+                code = code.replace(`yt2009_user`, data.author_name)
+            }
             code = code.replace(`yt2009_upload`, data.upload)
             code = code.replace(`yt2009_thumbnail`, `http://i.ytimg.com/vi/${data.id}/hqdefault.jpg`)
 
             // related
             let relatedHTML = ``
             let relatedIndex = 0;
-            data.related.forEach(video => {
-                if(utils.time_to_seconds(video.length) >= 1800 || relatedIndex > 4) return;
+            if((req.headers.cookie || "").includes("old_experience=1")) {
+                // exp_related
+                let keyword = utils.exp_related_keyword(data.tags, data.title)
+                ytsearch.related_from_keywords(
+                    keyword, data.id, "remove_username_space;realistic_view_count",
+                    ((html, data) => {
+                        create(data)
+                    }), "http"
+                )
+                function create(data) {
+                    data.forEach(video => {
+                        if(utils.time_to_seconds(video.length) >= 1800
+                        || relatedIndex > 4) return;
+                        video.upload = utils.genFakeDate()
 
-                relatedHTML += templates.mobile_video(video)
-                relatedIndex++;
-            })
-
-            code = code.replace(`<!--yt2009_related-->`, relatedHTML)
-
-            res.send(code)
+                        relatedHTML += templates.mobile_video(video)
+                        relatedIndex++;
+                    })
+                    code = code.replace(`<!--yt2009_related-->`, relatedHTML)
+                    res.send(code)
+                }
+            } else {
+                // default related
+                data.related.forEach(video => {
+                    if(utils.time_to_seconds(video.length) >= 1800
+                    || relatedIndex > 4) return;
+    
+                    relatedHTML += templates.mobile_video(video)
+                    relatedIndex++;
+                })
+    
+                code = code.replace(`<!--yt2009_related-->`, relatedHTML)
+    
+                res.send(code)
+            }
+            
         }, req.headers["user-agent"], utils.get_used_token(req), false)
     },
 
@@ -95,10 +156,16 @@ module.exports = {
         let query = req.query.q;
 
         let searchHTML = ``
+        if((req.headers.cookie || "").includes("old_experience=1")) {
+            query += " before:2010-04-01"
+        }
         ytsearch.get_search(query, "", "", (data => {
             let videoIndex = 0;
             data.forEach(video => {
                 if(videoIndex > 10 || video.type !== "video") return;
+                if((req.headers.cookie || "").includes("old_experience=1")) {
+                    video.upload = utils.genFakeDate()
+                }
 
                 searchHTML += templates.mobile_video(video)
                 videoIndex++;
@@ -110,35 +177,105 @@ module.exports = {
         }), utils.get_used_token(req))
     },
 
-    // rtsp video watch
-    "setup_rtsp": function(id, mute, res) {
-        let fileName = `${id}-144.mp4`
-        let streamId = Math.floor(Math.random() * 37211)
-
-        // process requested video if needed
-        if(!fs.existsSync(`../assets/${fileName}`)
-        && fs.existsSync(`../assets/${id}.mp4`)) {
-            // convert to 144p
-            child_process.execSync(
-                ffmpeg_process_144.join(" ").replace(
-                    "$1", `${__dirname}/../assets/${id}.mp4`
-                ).replace(
-                    "$2", `${__dirname}/../assets/${fileName}`
+    // process video when watch requested
+    // use a so-called "task list" to not repeat code and it's easier to modify
+    "video_process": function(req, res) {
+        let cookie = req.headers.cookie || ""
+        let playback = "rtsp_mp4"
+        cookie.split(";").forEach(c => {
+            if(c.trimStart().startsWith("mobile_playback=")) {
+                playback = c.trimStart().replace(
+                    "mobile_playback=", ""
                 )
-            )
+            }
+        })
+        
+        let taskLookup = {
+            "rtsp_mp4": [ffmpeg_process_144, "rtsp", "id-144.mp4"],
+            "rtsp_mp4_an": [ffmpeg_process_144, "mute", "rtsp", "id-144.mp4"],
+            "rtsp_3gp": [ffmpeg_process_3gp, "rtsp", "id.3gp"],
+            "rtsp_3gp_an": [ffmpeg_process_3gp, "mute", "rtsp", "id.3gp"],
+            "http_mp4": ["id.mp4"],
+            "http_mp4_144": [ffmpeg_process_144, "id-144.mp4"],
+            "http_3gp": [ffmpeg_process_3gp, "id.3gp"]
         }
 
-        // start RTSP stream of 144 file
-        child_process.exec(
-            ffmpeg_stream.join(" ").replace(
-                "$1", `${__dirname}/../assets/${fileName}`
-            ).replace(
-                "$2", `${mute ? "-an" : ""}`
-            ).replace(
-                "$3", `${rtsp_server}video/${id}-${streamId}`
-            )
+        let tasks = taskLookup[playback]
+        let tasksCompleted = 0;
+        this.processTask(
+            (req.query.v || req.query.video_id),
+            tasks, tasksCompleted, res, () => {}
         )
-        res.redirect(`${rtsp_server}video/${id}-${streamId}`)
+    },
+
+    "processTask": function(id, tasks, index, res, callback) {
+        let task = tasks[index]
+        let taskFilled = false
+        let baseFile = __dirname + `/../assets/${id}.mp4`
+        // get filename for target tasks
+        let fileName = tasks[tasks.length - 1]
+        let output = __dirname + `/../assets/${fileName.replace("id", id)}`
+        // tasks
+        if(typeof(task) == "object") {
+            // array task - process command
+            if(fs.existsSync(output)) {
+                this.processTask(id, tasks, index + 1, res, callback)
+                return;
+            }
+            let command = task.join(" ")
+                          .replace("$1", baseFile)
+                          .replace("$2", output)
+            child_process.exec(command, (err, stdout, stderr) => {
+                // go with the next task
+                if(!tasks[index + 1]) return;
+                this.processTask(id, tasks, index + 1, res, callback)
+                return;
+            })
+            taskFilled = true
+        }
+        if(task == "rtsp") {
+            // rtsp setup task
+            let streamId = Math.floor(Math.random() * 37211)
+            let path = `${rtsp_server}video/${id}-${streamId}`
+            let command = ffmpeg_stream_mp4
+            if(fileName.includes("3gp")) {
+                command = ffmpeg_stream_3gp
+            }
+            command = command.join(" ")
+                      .replace("$1", output)
+                      .replace("$2", tasks.includes("mute") ? "-an" : "")
+                      .replace("$3", path)
+            child_process.exec(command, (err, stdout, stderr) => {})
+            setTimeout(function() {
+                res.redirect(path)
+            }, 100)
+            taskFilled = true;
+        }
+        if(typeof(task) == "string"
+        && task.startsWith("id")
+        && !tasks.includes("rtsp")) {
+            // http task
+            if(fs.existsSync(output)) {
+                res.redirect(`/assets/${fileName.replace("id", id)}`)
+            } else {
+                if(typeof(tasks[0]) !== "object") return;
+                let command = tasks[0].join(" ")
+                              .replace("$1", baseFile)
+                              .replace("$2", output)
+                child_process.exec(command, (err, stdout, stderr) => {
+                    // go with the next task
+                    if(!tasks[index + 1]) return;
+                    this.processTask(id, tasks, index + 1, res, callback)
+                    return;
+                })
+            }
+            
+            taskFilled = true;
+        }
+        // default handling - go over the task
+        if(!taskFilled) {
+            this.processTask(id, tasks, index + 1, res, callback)
+        }
     },
 
     // mobile homepage
@@ -150,8 +287,15 @@ module.exports = {
         yt2009html.featured().splice(0, 4).forEach(video => {
             index++;
             code = code.split(`v${index}_id`).join(video.id)
+            code = code.split(`v${index}_link`).join(
+                this.playback_link(req, video.id)
+            )
+            code = code.split(`v${index}_time`).join(
+                utils.seconds_to_time(video.time)
+            )
             code = code.split(`v${index}_title`).join(video.title)
             code = code.split(`v${index}_views`).join(video.views)
+            code = code.split(`v${index}_date`).join(utils.genFakeDate())
         })
         res.send(code)
     },
@@ -166,6 +310,9 @@ module.exports = {
         yt2009html.fetch_video_data(id, (data => {
             // fill video data
             code = code.split("yt2009_id").join(data.id)
+            code = code.split(`yt2009_link`).join(
+                this.playback_link(req, data.id)
+            )
             code = code.split("yt2009_title").join(data.title)
             code = code.split("yt2009_length").join(
                 utils.seconds_to_time(data.length)
@@ -191,6 +338,120 @@ module.exports = {
             code = code.replace(`<!--yt2009_comments-->`, actual_comments)
             res.send(code)
         }), "", utils.get_used_token(req), false, false)
+    },
+
+    "playback_link": function(req, id) {
+        let link = "/mobile/create_rtsp?v=" + id // default
+        let cookie = req.headers.cookie || ""
+        let playback = "rtsp_mp4"
+        cookie.split(";").forEach(c => {
+            if(c.trimStart().startsWith("mobile_playback=")) {
+                playback = c.trimStart().replace(
+                    "mobile_playback=", ""
+                )
+            }
+        })
+
+        let linkLookup = {
+            "rtsp_mp4_an": "/mobile/create_rtsp?v=" + id + "&muted=1",
+            "rtsp_3gp": "/mobile/create_rtsp?v=" + id + "&3gp=1",
+            "rtsp_3gp_an": "/mobile/create_rtsp?v=" + id + "&3gp=1&muted=1",
+            "http_mp4": "/get_video?video_id=" + id + "/mp4",
+            "http_mp4_144": "/mp4_144?v=" + id,
+            "http_3gp": "/http_3gp?v=" + id
+        }
+
+        if(linkLookup[playback]) {
+            link = linkLookup[playback]
+        }
+
+        return link;
+    },
+
+    // channels
+    "channels": function(req, res) {
+        let original = req.query.desktop_uri
+        let code = channelpage_html
+        if(!original) {
+            res.status(400)
+            res.send("no desktop_uri")
+            return;
+        }
+        channels.main({"path": original, 
+        "headers": {"cookie": ""},
+        "query": {"f": 0}}, 
+        {"send": function(data) {
+            // metadata
+            code = code.split(`yt2009_username`).join(utils.asciify(data.name))
+            code = code.split(`yt2009_subcount`).join(
+                (data.properties.subscribers || "")
+                .replace("subscribers", "")
+                .replace("subscriber", "")
+                + (utils.approxSubcount(
+                    (data.properties.subscribers || "0")
+                ) > 1 ? " subscribers" : "subscriber")
+            )
+            code = code.split(`yt2009_avatar`).join(data.avatar)
+
+            // only_old/old_experience
+            if((req.headers.cookie || "").includes("old_experience=1")) {
+                ytsearch.get_search(
+                    `"${data.name}" before:2010-04-01`,
+                    "realistic_view_count;fake_upload_dates",
+                    "",
+                    (data) => {
+                        let videoCount = 0;
+                        data.forEach(d => {
+                            if(d.type == "video") {
+                                videoCount++
+                            }
+                        })
+
+                        if(videoCount > 0) {
+                            putVideos(data)
+                        } else {
+                            putVideos(data.videos)
+                        }
+                    },
+                    "",
+                    false
+                ) 
+            } else { 
+                // default
+                putVideos(data.videos)
+            }
+        }}, "", true)
+
+        // add valid html
+        function putVideos(videos) {
+            // approximated channel views
+            let videoViewCount = 0;
+            videos.forEach(video => {
+                if(!video.type || video.type == "video") {
+                    videoViewCount += utils.bareCount(video.views)
+                }
+            })
+
+            let channelViewCount = Math.floor(videoViewCount / 90)
+            code = code.split(`yt2009_cviews`).join(
+                utils.countBreakup(channelViewCount)
+            )
+
+            // videos
+            let videosHTML = ``
+            videos.slice(0, 10).forEach(v => {
+                if(!v.type || v.type == "video") {
+                    if((req.headers.cookie || "").includes("old_experience=1")) {
+                        v.upload = utils.genFakeDate()
+                    }
+                    videosHTML += templates.mobile_video(v)
+                }
+            })
+
+            code = code.replace(`<!--yt2009_videos-->`, videosHTML)
+
+            res.send(code)
+        }
     },
 
     // apk feeds
