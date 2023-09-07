@@ -316,8 +316,8 @@ module.exports = {
         return code;
     },
 
-    "related_from_keywords": function(keyword, sourceId, watch_flags, callback, protocol) {
-        this.get_search(keyword, "only_old", "", (data) => {
+    "related_from_keywords": function(keyword, sourceId, watch_flags, callback, protocol, disableOld) {
+        this.get_search(keyword, disableOld ? "" : "only_old", "", (data) => {
             if(!data) {
                 callback("", "")
                 return;

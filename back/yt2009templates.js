@@ -1357,5 +1357,32 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             </div>
         </td>
     </tr>`
+    },
+    "blazer_bareVideo": function(id, title, length, views, author, tags) {
+        return {
+            "id": id,
+            "video_id": id,
+            "title": title,
+            "duration": length,
+            "view_count": utils.countBreakup(utils.bareCount(views)),
+            "is_playable": true,
+            "username": author,
+            "watch_link": "/watch?v=" + id,
+            "thumbnail_for_list": "<img src=\"http://i.ytimg.com/vi/" + id + "/default.jpg\"/>",
+            "stream_url": "/get_video?video_id=" + id + "/mp4",
+            "u_hq_stream_url": "/get_480?video_id=" + id + "/mp4",
+            "landscape": true,
+            "stitched_thumbnail_large": {
+                "url": "http://i.ytimg.com/vi/" + id + "/hqdefault.jpg",
+                "width": 160,
+                "height": 120,
+                "posx": 60,
+                "posy": 25
+            },
+            "length": utils.time_to_seconds(length),
+            "tags": (tags || []),
+            "short_description": "loading",
+            "time_created_text": ""
+        }
     }
 }

@@ -18,7 +18,14 @@
                 document.cookie = "watch_flags= ; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
                 document.cookie = "global_flags=no_controls_fade:; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
             }
-            location.href = "/"
+            var redirect = "/"
+            try {
+                if(location.href.indexOf("blzr") !== -1) {
+                    redirect = "/mobile/blzr/"
+                }
+            }
+            catch(error) {}
+            location.href = redirect
         }
     </script>
 </body>

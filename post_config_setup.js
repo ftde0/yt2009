@@ -350,6 +350,22 @@ let files = [
     {
         "url": "https://s.ytimg.com/yt/img/yt-narrative-tail-vfl55396.gif",
         "path": "./assets/site-assets/yt-narrative-tail-vfl55396.gif"
+    },
+    {
+        "url": "https://web.archive.org/web/20100815042640im_/http://s.ytimg.com/yt/m/mobile/img/apple-touch-icon2-vfl171763.png",
+        "path": "./assets/site-assets/apple-touch-icon2-vfl171763.png"
+    },
+    {
+        "url": "http://web.archive.org/web/20100815042630if_/http://s.ytimg.com/yt/m/mobile/img/blazer_sprite_high-vfl176462.png",
+        "path": "./assets/site-assets/blazer_sprite_high-vfl176462.png"
+    },
+    {
+        "url": "http://web.archive.org/web/20100815042635if_/http://s.ytimg.com/yt/m/mobile/img/blazer_sprite_vhigh-vfl176746.png",
+        "path": "./assets/site-assets/blazer_sprite_vhigh-vfl176746.png"
+    },
+    {
+        "url": "http://web.archive.org/web/20100815042625if_/http://s.ytimg.com/yt/m/mobile/img/blazer_sprite_low-vfl176462.png",
+        "path": "./assets/site-assets/blazer_sprite_low-vfl176462.png"
     }
 ]
 const initialFileCount = files.length

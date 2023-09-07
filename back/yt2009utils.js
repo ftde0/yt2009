@@ -402,9 +402,6 @@ module.exports = {
 
 
     "saveAvatar": function(link) {
-        if(config.fallbackMode) {
-            return link;
-        }
         if(link.startsWith("//")) {
             link = link.replace("//", "https://")
         }
@@ -592,9 +589,9 @@ module.exports = {
         return working[0]
     },
 
-    "asciify": function(username) {
+    "asciify": function(username, dontRandom) {
         let r = username.replace(/[^a-zA-Z0-9]/g, "").trim()
-        if(r.length == 0) {
+        if(r.length == 0 && !dontRandom) {
             // random username if we're left with no characters
             let randomUsername = ""
             let usernameCharacters = "qwertyuiopasdfghjklzxcvbnm".split("")
@@ -606,6 +603,10 @@ module.exports = {
             // add random number to the end
             randomUsername += Math.floor(Math.random() * 90).toString()
             r = randomUsername;
+        }
+
+        if(dontRandom && r.length == 0) {
+            r = username;
         }
         return r;
     },
@@ -881,32 +882,20 @@ module.exports = {
 
     "saveMp4": function(id, callback) {
         let targetFilePath = `../assets/${id}.mp4`
-        if(config.fallbackMode) {
-            // return remote mp4 path when fallback
-            ytdl.getInfo(`https://youtube.com/watch?v=${id}`).then(r => {
-                r.formats.forEach(f => {
-                    if(f.itag == 18) {
-                        callback(f.url)
-                    }
-                })
-            })
-            return;
-        } else {
-            let writeStream = fs.createWriteStream(targetFilePath)
-            writeStream.on("finish", () => {
-                callback(targetFilePath.replace(".mp4", ""))
-            })
+        let writeStream = fs.createWriteStream(targetFilePath)
+        writeStream.on("finish", () => {
+            callback(targetFilePath.replace(".mp4", ""))
+        })
     
-            ytdl(`https://youtube.com/watch?v=${id}`, {
-                "quality": 18
-            })
-            .on("error", (error) => {
-                 callback(false)
-                 writeStream.close()
-                 return;
-             })
-            .pipe(writeStream)
-        }
+        ytdl(`https://youtube.com/watch?v=${id}`, {
+            "quality": 18
+        })
+        .on("error", (error) => {
+             callback(false)
+             writeStream.close()
+             return;
+         })
+        .pipe(writeStream)
     },
 
     "relativeTimeCreate": function(baseString, language) {

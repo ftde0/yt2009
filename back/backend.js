@@ -26,6 +26,7 @@ const yt2009_quicklist = require("./yt2009quicklistserver")
 const yt2009_captions = require("./yt2009captions")
 const yt2009_mobileflags = require("./yt2009mobileflags")
 const yt2009_inbox = require("./yt2009inbox")
+const yt2009_blazer = require("./yt2009mobileblazer")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -811,7 +812,8 @@ app.get("/playnav_get_comments", (req, res) => {
     yt2009_channels.playnav_get_comments(req, res)
 })
 
-app.get("/channel_fh264_getvideo", (req, res) => {
+function checkBaseline(req, res) {
+    let tr = false;
     if(req.headers["user-agent"].includes("Android")) {
         let androidVersion = 9;
         androidVersion = req.headers["user-agent"].split("Android")[1]
@@ -820,9 +822,14 @@ app.get("/channel_fh264_getvideo", (req, res) => {
         // handle old android versions, go with standard method otherwise
         if(!isNaN(androidVersion) && androidVersion < 4.2) {
             ffmpegEncodeBaseline(req, res)
-            return;
+            tr = true;
         }
     }
+    return tr;
+}
+
+app.get("/channel_fh264_getvideo", (req, res) => {
+    if(checkBaseline(req, res)) return;
 
     if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
         yt2009_utils.saveMp4(req.query.v, (vid) => {
@@ -839,7 +846,13 @@ app.get("/channel_fh264_getvideo", (req, res) => {
 })
 
 function ffmpegEncodeBaseline(req, res) {
-    req.query.v = req.query.v.replace(/[^a-zA-Z0-9+-+_]/g, "").substring(0, 11)
+    let vId = ""
+    if(req.query.v) {
+        vId = req.query.v.replace(/[^a-zA-Z0-9+-+_]/g, "").substring(0, 11)
+    } else if(req.query.video_id) {
+        vId = req.query.video_id.replace(/[^a-zA-Z0-9+-+_]/g, "").substring(0, 11)
+    }
+    
     if(config.env == "dev") {
         console.log(`baseline h264 req ${req.originalUrl}`)
     }
@@ -848,14 +861,14 @@ function ffmpegEncodeBaseline(req, res) {
     function sendFile() {
         let filePath = __dirname.replace("\\back", "\\assets")
                                 .replace("/back", "/assets")
-                       + "/" + req.query.v + "-baseline.mp4"
+                       + "/" + vId + "-baseline.mp4"
         res.sendFile(filePath)
     }
 
     // reencode from standard mp4 to baseline mp4
     function reencode() {
-        let stdFile = __dirname + "/../assets/" + req.query.v + ".mp4"
-        let targetFile = __dirname + "/../assets/" + req.query.v + "-baseline.mp4"
+        let stdFile = __dirname + "/../assets/" + vId + ".mp4"
+        let targetFile = __dirname + "/../assets/" + vId + "-baseline.mp4"
         // those fps and bitrate values are too specific but they work.
         // STAGEFRIGHT 1.1 I HATE YOU. I HOPE NOBODY HAS TO DEAL WITH THIS.
         let ffmpegOptions = [
@@ -877,14 +890,14 @@ function ffmpegEncodeBaseline(req, res) {
     }
 
     // video exists (highly unlikely but maybe??), send immediately
-    if(fs.existsSync("../assets/" + req.query.v + "-baseline.mp4")) {
+    if(fs.existsSync("../assets/" + vId + "-baseline.mp4")) {
         sendFile()
         return;
     }
 
-    if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
+    if(!fs.existsSync("../assets/" + vId + ".mp4")) {
         // standard mp4 doesn't exist, download and reencode
-        yt2009_utils.saveMp4(req.query.v, () => {
+        yt2009_utils.saveMp4(vId, () => {
             reencode()
         })
     } else {
@@ -1249,6 +1262,12 @@ app.get("/exp_hd", (req, res) => {
 */
 app.get("/get_480", (req, res) => {
     let id = req.query.video_id.substring(0, 11)
+    if(!fs.existsSync(`../assets/${id}.mp4`)) {
+        yt2009_utils.saveMp4(id, () => {
+            res.redirect(`/get_480?video_id=${id}&r=1`)
+        })
+        return;
+    }
     if(fs.existsSync(`../assets/${id}-480.mp4`)) {
         res.redirect(`/assets/${id}-480.mp4`)
     } else {
@@ -1270,6 +1289,10 @@ app.get("/get_480", (req, res) => {
         require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
             "quality": 135
         })
+        /*.catch(error => {
+            res.redirect(`/get_video?video_id=${id}/mp4`)
+            return;
+        })*/
         .pipe(writeStream)
     }
 })
@@ -1379,6 +1402,166 @@ app.post("/mobile/save_flags", (req, res) => {
 })
 app.get("/mobile/get_flags", (req, res) => {
     res.send(yt2009_mobileflags.get_flags(req));
+})
+
+/*
+======
+mobile (blazer/ios 2010 webapp) endpoints
+======
+*/
+let blazerEndpoints = [
+    "/mobile/blzr",
+    "/mobile/blzr/",
+    "/mobile/blzr/site.html"
+]
+const blazer = fs.readFileSync("../mobile/blzr/site.html").toString()
+blazerEndpoints.forEach(e => {
+    app.get(e, (req, res) => {
+        if(!yt2009_utils.isAuthorized(req)) {
+            res.redirect("/auth.html?redir=blzr")
+            return;
+        }
+        res.send(blazer)
+    })
+})
+app.get("/mobile/blzr/home", (req, res) => {
+    res.send(yt2009_blazer.homepage())
+})
+app.get("/mobile/blzr/my_account", (req, res) => {
+    res.send({"result": "ok"})
+})
+app.get("/mobile/blzr/watch", (req, res) => {
+    yt2009_blazer.video(req, res)
+})
+app.get("/mobile/blzr/view_comment", (req, res) => {
+    yt2009_blazer.get_comments(req, res)
+})
+app.get("/mobile/blzr/results", (req, res) => {
+    yt2009_blazer.search(req, res)
+})
+app.get("/mobile/blzr/profile", (req, res) => {
+    // same endpoint is used for things on the channel (videos etc)
+    // so check before passing
+    switch(req.query.view) {
+        case "videos": {
+            yt2009_blazer.user_videos(req.query.user, (r) => {
+                res.send(r)
+            })
+            break;
+        }
+        default: {
+            let isSubscribed = false;
+            if(req.headers.cookie
+            && req.headers.cookie.includes("blzr_sublist=")) {
+                let sublist = req.headers.cookie
+                              .split("blzr_sublist=")[1]
+                              .split(";")[0];
+                if(sublist.includes(req.query.user)) {
+                    isSubscribed = true;
+                }
+            }
+
+            let disableDefaultAvatar = false;
+            if(req.headers.cookie
+            && req.headers.cookie.includes("undefault-avatar")) {
+                disableDefaultAvatar = true;
+            }
+
+            yt2009_blazer.user_info(req.query.user, (r) => {
+                res.send(r)
+            }, isSubscribed, disableDefaultAvatar)
+            break;
+        }
+    }
+})
+app.post("/mobile/blzr/profile", (req, res) => {
+    yt2009_blazer.toggle_sub(req, res)
+})
+app.get("/mobile/blzr/videos", (req, res) => {
+    yt2009_blazer.browse(req, res)
+})
+app.post("/mobile/blzr/post_comment", (req, res) => {
+    if(req.body
+    && req.body.toString().includes("&comment=")) {
+        let username = (req.headers.cookie || "blazer_login=tnb")
+        if(username.includes("blazer_login=")) {
+            username = yt2009_utils.xss(decodeURIComponent(
+                username.split("blazer_login=")[1].split(";")[0]
+            ))
+        }
+        let content = yt2009_utils.xss(decodeURIComponent(
+            req.body.toString().split("&comment=")[1].split("&")[0]
+        ))
+        res.send({
+            "result": "ok",
+            "content": {
+                "allow_post_comment": true,
+                "new_comment": {
+                    "author_name": username,
+                    "comment": content,
+                    "time_ago": "1 second ago"
+                }
+            }
+        })
+    }
+})
+app.get("/mobile/blzr/manage_playlist", (req, res) => {
+    res.send({"result": "ok", "content": {
+        "playlists": yt2009_blazer.inter_read_playlists(req)
+    }})
+})
+app.post("/mobile/blzr/manage_playlist", (req, res) => {
+    yt2009_blazer.post_manage_playlist(req, res)
+})
+app.get("/mobile/blzr/patch_playlist", (req, res) => {
+    let playlistId = req.query.pid;
+    let videoId = req.query.vid;
+    let newCookie = yt2009_blazer.add_to_playlist(
+        req, playlistId, videoId
+    )
+    let cookieParams = [
+        `blzr_pl_${playlistId}=${newCookie}; `,
+        `Path=/; `,
+        `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+    ]
+    res.set("set-cookie", cookieParams.join(""))
+    res.send({"result": "ok"})
+})
+app.post("/mobile/blzr/add_favorite", (req, res) => {
+    yt2009_blazer.favorite(req, res)
+})
+app.get("/mobile/blzr/my_favorites", (req, res) => {
+    yt2009_blazer.get_favs(req, res)
+})
+app.get("/mobile/blzr/my_playlists", (req, res) => {
+    yt2009_blazer.get_playlists(req, res)
+})
+app.get("/mobile/blzr/view_playlist", (req, res) => {
+    yt2009_blazer.view_cookie_playlist(req, res)
+})
+app.get("/mobile/blzr/my_subscriptions", (req, res) => {
+    // "s" parameter = fetch user's new videos
+    // otherwise get the list
+    if(req.query.s) {
+        yt2009_blazer.sub_feed(req, res)
+    } else {
+        yt2009_blazer.user_subscriptions(req, res)
+    }  
+})
+app.get("/mobile/blzr/my_videos", (req, res) => {
+    res.send({"result": "ok", "content": {"videos": []}})
+})
+app.get("/mobile/blzr/signup", (req, res) => {
+    if(req.query.action_logout == "1") {
+        let cookieParams = [
+            `blazer_login=so; `,
+            `Path=/; `,
+            `Expires=Fri, 31 Dec 2005 23:59:59 GMT`
+        ]
+        res.set("set-cookie", cookieParams.join(""))
+    }
+
+    res.redirect("/mobile/blzr")
 })
 
 /*

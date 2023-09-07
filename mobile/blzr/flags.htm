@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yt2009 blazer flags</title>
+    <link rel="stylesheet" href="/mobile/app_style.css">
+</head>
+<body>
+    <div id="flagspage" class="panel">
+        <h1>yt2009 blazer flags</h1>
+        <h3>modify your blazer experience - a 2010 webapp. try at <a href="/mobile/blzr">/mobile/blzr</a>.</h3>
+        <p>--------<br>
+        getting an "In order to watch videos, please enable plugins in Safari Settings." error?<br>
+        if available, enable the QuickTime plugin, otherwise try requesting a desktop site.<br>
+        --------</p>
+        <div class="section watch-flags">
+            <h1>videos</h1>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-fix-btn">
+                <label for="watch-fix-btn">fix_btn</label>
+                <p class="subtext">center the play button as it may appear to the left on some platforms</p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-new-related">
+                <label for="watch-new-related">new_related</label>
+                <p class="subtext">show new videos within the Related section</p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-undefault-avatar">
+                <label for="watch-undefault-avatar">undefault_avatar</label>
+                <p class="subtext">doesn't use default_avataradapt for avatars.</p>
+            </div>
+        </div>
+        <div class="section search-flags">
+            <h1>search</h1>
+            <div class="checkbox">
+                <input type="checkbox" id="search-only-old">
+                <label for="search-only-old">only_old</label>
+                <p class="subtext">only show old videos in search results</p>
+            </div>
+        </div>
+        <div class="section global-flags">
+            <h1>global</h1>
+            <div class="checkbox">
+                <input type="checkbox" id="ls-login-simulate">
+                <label for="ls-login-simulate">login_simulate</label>
+                <input type="text" id="ls-login-simulate-box" autocomplete="off" spellcheck="false"/>
+                <p class="subtext">make blazer think you're logged in, enabling things like playlists.</p>
+            </div>
+        </div>
+        <button onclick="saveFlags();">save</button>
+    </div>
+    <script src="flags.js"></script>
+</body>
+</html>

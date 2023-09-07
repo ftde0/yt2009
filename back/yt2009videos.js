@@ -235,6 +235,7 @@ module.exports = {
                 "uploaderName": video.uploaderName,
                 "uploaderUrl": video.uploaderUrl,
                 "views": views,
+                "length": video.time
             })
         }
         if(!sortByPopular) {

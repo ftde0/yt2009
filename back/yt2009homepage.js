@@ -197,9 +197,9 @@ module.exports = function(req, res) {
     if(require("./config.json").fallbackMode) {
         addNotice = true;
         noticeText = "yt2009 was loaded in fallback mode."
-                           + " it may have happened after multiple"
-                           + " failed restarts. some features may not"
-                           + " work correctly."
+                   + " it may have happened after multiple"
+                   + " failed restarts. some features may not"
+                   + " work correctly."
     }
 
     if(require("./config.json").customHomepageText) {

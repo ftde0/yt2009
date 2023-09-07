@@ -173,6 +173,10 @@ module.exports = {
                     data["author_url"] = "/channel/" + videoData.videoDetails.channelId
                 }
 
+                if(data.author_url.startsWith("/@")) {
+                    data.author_handle = data.author_url.replace("/@", "");
+                }
+
                 if(!data.author_url.startsWith("/c/")
                 && !data.author_url.startsWith("/user/")
                 && !data.author_url.startsWith("/channel")) {
@@ -325,8 +329,7 @@ module.exports = {
                 
                 // save mp4/ogv
 
-                if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload)
-                || config.fallbackMode) {
+                if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload)) {
                     function on_mp4_save_finish(path) {
                         setTimeout(function() {
                             if(waitForOgv) {
@@ -1070,8 +1073,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(!useFlash) {
             code = code.replace(
                 "mp4_files", 
-                `<source src="${data.mp4}${!config.fallbackMode ? ".mp4" : ""}" type="video/mp4"></source>
-                <source src="${data.mp4}${!config.fallbackMode ? ".ogg" : ""}" type="video/ogg"></source>`
+                `<source src="${data.mp4}.mp4" type="video/mp4"></source>
+                <source src="${data.mp4}.ogg" type="video/ogg"></source>`
             )
         }
         code = code.replace(
@@ -1717,8 +1720,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         // exp_hq
         if(!useFlash
         && (qualityList.includes("720p")
-        || qualityList.includes("480p"))
-        && !config.fallbackMode) {
+        || qualityList.includes("480p"))) {
             let use720p = qualityList.includes("720p")
             code = code.replace(
                 `<!--yt2009_style_hq_button-->`,
@@ -2057,7 +2059,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
 
 
-    "get_video_comments": function(id, callback) {
+    "get_video_comments": function(id, callback, flags) {
         if(cache.read()[id]) {
             callback(cache.read()[id].comments);
         } else {
@@ -2075,7 +2077,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                                 .continuationItemRenderer
                                                 .continuationEndpoint
                                                 .continuationCommand.token
-                            this.request_continuation(token, id, "",
+                            this.request_continuation(token, id, (flags || ""),
                                 (comment_data) => {
                                     callback(comment_data)
                                 }

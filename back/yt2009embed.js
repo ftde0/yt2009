@@ -240,8 +240,7 @@ module.exports = function(req, res) {
     let waitForOgv = false;
 
     // if firefox <= 25 wait for ogv, callback mp4 otherwise
-    if(req.headers["user-agent"].includes("Firefox/")
-    && !config.fallbackMode) {
+    if(req.headers["user-agent"].includes("Firefox/")) {
         let ffVersion = parseInt(
             req.headers["user-agent"].split("Firefox/")[1]
                                      .split(" ")[0]
@@ -296,12 +295,9 @@ module.exports = function(req, res) {
             <source src="/assets/${id}.ogg" type="video/ogg"></source>`))
         })
     }
-    if(!fs.existsSync(`../assets/${id}.mp4`) || config.fallbackMode) {
+    if(!fs.existsSync(`../assets/${id}.mp4`)) {
         utils.saveMp4(id, (path) => {
             setTimeout(function() {
-                if((path || "").includes("googlevideo")) {
-                    id = path;
-                }
                 if(waitForOgv) {
                     child_process.exec(templates.createFffmpegOgg(id),
                     (error, stdout, stderr) => {
