@@ -4,7 +4,9 @@ a fairly accurate 2009 youtube frontend.
 ---
 
 ## setup
-- make sure you have [imagemagick](https://imagemagick.org/) and [ffmpeg](https://ffmpeg.org/) in your PATH.
+###### if you prefer using docker rather than installing directly, go [here](docker.md) for setup instructions instead
+
+- **make sure you have [imagemagick](https://imagemagick.org/) and [ffmpeg](https://ffmpeg.org/) in your PATH.**
 
 ### when installing imagemagick, make sure you also install its legacy tools (convert)! 
 
