@@ -194,7 +194,10 @@ module.exports = function(req, res) {
     // fallback notification
     let addNotice = false;
     let noticeText = "";
-    if(require("./config.json").fallbackMode) {
+    if(require("./config.json").fallbackMode
+    && (!req.headers.cookie
+    || (req.headers.cookie
+    && !req.headers.cookie.includes("disable_fallback")))) {
         addNotice = true;
         noticeText = "yt2009 was loaded in fallback mode."
                    + " it may have happened after multiple"

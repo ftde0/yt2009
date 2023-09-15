@@ -113,18 +113,29 @@ module.exports = {
     </div>
     `,
     "XLFormatVideo": function(video, protocol) {
-        let authorName = video.creatorName
-                        || video.uploaderName
-                        || video.author_name || ""
+        let authorName = video.author_handle
+                         || video.uploaderHandle
+                         || video.creatorHandle
+                         || video.creatorName
+                         || video.uploaderName
+                         || video.author_name
+                         || ""
         let authorUrl = video.uploaderUrl
                         || video.creatorUrl
-                        || video.author_url || ""
+                        || video.author_url
+                        || ""
         if(authorUrl.includes("/user/")) {
             authorName = authorUrl.split("/user/")[1]
         } else {
-            authorName = authorName.replace(/[^0-9a-zA-Z]/g, "")
+            authorName = authorName.replace(/[^a-zA-Z0-9+-+_]/g, "")
         }
         let time = video.length || video.time
+        if(!time) {
+            time = Math.floor(Math.random() * 100) + 60
+        }
+        if(utils.time_to_seconds(time) == time) {
+            time = utils.seconds_to_time(time)
+        }
         let views = video.views || video.viewCount || ""
         return {
             "video_id": video.id,
@@ -138,7 +149,7 @@ module.exports = {
             "restricted": 0,
             "image_url": protocol + "://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg",
             "user_id": "/",
-            "description": "",
+            "description": video.description || "",
             "title": video.title,
             "rating": 5,
             "author_url": authorUrl

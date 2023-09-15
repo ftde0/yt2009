@@ -175,6 +175,8 @@
 
 		<div class="group3">
 			<h2>/, /videos, /channels, /my_subscriptions</h2>
+			<input type="checkbox" id="mainpage-disable-fallback" title="ukrywa ostrzeżenie o trybu fallback">
+			<label for="mainpage-disable-fallback">disable_fallback</label><br>
 			<input type="checkbox" id="mainpage-fake-upload-date" title="fake daty wrzuceń filmów (np. 11 lat temu -> 3 miesiące temu)">
 			<label for="mainpage-fake-upload-date">fake_upload_date</label><br>
 			<input type="checkbox" id="mainpage-homepage-recommended" title="pokazuje polecane filmy na stronie głównej na podstawie 3 ostatnio obejrzanych">
@@ -214,6 +216,28 @@
 	<!--yt2009_f-->
 	<script src="/assets/site-assets/yt2009-flags-languages.js"></script>
 	<script>
+		function updateDescriptions() {
+			// show flag descriptions on labels BECAUSE PEOPLE CAN'T HOVER
+			// OVER THE CHECKBOX.
+			var labels = document.getElementsByTagName("input")
+			for(var label in labels) {
+				label = labels[label]
+				if(label.id && label.getAttribute("type") == "checkbox") {
+					var target = document.getElementsByTagName("label")
+					for(var p in target) {
+						if(target[p]
+						&& target[p].tagName
+						&& target[p].getAttribute("for") == label.id) {
+							target = target[p]
+						}
+					}
+					var labelText = label.getAttribute("title")
+					target.setAttribute("title", labelText)
+				}
+			}
+		}
+		updateDescriptions()
+
 		var watch_flags = ""
 		var results_flags = ""
 		var channel_flags = ""

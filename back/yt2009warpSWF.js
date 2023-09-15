@@ -110,6 +110,20 @@ module.exports = {
             res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
             return;
         }
+        if(req.query.eurl
+        && req.query.eurl.includes("embedr.com")) {
+            // xl
+            if(req.query.fmt == "22") {
+                // hd
+                res.redirect("/exp_hd?video_id=" + req.query.video_id)
+                return;
+            }
+            if(req.query.fmt == "35") {
+                // hq
+                res.redirect("/get_480?video_id=" + req.query.video_id)
+                return;
+            }
+        }
         this.vid_flv(req.query.video_id, () => {
             res.redirect(`../assets/${req.query.video_id}.flv`)
         })

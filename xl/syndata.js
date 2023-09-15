@@ -1992,7 +1992,7 @@ var serviceFavorite = function () {
             status: 'main.content_watch.popup.content',
             codemap: {
                 '-3': dataSignInText,
-                '-1': 'Unable to Favorite',
+                '-1': 'Favorited!',
                 '0': 'Favorited!'
             }
         }]
@@ -3046,6 +3046,21 @@ window.onload = function () {
     config.sessionTokenFlag = '';
     config.sessionTokenShare = '';
     config.sessionTokenSubscription = '';
+
+    // login_simulate
+    if(document.cookie
+        && document.cookie.indexOf("login_simulate") !== -1) {
+            var username = document.cookie
+                           .split("login_simulate")[1]
+                           .split(":")[0]
+                           .split(";")[0]
+            yt.xl.config.user = username;
+            yt.xl.config.sessionToken = 's';
+            yt.xl.config.sessionTokenFavorite = 's';
+            yt.xl.config.sessionTokenFlag = 's';
+            yt.xl.config.sessionTokenShare = 's';
+            yt.xl.config.sessionTokenSubscription = 's';
+    }
 
     if (configuration.safe_search == 'always') {
         config.filterRacyContent = true;

@@ -41,6 +41,7 @@ var languageData_EN = {
         "channel-use-ryd": "use data from Return YouTube Dislike (https://returnyoutubedislike.com/) for correct star ratings",
         "channel-username-asciify": "remove special characters from usernames",
 
+        "mainpage-disable-fallback": "hides fallback mode warning",
         "mainpage-fake-upload-date": "fake upload dates (ex. 11 years ago -> 3 months ago)",
         "mainpage-homepage-recommended": "show a recommended section on the homepage based on the last 3 videos watched",
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
@@ -142,6 +143,8 @@ function setEnglish() {
     for(var element in placeholders) {
         document.querySelector("#" + element).setAttribute("placeholder", placeholders[element])
     }
+
+    updateDescriptions()
 }
 
 

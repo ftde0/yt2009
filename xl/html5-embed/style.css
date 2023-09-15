@@ -16,6 +16,12 @@ video {
     display: none !important;
 }
 
+.html5-loading {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    background-image: url("/player-imgs/loading.gif");
+}
 
 .controls {
     position: absolute;
@@ -73,6 +79,7 @@ video {
 
 .btn:hover {
     background-color: black;
+    outline: 4px solid white;
 }
 
 .btn:active {
@@ -131,6 +138,34 @@ video {
     right: 2%;
 } 
 
+.hq-btn {
+    right: 19%;
+    background-image: url("./player-imgs/hq-btn.png");
+}
+
+.hq-btn.active {
+    background-image: url("./player-imgs/hq-btn-active.png");
+}
+
+.hq-btn:active {
+    background-image: url("./player-imgs/hq-btn-clck.png");
+}
+
+.hd {
+    background-image: url("./player-imgs/hd-btn.png");
+}
+
+.hd.active {
+    background-image: url("./player-imgs/hd-btn-active.png");
+}
+
+.hd:active {
+    background-image: url("./player-imgs/hd-btn-clck.png");
+}
+
+.has-quality .loop-btn {
+    left: 50%;
+}
 
 /*time text*/
 .timer {

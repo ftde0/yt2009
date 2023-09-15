@@ -72,11 +72,11 @@ function videoToggle() {
 
 video.addEventListener("pause", function() {
     $(".pause-btn").className += " hid"
-    $(".play-btn").className = $(".play-btn").className.replace("hid", "")
+    $(".play-btn").className = $(".play-btn").className.split("hid").join("")
 }, false)
 
 video.addEventListener("play", function() {
-    $(".pause-btn").className = $(".pause-btn").className.replace("hid", "")
+    $(".pause-btn").className = $(".pause-btn").className.split("hid").join("")
     $(".play-btn").className += " hid"
 }, false)
 
@@ -118,6 +118,8 @@ function timeUpdate() {
     if(overrideTimer) return;
     $(".timer").innerHTML = seconds_to_time(Math.floor(video.currentTime))
                         + " / " + seconds_to_time(Math.floor(video.duration))
+
+    hideLoadingSprite()
 }
 
 video.addEventListener("timeupdate", timeUpdate, false)
@@ -206,3 +208,68 @@ var controlsFade = setInterval(function() {
         $(".controls").style.opacity = 0;
     }
 }, 1000)
+
+// loading sprite
+function adjustSprite() {
+    if(document.querySelector(".html5-loading")) {
+        // -16 from half the gif size (32x32)
+        var left = video.getBoundingClientRect().width / 2 - 16
+        $(".html5-loading").style.left = left + "px"
+        var top = video.getBoundingClientRect().height / 2 - 16
+        $(".html5-loading").style.top = top + "px"; 
+    }
+}
+
+adjustSprite()
+window.onresize = adjustSprite;
+
+function showLoadingSprite() {
+    var c = $(".html5-loading").className
+    $(".html5-loading").className = c.split("hid").join("")
+}
+
+function hideLoadingSprite() {
+    if($(".html5-loading").className.indexOf("hid") !== -1) return;
+    $(".html5-loading").className += " hid"
+}
+
+// hq / hd
+var r = new XMLHttpRequest();
+var hqEnabled = false;
+r.open("GET", "/get_video_info?video_id=" + id)
+r.send(null)
+r.addEventListener("load", function(e) {
+    if(r.responseText.indexOf("exp_hd") !== -1) {
+        // hd
+        document.querySelector(".yt2009-hd")
+        .addEventListener("click", function() {
+            toggleQuality("exp_hd")
+        }, false)
+        document.querySelector(".yt2009-hd").className = "btn hq-btn hd"
+        document.body.className = "has-quality"
+    } else if(r.responseText.indexOf("get_480") !== -1) {
+        // hq
+        document.querySelector(".yt2009-hd")
+        .addEventListener("click", function() {
+            toggleQuality("get_480")
+        }, false)
+        document.querySelector(".yt2009-hd").className = "btn hq-btn"
+        document.body.className = "has-quality"
+    }
+}, false)
+function toggleQuality(endpoint) {
+    showLoadingSprite()
+    if(!hqEnabled) {
+        v.src = "/" + endpoint + "?video_id=" + id;
+        document.querySelector(".hq-btn").className += " active"
+        hqEnabled = true
+        v.play()
+    } else {
+        v.src = "/get_video?video_id=" + id + "/mp4";
+        var c = document.querySelector(".hq-btn").className
+        document.querySelector(".hq-btn").className = c.split("active").join("")
+        hqEnabled = false
+        v.play()
+    }
+    
+}

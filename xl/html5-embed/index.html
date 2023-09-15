@@ -20,14 +20,17 @@
         <span class="btn rewind-btn"></span>
         <span class="btn fw-btn"></span>
         <span class="btn loop-btn inactive"></span>
+        <span class="yt2009-hd"></span>
         <span class="btn fullscreen-btn"></span>
         <h1 class="timer">0:00 / 0:00</h1>
     </div>
+    <span class="html5-loading hid"></span>
     <script>
         // fill the video tag
+        var v = document.querySelector("video")
         var id = location.href.split("video_id=")[1].split("&")[0]
         var version = location.href.indexOf("ogg") !== -1 ? "ogg" : "mp4"
-        document.querySelector("video").src = "/assets/" + id + "." + version
+        v.src = "/assets/" + id + "." + version
     </script>
     <script src="html5-player.js"></script>
 </body>

@@ -553,6 +553,22 @@ app.get("/xl/console_profile_videos", (req, res) => {
     yt2009_xl.get_profile(req, res)
 })
 
+app.post("/xl/favorites", (req, res) => {
+    yt2009_xl.add_favorites(req, res)
+})
+
+app.get("/xl/console_profile_favorites", (req, res) => {
+    yt2009_xl.get_favorites(req, res)
+})
+
+app.get("/xl/console_profile_playlists", (req, res) => {
+    yt2009_xl.get_playlists(req, res)
+})
+
+app.get("/xl/console_profile_recommendation", (req, res) => {
+    yt2009_xl.get_recommendations(req, res)
+})
+
 app.get("/apiplayer", (req, res) => {
     res.redirect("/xl/apiplayer.swf")
 })
@@ -564,37 +580,36 @@ app.get("/swf/apiplayer.swf", (req, res) => {
 app.get("/get_video_info", (req, res) => {
     req.query.video_id = req.query.video_id.replace("/mp4", "")
     yt2009.fetch_video_data(req.query.video_id, (data => {
-        let qualities = require("./cache_dir/qualitylist_cache_manager")
-                        .read()[req.query.video_id] || [];
-        let fmt_list = ""
-        let fmt_stream_map = ""
-        let fmt_map = ""
-        qualities.forEach(quality => {
-            switch(quality) {
-                case "720p": {
-                    fmt_list += "22/1280x720/9/0/115,"
-                    fmt_map += "22/2000000/9/0/115,"
-                    fmt_stream_map += `22|http://${config.ip}:${
-                        config.port
-                    }/exp_hd?video_id=${req.query.video_id},`
-                    break;
+        yt2009.get_qualities(req.query.video_id, (qualities => {
+            let fmt_list = ""
+            let fmt_stream_map = ""
+            let fmt_map = ""
+            qualities.forEach(quality => {
+                switch(quality) {
+                    case "720p": {
+                        fmt_list += "22/1280x720/9/0/115,"
+                        fmt_map += "22/2000000/9/0/115,"
+                        fmt_stream_map += `22|http://${config.ip}:${
+                            config.port
+                        }/exp_hd?video_id=${req.query.video_id},`
+                        break;
+                    }
+                    case "480p": {
+                        fmt_list += "35/854x480/9/0/115,"
+                        fmt_map += "35/0/9/0/115,"
+                        fmt_stream_map +=  `35|http://${config.ip}:${
+                            config.port
+                        }/get_480?video_id=${req.query.video_id},`
+                        break;
+                    }
                 }
-                case "480p": {
-                    fmt_list += "35/854x480/9/0/115,"
-                    fmt_map += "35/0/9/0/115,"
-                    fmt_stream_map +=  `35|http://${config.ip}:${
-                        config.port
-                    }/get_480?video_id=${req.query.video_id},`
-                    break;
-                }
-            }
-        })
-        fmt_list += "5/640x360/9/0/115"
-        fmt_map += "5/0/7/0/0"
-        fmt_stream_map += `5|http://${config.ip}:${
-            config.port
-        }/assets/${data.id}.mp4`
-res.send(`status=ok
+            })
+            fmt_list += "5/640x360/9/0/115"
+            fmt_map += "5/0/7/0/0"
+            fmt_stream_map += `5|http://${config.ip}:${
+                config.port
+            }/assets/${data.id}.mp4`
+            res.send(`status=ok
 length_seconds=1
 keywords=a
 vq=None
@@ -619,6 +634,8 @@ title=${data.title}
 video_id=${req.query.video_id}
 fmt_list=${encodeURIComponent(fmt_list)}
 fmt_stream_map=${encodeURIComponent(fmt_stream_map)}`.split("\n").join("&"))
+        }))
+        
     }), "", "", false, false)
 })
 
@@ -1251,6 +1268,10 @@ app.get("/exp_hd", (req, res) => {
         require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
             "quality": 136
         })
+        .on("error", () => {
+            res.redirect(`/get_video?video_id=${id}/mp4`)
+            return;
+        })
         .pipe(writeStream)
     }
 })
@@ -1265,6 +1286,7 @@ app.get("/get_480", (req, res) => {
     if(!fs.existsSync(`../assets/${id}.mp4`)) {
         yt2009_utils.saveMp4(id, () => {
             res.redirect(`/get_480?video_id=${id}&r=1`)
+            return;
         })
         return;
     }
@@ -1289,10 +1311,10 @@ app.get("/get_480", (req, res) => {
         require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
             "quality": 135
         })
-        /*.catch(error => {
+        .on("error", () => {
             res.redirect(`/get_video?video_id=${id}/mp4`)
             return;
-        })*/
+        })
         .pipe(writeStream)
     }
 })
