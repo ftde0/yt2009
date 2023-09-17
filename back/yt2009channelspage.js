@@ -48,7 +48,6 @@ module.exports = {
         code = require("./yt2009loginsimulate")(req, code)
 
         let channelList = channels.get_saved_channels()
-        console.log(channelList)
         let listedChannels = []
         let index = 0;
         let channelsHTML = ``

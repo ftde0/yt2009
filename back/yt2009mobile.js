@@ -456,6 +456,14 @@ module.exports = {
 
     // apk feeds
     "feeds": function(req, res) {
+        // mobileflags
+        if(req.headers["x-gdata-device"]
+        && req.headers["x-gdata-device"].includes("device-id=\"")) {
+            let deviceId = req.headers["x-gdata-device"]
+                               .split("device-id=\"")[1]
+                               .split("\"")[0];
+            mobileflags.write_session(req.ip, deviceId)
+        }
         // handle category feeds in a separate function
         if(req.originalUrl.includes("most_viewed_")
         || req.originalUrl.includes("most_discussed_")
@@ -499,15 +507,6 @@ module.exports = {
                     }
                 }, "", "", false, false, true)
             })
-
-            // mobileflags
-            if(req.headers["x-gdata-device"]
-            && req.headers["x-gdata-device"].includes("device-id=\"")) {
-                let deviceId = req.headers["x-gdata-device"]
-                                   .split("device-id=\"")[1]
-                                   .split("\"")[0];
-                mobileflags.write_session(req.ip, deviceId)
-            }
         } else if(req.originalUrl.includes("most_popular")) {
             // grab popular videos (100k+ views) from featured 25-50
             // and put them into the feed

@@ -1395,5 +1395,10 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             "short_description": "loading",
             "time_created_text": ""
         }
-    }
+    },
+    "banner": function(url) {return `<div id="user_banner" class="profile-banner-box"><img src="${url}" class="" width="960" height="150"></div>`},
+    "watchBanner": function(link, img) {
+    return `<div id="watch-channel-brand-cap">
+        <a href="${link}"><img src="${img}" width="300" height="50" border="0"></a>
+    </div>`}
 }

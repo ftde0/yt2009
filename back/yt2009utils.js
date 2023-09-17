@@ -401,11 +401,14 @@ module.exports = {
     },
 
 
-    "saveAvatar": function(link) {
+    "saveAvatar": function(link, banner) {
         if(link.startsWith("//")) {
             link = link.replace("//", "https://")
         }
         let fname = link.split("/")[link.split("/").length - 1]
+        if(banner) {
+            fname = link.split("/")[link.split("/").length - 2] + "_banner.jpg"
+        }
         fname = fname.replace(".png", "")
         if(!fs.existsSync(`../assets/${fname}.png`)) {
             fetch(link, {
@@ -420,7 +423,31 @@ module.exports = {
         return `/assets/${fname}.png`
     },
 
-    "get_dominant_color": function(banner, callback) {
+    "saveBanner": function(link, bg, header) {
+        if(link.startsWith("//")) {
+            link = link.replace("//", "https://")
+        }
+        let fname = link.split("/")[link.split("/").length - 2] + "_banner.jpg"
+        if(bg) {
+            fname = fname.replace("_banner", "_background")
+        }
+        if(header) {
+            fname = fname.replace("_banner", "_header")
+        }
+        if(!fs.existsSync(`../assets/${fname}`)) {
+            fetch(link, {
+                "headers": constants.headers
+            }).then(r => {
+                r.buffer().then(buffer => {
+                    fs.writeFileSync(`../assets/${fname}`, buffer)
+                })
+            })
+        }
+
+        return `/assets/${fname}`
+    },
+
+    "get_dominant_color": function(banner, callback, cropSide) {
         let banner_fname = banner.split("/")[banner.split("/").length - 1]
         if(!fs.existsSync(`../assets/${banner_fname}.png`)) {
             fetch(banner, {
@@ -437,7 +464,7 @@ module.exports = {
             dominant_color(`${__dirname}/../assets/${banner_fname}.png`,
             (color) => {
                 callback(color)
-            }, 32)
+            }, 32, cropSide)
         }
     },
 
@@ -501,7 +528,8 @@ module.exports = {
             })
         }
 
-        if(config.env == "dev") {
+        if(config.env == "dev"
+        || (tokens.length == 1 && tokens[0] == "*")) {
             tr = true;
         }
 
@@ -589,9 +617,9 @@ module.exports = {
         return working[0]
     },
 
-    "asciify": function(username, dontRandom) {
+    "asciify": function(username, dontRandom, rEmpty) {
         let r = username.replace(/[^a-zA-Z0-9]/g, "").trim()
-        if(r.length == 0 && !dontRandom) {
+        if(r.length == 0 && !dontRandom && !rEmpty) {
             // random username if we're left with no characters
             let randomUsername = ""
             let usernameCharacters = "qwertyuiopasdfghjklzxcvbnm".split("")
@@ -600,12 +628,11 @@ module.exports = {
                                 [Math.floor(Math.random() * 26)]
             }
 
-            // add random number to the end
             randomUsername += Math.floor(Math.random() * 90).toString()
             r = randomUsername;
         }
 
-        if(dontRandom && r.length == 0) {
+        if(dontRandom && r.length == 0 && !rEmpty) {
             r = username;
         }
         return r;
@@ -769,6 +796,7 @@ module.exports = {
     /*
     ========
     flag handling for simpler things, move to this in the future
+    actually don't move to this in the future this is horrible
     ========
     */
     "textFlags": function(input, flags, additionalInput) {
@@ -786,7 +814,7 @@ module.exports = {
                 }
                 case "username_asciify": {
                     if(tr.includes(" ago")) return
-                    tr = this.asciify(tr)
+                    tr = this.asciify(tr, true, true)
                     break;
                 }
                 case "author_old_names": {

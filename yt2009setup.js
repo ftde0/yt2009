@@ -27,7 +27,7 @@ dev:
 - no possibility of creating an ssl version
 prod:
 - doesn't log normal activity
-- will create a bunch of random tokens users will have to enter to use
+- if enabled, will create a bunch of random tokens users will have to enter to use
 - will be possible to create an ssl version on a separate port`)
 while(env !== "dev" && env !== "prod") {
     env = readline.question("environment (dev/prod): ")
@@ -72,6 +72,18 @@ do you want to use SSL on a second port?`)
             cfg.SSLPort = readline.question(
                 "\nspecify a different port for the SSL yt2009 version: "
             )
+        }
+    }
+
+    // tokens
+    let rawTokens = ""
+    while(rawTokens !== "n"
+    && rawTokens !== "y") {
+        rawTokens = readline.question(
+            "\n\ndisable tokens requirement? will set tokens as [\"*\"]. (y/n): "
+        ).toLowerCase()
+        if(rawTokens == "y") {
+            cfg.tokens = ["*"]
         }
     }
 }

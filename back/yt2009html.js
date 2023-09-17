@@ -449,7 +449,11 @@ module.exports = {
         }
 
         if(flags.includes("username_asciify")) {
-            author_name = yt2009utils.asciify(author_name)
+            author_name = yt2009utils.asciify(author_name, true, true)
+            if(author_name == "") {
+                author_name = data.author_handle
+                              || yt2009utils.asciify(author_name)
+            }
         }
 
         if(flags.includes("author_old_names")
@@ -1881,23 +1885,84 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // channel banners
-        yt2009channelcache.getSmallBanner(data.author_url, (file => {
-            if(file && file !== "no") {
+        function defaultBanner() {
+            yt2009channelcache.getSmallBanner(data.author_url, (file => {
+                if(file && file !== "no") {
+                    code = code.replace(
+                        `<!--yt2009_bannercard-->`,
+                        yt2009templates.watchBanner(
+                            data.author_url, "/assets/" + file
+                        )
+                    )
+                }
+                callbacksMade++;
+                if(requiredCallbacks <= callbacksMade) {
+                    render_endscreen()
+                    fillFlashIfNeeded();
+                    genRelay();
+                    callback(code)
+                }
+            }))
+        }
+        if(flags.includes("old_banners")
+        && data.author_url.includes("channel/UC")) {
+            //requiredCallbacks++
+            let id = data.author_url.split("channel/UC")[1]
+            let header = `https://i3.ytimg.com/u/${id}/watch_header.jpg`
+            let fname = __dirname + "/../assets/" + id + "_header.jpg"
+            if(!fs.existsSync(fname)) {
+                requiredCallbacks++
+                fetch(header, {
+                    "headers": constants.headers
+                }).then(r => {
+                    let b = ""
+                    if(r.status !== 404) {
+                        b = yt2009utils.saveBanner(header, false, true)
+                    } else {
+                        requiredCallbacks -= 1;
+                        defaultBanner()
+                        return;
+                    }
+
+                    code = code.replace(
+                        `<!--yt2009_bannercard-->`,
+                        yt2009templates.watchBanner(
+                            data.author_url, b
+                        )
+                    )
+                    callbacksMade++;
+                    // wait for f
+                    let x = setInterval(function() {
+                        if(fs.existsSync(fname)) {
+                            clearInterval(x)
+                            callbacksMade++
+                            if(requiredCallbacks <= callbacksMade) {
+                                render_endscreen()
+                                fillFlashIfNeeded();
+                                genRelay();
+                                callback(code)
+                            }
+                        }
+                    }, 250)
+                })
+            } else {
                 code = code.replace(
-                    `<!--yt2009_bannercard-->`,`
-                    <div id="watch-channel-brand-cap">
-                        <a href="${data.author_url}"><img src="/assets/${file}" width="300" height="50" border="0"></a>
-                    </div>`
+                    `<!--yt2009_bannercard-->`,
+                    yt2009templates.watchBanner(
+                        data.author_url, "/assets/" + id + "_header.jpg"
+                    )
                 )
+                callbacksMade++;
+                if(requiredCallbacks <= callbacksMade) {
+                    render_endscreen()
+                    fillFlashIfNeeded();
+                    genRelay();
+                    callback(code)
+                }
             }
-            callbacksMade++;
-            if(requiredCallbacks == callbacksMade) {
-                render_endscreen()
-                fillFlashIfNeeded();
-                genRelay();
-                callback(code)
-            }
-        }))
+        } else {
+            defaultBanner()
+        }
 
         // relay
         function genRelay() {

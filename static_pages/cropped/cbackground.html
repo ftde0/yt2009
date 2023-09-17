@@ -1,0 +1,66 @@
+<style>
+    #clink {
+        width: 300px
+    }
+    #browser {
+        margin-top: 50px;
+    }
+    img {
+        width: 500px;
+        height: auto;
+    }
+</style>
+<h1>yt2009: suggest better channel background</h1>
+<input type="text" autocomplete="off" spellcheck="false" placeholder="channel link" id="clink">
+<a class="yt-button yt-button-primary" href="#" onclick="getId()"><span>Get channel</span></a>
+<div class="hid" id="browser">
+    <p>below you will see old backgrounds of the linked user. if you see a fitting one, press "suggest".<br>
+    suggestions will be manually reviewed and if matching will be put in a list to use within the frontend.<br>
+    thank you!</p>
+    <p id="idsel">image id: 101</p>
+    <a class="yt-button yt-button-primary" href="#" onclick="switchImg(-1)"><span>previous</span></a>
+    <a class="yt-button yt-button-primary" href="#" onclick="switchImg(1)"><span>next</span></a>
+    <a class="yt-button yt-button-primary" href="#" onclick="sendSuggestion()"><span>suggest</span></a><br>
+    <img/>
+</div>
+
+<script>
+    var channelId = ""
+    function getId() {
+        var v = document.getElementById("clink").value
+        if(v.indexOf("/channel/") !== -1) {
+            channelId = v.split("/channel/")[1]
+                         .split("/")[0].split("?")[0].split("#")[0]
+                         .replace("UC", "")
+            document.getElementById("browser").className = ""
+        } else {
+            var r = new XMLHttpRequest();
+            r.open("GET", "/get_userid?link=" + v)
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                channelId = r.responseText.replace("UC", "");
+                document.getElementById("browser").className = ""
+                switchImg(0)
+            }, false)
+        }
+    }
+
+    var imageId = 101;
+    function switchImg(index) {
+        imageId += index;
+        var url = "//i3.ytimg.com/bg/" + channelId + "/" + imageId + ".jpg"
+        document.getElementsByTagName("img")[0].src = url
+        document.getElementById("idsel").innerHTML = "image id: " + imageId
+    }
+
+    function sendSuggestion() {
+        var r = new XMLHttpRequest();
+        r.open("POST", "/cbackground_suggest")
+        r.setRequestHeader("channel", channelId)
+        r.setRequestHeader("image", imageId)
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            alert("request submitted.")
+        }, false)
+    }
+</script>

@@ -12,6 +12,7 @@ const wayback_channel = require("./cache_dir/wayback_channel")
 const templates = require("./yt2009templates")
 const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
+const overrideBgs = require("./channel_backgrounds.json")
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
@@ -255,7 +256,8 @@ module.exports = {
                     data.videos.push({
                         "id": video.videoId,
                         "title": video.title.runs[0].text,
-                        "views": video.viewCountText.simpleText,
+                        "views": (video.viewCountText
+                              || {"simpleText": "0 views"}).simpleText,
                         "upload": video.publishedTimeText.simpleText,
                         "thumbnail": "http://i.ytimg.com/vi/"
                                     + video.videoId
@@ -485,6 +487,10 @@ module.exports = {
 
             stepsRequiredToCallback++
         }
+
+        if(flags.includes("banners")) {
+            stepsRequiredToCallback++;
+        }
         
         /*
         =======
@@ -495,6 +501,10 @@ module.exports = {
         let channelName = yt2009utils.textFlags(
             yt2009utils.xss(data.name), flags, data.url
         )
+        if(!channelName && flags.includes("username_asciify")) {
+            channelName = data.handle.replace("@", "")
+                        || yt2009utils.asciify(data.name, true, false)
+        }
         if(flags.includes("author_old_names")
         && channelUrl.includes("user/")) {
             channelName = channelUrl.split("user/")[1]
@@ -522,36 +532,49 @@ module.exports = {
 
         // custom colors
         // main background
-        let mainBg = yt2009utils.createRgb([
-            data.dominant_color[0] + 20,
-            data.dominant_color[1] + 20,
-            data.dominant_color[2] + 20
-        ])
-        if(flags.includes("default_color")) {
-            mainBg = yt2009utils.createRgb([200, 200, 200])
-        }
-        code = code.split("yt2009_main_bg").join(mainBg)
+        function defaultBg() {
+            let mainBg = yt2009utils.createRgb([
+                data.dominant_color[0] + 20,
+                data.dominant_color[1] + 20,
+                data.dominant_color[2] + 20
+            ])
+            if(flags.includes("default_color")) {
+                mainBg = yt2009utils.createRgb([200, 200, 200])
+            }
+            if(!flags.includes("banners")) {
+                code = code.split("yt2009_main_bg").join(mainBg)
+            }
+    
+            // darker background
+            let darkerBg = [
+                data.dominant_color[0] - 45,
+                data.dominant_color[1] - 45,
+                data.dominant_color[2] - 45
+            ]
+            if(darkerBg[0] < 0
+            || darkerBg[1] < 0
+            || darkerBg[2] < 0) {
+                darkerBg = data.dominant_color
+            }
+            let darkBg = yt2009utils.createRgb(darkerBg)
+            if(flags.includes("default_color")) {
+                mainBg = yt2009utils.createRgb([135, 135, 135])
+            }
+            if(!flags.includes("banners")) {
+                code = code.split("yt2009_darker_bg").join(darkBg)
+            }
 
-        // darker background
-        let darkBg = yt2009utils.createRgb([
-            data.dominant_color[0] - 45,
-            data.dominant_color[1] - 45,
-            data.dominant_color[2] - 45,
-        ])
-        if(flags.includes("default_color")) {
-            mainBg = yt2009utils.createRgb([135, 135, 135])
+            // find text color
+            if(data.dominant_color[0] + data.dominant_color[1] >= 340
+            || flags.includes("default_color")) {
+                code = code.split("yt2009_text_color").join("black")
+                code = code.split("yt2009_black").join("icon_black")
+            } else {
+                code = code.split("yt2009_text_color").join("white")
+            }
         }
-        code = code.split("yt2009_darker_bg").join(darkBg)
-
-        // find text color
-        if(data.dominant_color[0] + data.dominant_color[1] >= 340
-        || flags.includes("default_color")) {
-            code = code.split("yt2009_text_color").join("black")
-            code = code.split("yt2009_black").join("icon_black")
-        } else {
-            code = code.split("yt2009_text_color").join("white")
-        }
-
+        if(!flags.includes("banners")) {defaultBg()}
+        
         // use_ryd clientside
         if(flags.includes("use_ryd")) {
             code = code.replace(`<!--yt2009_ryd_set-->`, `
@@ -738,6 +761,11 @@ module.exports = {
                     
                     code = code.replace(`<!--yt2009_comments-->`, comments_html)
                     code = code.replace(`yt2009_channel_comment_count`, count)
+                } else {
+                    code = code.replace(
+                        `<!--yt2009_no_comments-->`,
+                        `<div class="alignC">There are no comments for this user.</div>`
+                    )
                 }
 
                 // determine the used player (html5/flash)
@@ -949,6 +977,19 @@ module.exports = {
 
             code = code.replace(`<!--yt2009_subs-->`, subscriptions_html)
             code = code.replace(`<!--yt2009_default_friends-->`, friends_html)
+
+            if(friends_html == "") {
+                code = code.replace(
+                    `yt2009-default-friends-mark`,
+                    `yt2009-default-friends-mark hid`
+                )
+            }
+            if(subscriptions_html == "") {
+                code = code.replace(
+                    `yt2009-subscriptions-mark`,
+                    `yt2009-subscriptions-mark hid`
+                )
+            }
         }
         code = code.replace("yt2009_subscriptions_count", subscriptions_count)
         code = code.replace("yt2009_friends_count", friends_count)
@@ -960,8 +1001,9 @@ module.exports = {
         */
         let all_scrollbox_playlists_html = templates.allScrollboxPlaylistHead
         let playlists_scrollbox_html = templates.playlistScrollboxHead
+        let savedPlaylists = n_impl_yt2009channelcache.read("playlist")[data.id]
         if(flags.includes("exp_playlists")
-        && n_impl_yt2009channelcache.read("playlist")[data.id]) {
+        && savedPlaylists && savedPlaylists.length > 0) {
             let playlists = n_impl_yt2009channelcache.read("playlist")[data.id]
 
             // "all" scrollbox playlists
@@ -1303,6 +1345,171 @@ module.exports = {
         }
 
 
+        /*
+        =======
+        banners
+        =======
+        */
+        if(flags.includes("banners")
+        && !flags.includes("default_color")) {
+            let cId = data.id.replace("UC", "")
+            let bannerSet = false;
+            let bgSet = false;
+            let banner = `https://i3.ytimg.com/u/${cId}/profile_header.jpg`
+            let oBg = overrideBgs[cId]
+            let bg = `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`
+            let bgfile = __dirname + "/../assets/" + cId + "_background.jpg"
+            let oldBgUsed = false;
+
+            // top banner
+            let b = __dirname + "/../assets/" + cId + "_banner.jpg"
+            let oldBannerUsed = false;
+            let useBanner = true;
+            if(!fs.existsSync(b)) {
+                fetch(banner, {
+                    "headers": yt2009constants.headers
+                }).then(r => {
+                    let b = ""
+                    if(r.status !== 404) {
+                        b = yt2009utils.saveBanner(banner)
+                        oldBannerUsed = true;
+                    } else {
+                        b = "/assets/" + data.banner
+                        if(!data.banner) {
+                            useBanner = false;
+                        }
+                    }
+    
+                    if(useBanner && (!oBg || oBg.showHeader)) {
+                        code = code.replace(
+                            `<!--yt2009_banner-->`,
+                            templates.banner(b)
+                        )
+                    } else {
+                        flags = flags.replace("banners", "")
+                        defaultBg()
+                    }
+    
+                    bannerSet = true;
+                    c()
+                })
+            } else {
+                if(!oBg || oBg.showHeader) {
+                    code = code.replace(
+                        `<!--yt2009_banner-->`,
+                        templates.banner(`/assets/${cId}_banner.jpg`)
+                    )
+                }
+                bannerSet = true;
+                oldBannerUsed = true;
+                c()
+            }
+
+            // background
+            function getOldBg() {
+                let css = `#channel-body {
+                    background-image: url("/assets/${cId}_background.jpg")
+                }
+                `
+                if(!oldBannerUsed) {
+                    bgSet = true;
+                    c();
+                    return;
+                }
+                if(!fs.existsSync(bgfile)) {
+                    fetch(bg, {
+                        "headers": yt2009constants.headers
+                    }).then(r => {
+                        b = yt2009utils.saveBanner(bg, true)
+                        if(r.status !== 404) {
+                            code = code.replace(`/*yt2009_custom_bg*/`, css)
+                            oldBgUsed = true
+                        }
+                        bgSet = true
+                        c()
+                    })
+                } else {
+                    code = code.replace(`/*yt2009_custom_bg*/`, css)
+                    bgSet = true
+                    oldBgUsed = true;
+                    c()
+                }
+            }
+
+            // callback
+            function ac() {
+                stepsTaken++
+                if(stepsRequiredToCallback <= stepsTaken) {
+                    try{callback(code)}catch(error){}
+                }
+            }
+            function c() {
+                if(bannerSet && !bgSet) {
+                    getOldBg()
+                    return;
+                }
+                if(bannerSet && bgSet) {
+                    // get dominant color of banner and set as bg
+                    let fname = oldBannerUsed
+                                ? `${__dirname}/../assets/${cId}_banner.jpg`
+                                : `${__dirname}/../assets/${data.banner}`
+                    if(oldBgUsed) {
+                        // wait for file
+                        let x = setInterval(function() {
+                            if(fs.existsSync(fname)) {
+                                fname = bgfile;
+                                applyBanner()
+                                clearInterval(x)
+                            }
+                        }, 250)
+                        return;
+                    }
+                    function applyBanner() {
+                        dominant_color(fname, (color) => {
+                            code = code.split(`yt2009_main_bg`).join(
+                                oBg ? oBg.primaryBg : yt2009utils.createRgb(color)
+                            )
+                            let brighterBg = [
+                                color[0] + 10, color[1] + 10, color[2] + 10
+                            ]
+                            code = code.split(`yt2009_darker_bg`).join(
+                                oBg ? oBg.secondaryBg : yt2009utils.createRgb(brighterBg)
+                            )
+                            if(brighterBg[0] + brighterBg[1] >= 340
+                            || (oBg && oBg.blackText)) {
+                                code = code.split("yt2009_text_color").join("black")
+                                code = code.split("yt2009_black").join("icon_black")
+                            } else {
+                                code = code.split("yt2009_text_color").join("white")
+                            }
+    
+    
+                            // callback
+                            ac()
+                        }, 32, true)
+                    }
+                    if((oldBannerUsed && !fs.existsSync(fname)
+                    || !oldBannerUsed && !fs.existsSync(fname))) {
+                        // wait for file
+                        let x = setInterval(function() {
+                            if(fs.existsSync(fname)) {
+                                applyBanner()
+                                clearInterval(x)
+                            }
+                        }, 250)
+                    } else if(
+                        (oldBannerUsed && fs.existsSync(fname))
+                    ||  (!oldBannerUsed && fs.existsSync(fname))) {
+                        applyBanner()
+                    }
+                    if(!useBanner) {
+                        ac()
+                    }
+                }
+            }
+        }
+
+
         if(stepsRequiredToCallback <= stepsTaken) {
             try{callback(code)}catch(error){}
         }
@@ -1483,5 +1690,21 @@ module.exports = {
                 }
             })
         }
+    },
+
+    "get_id": function(link, callback) {
+        link = link.split("/")
+        link.forEach(p => {
+            if(p.startsWith("@")) {
+                link = p
+            }
+            if(p == "user") {
+                link = link[link.indexOf(p) + 1]
+            }
+        })
+        userid_cache.read(link, (id) => {
+            // clean fetch the channel
+            callback(id)
+        })
     }
 }

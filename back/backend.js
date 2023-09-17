@@ -27,6 +27,7 @@ const yt2009_captions = require("./yt2009captions")
 const yt2009_mobileflags = require("./yt2009mobileflags")
 const yt2009_inbox = require("./yt2009inbox")
 const yt2009_blazer = require("./yt2009mobileblazer")
+//const yt2009_leanback = require("./yt2009leanback")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -825,6 +826,38 @@ channel_endpoints.forEach(channel_endpoint => {
     })
 })
 
+app.get("/get_userid", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+
+    yt2009_channels.get_id(req.query.link, (id => {
+        res.send(id)
+    }))
+})
+
+app.post("/cbackground_suggest", (req, res) => {
+    let channel = req.headers.channel
+    let img = req.headers.image
+    if(!channel || !img) {
+        res.sendStatus(400)
+        return;
+    }
+
+    let s = {}
+    if(!fs.existsSync("./suggestions.json")) {
+        fs.writeFileSync("./suggestions.json", "{}")
+    } else {
+        s = JSON.parse(fs.readFileSync("./suggestions.json").toString())
+    }
+
+    s[channel + "/" + Date.now() + yt2009_utils.get_used_token(req)] = img;
+    fs.writeFileSync("./suggestions.json", JSON.stringify(s))
+
+    res.sendStatus(200)
+})
+
 app.get("/playnav_get_comments", (req, res) => {
     yt2009_channels.playnav_get_comments(req, res)
 })
@@ -1144,7 +1177,8 @@ let static_sites = {
     "/my_videos_upload": "upload.html",
     "/warp_speed": "warp_speed.html",
     "/warp_speed_en": "warp_speed_en.html",
-    "/t/new_viewing_experience": "new_viewing_experience.html"
+    "/t/new_viewing_experience": "new_viewing_experience.html",
+    "/cbackground": "cbackground.html"
 }
 for(let site in static_sites) {
     app.get(site, (req, res) => {
@@ -1951,6 +1985,18 @@ app.get("/retry_video", (req, res) => {
         })
     }
 })
+
+/*
+======
+leanback, soon
+======
+*/
+/*app.get("/console_profile_playlists", (req, res) => {
+    yt2009_leanback.daily_playlist(req, res)
+})
+app.get("/console_feed", (req, res) => {
+
+})*/
 /*
 pizdec
 */

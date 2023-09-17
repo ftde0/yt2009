@@ -10,6 +10,7 @@ var languageData_EN = {
         "watch-fake-comment-dates": "fake comment dates",
         "watch-fake-upload-date": "fake upload date (ranging anywhere in 2009)",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",
+        "watch-old-banners": "uses old channel banners without wayback_features if possible",
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",
         "watch-remove-username-space": "removes spaces from usernames",
         "watch-share-behavior": "sets how the Share section should work",
@@ -28,6 +29,7 @@ var languageData_EN = {
 
         "channel-author-old-names": "if the creator has a /user/ link, use the name from it instead of their current name.",
         "channel-auto-user": "always try to redirect to a /user/ url if one can be found",
+        "channel-banners": "adds banners and backgrounds. also applies colors differently for better matching.",
         "channel-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "channel-default-color": "use the default gray color instead of taking one from the banner",
         "channel-exp-fill-comments": "fill the channel comments section with comments from the top video",
