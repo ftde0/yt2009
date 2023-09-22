@@ -22,6 +22,8 @@
             try {
                 if(location.href.indexOf("blzr") !== -1) {
                     redirect = "/mobile/blzr/"
+                } else if(location.href.indexOf("rtsp") !== -1) {
+                    redirect = "/mobile/"
                 }
             }
             catch(error) {}

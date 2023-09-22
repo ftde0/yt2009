@@ -78,6 +78,10 @@ const channelpage_html = fs.readFileSync("../mobile/channel.htm").toString()
 module.exports = {
     // create the watch page
     "create_watchpage": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.redirect("/auth.html?redir=rtsp")
+            return;
+        }
         let id = req.query.v.substring(0, 11)
         yt2009html.fetch_video_data(id, (data) => {
             if(!data) {
@@ -152,6 +156,10 @@ module.exports = {
 
     // video searching
     "search": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.redirect("/auth.html?redir=rtsp")
+            return;
+        }
         let code = search_html
         let query = req.query.q;
 
@@ -180,6 +188,10 @@ module.exports = {
     // process video when watch requested
     // use a so-called "task list" to not repeat code and it's easier to modify
     "video_process": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.redirect("/auth.html?redir=rtsp")
+            return;
+        }
         let cookie = req.headers.cookie || ""
         let playback = "rtsp_mp4"
         cookie.split(";").forEach(c => {
@@ -280,6 +292,10 @@ module.exports = {
 
     // mobile homepage
     "create_homepage": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.redirect("/auth.html?redir=rtsp")
+            return;
+        }
         let code = homepage_html;
         let index = 0;
 
@@ -302,6 +318,10 @@ module.exports = {
 
     // comments view page
     "view_comments": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.redirect("/auth.html?redir=rtsp")
+            return;
+        }
         let code = comments_html
         let actual_comments = ``
         req = utils.addFakeCookie(req)
@@ -370,6 +390,10 @@ module.exports = {
 
     // channels
     "channels": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.redirect("/auth.html?redir=rtsp")
+            return;
+        }
         let original = req.query.desktop_uri
         let code = channelpage_html
         if(!original) {

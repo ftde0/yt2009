@@ -46,15 +46,23 @@ module.exports = {
 
         subList.forEach(sub => {
             // !sub.name didn't work. idk why.
-            // PUT INTO TEMPLATES SOON
-            if(sub.name.toString() !== "undefined") {
-                sidebarSubList += `<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="${sub.url}"><a class="name" href="#">${sub.name}</a></div>`
+            // also hide duplicate entries
+            if(sub.name.toString() !== "undefined"
+            && !sidebarSubList.includes(sub.name.trim())) {
+                sidebarSubList += templates.sidebarSub(sub)
             }
         })
         sidebarSubList += `<div class="secondary-subscription-list"></div>`
 
         code = code.replace(`<!--yt2009_subscriptions_insert-->`, sidebarSubList)
         code = require("./yt2009loginsimulate")(req, code);
+
+        if(req.headers.cookie.includes("f_mode=on")) {
+            code = code.replace(
+                `<!--f_script-->`,
+                `<script src="/assets/site-assets/yt2009_userpage_f.js"></script>`
+            )
+        }
 
         res.send(code);
     },
@@ -135,6 +143,13 @@ module.exports = {
 
     "fetch_new_videos": function(req, res, sendRawData) {
         let url = req.headers.url;
+        if(url.startsWith("http")) {
+            let prefix = url.split("/channel/")[0]
+                            .split("/user/")[0]
+                            .split("/c/")[0]
+                            .split("/@")[0]
+            url = url.replace(prefix, "")
+        }
 
         // initial check
         if(!url.startsWith("/channel/")

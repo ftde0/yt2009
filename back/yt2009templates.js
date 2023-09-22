@@ -1400,5 +1400,6 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     "watchBanner": function(link, img) {
     return `<div id="watch-channel-brand-cap">
         <a href="${link}"><img src="${img}" width="300" height="50" border="0"></a>
-    </div>`}
+    </div>`},
+    "sidebarSub": function(sub) {return `<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="${sub.url}"><a class="name" href="#">${sub.name.trim()}</a></div>`}
 }

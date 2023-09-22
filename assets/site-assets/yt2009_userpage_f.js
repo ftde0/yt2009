@@ -112,3 +112,46 @@ function show_playlist(element) {
         videoIndex++;
     }
 }
+
+
+function switchChannel(element) {
+    var url = element.getAttribute("data-url")
+    var username = element.getElementsByTagName("a")[0].innerHTML
+
+    var videos_element = document.getElementById("videos")
+                                 .getElementsByTagName("td")[0]
+
+    // classname .selected, remove from others, add to needed ones
+    var s = document.getElementsByTagName("*")
+    for(var e in s) {
+        if(s[e].className
+        && s[e].className.indexOf("channel-subfolder") !== -1
+        && s[e].className.indexOf("selected") !== -1) {
+            s[e].className = "subfolder channel-subfolder"
+        }
+    }
+    
+    element.className += " selected"
+
+    // loading anim
+    videos_element.innerHTML = "<img src=\"/assets/site-assets/icn_loading_animated-vfl24663.gif\" style=\"text-align: center;padding: 50px 50px;position: relative;left: 300px;\">"
+
+    // fetch new videos
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/subscriptions_new_videos")
+    r.setRequestHeader("url", url)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            // html sent from server
+            videos_element.innerHTML = r.responseText
+            document.getElementById("view-pane")
+                    .getElementsByTagName("h2")[0].innerHTML = username
+        }
+    }
+}

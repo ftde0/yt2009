@@ -81,6 +81,8 @@ function $(element) {
     }
 }
 
+var sub = ""
+
 // ui with &f=1
 
 /*
@@ -214,6 +216,65 @@ if(location.href.indexOf("watch") !== -1) {
         onPlaylistChange();
         playlistAdd(plSelectedOption.getAttribute("value"));
         watchpage_initPlaylistsTab();
+    }
+
+    function updateSublist() {
+        var split = document.cookie.split(";")
+        for(var c in split) {
+            var cookie = split[c]
+            if(cookie.indexOf("sublist=") !== -1) {
+                sub = cookie.replace("sublist=", "")
+                if(sub.indexOf(" ") == 0) {
+                    sub = sub.replace(" ", "")
+                }
+            }
+        }
+    }
+
+    // SUBSCRIBE
+    $("#subscribeDiv").onclick = function() {
+        $("#subscribeDiv").style.display = "none"
+        $("#unsubscribeDiv").style.display = "block"
+
+        // cookie
+        updateSublist()
+
+        sub = encodeURIComponent(
+            $(".yt2009-channel-link").href.replace(
+                location.protocol + "//" + location.hostname + ":" + location.port,
+                ""
+            )
+        ) + "&" + encodeURIComponent($(".yt2009-channel-link").innerHTML
+        ) + ":" + sub;
+        document.cookie = "sublist=" + sub
+                        + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    }
+    
+    // UNSUBSCRIBE
+    $("#unsubscribeDiv").onclick = function() {
+        $("#unsubscribeDiv").style.display = "none"
+        $("#subscribeDiv").style.display = "block"
+        // cookie
+        updateSublist()
+
+        sub = sub.replace(
+            encodeURIComponent($(".yt2009-channel-link").href.replace(
+                location.protocol + "//" + location.hostname + ":" + location.port,
+                ""
+            ))
+            + "&" + encodeURIComponent($(".yt2009-channel-link").innerHTML)
+            + ":",
+            ""
+        )
+        document.cookie = "sublist=" + sub
+                        + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    }
+
+    // check if subscribed
+    updateSublist()
+    if(decodeURIComponent(sub).indexOf($(".yt2009-channel-link").href) !== -1) {
+        $("#subscribeDiv").style.display = "none"
+        $("#unsubscribeDiv").style.display = "block"
     }
 }
 
@@ -861,6 +922,53 @@ function playnav_favorite_video() {
                           + favorites
                           + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
+}
+
+
+function subscribe() {
+    // hide sub button
+    var e = $(".yt2009-subscribe-button-hook")
+    for(var sel in e) {
+        try {e[sel].className += " hid"}
+        catch(error) {}
+    }
+    e = $(".yt2009-unsubscribe-button-hook")
+    for(var sel in e) {
+        try {e[sel].className = "yt2009-unsubscribe-button-hook"}
+        catch(error) {}
+    }
+
+    // write sub
+    updateSublist()
+    sub = encodeURIComponent(location.pathname)
+          + "&" + encodeURIComponent($(".yt2009-name").innerHTML)
+          + ":" + sub;
+    document.cookie = "sublist=" + sub + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+}
+
+// unsub
+function unsubscribe() {
+    // hide unsub button
+    var e = $(".yt2009-unsubscribe-button-hook")
+    for(var sel in e) {
+        try {e[sel].className += " hid"}
+        catch(error) {}
+    }
+    e = $(".yt2009-subscribe-button-hook")
+    for(var sel in e) {
+        try {e[sel].className = "subscribe-div yt2009-subscribe-button-hook"}
+        catch(error) {}
+    }
+    
+    // wywalanie z cookie
+    updateSublist()
+    sub = sub.replace(
+        encodeURIComponent(location.pathname)
+        + "&" + encodeURIComponent($(".yt2009-name").innerHTML)
+        + ":",
+        ""
+    )
+    document.cookie = "sublist=" + sub + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 }
 
 // flip!!

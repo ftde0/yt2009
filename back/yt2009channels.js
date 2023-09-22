@@ -1380,7 +1380,9 @@ module.exports = {
                         }
                     }
     
-                    if(useBanner && (!oBg || oBg.showHeader)) {
+                    if(useBanner && (
+                        !oBg || oBg.showHeader || (oBg && !oBg.showHeader)
+                    )) {
                         code = code.replace(
                             `<!--yt2009_banner-->`,
                             templates.banner(b)
@@ -1394,7 +1396,7 @@ module.exports = {
                     c()
                 })
             } else {
-                if(!oBg || oBg.showHeader) {
+                if(!oBg || oBg.showHeader || (oBg && !oBg.showHeader)) {
                     code = code.replace(
                         `<!--yt2009_banner-->`,
                         templates.banner(`/assets/${cId}_banner.jpg`)
@@ -1467,13 +1469,15 @@ module.exports = {
                     function applyBanner() {
                         dominant_color(fname, (color) => {
                             code = code.split(`yt2009_main_bg`).join(
-                                oBg ? oBg.primaryBg : yt2009utils.createRgb(color)
+                                oBg && oBg.primaryBg
+                                ? oBg.primaryBg : yt2009utils.createRgb(color)
                             )
                             let brighterBg = [
                                 color[0] + 10, color[1] + 10, color[2] + 10
                             ]
                             code = code.split(`yt2009_darker_bg`).join(
-                                oBg ? oBg.secondaryBg : yt2009utils.createRgb(brighterBg)
+                                oBg && oBg.secondaryBg
+                                ? oBg.secondaryBg : yt2009utils.createRgb(brighterBg)
                             )
                             if(brighterBg[0] + brighterBg[1] >= 340
                             || (oBg && oBg.blackText)) {

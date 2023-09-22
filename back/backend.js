@@ -73,6 +73,20 @@ if(config.env == "dev") {
     });
 }
 
+if(config.redirmode
+&& typeof(config.redirmode) == "string") {
+    app.get("*", (req, res) => {
+        res.redirect(config.redirmode + req.path)
+        return;
+    })
+    app.post("*", (req, res) => {
+        res.redirect(config.redirmode + req.path)
+        return;
+    })
+} else if(config.redirmode && typeof(config.redirmode) !== "string") {
+    console.log("/!\\ config.redirmode set incorrectly. ignoring.")
+}
+
 app.get('/back/*', (req,res) => {
     res.redirect("https://github.com/ftde0/yt2009")
 })
@@ -532,6 +546,16 @@ app.get("/xl", (req, res) => {
         url += "?html5=1"
     }
     res.redirect(url)
+})
+
+const xlInitial = fs.readFileSync("../xl/index.htm").toString()
+app.get("/xl/index.htm", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.redirect("/unauth.htm")
+        return;
+    }
+
+    res.send(xlInitial)
 })
 
 app.get("/xl/console_browse", (req, res) => {
@@ -1995,7 +2019,7 @@ leanback, soon
     yt2009_leanback.daily_playlist(req, res)
 })
 app.get("/console_feed", (req, res) => {
-
+    yt2009_leanback.feed(req, res)
 })*/
 /*
 pizdec
