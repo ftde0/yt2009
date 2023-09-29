@@ -1,0 +1,21 @@
+some icons here were modified from the "grey bar" 2009 layout to more fit the late 2009. those have their "vfl" id removed.
+
+original icon sources:
+http://s.ytimg.com/yt/img/logo-valentinesday-vfl78111.png
+http://s.ytimg.com/yt/img/logo-superbowl-vfl75173.png
+http://s.ytimg.com/yt/img/logo-clownnose-vfl82887.png
+http://s.ytimg.com/yt/img/logo-stpats-vfl82887.png
+http://s.ytimg.com/yt/img/logo_symphony-vfl89746.png
+http://s.ytimg.com/yt/img/logo_eurovision-vfl97055.png
+http://s.ytimg.com/yt/img/logo_world_environment_day-vfl100782.png
+http://s.ytimg.com/yt/img/logo_analog_off-vfl102489.gif
+http://s.ytimg.com/yt/img/logo_july4th-vfl106458.png
+http://s.ytimg.com/yt/img/logo_lunar-vfl109325.png
+http://s.ytimg.com/yt/img/logo-german-election-vfl122998.png
+http://s.ytimg.com/yt/img/logo_holy_crap_1bn_a_day-vfl124472.png
+http://s.ytimg.com/yt/img/logo_halloween-vfl129017.png
+http://s.ytimg.com/yt/img/logo_solstice-vfl138400.png
+
+other filenames:
+"remade" - remade by taking the original late 2009 logo and adjusting it.
+"custom" - entirely custom doodle that didn't happen back in the day.

@@ -9,6 +9,7 @@ yt2009, 2022
 const utils = require("./yt2009utils")
 const fs = require("fs")
 const page = fs.readFileSync("../history.htm").toString()
+const doodles = require("./yt2009doodles")
 
 module.exports = {
     "apply": function(req, res) {
@@ -122,6 +123,7 @@ module.exports = {
         code = require("./yt2009loginsimulate")(req, code);
         code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
         code = code.split(`yt2009_page_count`).join(pageNum)
+        code = doodles.applyDoodle(code)
 
         res.send(code);
     }

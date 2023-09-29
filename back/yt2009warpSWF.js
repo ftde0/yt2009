@@ -3,6 +3,7 @@ const yt2009search = require("./yt2009search")
 const yt2009wayback = require("./cache_dir/wayback_watchpage")
 const yt2009templates = require("./yt2009templates")
 const video_exists = require("./cache_dir/video_exists_cache_mgr")
+const ryd = require("./cache_dir/ryd_cache_manager")
 const fs = require("fs")
 const fetch = require("node-fetch")
 const constants = require("./yt2009constants.json")
@@ -69,10 +70,9 @@ module.exports = {
             }) warp videos load (${video}, ${Date.now()})`)
         }
 
-        let videos_xml = `
-        <?xml version="1.0" encoding="utf-8"?>
-        <ut_response status="ok">
-        <video_list>`
+        let videos_xml = `<?xml version="1.0" encoding="utf-8"?>
+<ut_response status="ok">
+<video_list>`
         let video_index = 1;
 
         yt2009main.fetch_video_data(video, (data) => {
@@ -85,13 +85,19 @@ module.exports = {
                             v.title,
                             v.length,
                             v.creatorHandle || v.creatorName,
-                            video_index
+                            video_index,
+                            v.description,
+                            v.views,
+                            ryd.readCache(v.id) || 5,
+                            v.upload
                         )
 
                         video_index++
                     })
 
-                    videos_xml += `</video_list></ut_response>`
+                    videos_xml += `
+</video_list>
+</ut_response>`
                     res.send(videos_xml)
             }, "http")
         }, req.headers["user-agent"], utils.get_used_token(req), false, false, true)

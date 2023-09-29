@@ -9,6 +9,7 @@ const tokens = config.tokens || ["amogus"]
 const logged_tokens = config.logged_tokens || []
 const templocked_tokens = config.templocked_tokens || []
 const useTShare = fs.existsSync("./yt2009ts.js")
+const wlist = /discord.gg|tiktok|tik tok|pre-vevo|2023|lnk.to|official hd video|smarturl/gui
 let ip_uses_flash = []
 
 module.exports = {
@@ -1041,5 +1042,79 @@ module.exports = {
         }
 
         return lookup_keyword;
+    },
+
+    "descriptionDistill": function(description, req) {
+        // description distill:
+        // cleans the description from signs of being new
+        const regexEmojis = new RegExp(/\p{Other_Symbol}/gui)
+        const regexHashtags = new RegExp(/#.*$|#.*\n/gui)
+
+        let distilledDescription = description
+        // precondition
+        let distill = false;
+        let distillMode = "max"
+        if(req.headers.cookie
+        && (req.headers.cookie.includes("distill_description")
+        || req.headers.cookie.includes("distill-description"))) {
+            distill = true
+            distillMode = req.headers.cookie.replace(/[_-]/g, "")
+                             .split("distilldescription")[1]
+                             .split(":")[0].split(";")[0]
+            distillMode = distillMode.trim().toLowerCase()
+            let allowedModes = ["poor", "moderate", "max"]
+            if(!allowedModes.includes(distillMode)) {
+                distillMode = "max";
+            }
+        }
+        if(!distill) return description;
+
+        // split the description into parts and check each one individually
+        // lets us keep similar code for "max" filtering (removing whole lines)
+        // and others
+        let dParts = description.split("\n")
+        let partIndex = 0;
+        dParts.forEach(part => {
+            if(distillMode == "max"
+            && (regexEmojis.test(part)
+            || regexHashtags.test(part)
+            || wlist.test(part.toLowerCase()))) {
+                part = "int_no_line"
+            }
+
+            if(regexEmojis.test(part)
+            && distillMode !== "max") {
+                part = part.replace(regexEmojis, "")
+            }
+            if(regexHashtags.test(part)
+            && distillMode !== "max") {
+                part = part.replace(regexHashtags, "")
+            }
+            if(distillMode == "moderate") {
+                let splitWords = part.split(" ")
+                splitWords.forEach(word => {
+                    if(wlist.test(word.toLowerCase())) {
+                        let i = splitWords.indexOf(word)
+                        splitWords[i] = ""
+                    }
+                })
+                part = splitWords.join(" ")
+            }
+
+            dParts[partIndex] = part;
+            partIndex++
+        })
+
+        distilledDescription = dParts.join("\n")
+        distilledDescription = distilledDescription.split("\n\n\n").join("\n")
+        distilledDescription = distilledDescription
+                               .split("int_no_line\n").join("")
+                               .split("int_no_line").join("")
+        while(distilledDescription.startsWith("\n")) {
+            distilledDescription = distilledDescription.replace("\n", "")
+        }
+
+        return distilledDescription;
+
     }
 }

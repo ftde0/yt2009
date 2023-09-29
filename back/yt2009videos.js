@@ -31,6 +31,26 @@ const category_numbers = {
     "30": "Sports",
     "19": "Travel & Events"
 }
+const category_numbers_lang = {
+    "0": "lang_cat_all",
+    "2": "lang_cat_autos",
+    "35": "lang_cat_comedy",
+    "34": "lang_cat_edu",
+    "24": "lang_cat_entertainment",
+    "1": "lang_cat_film",
+    "33": "lang_cat_gaming",
+    "26": "lang_cat_howto",
+    "31": "lang_cat_music",
+    "32": "lang_cat_news",
+    "29": "lang_cat_nonprofit",
+    "22": "lang_cat_people",
+    "15": "lang_cat_pets",
+    "28": "lang_cat_sci",
+    "30": "lang_cat_sports",
+    "19": "lang_cat_travel"
+}
+const doodles = require("./yt2009doodles")
+const language = require("./language_data/language_engine")
 
 module.exports = {
     "apply": function(req, res) {
@@ -61,13 +81,13 @@ module.exports = {
         // shows tab
         if(req.headers.cookie.includes("shows_tab")) {
             code = code.replace(
-                `<a href="/channels">Channels</a>`,
-                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a>`,
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
 
         let categoryNumber = req.query.c || "0"
-        let categoryName = category_numbers[categoryNumber]
+        let categoryName = category_numbers_lang[categoryNumber]
 
         // sorting option
         let sortByPopular = true;
@@ -108,7 +128,8 @@ module.exports = {
                 authorName.trim(),
                 video.uploaderUrl,
                 views,
-                flags
+                flags,
+                true
             )
         }
 
@@ -130,11 +151,11 @@ module.exports = {
             }
             code = code.replace(
                 `<!--yt2009_popular-->`,
-                `<a href="${popUrl}">Popular</a>`
+                `<a href="${popUrl}">lang_sort_pop</a>`
             )
             code = code.replace(
                 `<!--yt2009_recent_videos-->`,
-                `<span>Recent Videos</span>`
+                `<span>lang_sort_recent</span>`
             )
             code = code.replace(
                 `yt2009-hook-selected-recent`,
@@ -151,11 +172,11 @@ module.exports = {
             }
             code = code.replace(
                 `<!--yt2009_popular-->`,
-                `<span>Popular</span>`
+                `<span>lang_sort_pop</span>`
             )
             code = code.replace(
                 `<!--yt2009_recent_videos-->`,
-                `<a href="${mrUrl}">Recent Videos</a>`
+                `<a href="${mrUrl}">lang_sort_recent</a>`
             )
             code = code.replace(
                 `yt2009-hook-selected-pop`,
@@ -210,6 +231,8 @@ module.exports = {
 
         // finalize
         code = require("./yt2009loginsimulate")(req, code)
+        code = doodles.applyDoodle(code)
+        code = language.apply_lang_to_code(code, req)
         res.send(code)
     },
 
@@ -241,11 +264,11 @@ module.exports = {
         if(!sortByPopular) {
             // no sorting (latest)
             let index = 0;
-            let startIndex = 23 * (pageNumber - 1)
+            let startIndex = 24 * (pageNumber - 1)
             yt2009html.featured().slice(startIndex).forEach(video => {
                 if(video.category !== categoryName
                 && parseInt(categoryNumber) !== 0
-                || index > 23) return;
+                || index > 24) return;
                 addVideo(video)
                 index++;
             })

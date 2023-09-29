@@ -3,6 +3,7 @@ const header = fs.readFileSync("../static_pages/header.html")
 const footer = fs.readFileSync("../static_pages/footer.html")
 const utils = require("./yt2009utils")
 const templates = require("./yt2009templates")
+const doodles = require("./yt2009doodles")
 
 module.exports = {
     "createSite": function(path_to_content, req, res) {
@@ -43,9 +44,6 @@ module.exports = {
 
         if(req.query.f == 1 || req.headers.cookie.includes("f_mode")) {
             site = site.replace(`<!DOCTYPE html>`, templates.html4)
-            //site = site.replace(`href="#" onclick="document.searchForm.submit(); return false;"`, `href="#"
-            //onclick="document.searchForm.submit(); return false;" style="width: 40px;"`)
-            //site = site.replace(`<!--yt2009_style_fixes_f-->`, `<link rel="stylesheet" href="/assets/site-assets/f.css">`)
         } else {
             site = site.replace(
                 `<!--yt2009_html5_stylesheet-->`,
@@ -54,6 +52,7 @@ module.exports = {
             site = site.replace(`yt2009_html5_mark`, `html5`)
         }
         site = require("./yt2009loginsimulate")(req, site)
+        site = doodles.applyDoodle(site)
         res.send(site)
     }
 }

@@ -11,6 +11,7 @@ const page = fs.readFileSync("../channels.htm").toString()
 const channels = require("./yt2009channels")
 const utils = require("./yt2009utils")
 const templates = require("./yt2009templates")
+const doodles = require("./yt2009doodles")
 
 module.exports = {
     "apply": function(req, res) {
@@ -70,6 +71,8 @@ module.exports = {
         })
 
         code = code.replace(`<!--yt2009_channels_insert-->`, channelsHTML)
+
+        code = doodles.applyDoodle(code)
 
         res.send(code)
     }

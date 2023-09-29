@@ -10,6 +10,7 @@ const utils = require("./yt2009utils")
 const template = require("./yt2009templates")
 const fs = require("fs")
 const page = fs.readFileSync("../playlists.htm").toString()
+const doodles = require("./yt2009doodles")
 let client_playlists = {}
 
 module.exports = {
@@ -55,6 +56,7 @@ module.exports = {
         }
 
         code = require("./yt2009loginsimulate")(req, code);
+        code = doodles.applyDoodle(code)
         res.send(code);
     }
 }

@@ -28,6 +28,7 @@ const yt2009_mobileflags = require("./yt2009mobileflags")
 const yt2009_inbox = require("./yt2009inbox")
 const yt2009_blazer = require("./yt2009mobileblazer")
 //const yt2009_leanback = require("./yt2009leanback")
+const yt2009_doodles = require("./yt2009doodles")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -171,12 +172,14 @@ app.get("/watch", (req, res) => {
             yt2009.get_qualities(id, (qualities) => {
                 yt2009.applyWatchpageHtml(data, req, (code => {
                     code = yt2009_languages.apply_lang_to_code(code, req)
+                    code = yt2009_doodles.applyDoodle(code)
                     res.send(code)
                 }), qualities)
             })
         } else {
             yt2009.applyWatchpageHtml(data, req, (code => {
                 code = yt2009_languages.apply_lang_to_code(code, req)
+                code = yt2009_doodles.applyDoodle(code)
                 res.send(code)
             }), [])
         }
@@ -674,10 +677,12 @@ quicklist
 ======
 */
 app.get("/ql_html_template", (req, res) => {
-    res.send(yt2009_templates.quicklistHTMLTemplate)
+    res.send(yt2009_languages.apply_lang_to_code(
+        yt2009_templates.quicklistHTMLTemplate, req
+    ))
 })
 app.get("/watch_queue", (req, res) => {
-    res.send(yt2009_quicklist.apply(req, res))
+    yt2009_quicklist.apply(req, res)
 })
 
 /*
@@ -1131,6 +1136,9 @@ app.get("/api2_rest", (req, res) => {
     yt2009_warp_swf.get_video(req, res)
 })
 app.get("/get_awesome", (req, res) => {
+    yt2009_warp_swf.get_related(req, res)
+})
+app.get("/set_awesome", (req, res) => {
     yt2009_warp_swf.get_related(req, res)
 })
 app.get("/next_awesome", (req, res) => {
@@ -1826,8 +1834,10 @@ app.get("/yt2009_recommended", (req, res) => {
         // create and send html of filteredSuggestions
         let response = ""
         filteredSuggestions.forEach(video => {
-            response += yt2009_templates.recommended_videoCell(video)
+            response += yt2009_templates.recommended_videoCell(video, req)
         })
+
+        response = yt2009_languages.apply_lang_to_code(response, req)
         res.send(response)
     }
 })
@@ -2021,6 +2031,117 @@ leanback, soon
 app.get("/console_feed", (req, res) => {
     yt2009_leanback.feed(req, res)
 })*/
+
+
+/*
+======
+signin endpoints
+======
+*/
+let signin = fs.readFileSync("../signin.htm").toString()
+app.get("/signin", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.redirect("/unauth.htm")
+        return;
+    }
+
+    res.send(signin)
+})
+app.get("/logout", (req, res) => {
+    let flags = req.headers.cookie || ""
+    let globalFlags = ""
+    flags.split(";").forEach(c => {
+        if(c.includes("global_flags=")) {
+            globalFlags = c.split("global_flags=")[1]
+        }
+    })
+
+    if(globalFlags.includes("login_simulate")) {
+        let username = globalFlags.split("login_simulate")[1].split(":")[0]
+        globalFlags = globalFlags.replace(
+            "login_simulate" + username + ":", ""
+        ).replace(
+            "login_simulate" + username, ""
+        )
+    }
+
+    let cookieParams = [
+        `global_flags=${globalFlags} `,
+        `Path=/; `,
+        `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+    ]
+    res.set("set-cookie", cookieParams.join(""))
+    res.send("<script>location.href = \"/\"</script>")
+})
+
+
+/*
+======
+language picker
+======
+
+bucket = vertical row
+*/
+app.get("/language_picker", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.send("")
+        return;
+    }
+    let languageBuckets = [
+        [], [], [], [], []
+    ]
+    let langListArray = []
+    let bucketSize = 5;
+    if(req.headers.referer
+    && req.headers.referer.includes("/watch")) {
+        bucketSize = 3;
+        languageBuckets = [[], [], []]
+    }
+
+    // get available languages
+    let langs = yt2009_languages.get_language_list()
+    for(let langCode in langs) {
+        langListArray.push([langCode, langs[langCode]])
+    }
+    let currentBucket = 0
+
+    // put them into buckets
+    langListArray.forEach(l => {
+        languageBuckets[currentBucket].push(l)
+        currentBucket++
+        if(currentBucket >= bucketSize) {
+            currentBucket = 0;
+        }
+    })
+
+    // put buckets into html
+    let html = yt2009_templates.langPickerBase
+    let bucketHTML = [
+        "", "", "", "", ""
+    ]
+    if(bucketSize == 3) {
+        bucketHTML = ["", "", ""]
+    }
+    let bucketIndex = 0;
+    languageBuckets.forEach(bucket => {
+        bucket.forEach(lang => {
+            bucketHTML[bucketIndex] += yt2009_templates.langPickerLanguage(
+                lang[0], lang[1]
+            )
+        })
+        html = html.replace(
+            `<!--yt2009_bucket_${bucketIndex + 1}-->`,
+            bucketHTML[bucketIndex]
+        )
+        bucketIndex++
+    })
+
+
+    res.send(html)
+})
+
 /*
 pizdec
+jp2gmd
+mleczsus :*
 */

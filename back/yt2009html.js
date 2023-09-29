@@ -1092,10 +1092,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             `<object width=&quot;425&quot; height=&quot;344&quot;><param name=&quot;movie&quot; value=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot;></param><param name=&quot;allowFullScreen&quot; value=&quot;true&quot;></param><param name=&quot;allowscriptaccess&quot; value=&quot;always&quot;></param><embed src=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot; type=&quot;application/x-shockwave-flash&quot; allowscriptaccess=&quot;always&quot; allowfullscreen=&quot;true&quot; width=&quot;425&quot; height=&quot;344&quot;></embed></object>`
         )
 
+        let description = yt2009utils.descriptionDistill(data.description, req);
+
         // markup descriptions - treat http and https as links
-        let shortDescription = data.description.split("\n")
-                                                .slice(0, 3).join("<br>")
-        let fullDescription = data.description.split("\n").join("<br>")
+        let shortDescription = description.split("\n").slice(0, 3).join("<br>")
+        let fullDescription = description.split("\n").join("<br>")
 
         // descriptions
         code = code.replace(
@@ -1396,13 +1397,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         // fmode endscreen
         function render_endscreen_f() {
-            if(req.headers["user-agent"].includes("MSIE")
-            || req.headers["user-agent"].includes("Goanna")
-            || !flash_url.includes("/watch.swf")) return "";
+            if(!flash_url.includes("/watch.swf")) return "";
             let rv_url = ""
             let related_index = 0;
             endscreen_queue.forEach(video => {
-                if(related_index <= 7) {
+                if(related_index <= 7
+                && encodeURIComponent(rv_url).length < 1700) {
                     rv_url += `&rv.${related_index}.title=${
                         encodeURIComponent(video.title)
                     }`

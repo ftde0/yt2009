@@ -1,0 +1,148 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>YouTube</title>
+        <link rel="stylesheet" href="/assets/site-assets/signin-css.css">
+    </head>
+    <body>
+        <div id="main">
+            <div id="masthead-container">
+                <div id="masthead">
+                    <a href="" class="logo">
+                        <img src="/assets/site-assets/pixel-vfl73.gif" alt="" border="0">
+                    </a>
+                    <div id="masthead-main">
+                        <div id="masthead-search">
+                            <form class="search-form" action="/results" method="get" name="searchForm">
+                                <div class="search-wrapper">
+                                    <input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" maxlength="128">
+                                    <input id="search-type-masthead" name="search_type" type="hidden" value="">
+                                    <a class="yt-button yt-button-primary" href="#" onclick="document.searchForm.submit(); return false;">
+                                        <span>Search</span>
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                        <div id="masthead-nav-main">
+                            <a href="/">Home</a>
+                            <a href="/videos">Videos</a>
+                            <a href="/channels">Channels</a>
+                            <a href="#">Shows</a>
+                        </div>
+                    </div>
+                    <div style="clear: both"></div>
+                </div>
+            </div>
+            <div class="title-bar page-title">Sign in to YouTube!</div>
+            <br>
+            <table width="90%" cellspacing="1" cellpadding="5" border="0" align="center"><tbody><tr>
+                <td width="75%" valign="top">
+                    <div style="font-size:83%;">
+                        <div style="font-weight: bold;">Join the largest worldwide video community!</div>
+                        <br>
+                        Get full access to YouTube with your account:
+                        <ul>
+                            <li>Upload and share your own videos with the world</li>
+                            <li>Comment on, rate, and make video responses to your favorite videos</li>
+                            <li>Build playlists of favorites to watch later</li>
+                        </ul>
+                    </div>
+                </td>
+                <td style="padding-left: 10px;" valign="top" align="center">
+                    <form id="gaia_loginform" action="#" method="post" onsubmit="login();return false;"><div id="gaia_loginbox">
+                        <table class="form-noindent" width="100%" cellspacing="3" cellpadding="5" border="0"><tbody><tr>
+                            <td style="text-align:center" valign="top" nowrap="nowrap" bgcolor="#e8eefa">
+                                <input type="hidden" name="ltmpl" value="sso">
+                                <div class="loginBox"><table id="gaia_table" cellspacing="0" cellpadding="1" border="0" align="center"><tbody>
+                                    <tr><td colspan="2" align="center">
+                                        <div style="margin: 5px 0; font-size: 13px; width: 300px;">
+                                            <div><img src="/assets/site-assets/youtube_google_brand.gif" alt="" style="vertical-align: middle;" border="0"></div>
+                                            <div style="width: 200px; padding-top: 10px;">
+                                                Sign in to YouTube with your
+                                                YouTube <b>OR</b> Google Account
+                                            </div>
+                                        </div>
+                                    </td></tr>
+                                    <tr><td colspan="2" align="center"></td></tr>
+                                    <tr>
+                                        <td nowrap="nowrap"><div align="right"><span class="gaia le lbl">Username:</span></div></td>
+                                        <td><input type="text" name="Email" id="Email" size="18" value="" class="gaia le val"></td>
+                                    </tr>
+                                    <tr><td></td><td align="left"></td></tr>
+                                    <tr>
+                                        <td align="right"><span class="gaia le lbl">Password:</span></td>
+                                        <td><input type="password" name="Passwd" id="Passwd" size="18" class="gaia le val"></td>
+                                    </tr>
+                                    <tr><td></td><td align="left"></td></tr>
+                                    <tr>
+                                        <td valign="top" align="right"><input type="checkbox" name="PersistentCookie" id="PersistentCookie" value="yes" checked="checked"></td>
+                                        <td><label for="PersistentCookie" class="gaia le rem">Stay signed in</label></td>
+                                    </tr>
+                                    <tr><td></td><td align="left">
+                                        <input type="submit" class="gaia le button" name="signIn" value="Sign in">
+                                    </td></tr>
+                                    <tr id="ga-fprow"><td colspan="2" class="gaia le fpwd" valign="bottom" height="33.0" align="center">
+                                        <a href="#">Can't access your account?</a>
+                                    </td></tr>
+                                </tbody></table></div>
+                            </td>
+                        </tr></tbody></table>
+                    </div></form>
+                    <br>
+                    <table class="form-noindent" width="100%" cellspacing="3" cellpadding="6" border="0"><tbody><tr>
+                        <td style="font-size:83%" bgcolor="#e8eefa" align="center">
+                            <b>Don't have an account?</b><br>
+                            <a style="text-decoration: none;" href="#">
+                                <b>Sign up for YouTube!</b>
+                            </a>
+                        </td>
+                    </tr></tbody></table>
+                </td>
+            </tr></tbody></table>
+            <br>
+            <br>
+            <div class="footer" align="center">
+                <font color="#666666">©2009 YouTube, LLC</font>
+                -
+                <a href="t/terms">Terms of Use</a> -
+                <a href="t/privacy">Privacy Policy</a> -
+                <a href="http://help.youtube.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en_US">Help</a> -
+                <a href="t/community_guidelines">Community Guidelines</a> -
+                <a href="t/contact_us">Contact</a>
+            </div>
+        </div>
+    </body>
+    <script>
+        // yt2009: set login_simulate upon signing in
+        function login() {
+            var c = ""
+            var cookies = (document.cookie || "").split(";")
+            for(var cookie in cookies) {
+                cookie = cookies[cookie]
+                if(cookie.indexOf("global_flags=") !== -1) {
+                    c = cookie.split("global_flags=")[1].replace(";", "")
+                }
+            }
+
+            // got global_flags cookie, remove old login_simulate
+            // and add new one
+            if(c.indexOf("login_simulate") !== -1) {
+                var lsName = c.split("login_simulate")[1].split(":")[0]
+                c = c.replace("login_simulate" + lsName + ":", "")
+                c = c.replace("login_simulate" + lsName, "")
+            }
+            var username = document.getElementById("Email").value
+            var persistent = document.getElementById("PersistentCookie").checked
+            var expiry = (
+                persistent 
+                ? " expires=Fri, 31 Dec 2066 23:59:59 GMT"
+                : ""
+            )
+            c += "login_simulate" + username + ":"
+            document.cookie = "global_flags=" + c
+                            + "; Path=/;" + expiry
+            
+            location.href = "/"
+        }
+    </script>
+</html>

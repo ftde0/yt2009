@@ -4,6 +4,7 @@ const yt2009contants = require("./yt2009constants.json");
 const yt2009exports = require("./yt2009exports");
 const yt2009templates = require("./yt2009templates");
 const yt2009waybackwatch = require("./cache_dir/wayback_watchpage")
+const yt2009doodles = require("./yt2009doodles")
 const config = require("./config.json")
 const fs = require("fs")
 const search_code = fs.readFileSync("../search-generic-page.htm").toString();
@@ -312,6 +313,8 @@ module.exports = {
             `<!--yt2009_pager-->`,
             pagingHTML
         )
+
+        code = yt2009doodles.applyDoodle(code)
 
         return code;
     },

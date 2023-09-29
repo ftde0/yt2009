@@ -5,6 +5,7 @@ templates for individual yt2009 parts fillable with function calls.
 */
 const utils = require("./yt2009utils")
 const config = require("./config.json")
+const langs = require("./language_data/language_engine")
 
 module.exports = {
     "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes) {
@@ -62,8 +63,8 @@ module.exports = {
                             <div class="v90WrapperInner">
                                 <a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" class="video-thumb-link" rel="nofollow"><img title="${title.split('"').join("&quot;")}" thumb="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" src="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" class="vimg90" qlicon="${id}" alt="${title.split('"').join("&quot;")}}" onload="checkExists(this)"></a>
         
-                                <div class="addtoQL90"><a href="#" ql="${id}" title="Add Video to QuickList"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(creatorName)}')"></button></a>
-                                    <div class="hid quicklist-inlist"><a href="#">Added to Quicklist</a></div>
+                                <div class="addtoQL90"><a href="#" ql="${id}" title="lang_add_to_ql"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(creatorName)}')"></button></a>
+                                    <div class="hid quicklist-inlist"><a href="#">lang_ql_added</a></div>
                                 </div>
         
                                 ${length !== "" ? `<div class="video-time"><a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" rel="nofollow">${length}</a></div>` : ""}
@@ -258,26 +259,28 @@ module.exports = {
             </div>
         </div>`
     },
-    "warpVideo": function(id, title, length, creatorName, video_index) {
+    "warpVideo": function(id, title, length, creatorName, video_index, description, views, rating, uploaded) {
         return `
-        <video>
-            <author>${creatorName}</author>
-            <id>${id}</id>
-            <title>${title}</title>
-            <length_seconds>${utils.time_to_seconds(length)}</length_seconds>
-            <rating_avg>5</rating_avg>
-            <rating_count>1</rating_count>
-            <description>.</description>
-            <view_count>1</view_count>
-            <upload_time>1</upload_time>
-            <comment_count>1</comment_count>
-            <tags> </tags>
-            <url>http://www.youtube.com/watch?v=${id}</url>
-            <thumbnail_url>http://i.ytimg.com/vi/${id}/default.jpg</thumbnail_url>
-            <embed_status>ok</embed_status>
-            <allow_ratings>yes</allow_ratings>
-            <w>${video_index}</w>
-        </video>`
+    <video>
+        <author>${creatorName}</author>
+        <id>${id}</id>
+        <title>${title}</title>
+        <length_seconds>${utils.time_to_seconds(length)}</length_seconds>
+        <run_time>${length}</run_time>
+        <rating_avg>${rating}</rating_avg>
+        <rating_count>${Math.floor(utils.bareCount(views || "1 views") / 150)}</rating_count>
+        <description>${description || "."}</description>
+        <view_count>${utils.bareCount(views || 1)}</view_count>
+        <upload_time>${utils.relativeToAbsoluteApprox(uploaded || "1 day ago")}</upload_time>
+        <comment_count>${Math.floor(utils.bareCount(views || "1 views") / 170)}</comment_count>
+        <tags> </tags>
+        <url>http://www.youtube.com/watch?v=${id}</url>
+        <thumbnail_url>http://i.ytimg.com/vi/${id}/default.jpg</thumbnail_url>
+        <thumbnail_url2>http://i.ytimg.com/vi/${id}/hqdefault.jpg</thumbnail_url2>
+        <embed_status>ok</embed_status>
+        <allow_ratings>yes</allow_ratings>
+        <w>${video_index}</w>
+    </video>`
     },
     "channelSectionHTMLBegin": function(sectionName) {
         return `
@@ -344,7 +347,7 @@ module.exports = {
 		<div class="yt-uix-expander-body floatR"></div>
 		<h2 class="yt-uix-expander-head" onclick="toggleQuicklistExpander(this)">
 			<button title="" class="yt-uix-expander-arrow master-sprite"></button>
-			<span>QuickList</span><span class="watch-quicklist-count">(<span id="playlistVideoCount_QL">?</span>)</span>
+			<span>lang_quicklist</span><span class="watch-quicklist-count">(<span id="playlistVideoCount_QL">?</span>)</span>
 		</h2>
 		<div id="playlistContainer_QL" class="yt-uix-expander-body watch-playlist-container watch-playlist-auto-height">
 			<div id="playlistRows_QL" class="yt2009-ql-videos">
@@ -353,13 +356,15 @@ module.exports = {
 		</div>
 		<div id="watch-playlist-actions" class="yt-uix-expander-body">
 			<span class="smallText">
-				<a href="#" onclick="clearQuicklist()" title="Remove all videos from QuickList" rel="nofollow">Clear</a> <span class="smallText grayText">|</span>
-				<a href="#" title="Save all videos into a permanent playlist" onmousedown="createPlaylistFromQuicklist()" rel="nofollow">Save</a>
+				<a href="#" onclick="clearQuicklist()" title="lang_ql_clear_desc" rel="nofollow">lang_ql_clear_title</a> <span class="smallText grayText">|</span>
+				<a href="#" title="lang_ql_save_desc" onmousedown="createPlaylistFromQuicklist()" rel="nofollow">lang_ql_save_title</a>
 			</span>
 		</div>
 	</div>
     `,
-    "videoCell": function(id, title, protocol, uploaderName, uploaderUrl, views, flags) {
+    "videoCell": function(id, title, protocol, uploaderName, uploaderUrl, views, flags, noLang) {
+        let viewCount = noLang ? `lang_views_prefix${utils.countBreakup(utils.bareCount(views))}lang_views_suffix`
+                      : views
         return `
         <div class="video-cell *vl" style="width:19.5%" data-id="${id}">
             <div class="video-entry yt-uix-hovercard">
@@ -368,8 +373,8 @@ module.exports = {
                         <div class="v120WrapperInner">
                             <a class="video-thumb-link" href="/watch?v=${id}" rel="nofollow"><img title="${title.split("\"").join("&quot;")}" src="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg"></a>
 
-                            <div class="addtoQL90"><a href="#" ql="${id}" title="Add Video to QuickList"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(uploaderName.split(" ").join(""))}')"></button></a>
-                                <div class="hid quicklist-inlist"><a href="#">Added to Quicklist</a></div>
+                            <div class="addtoQL90"><a href="#" ql="${id}" title="${noLang ? "lang_add_to_ql": "Add Video to Quickist"}"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(uploaderName.split(" ").join(""))}')"></button></a>
+                                <div class="hid quicklist-inlist"><a href="#">${noLang ? "lang_ql_added" : "Added to Quicklist"}</a></div>
                             </div>
                         </div>
                     </div>
@@ -381,7 +386,7 @@ module.exports = {
                         </div>
                     </div>
                     <div class="video-facets">
-                        <span class="video-view-count">${views}</span>
+                        <span class="video-view-count">${viewCount}</span>
                         <span class="video-username"><a class="hLink" href="${uploaderUrl}">${flags.includes("remove_username_space") ? uploaderName.split(" ").join("") : uploaderName}</a></span>
                     </div>
                 </div>
@@ -1173,13 +1178,13 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                             <div class="fm2-title-border-box-gray yt-rounded">
                                 <div class="fm2-title">
                                     <img class="img_feed_recommended master-sprite fm2-icon" src="/assets/site-assets/pixel-vfl73.gif">
-                                    <span class="fm2-titleText" id="feed_recommended-titleText">Recommended for You</span>
+                                    <span class="fm2-titleText" id="feed_recommended-titleText">lang_hp_recommended</span>
                                 </div>
                                 <div class="feedmodule-preamble yt2009-signin-hide" style="border-bottom: 1px dotted;" id="yt2009-rec-learn-more">
-                                    <a href="#">Learn More</a>
+                                    <a href="#">lang_hp_learnmore</a>
                                 </div>
                                 <div class="feedmodule-updown">
-                                    <span id="medit-REC" class="iyt-edit-link iyt-edit-link-gray">edit</span>
+                                    <span id="medit-REC" class="iyt-edit-link iyt-edit-link-gray">lang_hp_edit</span>
                                     <span id="mup-REC" class="up-button">
                                         <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif">
                                     </span>
@@ -1198,10 +1203,10 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                             <div id="logged_out_rec_learn_more_box" class="yt-rounded side-announcement-box" style="margin: 5px 10px 5px 5px; padding: 5px; display: none;">
                                 <div style="cursor: pointer; display:inline; float: right;" id="yt2009-rec-more-close"><img class="img-php-close-button master-sprite" style="background-position: -57px -712px;" src="/assets/site-assets/pixel-vfl73.gif"></div>
                                 <div style="color: black; padding-left: 5px;">
-                                    The "Recommended for You" module picks videos based on your viewing history. To see your <a href="/my_history">viewing history</a>, click on the History link at the top right of the page; if you want to clear your history and recommendations, click the "Clear Viewing History" button on that page.
+                                    lang_hp_rec_desc_p1lang_hp_rec_desc_p2
                                 </div>
                                 <div style="color: black; padding-left: 5px; padding-right: 10px; margin-top: 10px;">
-                                    Remember, you will get better, more specific, and more consistent recommendations by <a href="#">logging in</a> (or <a href="#">signing up</a> for a YouTube account, if you don't already have one).
+                                    lang_hp_rec_desc_p3
                                 </div>
                             </div>
                             <div class="feedmodule-body grid-view">
@@ -1215,14 +1220,14 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                     <div class="clear"></div>
                 </div>
                 <script src="/assets/site-assets/homepage-recommended.js"></script>`,
-    "recommended_videoCell": function(video) {
+    "recommended_videoCell": function(video, req) {
         return `<div class="video-cell" style="width:24.5%" data-id="${video.id}">
         <div class="video-entry yt-uix-hovercard">
             <div class="v120WideEntry">
                 <div class="v120WrapperOuter">
                     <div class="v120WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="${video.title.split(`"`).join(`&quot;`)}" src="//i.ytimg.com/vi/${video.id}/default.jpg" class="vimg120 yt-uix-hovercard-target"></a>
-                        <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="Add Video to QuickList" onclick="addToQuicklist('${video.id}', '${video.title.split(`'`).join("&quot;").split(`"`).join("&quot;")}', '${utils.asciify(video.creatorName)}')"><button class="master-sprite QLIconImg" title=""></button></a>
-                            <div class="hid quicklist-inlist"><a href="/my_quicklist">Added to <br> Quicklist</a></div>
+                        <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="lang_add_to_ql" onclick="addToQuicklist('${video.id}', '${video.title.split(`'`).join("&quot;").split(`"`).join("&quot;")}', '${utils.asciify(video.creatorName)}')"><button class="master-sprite QLIconImg" title=""></button></a>
+                            <div class="hid quicklist-inlist"><a href="/my_quicklist">lang_ql_added_homepage</a></div>
                         </div>
                         <div class="video-time"><a id="video-run-time-${video.id}" href="/watch?v=${video.id}" rel="nofollow">${video.length}</a></div>
                     </div>
@@ -1240,8 +1245,12 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                             <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
                         </div>
                     </span>
-                    <span id="video-added-time-${video.id}" class="video-date-added">${utils.genFakeDate()}</span>
-                    <span id="video-num-views-${video.id}" class="video-view-count">${video.views}</span>
+                    <span id="video-added-time-${video.id}" class="video-date-added">${utils.relativeTimeCreate(
+                        utils.genFakeDate(), langs.get_language(req)
+                    )}</span>
+                    <span id="video-num-views-${video.id}" class="video-view-count">lang_views_prefix${utils.countBreakup(
+                        utils.bareCount(video.views)
+                    )}lang_views_suffix</span>
                     <span id="video-average-rating-${video.id}" class="video-rating-grid ">
                         <div>
                             <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
@@ -1401,5 +1410,44 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     return `<div id="watch-channel-brand-cap">
         <a href="${link}"><img src="${img}" width="300" height="50" border="0"></a>
     </div>`},
-    "sidebarSub": function(sub) {return `<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="${sub.url}"><a class="name" href="#">${sub.name.trim()}</a></div>`}
+    "sidebarSub": function(sub) {return `<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="${sub.url}"><a class="name" href="#">${sub.name.trim()}</a></div>`},
+    "langPickerBase": `
+    <div id="language-picker">
+        <div class="picker-top" style="">
+            <h2>Set Your Language Preference</h2>
+            <div id="language-picker-help">
+                <a href="#" class="picker-help-link">(What is this?)</a>
+            </div>
+            <div class="box-close-link">
+                <img onclick="closeLangPicker()" src="/assets/site-assets/pixel-vfl73.gif" alt="Close">
+            </div>
+            <div class="clearR"></div>
+        </div>
+        <div class="flag-list">
+            <div class="flag-bucket">
+                <!--yt2009_bucket_1-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_2-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_3-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_4-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_5-->
+            </div>
+            <div class="spacer">&nbsp;</div>
+        </div>
+    </div>`,
+    "langPickerLanguage": function(code, name) {
+        return `
+                <div class="flag-div">
+                    <a href="#" onclick="setLang('${code}'); return false;">
+                        ${name}
+                    </a>
+                </div>`
+    }
 }

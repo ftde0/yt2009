@@ -3,6 +3,8 @@ const videos = require("./yt2009constants.json");
 const yt2009html = require("./yt2009html")
 const yt2009utils = require("./yt2009utils")
 const wayback_watchpage = require("./cache_dir/wayback_watchpage")
+const doodles = require("./yt2009doodles")
+const languages = require("./language_data/language_engine")
 
 const homepage_code = fs.readFileSync("../index.htm").toString()
 
@@ -43,6 +45,8 @@ function section_fill(code, section_name, section_content, flags, protocol) {
             name = waybackData.authorName
         }
     }
+
+    views = "lang_views_prefix" + views.replace(" views", "lang_views_suffix")
 
     let temp_code = code;
     temp_code = temp_code.split(`/yt2009_${section_name}_watch`)
@@ -137,15 +141,15 @@ module.exports = function(req, res) {
     // shows tab
     if((req.headers.cookie || "").includes("shows_tab")) {
         code = code.replace(
-            `<a href="/channels">Channels</a>`,
-            `<a href="/channels">Channels</a><a href="#">Shows</a>`
+            `<a href="/channels">lang_channels</a>`,
+            `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
         )
     }
     
 
-    code = require("./yt2009loginsimulate")(req, code)
+    code = require("./yt2009loginsimulate")(req, code, true)
 
-    if(code.includes("Sign Out")) {
+    if(code.includes("signout_btn")) {
         // hide login promo when using login_simulate
         code = code.replace(
             `id="iyt-login-suggest-side-box" class="homepage-side-block"`,
@@ -219,6 +223,9 @@ module.exports = function(req, res) {
         )
     }
 
+
+    code = languages.apply_lang_to_code(code, req)
+    code = doodles.applyDoodle(code)
 
     // wysyłamy
     res.send(code)

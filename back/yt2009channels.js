@@ -6,6 +6,7 @@ const yt2009html = require("./yt2009html");
 const yt2009constants = require("./yt2009constants.json")
 const yt2009search = require("./yt2009search")
 const yt2009languages = require("./language_data/language_engine")
+const yt2009doodles = require("./yt2009doodles")
 const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
 const wayback_channel = require("./cache_dir/wayback_channel")
@@ -96,6 +97,7 @@ module.exports = {
                         applyHTML(data, flags, (html => {
                             writeTimingData("applyHTML")
                             html = yt2009languages.apply_lang_to_code(html, req)
+                            html = yt2009doodles.applyDoodle(html)
                             if(html.includes(` (0)</div>`)) {
                                 html = html.split(` (0)</div>`).join(`</div>`)
                             }
@@ -907,6 +909,11 @@ module.exports = {
         =======
         */
         let properties_html = ``
+        let swapTable = {
+            "name": "lang_channel_field_name",
+            "subscribers": "lang_channel_subscribers",
+            "description": "lang_channel_field_description"
+        }
         for(let p in data.properties) {
             let p_uppercase = yt2009utils.firstUppercase(p)
             let value = data.properties[p]
@@ -916,7 +923,7 @@ module.exports = {
             let valueMarkup = yt2009utils.markupDescription(value)
 
             properties_html += templates.channelProperty(
-                p_uppercase, valueMarkup
+                swapTable[p], valueMarkup
             )
         }
         if(!wayback_settings.includes("fields")) {

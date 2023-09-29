@@ -63,6 +63,15 @@
 			- adapt - ustawia domyślny awatar tylko jak obecny jest domyślny<br>
 			- always - zawsze ustawia domyślny awatar.<br>
 			(zostawienie pustego pola/inna wartość oznaczy always)</p>
+			<input type="checkbox" id="watch-distill-description" title="&quot;destyluje&quot; opisy filmów z oznak nowych opisów trzymając resztę zawartości">
+			<label for="watch-distill-description">distill_description</label>
+			<input type="text" id="watch-distill-description-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<a id="watch-distill-expander" href="javascript:toggleExpander('watch-distill-description-expander')">(możliwe wartości)</a><br>
+			<p id="watch-distill-description-expander" class="hid">tryby distill_description:<br>
+			- poor - usuwa emoji i hashtagi<br>
+			- moderate - wszystko co poor + niektóre słowa<br>
+			- max - usuwa całe linijki tekstu których zawartość pasuje do moderate<br>
+			(zostawienie pola pustego/inna wartość oznacza max)</p>
 			<input type="checkbox" id="watch-exp-hd" title="pokazuj przycisk HQ jak film jest dostępny w 720p">
 			<label for="watch-exp-hd">exp_hd</label><br>
 			<input type="checkbox" id="watch-exp-related" title="pokazuje podobne filmy bazując na tagach oglądanego filmu">

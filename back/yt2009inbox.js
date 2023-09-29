@@ -1,6 +1,7 @@
 const utils = require("./yt2009utils")
 const fs = require("fs")
 const page = fs.readFileSync("../inbox.htm").toString()
+const doodles = require("./yt2009doodles")
 
 module.exports = {
     "apply": function(req, res) {
@@ -18,6 +19,7 @@ module.exports = {
             )
         }
         code = require("./yt2009loginsimulate")(req, code);
+        code = doodles.applyDoodle(code)
 
         res.send(code);
     }

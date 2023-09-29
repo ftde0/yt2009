@@ -17,7 +17,7 @@ const base_code_logged_in = `
         <button class="master-sprite img-general-messages" title="Inbox"></button>
         <a href="/inbox" class="notif-count hid">(0)</a>
     </span>
-    <span class="utility-item"><a href="#">Sign Out</a></span>
+    <span class="utility-item"><a href="/logout">Sign Out</a></span>
 </div>
 `
 
@@ -25,7 +25,7 @@ const base_code_logged_out = `
 <span class="utility-item">
 	<a href="#"><strong>Create Account</strong></a>
 	<span class="utility-joiner">or</span>
-	<a href="#">Sign In</a>
+	<a href="/signin">Sign In</a>
 </span>`
 
 function embedRelay(req) {

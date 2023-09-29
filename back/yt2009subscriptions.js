@@ -14,6 +14,7 @@ const constants = require("./yt2009constants.json")
 const fs = require("fs")
 const page = fs.readFileSync("../subscriptions.htm").toString()
 const config = require("./config.json")
+const doodles = require("./yt2009doodles")
 
 let saved_subscription_data = {}
 
@@ -63,6 +64,8 @@ module.exports = {
                 `<script src="/assets/site-assets/yt2009_userpage_f.js"></script>`
             )
         }
+
+        code = doodles.applyDoodle(code)
 
         res.send(code);
     },

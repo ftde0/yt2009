@@ -4,6 +4,7 @@ const yt2009templates = require("./yt2009templates")
 const config = require("./config.json")
 const fs = require("fs")
 const playlist_html = fs.readFileSync("../playlist.htm").toString();
+const doodles = require("./yt2009doodles")
 
 let cache = require("./cache_dir/playlist_cache_manager")
 
@@ -84,6 +85,8 @@ module.exports = {
         }
 
         code = code.replace(`<!--yt2009_video_entries-->`, videos_html)
+
+        code = doodles.applyDoodle(code)
 
         return code;
     },

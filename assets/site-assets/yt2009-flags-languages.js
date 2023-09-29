@@ -5,6 +5,7 @@ var languageData_EN = {
         "watch-autoplay": "start video playback automatically (may require enabling autoplay in your browser)",
         "watch-comments-remove-future": "remove comments that contain years 2011-2022",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
+        "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
         "watch-exp-hd": "shows a HQ button in the player if available.",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
         "watch-fake-comment-dates": "fake comment dates",
@@ -64,6 +65,7 @@ var languageData_EN = {
         <br>this function requires cookies to be enabled, so if it doesn't work, check that first.\
         <br><br>if you want to use a flag only once, add a flags parameter to the URL.",
 
+        "#watch-distill-expander": "(possible values)",
         "#watch-share-expander": "(possible values)",
         "#watch-upload-expander": "(possible values)",
         "#watch-avatar-expander": "(possible values)",
@@ -110,13 +112,20 @@ var languageData_EN = {
         "#results-only-old-expander": "only_old syntax (YYYY-MM-DD):<br>\
         - 1 date - e.g. <b>2010-04-01</b> - will only show videos uploaded before that date<br>\
         - 2 dates (space-separated) - e.g. <b>2007-01-01 2010-04-01</b> - will only show videos uploaded between those dates<br>\
-        - leaving this box empty - standard behavior - will only show videos uploaded before 2010-04-01."
+        - leaving this box empty - standard behavior - will only show videos uploaded before 2010-04-01.",
+
+        "#watch-distill-description-expander": "distill_description modes:<br>\
+        - poor - removes emojis and hashtags<br>\
+        - moderate - everything from poor + known new words<br>\
+        - max - removes whole lines of text matching moderate<br>\
+        (leaving this box empty/different value = max.)"
     },
 
     "placeholders": {
         "watch-share-behavior-input": "mode",
         "watch-fake-upload-date-input": "mode",
         "watch-default-avatar-input": "mode",
+        "watch-distill-description-input": "mode",
         "watch-wayback-features-input": "mode",
         "channel-default-avatar-input": "mode",
         "channel-only-old-input": "check possible values",
