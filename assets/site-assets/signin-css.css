@@ -1,0 +1,464 @@
+/*yt2009 note: code 2009 original + a few fixes from me (ftde0). */
+
+.gaia.le.lbl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.le.fpwd {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 70%;
+}
+
+.gaia.le.chusr {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 70%;
+}
+
+.gaia.le.val {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.le.button {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.le.rem {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.captchahtml.desc {
+    font-family: arial, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.captchahtml.cmt {
+    font-family: arial, sans-serif;
+    font-size: smaller;
+    font-style: italic;
+}
+
+body {
+    font-family: arial, sans-serif;
+    margin: 0;
+    padding: 13px 15px 15px;
+}
+
+.body {
+    margin: 0;
+}
+
+div.errormsg {
+    color: red;
+    font-size: smaller;
+    font-family: arial, sans-serif;
+}
+
+font.errormsg {
+    color: red;
+    font-size: smaller;
+    font-family: arial, sans-serif;
+}
+
+div.topbar {
+    font-size: smaller;
+    margin-right: -5px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+div.header {
+    margin-bottom: 9px;
+    margin-left: -2px;
+    position: relative;
+    zoom: 1
+}
+
+div.header img.logo {
+    border: 0;
+    float: left;
+}
+
+div.header div.headercontent {
+    float: right;
+    margin-top: 17px;
+}
+
+div.header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+div.pagetitle {
+    font-weight: bold;
+}
+
+.footer {
+    color: #666;
+    font-size: smaller;
+    margin-top: 40px;
+    text-align: center;
+}
+
+table#signupform {
+    left: -5px;
+    top: -7px;
+    position: relative;
+}
+
+table#signupform td {
+    padding: 7px 5px;
+}
+
+table#signupform td table td {
+    padding: 1px;
+}
+
+hr {
+    border: 0;
+    background-color: #DDDDDD;
+    height: 1px;
+    width: 100%;
+    text-align: left;
+    margin: 5px;
+}
+
+body {
+    font-family: arial, sans-serif;
+    background-color: #fff;
+    margin-top: 2;
+}
+
+.c {
+    width: 4;
+    height: 4;
+}
+
+a:link {
+    color: #00c;
+}
+
+a:visited {
+    color: #551a8b;
+}
+
+a:active {
+    color: #f00;
+}
+
+.form-noindent {
+    background-color: #fff;
+    border: 1px solid #c3d9ff;
+}
+
+#main {
+    width: 960px;
+    margin: auto;
+}
+
+body {
+    padding-top: 9px;
+    margin-top: 0;
+}
+
+#masthead-container {
+    font-size: 75%;
+    border-bottom: 1px solid #ccc;
+    margin: 0 auto 0.8333em;
+}
+
+#masthead {
+    margin: 0 auto;
+    padding: 0 0 0.38462em;
+    /* 9px 0px 5px @ 13px font-size */
+    font-size: 1.0833em;
+}
+
+#masthead-main {
+    float: left;
+}
+
+#masthead-search {
+    padding: 0.23077em 0.23077em;
+    /* 2px 3px @ 13px font-size */
+    margin: 0.23077em 0;
+    /* 3px 0px @ 13px font-size */
+    line-height: 2.07692em;
+    /* 27px @ 13px font-size */
+    background: #EAEAEA;
+    border: 1px solid #CCC;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+a:link,
+a:visited {
+    color: #03c;
+    text-decoration: none;
+}
+
+form {
+    padding: 0;
+}
+
+.search-wrapper {
+    margin-right: -0.23em;
+}
+
+.search-term {
+    font-size: 100% !important;
+    border: 1px solid #666;
+    display: inline;
+    padding: 4px 1px 1px 1px;
+    width: 25em;
+    height: 1.84616em;
+    vertical-align: top;
+    float: left;
+}
+
+
+/* base button styles */
+
+
+/* use inline-block if possible, simulate for FF2, reset for IE6 and IE7 */
+
+.yt-button,
+a.yt-button {
+    padding: 0 0.8333em;
+    margin: 0 0.33em;
+    vertical-align: middle;
+    white-space: nowrap;
+    text-decoration: none;
+    color: #039;
+    background: #d8d8d8 url("/master-vfl121679.png") repeat-x center -802px;
+    border: 1px solid #999;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: -moz-inline-box;
+    display: inline-block;
+    /**display: inline;*/
+    font-family: Arial, sans-serif;
+}
+
+
+/* fix rounded corners for FF2 */
+
+html>body .yt-button,
+tt:-moz-any-link {
+    -moz-border-radius: 3px;
+    -moz-border-radius-bottomleft: 5px;
+    -moz-border-radius-bottomright: 5px;
+}
+
+
+/* reset rounded corners for FF3 */
+
+html>body .yt-button,
+tt:-moz-any-link,
+tt:default {
+    -moz-border-radius: 3px;
+}
+
+
+/* define button height, fix for IE6 and IE7 */
+
+.yt-button span {
+    font-size: 90%;
+    line-height: 1.9166em;
+    height: 1.9166em;
+    display: inline-block;
+}
+
+
+/* fix height for FF2 */
+
+html>body .yt-button span,
+tt:-moz-any-link {
+    padding-top: .3333em;
+    line-height: 1.75em;
+}
+
+
+/* reset height for FF3 */
+
+html>body .yt-button span,
+tt:-moz-any-link,
+tt:default {
+    padding-top: 0;
+    line-height: 1.9166em;
+}
+
+
+/* fix height for IE7 */
+
+*:first-child+html .yt-button span {
+    padding-top: 0;
+    line-height: 1.75em;
+}
+
+
+/* variant button types (e.g. colors) */
+
+.yt-button-primary,
+a.yt-button-primary {
+    font-weight: bold;
+    color: #039;
+    background: #c6d7f3 url("/master-vfl121679.png") repeat-x center -1602px;
+    border-color: #A0B1DC;
+}
+
+.yt-button-urgent,
+a.yt-button-urgent {
+    font-weight: bold;
+    color: #994800;
+    background: #FED81C url("/master-vfl121679.png") repeat-x center -2202px;
+    border-color: #ECC101;
+}
+
+
+/* button and dropdown hover states */
+
+.yt-button:hover,
+.yt-dropdown:hover {
+    text-decoration: none;
+}
+
+.yt-button:hover span,
+.yt-dropdown:hover .yt-button span {
+    text-decoration: underline;
+}
+
+.yt-button:hover,
+.yt-dropdown:hover .yt-button {
+    background-position: center -1002px;
+}
+
+.yt-button-primary:hover,
+.yt-dropdown-primary:hover .yt-dropdown-btn {
+    background-position: center -1802px;
+}
+
+.yt-button-urgent:hover,
+.yt-dropdown-urgent:hover .yt-dropdown-btn {
+    background-position: center -2402px;
+}
+
+#masthead .search-form {
+    display: inline;
+    position: relative;
+    /* fix yt-button in IE7 */
+}
+
+#masthead-nav-main {
+    padding-left: 0.23077em;
+    /* 3px @ 13px font-size */
+    line-height: 1.53846em;
+    /* 20px @ 13px font-size */
+    font-weight: bold;
+}
+
+#masthead-nav-main a:hover {
+    text-decoration: underline;
+}
+
+#masthead-nav-main a {
+    margin-right: 1em;
+    text-decoration: none;
+}
+
+.logo {
+    float: left;
+    display: block;
+    margin: 0 18px 0 0;
+}
+
+.logo img {
+    width: 110px;
+    height: 54px;
+    background: white url("/master-vfl121679.png") no-repeat scroll 0 0;
+}
+
+.title-bar {
+    border-bottom: 1px solid #999;
+}
+
+.page-title {
+    font-size: 19px;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+div.errormsg {
+    color: red;
+    font-size: smaller;
+    font-family: arial, sans-serif;
+}
+
+font.errormsg {
+    color: red;
+    font-size: smaller;
+    font-family: arial, sans-serif;
+}
+
+.gaia.le.lbl {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.le.fpwd {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 70%;
+}
+
+.gaia.le.chusr {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 70%;
+}
+
+.gaia.le.val {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.le.button {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.le.rem {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.captchahtml.desc {
+    font-family: arial, sans-serif;
+    font-size: smaller;
+}
+
+.gaia.captchahtml.cmt {
+    font-family: arial, sans-serif;
+    font-size: smaller;
+    font-style: italic;
+}
+
+.footer {
+    font-family: arial, sans-serif;
+    font-size: 83%;
+    text-align: center;
+    border-top: 1px solid #ccc;
+    padding: 4px;
+    margin: 0 3px;
+}
+
+.search-wrapper .yt-button {
+    width: 41px;
+    height: 22px;
+}

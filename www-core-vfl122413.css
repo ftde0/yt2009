@@ -6102,3 +6102,88 @@ td.spons-vid-thumb .user-thumb-jumbo img {
 .QLIconImg:hover {
   background-position: -25px -364px;
 }
+
+#region-picker,
+#language-picker,
+#safetymode-picker {
+  margin-top: 0.5em;
+  padding: 10px;
+  background-color: #fafafa;
+  border: 1px solid #cccccc
+}
+
+#region-picker-loading,
+#language-picker-loading,
+#safetymode-picker-loading {
+  padding: 0.6em
+}
+
+#region-picker-help,
+#language-picker-help,
+#safetymode-picker-help {
+  font-size: 12px;
+  padding: 3px 0
+}
+
+.picker-help-link {
+  font-size: 10px;
+  margin-left: 5px;
+  font-weight: normal
+}
+
+.picker-top {
+  margin-bottom: 5px
+}
+
+.picker-top h2 {
+  margin: 0;
+  line-height: 16px
+}
+
+.box-close-link {
+  text-align: right;
+  font-size: 10px;
+  float: right;
+  line-height: 16px;
+  padding-bottom: 1px
+}
+
+.box-close-link img {
+  background: transparent url(http://web.archive.org/web/20091110101031im_/http://s.ytimg.com/yt/img/close-vfl69806.png) no-repeat scroll 0 0;
+  height: 12px;
+  width: 12px;
+  margin-left: 5px;
+  cursor: hand;
+  cursor: pointer;
+  vertical-align: middle
+}
+
+.flag-list {
+  border-top: 1px solid #ccc;
+  clear: left
+}
+
+.flag-bucket {
+  width: 170px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  float: left
+}
+
+.flag-list .flag-div {
+  padding-top: 5px;
+  padding-right: 5px;
+  white-space: nowrap
+}
+
+.flag-div a {
+  text-decoration: none
+}
+
+.flag-div a:hover {
+  text-decoration: underline
+}
+
+#language-picker-help, .picker-top h2 {
+  float: left;
+}
