@@ -17,6 +17,7 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_SSLPORT` sets the HTTPS port (default: `443`)
 - `YT2009_SSLPATH` sets the path for the SSL certificate (default: `/yt2009/cert.crt`)
 - `YT2009_SSLKEY` sets the path for the SSL certificate private key (default: `/yt2009/cert.key`)
+- `YT2009_PB` allows you to enable experimental protobuf support (default: `false`)
 
 ## troubleshooting
 #### persistent auth tokens

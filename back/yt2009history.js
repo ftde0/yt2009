@@ -3,13 +3,14 @@
 /my_history handler
 =======
 
-yt2009, 2022
+yt2009, 2022-2023
 */
 
 const utils = require("./yt2009utils")
 const fs = require("fs")
 const page = fs.readFileSync("../history.htm").toString()
 const doodles = require("./yt2009doodles")
+const templates = require("./yt2009templates")
 
 module.exports = {
     "apply": function(req, res) {
@@ -23,24 +24,40 @@ module.exports = {
 
         // shows tab
         if(req.headers.cookie.includes("shows_tab")) {
-            code = code.replace(`<a href="/channels">Channels</a>`, `<a href="/channels">Channels</a><a href="#">Shows</a>`)
+            code = code.replace(
+                `<a href="/channels">Channels</a>`,
+                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+            )
         }
 
-        // czytamy historię
-
+        // read cookie based history
         let history = ""
+        let backupCookies = []
         try {
             req.headers.cookie.split(";").forEach(cookie => {
-                if(cookie.trimStart().startsWith("watch_history")) {
-                    history = cookie.trimStart().replace("watch_history=", "").split(":")
+                if(cookie.includes("watch_history")) {
+                    history += cookie.split("watch_history=")[1]
+                }
+                if(cookie.includes("watch_history_backup")) {
+                    let tempHistory = cookie.split("=")
+                    tempHistory.shift()
+                    tempHistory = tempHistory.join("=")
+                    backupCookies.push(tempHistory)
                 }
             })
         }
-        catch(error) {}
+        catch(error) {console.log(error);}
+        backupCookies.forEach(cookie => {
+            history += cookie
+        })
+        history = history.split(":")
         let historyReadable = []
 
         if(typeof(history) == "object") {
             history.forEach(video => {
+                if(video.startsWith("undefined")) {
+                    video = video.replace("undefined", "")
+                }
                 let s = video.split("&")
                 let title = s[0]
                 let views = s[1]
@@ -48,19 +65,23 @@ module.exports = {
 
                 if(!views) return;
     
-                historyReadable.push({"title": decodeURIComponent(title), "views": views, "id": id})
+                historyReadable.push({
+                    "title": decodeURIComponent(title).trim(),
+                    "views": views,
+                    "id": id
+                })
             })
         }
         
 
-        // splitujemy co 20 na strony
-
+        // split every 20
         function splitEvery(array, num) {
             let tr = []
             let tempArray = []
             array.forEach(el => {
                 tempArray.push(el)
-                if(tempArray.length == num || array.indexOf(el) == array.length - 1) {
+                if(tempArray.length == num
+                || array.indexOf(el) == array.length - 1) {
                     tr.push(tempArray)
                     tempArray = []
                 }
@@ -71,54 +92,17 @@ module.exports = {
 
         let videosHTML = ``
         
-        // foreach i pod htmla
+        // foreach and to html
         let pageNum = 0;
 
         splitEvery(historyReadable, 20).forEach(videosPage => {
-
-            videosHTML += `
-        <tbody id="videos" class="videos-page videos-page-${pageNum} ${pageNum !== 0 ? "hid" : ""}">
-            <tr>
-                <td colspan="2">
-        `
-
-        videosPage.forEach(video => {
-            videosHTML += `
-                    <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">
-                        <div style="float: left;">
-                            <div style="float: left;">
-                                <input type="checkbox" class="checkbox" value="${video.id}" />
-                            </div>
-                        </div>
-                        <div style="float: left; width: 120px;">
-                            <a href="/watch?v=${video.id}" class="video-thumb"><img src="${req.protocol}://i.ytimg.com/vi/${video.id}/hqdefault.jpg"/></a>
-                            <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
-                            <div class="video-stats">
-                                <div class="video-stat"><span class="stat-views">Views: ${video.views}</span></div>
-                                <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>
-                            </div>
-                        </div>
-                    </div>`;
-        })
-            
-        
-            videosHTML += `
-                </td>
-            </tr>
-        </tbody>`
-
+            videosHTML += templates.historyParts[0](pageNum)
+            videosPage.forEach(video => {
+                videosHTML += templates.historyVideo(video, req)
+            })
+            videosHTML += templates.historyParts[1]
             pageNum++;
         })
-
-        /*let flags = req.query.flags || ""
-        try {
-            req.headers.cookie.split(";").forEach(cookie => {
-                if(cookie.trimStart().startsWith("mainpage_flags")) {
-                    flags += cookie.trimStart().replace("mainpage_flags=", "").split(":").join(";")
-                }
-            })
-        }
-        catch(error) {}*/
 
         code = require("./yt2009loginsimulate")(req, code);
         code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)

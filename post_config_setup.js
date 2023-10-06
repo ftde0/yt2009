@@ -72,7 +72,8 @@ const cacheFiles = {
     "watched_now.json": [],
     "wayback_channel_cache.json": {},
     "wayback_watch_cache.json": {},
-    "captions_cache.json": {}
+    "captions_cache.json": {},
+    "oldbanner_unavail.json": []
 }
 console.log("creating cache files")
 for(let file in cacheFiles) {

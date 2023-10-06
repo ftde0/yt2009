@@ -27,6 +27,18 @@ if(process.env.YT2009_ENV === 'dev' || process.env.YT2009_ENV === 'prod') {
 // no simple way to verify validity afaik, will need to trust the user on this one
 cfg.ip = process.env.YT2009_IP;
 
+//set protobuf
+switch (process.env.YT2009_PB) {
+    case 'true':
+        cfg.use_pb = true;
+        break;
+    case 'false':
+        cfg.use_pb = false;
+        break;
+    default:
+        throw new Error('invalid YT2009_PB')
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

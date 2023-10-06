@@ -515,7 +515,7 @@ module.exports = {
                     response += templates.gdata_feedVideo(
                         video.id,
                         video.title,
-                        utils.asciify(authorName),
+                        video.author_handle || utils.asciify(authorName),
                         utils.bareCount(video.views),
                         utils.time_to_seconds(data.length || 0),
                         data.description,
@@ -542,7 +542,8 @@ module.exports = {
                             response += templates.gdata_feedVideo(
                                 video.id,
                                 video.title,
-                                utils.asciify(video.uploaderName),
+                                video.author_handle
+                                || utils.asciify(video.uploaderName),
                                 utils.bareCount(video.views),
                                 utils.time_to_seconds(data.length || 0),
                                 data.description,
@@ -573,7 +574,7 @@ module.exports = {
             response += templates.gdata_feedVideo(
                 data.id,
                 data.title,
-                utils.asciify(data.author_name),
+                data.author_handle || utils.asciify(data.author_name),
                 utils.bareCount(data.viewCount),
                 utils.time_to_seconds(data.length || 0),
                 data.description,

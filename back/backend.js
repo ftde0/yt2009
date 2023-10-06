@@ -2141,6 +2141,23 @@ app.get("/language_picker", (req, res) => {
 })
 
 /*
+======
+/flags lister page
+======
+*/
+let flagsCode = fs.readFileSync("../flags_main.htm").toString()
+app.get("/flags_main.htm", (req, res) => {
+    if(yt2009_utils.isAuthorized(req)) {
+        res.send(flagsCode)
+    } else {
+        res.redirect("/unauth.htm")
+    }
+})
+app.get("/flags", (req, res) => {
+    res.redirect("/flags_main.htm")
+})
+
+/*
 pizdec
 jp2gmd
 mleczsus :*

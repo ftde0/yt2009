@@ -1,0 +1,11 @@
+syntax = "proto3";
+package popularVidsChip;
+
+message vidsChip {
+    string dummy = 1;
+    message nestedMsg1 {
+        string channelId = 2;
+        string chipParam = 3;
+    }
+    repeated nestedMsg1 msg = 80226972;
+}

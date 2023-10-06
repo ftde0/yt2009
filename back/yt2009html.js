@@ -1069,7 +1069,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // podkładanie pod html podstawowych danych
-        code = code.split("video_title").join(yt2009utils.xss(data.title))
+        code = code.split("video_title").join(yt2009utils.xss(data.title).trim())
         code = code.replace("video_view_count", views)
         code = code.replace("channel_icon", channelIcon)
         code = code.replace("channel_name", yt2009utils.xss(author_name))
@@ -2015,6 +2015,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             callback([])
             return;
         }
+        innertube_context = this.get_innertube_context()
         if(continuations_cache[token]) {
             callback(continuations_cache[token])
         } else {
@@ -2130,6 +2131,36 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(cache.read()[id]) {
             callback(cache.read()[id].comments);
         } else {
+            if(config.use_pb) {
+                const pb = require("./proto/cmts_pb")
+                let commentRequest = new pb.comments()
+
+                let videoMsg = new pb.comments.video()
+                videoMsg.setVideoid(id)
+                commentRequest.addVideomsg(videoMsg)
+
+                commentRequest.setType(6)
+
+                let commentsReqParamsMain = new pb.comments.commentsReq()
+                commentsReqParamsMain.setSectiontype("comments-section")
+                let crpChild = new pb.comments.commentsReq.commentsData()
+                crpChild.setVideoid(id)
+                crpChild.setH(0)
+                crpChild.setD(2)
+                commentsReqParamsMain.addCommentsdatareq(crpChild)
+                commentRequest.addCommentsreqmsg(commentsReqParamsMain)
+
+                let token = encodeURIComponent(Buffer.from(
+                    commentRequest.serializeBinary()
+                ).toString("base64"))
+                
+                this.request_continuation(token, id, (flags || ""),
+                    (comment_data) => {
+                        callback(comment_data)
+                    }
+                )
+                return;
+            }
             this.innertube_get_data(id, (data) => {
                 try {
                     let sections = data.contents.twoColumnWatchNextResults

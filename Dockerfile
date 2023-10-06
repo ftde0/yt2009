@@ -12,7 +12,8 @@ ENV YT2009_PORT=80 \
     YT2009_SSL=false \
     YT2009_SSLPORT=443 \
     YT2009_SSLPATH=/yt2009/cert.crt \
-    YT2009_SSLKEY=/yt2009/cert.key
+    YT2009_SSLKEY=/yt2009/cert.key \
+	YT2009_PB=false
 
 RUN echo "{\"env\": \"dev\"}" > back/config.json
 RUN node post_config_setup.js

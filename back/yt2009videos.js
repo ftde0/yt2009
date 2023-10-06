@@ -286,8 +286,8 @@ module.exports = {
                 })
             }
 
-            let startIndex = 23 * (pageNumber - 1)
-            sortedVideos = sortedVideos.slice(startIndex, startIndex + 23)
+            let startIndex = 24 * (pageNumber - 1)
+            sortedVideos = sortedVideos.slice(startIndex, startIndex + 24)
 
             // add videos
             sortedVideos.forEach(video => {

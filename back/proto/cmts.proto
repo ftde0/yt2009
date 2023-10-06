@@ -1,0 +1,21 @@
+syntax = "proto3";
+package commentsProto;
+
+message comments {
+    message video {
+        string videoId = 2;
+    }
+    repeated video videoMsg = 2;
+    int64 type = 3;
+    message commentsReq {
+        string rankedStreams = 1;
+        message commentsData {
+            string videoId = 4;
+            int64 h = 6;
+            int64 d = 15;
+        }
+        repeated commentsData commentsDataReq = 4;
+        string sectionType = 8;
+    }
+    repeated commentsReq commentsReqMsg = 6;
+}

@@ -126,6 +126,25 @@
 			document.getElementById("alt-swf-file").value = swf_path;
 			document.getElementById("alt-swf-id-arg").value = arg;
 		}
+
+		// get alt swf preset
+		var cookies = (document.cookie || "").split(";")
+		for(var c in cookies) {
+			var cookie = cookies[c]
+			var name = cookie.split("=")[0].replace(" ", "")
+			var value = decodeURIComponent(cookie.split("=")[1])
+
+			switch(name) {
+				case "alt_swf_path": {
+					document.getElementById("alt-swf-file").value = value
+					break;
+				}
+				case "alt_swf_arg": {
+					document.getElementById("alt-swf-id-arg").value = value
+					break;
+				}
+			}
+		}
 	</script>
 </body>
 

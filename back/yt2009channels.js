@@ -14,6 +14,7 @@ const templates = require("./yt2009templates")
 const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
 const overrideBgs = require("./channel_backgrounds.json")
+const oldbanner_unavail_cache = require("./cache_dir/oldbanner_unavail_cache")
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
@@ -119,6 +120,9 @@ module.exports = {
     */
     "parse_main_response": function(r, flags, callback) {
         let fetchesRequired = 3;
+        if(config.use_pb) {
+            fetchesRequired = 2;
+        }
         let additionalFetchesCompleted = 0;
 
         // basic extract
@@ -153,9 +157,26 @@ module.exports = {
         // fetch videos tab
         let videosTabAvailable = false;
         data.tabParams = {}
+        if(config.use_pb) {
+            const popularVids = require("./proto/popularVidsChip_pb")
+            let vidsContinuation = new popularVids.vidsChip()
+            let msg = new popularVids.vidsChip.nestedMsg1()
+            msg.setChannelid(data.id)
+            // need to figure out what that does, leaving it in as it's
+            // what came out of decode
+            msg.setChipparam(
+                "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D"
+            )
+            vidsContinuation.addMsg(msg)
+            let chip = encodeURIComponent(Buffer.from(
+                vidsContinuation.serializeBinary()
+            ).toString("base64"))
+            fetchChip(chip)
+        }
         r.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
             if(tab.tabRenderer
-            && tab.tabRenderer.title.toLowerCase() == "videos") {
+            && tab.tabRenderer.title.toLowerCase() == "videos"
+            && !config.use_pb) {
                 videosTabAvailable = true;
                 setTimeout(function() {
                     let param = tab.tabRenderer.endpoint
@@ -223,31 +244,34 @@ module.exports = {
         }
 
         function fetchChip(chipToken) {
-            setTimeout(function() {
-                fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                    yt2009html.get_api_key()
-                }`, {
-                    "headers": yt2009constants.headers,
-                    "referrer": "https://www.youtube.com/",
-                    "referrerPolicy": "strict-origin-when-cross-origin",
-                    "body": JSON.stringify({
-                        "context": yt2009constants.cached_innertube_context,
-                        "continuation": chipToken
-                    }),
-                    "method": "POST",
-                    "mode": "cors"
-                }).then(r => {r.json().then(r => {
-                    r.onResponseReceivedActions.forEach(action => {
-                        if(action.reloadContinuationItemsCommand.slot
-                        == "RELOAD_CONTINUATION_SLOT_BODY") {
-                            createVideosFromChip(
-                                action.reloadContinuationItemsCommand
-                                      .continuationItems
-                            )
-                        }
-                    })
-                })})
-            }, 405)
+            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
+                yt2009html.get_api_key()
+            }`, {
+                "headers": yt2009constants.headers,
+                "referrer": "https://www.youtube.com/",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": JSON.stringify({
+                    "context": yt2009constants.cached_innertube_context,
+                    "continuation": chipToken
+                }),
+                "method": "POST",
+                "mode": "cors"
+            }).then(r => {r.json().then(r => {
+                if(!r.onResponseReceivedActions) {
+                    createVideosFromChip([])
+                    return;
+                }
+                r.onResponseReceivedActions.forEach(action => {
+                    if(action.reloadContinuationItemsCommand.slot
+                    == "RELOAD_CONTINUATION_SLOT_BODY") {
+                        videosTabAvailable = true
+                        createVideosFromChip(
+                            action.reloadContinuationItemsCommand
+                                  .continuationItems
+                        )
+                    }
+                })
+            })})
         }
 
         function createVideosFromChip(chip) {
@@ -268,14 +292,13 @@ module.exports = {
                                   .simpleText
                     })
                 }
-                
             })
             additionalFetchesCompleted++;
             onVideosCreate()
         }
 
         // fallback: no videos tab (eg topic channels)
-        if(!videosTabAvailable) {
+        if(!videosTabAvailable && !config.use_pb) {
             additionalFetchesCompleted = fetchesRequired
             try {
                 r.contents.twoColumnBrowseResultsRenderer.tabs[1].tabRenderer
@@ -373,7 +396,7 @@ module.exports = {
         let callbacksRequired = 3;
         let callbacksMade = 0;
         function markCompleteStep() {
-            callbacksMade++; 
+            callbacksMade++;
             if(callbacksMade == callbacksRequired) {
                 callback()
             }
@@ -400,60 +423,59 @@ module.exports = {
        // friends
        let channels_list = {}
        if(n_impl_yt2009channelcache.read("friend")[data.id]
-       || !data.tabParams) {
-            markCompleteStep()
-        } else {
-            if(data.tabParams["channels"]) {
-                yt2009utils.channelGetSectionByParam(
-                    data.id, data.tabParams["channels"], (r => {
-                        let tab = yt2009utils.channelJumpTab(r, "channels").content
-                        try {
-                            channels_list = yt2009utils.parseChannelsSections(
-                                tab.sectionListRenderer.contents,
-                                tab.sectionListRenderer.subMenu
-                            )
-                        }
-                        catch(error) {}
-            
-                        n_impl_yt2009channelcache.write(
-                            "friend",
-                            data.id,
-                            JSON.parse(JSON.stringify(channels_list))
-                        )
-                        markCompleteStep()
-                    }
-                ))
-            }
-        }
+       || !data.tabParams
+       || !data.tabParams["channels"]) {
+           markCompleteStep()
+       } else {
+           yt2009utils.channelGetSectionByParam(
+               data.id, data.tabParams["channels"], (r => {
+                   let tab = yt2009utils.channelJumpTab(r, "channels").content
+                   try {
+                       channels_list = yt2009utils.parseChannelsSections(
+                           tab.sectionListRenderer.contents,
+                           tab.sectionListRenderer.subMenu
+                       )
+                   }
+                   catch(error) {}
+           
+                   n_impl_yt2009channelcache.write(
+                       "friend",
+                       data.id,
+                       JSON.parse(JSON.stringify(channels_list))
+                   )
+                   markCompleteStep()
+               }
+           ))
+       }
 
 
-        // playlists
-        let playlist_list = {}
-        if(n_impl_yt2009channelcache.read("playlist")[data.id]
-        || !data.tabParams) {
-            markCompleteStep()
-        } else {
-            if(data.tabParams["playlists"]) {
-                yt2009utils.channelGetSectionByParam(
-                    data.id, data.tabParams["playlists"], (r => {
-                        let tab = yt2009utils.channelJumpTab(r, "playlists").content
-                                             .sectionListRenderer.contents[0]
-                                             .itemSectionRenderer.contents[0]
-                        try {
-                            playlist_list = yt2009utils.parseChannelPlaylists(tab)
-                        }
-                        catch(error) {console.log(error)}
-            
-                        n_impl_yt2009channelcache.write(
-                            "playlist",
-                            data.id,
-                            JSON.parse(JSON.stringify(playlist_list))
-                        )
-                        markCompleteStep()
-                    }
-                ))
-            }
-        }
+       // playlists
+       let playlist_list = {}
+       if(n_impl_yt2009channelcache.read("playlist")[data.id]
+       || !data.tabParams
+       || !data.tabParams["playlists"]) {
+           markCompleteStep()
+       } else {
+           yt2009utils.channelGetSectionByParam(
+               data.id, data.tabParams["playlists"], (r => {
+                   let tab = yt2009utils.channelJumpTab(r, "playlists")
+                                       .content
+                                       .sectionListRenderer.contents[0]
+                                       .itemSectionRenderer.contents[0]
+                   try {
+                       playlist_list = yt2009utils.parseChannelPlaylists(tab)
+                   }
+                   catch(error) {}
+        
+                   n_impl_yt2009channelcache.write(
+                       "playlist",
+                       data.id,
+                       JSON.parse(JSON.stringify(playlist_list))
+                   )
+                   markCompleteStep()
+               }
+           ))
+       }
     },
 
     /*
@@ -722,6 +744,7 @@ module.exports = {
                 // if not overriden by wayback_features
                 let comments_html = ``
                 if(saved_channel_comments[video.id]
+                && saved_channel_comments[video.id].length > 0
                 && flags.includes("exp_fill_comments")
                 && !wayback_settings.includes("comments")) {
                     let comments = saved_channel_comments[video.id]
@@ -842,6 +865,10 @@ module.exports = {
                 code = code.replace(
                     `yt2009_channel_comment_count`,
                     channelCommentCount
+                )
+                code = code.replace(
+                    `<!--yt2009_no_comments-->`,
+                    `<div class="alignC">There are no comments for this user.</div>`
                 )
 
                 if(!wayback_settings.includes("comments")) {
@@ -1058,6 +1085,10 @@ module.exports = {
         */
         let onlyOldVideos = []
         if(flags.includes("only_old")) {
+            if(data.videos.length <= 0) {
+                videosRender()
+                return;
+            }
             stepsRequiredToCallback++;
             let only_old = yt2009search.handle_only_old(flags)
             let query = `"${data.name}" ${only_old}`
@@ -1079,11 +1110,26 @@ module.exports = {
                 if(!onlyOldVideos[0] && data.videos[0]) {
                     videosSource = data.videos;
                 }
-                videosRender();
-                stepsTaken++
-                if(stepsTaken >= stepsRequiredToCallback) {
-                    try{callback(code)}catch(error){}
+                // get comments for vid
+                if(onlyOldVideos[0]
+                && !saved_channel_comments[onlyOldVideos[0].id]) {
+                    let id = onlyOldVideos[0].id
+                    yt2009html.get_video_comments(id, (comments) => {
+                        saved_channel_comments[id] = comments.slice();
+                        videosRender();
+                        stepsTaken++
+                        if(stepsTaken >= stepsRequiredToCallback) {
+                            try{callback(code)}catch(error){}
+                        }
+                    })
+                } else {
+                    videosRender();
+                    stepsTaken++
+                    if(stepsTaken >= stepsRequiredToCallback) {
+                        try{callback(code)}catch(error){}
+                    }
                 }
+                
             }), yt2009utils.get_used_token(req), false)
         }
 
@@ -1357,8 +1403,7 @@ module.exports = {
         banners
         =======
         */
-        if(flags.includes("banners")
-        && !flags.includes("default_color")) {
+        if(flags.includes("banners")) {
             let cId = data.id.replace("UC", "")
             let bannerSet = false;
             let bgSet = false;
@@ -1373,6 +1418,17 @@ module.exports = {
             let oldBannerUsed = false;
             let useBanner = true;
             if(!fs.existsSync(b)) {
+                if(oldbanner_unavail_cache.read().includes(cId)) {
+                    b = "/assets/" + data.banner
+                    if(!data.banner) {
+                        useBanner = false;
+                    }
+                    flags = flags.replace("banners", "")
+                    defaultBg()
+                    bannerSet = true;
+                    c()
+                    return;
+                }
                 fetch(banner, {
                     "headers": yt2009constants.headers
                 }).then(r => {
@@ -1385,6 +1441,7 @@ module.exports = {
                         if(!data.banner) {
                             useBanner = false;
                         }
+                        oldbanner_unavail_cache.write(cId)
                     }
     
                     if(useBanner && (
