@@ -94,6 +94,9 @@ app.get('/back/*', (req,res) => {
 app.get('/node_modules/*', (req,res) => {
     res.sendStatus(404)
 })
+app.get("/.git/*", (req, res) => {
+    res.sendStatus(404)
+})
 
 app.get('/', (req,res) => {
     if(!yt2009_utils.isAuthorized(req)) {

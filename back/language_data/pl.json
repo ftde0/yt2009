@@ -1,5 +1,10 @@
 {
     "relativeTimeRules": {
+        "seconds": {
+            "1": "sekunda",
+            "2-4": "sekundy",
+            "5+": "sekund"
+        },
         "minutes": {
             "1": "minuta",
             "2-4": "minuty",
