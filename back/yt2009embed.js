@@ -251,8 +251,7 @@ module.exports = function(req, res) {
     }
 
     // exp_hd=1
-    let videoQualities = require("./cache_dir/qualitylist_cache_manager")
-                         .read()[id] || []
+    let videoQualities = require("./yt2009html").get_cache_video(id).qualities || []
     if(((req.headers.cookie || "").includes("exp_hd")
     || req.query.exp_hd == 1)
     && (videoQualities.includes("720p")

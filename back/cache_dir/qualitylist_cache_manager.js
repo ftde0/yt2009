@@ -14,10 +14,3 @@ module.exports = {
         return cache;
     }
 }
-
-
-// update pliku cache co 1h
-let cacheWrite = setInterval(() => {
-    if(config.fallbackMode) return;
-    fs.writeFileSync(`${__dirname}/qualitylist_cache.json`, JSON.stringify(cache))
-}, 3600000)

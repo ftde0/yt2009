@@ -171,21 +171,13 @@ app.get("/watch", (req, res) => {
             - the video cannot be downloaded (paywalled, age restricted etc.)`)
             return;
         }
-        if(req.headers.cookie.includes("exp_hd")) {
-            yt2009.get_qualities(id, (qualities) => {
-                yt2009.applyWatchpageHtml(data, req, (code => {
-                    code = yt2009_languages.apply_lang_to_code(code, req)
-                    code = yt2009_doodles.applyDoodle(code)
-                    res.send(code)
-                }), qualities)
-            })
-        } else {
+        yt2009.get_qualities(id, (qualities) => {
             yt2009.applyWatchpageHtml(data, req, (code => {
                 code = yt2009_languages.apply_lang_to_code(code, req)
                 code = yt2009_doodles.applyDoodle(code)
                 res.send(code)
-            }), [])
-        }
+            }), qualities)
+        })
     }, req.headers["user-agent"],
         yt2009_utils.get_used_token(req),
         useFlash, 
@@ -612,6 +604,9 @@ app.get("/get_video_info", (req, res) => {
     req.query.video_id = req.query.video_id.replace("/mp4", "")
     yt2009.fetch_video_data(req.query.video_id, (data => {
         yt2009.get_qualities(req.query.video_id, (qualities => {
+            if((!qualities || qualities.length == 0) && data.qualities) {
+                qualities = data.qualities
+            }
             let fmt_list = ""
             let fmt_stream_map = ""
             let fmt_map = ""

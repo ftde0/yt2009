@@ -295,7 +295,6 @@ module.exports = {
                 }
 
                 // fetch comments
-
                 try {
                     let sections = videoData.contents.twoColumnWatchNextResults
                                     .results.results.contents
@@ -326,6 +325,15 @@ module.exports = {
                         callback(data)
                     }
                 }
+
+                // qualities
+                data.qualities = []
+                videoData.streamingData.adaptiveFormats.forEach(quality => {
+                    if(quality.qualityLabel
+                    && !data.qualities.includes(quality.qualityLabel)) {
+                        data.qualities.push(quality.qualityLabel)
+                    }
+                })
                 
                 // save mp4/ogv
 
@@ -400,6 +408,11 @@ module.exports = {
                                                 .split(";")[0]
         }
         catch(error) {}
+
+        // modern qualitylist
+        if(data.qualities) {
+            qualityList = data.qualities;
+        }
 
         // playlist
         let playlistId = req.query.list
@@ -2300,9 +2313,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
     "get_qualities": function(id, callback) {
         if(yt2009qualitycache.read()[id]) {
             callback(yt2009qualitycache.read()[id])
+        } else if(this.get_cache_video(id).qualities) {
+            callback(this.get_cache_video(id).qualities)
         } else {
             // clean fetch if we don't have cached data
-            this.innertube_get_data(id, (data) => {
+            /*.innertube_get_data(id, (data) => {
                 let qualityList = []
                 try {
                     data.streamingData.adaptiveFormats
@@ -2320,7 +2335,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     console.log(error)
                     callback([])
                 }
-            })
+            })*/
+            callback([])
         }
     },
 
