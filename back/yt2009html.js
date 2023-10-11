@@ -143,7 +143,7 @@ module.exports = {
 
                 let data = {}
                 try {
-                    data["title"] = videoData.videoDetails.title
+                    data.title = videoData.videoDetails.title
                 }
                 catch(error) {
                     callback(false)
@@ -156,13 +156,13 @@ module.exports = {
                 }
 
                 // basic data
-                data["description"] = videoData.videoDetails.shortDescription
-                data["viewCount"] = videoData.videoDetails.viewCount
-                data["author_name"] = videoData.videoDetails.author;
-                data["id"] = id;
-                data["author_url"] = ""
+                data.description = videoData.videoDetails.shortDescription
+                data.viewCount = videoData.videoDetails.viewCount
+                data.author_name = videoData.videoDetails.author;
+                data.id = id;
+                data.author_url = ""
                 try {
-                    data["author_url"] = videoData.contents
+                    data.author_url = videoData.contents
                                         .twoColumnWatchNextResults
                                         .results.results.contents[1]
                                         .videoSecondaryInfoRenderer.owner
@@ -170,7 +170,7 @@ module.exports = {
                                         .browseEndpoint.canonicalBaseUrl
                 }
                 catch(error) {
-                    data["author_url"] = "/channel/" + videoData.videoDetails.channelId
+                    data.author_url = "/channel/" + videoData.videoDetails.channelId
                 }
 
                 if(data.author_url.startsWith("/@")) {
@@ -191,38 +191,40 @@ module.exports = {
                                                     .browseEndpoint.browseId
                 }
 
+                data.author_id = videoData.videoDetails.channelId
+
                 // more basic data
-                data["author_img"] = ""
+                data.author_img = ""
                 try {
-                    data["author_img"] = videoData.contents
-                                        .twoColumnWatchNextResults
-                                        .results.results.contents[1]
-                                        .videoSecondaryInfoRenderer
-                                        .owner.videoOwnerRenderer
-                                        .thumbnail.thumbnails[1].url
+                    data.author_img = videoData.contents
+                                      .twoColumnWatchNextResults
+                                      .results.results.contents[1]
+                                      .videoSecondaryInfoRenderer
+                                      .owner.videoOwnerRenderer
+                                      .thumbnail.thumbnails[1].url
                 }
                 catch(error) {
-                    data["author_img"] = "default"
+                    data.author_img = "default"
                 }
-                data["upload"] = ""
+                data.upload = ""
                 try {
-                    data["upload"] = videoData.contents
-                                    .twoColumnWatchNextResults
-                                    .results.results.contents[0]
-                                    .videoPrimaryInfoRenderer.dateText
-                                    .simpleText
+                    data.upload = videoData.contents
+                                  .twoColumnWatchNextResults
+                                  .results.results.contents[0]
+                                  .videoPrimaryInfoRenderer.dateText
+                                  .simpleText
                 }
                 catch(error) {
-                    data["upload"] = videoData.microformat
-                                    .playerMicroformatRenderer.uploadDate
+                    data.upload = videoData.microformat
+                                  .playerMicroformatRenderer.uploadDate
                 }
-                data["tags"] = videoData.videoDetails.keywords || [];
-                data["related"] = []
-                data["length"] = parseInt(videoData.microformat
-                                        .playerMicroformatRenderer
-                                        .lengthSeconds)
-                data["category"] = videoData.microformat
-                                    .playerMicroformatRenderer.category
+                data.tags = videoData.videoDetails.keywords || [];
+                data.related = []
+                data.length = parseInt(videoData.microformat
+                                       .playerMicroformatRenderer
+                                       .lengthSeconds)
+                data.category = videoData.microformat
+                                .playerMicroformatRenderer.category
 
                 // "related" videos
 
@@ -309,7 +311,7 @@ module.exports = {
                                         .continuationCommand.token
                             this.request_continuation(token, id, "",
                             (comment_data) => {
-                                data["comments"] = comment_data
+                                data.comments = comment_data
                                 fetchesCompleted++;
                                 if(fetchesCompleted == 3) {
                                     callback(data)
@@ -319,7 +321,7 @@ module.exports = {
                     })
                 }
                 catch(error) {
-                    data["comments"] = []
+                    data.comments = []
                     fetchesCompleted++;
                     if(fetchesCompleted == 3) {
                         callback(data)
@@ -344,7 +346,7 @@ module.exports = {
                                 child_process.exec(
                                     yt2009templates.createFffmpegOgg(id),
                                     (error, stdout, stderr) => {
-                                        data["mp4"] = `/assets/${id}`
+                                        data.mp4 = `/assets/${id}`
                                         fetchesCompleted++;
                                         if(fetchesCompleted == 3) {
                                             callback(data)
@@ -353,9 +355,9 @@ module.exports = {
                                 )
                             } else {
                                 if((path || "").includes("googlevideo")) {
-                                    data["mp4"] = path;
+                                    data.mp4 = path;
                                 } else {
-                                    data["mp4"] = `/assets/${id}`
+                                    data.mp4 = `/assets/${id}`
                                 }
                                 fetchesCompleted++;
                                 if(fetchesCompleted == 3) {
@@ -374,7 +376,7 @@ module.exports = {
                     }))
                     
                 } else {
-                    data["mp4"] = `/assets/${id}`
+                    data.mp4 = `/assets/${id}`
                     fetchesCompleted++;
                     if(fetchesCompleted == 3) {
                         callback(data)
@@ -1898,13 +1900,20 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // channel banners
+        const yt2009channels = require("./yt2009channels")
         function defaultBanner() {
-            yt2009channelcache.getSmallBanner(data.author_url, (file => {
-                if(file && file !== "no") {
+            let channelUrl = data.author_id
+                           ? "/channel/" + data.author_id
+                           : data.author_url
+            yt2009channels.main({"path": channelUrl, 
+            "headers": {"cookie": ""},
+            "query": {"f": 0}}, 
+            {"send": function(data) {
+                if(data.banner) {
                     code = code.replace(
                         `<!--yt2009_bannercard-->`,
                         yt2009templates.watchBanner(
-                            data.author_url, "/assets/" + file
+                            channelUrl, "/assets/" + data.banner
                         )
                     )
                 }
@@ -1915,7 +1924,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     genRelay();
                     callback(code)
                 }
-            }))
+            }}, "", true)
         }
         if(flags.includes("old_banners")
         && data.author_url.includes("channel/UC")) {
@@ -2316,26 +2325,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         } else if(this.get_cache_video(id).qualities) {
             callback(this.get_cache_video(id).qualities)
         } else {
-            // clean fetch if we don't have cached data
-            /*.innertube_get_data(id, (data) => {
-                let qualityList = []
-                try {
-                    data.streamingData.adaptiveFormats
-                    .forEach(videoQuality => {
-                        if(videoQuality.qualityLabel
-                        && !qualityList.includes(videoQuality.qualityLabel)) {
-                            qualityList.push(videoQuality.qualityLabel)
-                        }
-                    })
-
-                    callback(qualityList)
-                    yt2009qualitycache.write(id, qualityList)
-                }
-                catch(error) {
-                    console.log(error)
-                    callback([])
-                }
-            })*/
             callback([])
         }
     },

@@ -81,5 +81,4 @@ let cacheWrite = setInterval(() => {
     fs.writeFileSync(`${__dirname}/channel_main_cache.json`, JSON.stringify(cacheList.mainCache))
     fs.writeFileSync(`${__dirname}/channel_friend_cache.json`, JSON.stringify(cacheList.friendCache))
     fs.writeFileSync(`${__dirname}/channel_playlist_cache.json`, JSON.stringify(cacheList.playlistCache))
-    fs.writeFileSync(`${__dirname}/channel_banner_cache.json`, JSON.stringify(cacheList.bannerCache))
 }, 3600000)
