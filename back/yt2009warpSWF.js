@@ -2,6 +2,7 @@ const yt2009main = require("./yt2009html")
 const yt2009search = require("./yt2009search")
 const yt2009wayback = require("./cache_dir/wayback_watchpage")
 const yt2009templates = require("./yt2009templates")
+const yt2009exports = require("./yt2009exports")
 const video_exists = require("./cache_dir/video_exists_cache_mgr")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const fs = require("fs")
@@ -145,6 +146,16 @@ module.exports = {
         ]
 
         // have flv?
+        if(!fs.existsSync(`../assets/${id}.flv`)
+        && yt2009exports.getStatus(id)) {
+            // mp4 downloading, wait and convert
+            yt2009exports.waitForStatusChange(id, () => {
+                convert_mp4_to_flv(id, () => {
+                    callback()
+                })
+            })
+            return;
+        }
         if(fs.existsSync(`../assets/${id}.flv`)) {
             callback()
         } else if(fs.existsSync(`../assets/${id}.mp4`)

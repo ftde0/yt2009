@@ -1,7 +1,11 @@
 const constants = require("./yt2009constants.json")
 let data = {
     "api_key": "",
-    "context": {}
+    "context": {},
+    "fileDownloadStatus": {}
+}
+let fileDownloadListeners = {
+
 }
 
 module.exports = {
@@ -11,6 +15,37 @@ module.exports = {
 
     "read": function() {
         return data;
+    },
+
+    "updateFileDownload": function(id, status) {
+        data.fileDownloadStatus[id] = status;
+        if(status == 2 && fileDownloadListeners[id]) {
+            fileDownloadListeners[id].forEach(l => {
+                l()
+            })
+            delete fileDownloadListeners[id]
+            delete data.fileDownloadStatus[id]
+        }
+    },
+
+    "getStatus": function(id) {
+        return data.fileDownloadStatus[id];
+    },
+
+    "waitForStatusChange": function(id, callback) {
+        if(!fileDownloadListeners[id]) {
+            fileDownloadListeners[id] = []
+        }
+        if(data.fileDownloadStatus[id] == 2) {
+            callback()
+            try {
+                delete fileDownloadListeners[id]
+                delete data.fileDownloadStatus[id]
+            }
+            catch(error) {}
+            return;
+        }
+        fileDownloadListeners[id].push(callback)
     }
 }
 

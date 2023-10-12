@@ -825,6 +825,8 @@ module.exports = {
     if(document.querySelector("video").readyState >= 3) {
         document.querySelector("video").play();
     }
+    showLoadingSprite()
+    document.querySelector("video").play()
 </script>`,
     "embedNoControlsFadeCode": `
     fadeControlsEnable = false;
@@ -832,7 +834,8 @@ module.exports = {
     s.innerHTML = "video:not(.showing-endscreen) {height: calc(100% - 25px) !important;}#watch-player-div {background: black !important;}"
     document.body.appendChild(s)`,
     "embedVideoSources": function(id) {
-        let mp4Path = `/assets/${id}.mp4`
+        //let mp4Path = `/assets/${id}.mp4`
+        let mp4Path = `/get_video?video_id=${id}/mp4`
         let ogvPath = `/assets/${id}.ogg`
         if(id.includes("googlevideo")) {
             mp4Path = id;

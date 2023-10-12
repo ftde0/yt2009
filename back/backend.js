@@ -29,6 +29,7 @@ const yt2009_inbox = require("./yt2009inbox")
 const yt2009_blazer = require("./yt2009mobileblazer")
 //const yt2009_leanback = require("./yt2009leanback")
 const yt2009_doodles = require("./yt2009doodles")
+const yt2009_exports = require("./yt2009exports")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -634,7 +635,7 @@ app.get("/get_video_info", (req, res) => {
             fmt_map += "5/0/7/0/0"
             fmt_stream_map += `5|http://${config.ip}:${
                 config.port
-            }/assets/${data.id}.mp4`
+            }/get_video?video_id=${data.id}/mp4`
             res.send(`status=ok
 length_seconds=1
 keywords=a
@@ -908,6 +909,13 @@ function checkBaseline(req, res) {
 app.get("/channel_fh264_getvideo", (req, res) => {
     if(checkBaseline(req, res)) return;
 
+    if(yt2009_exports.getStatus(req.query.v)) {
+        // wait for mp4 while it's downloading
+        yt2009_exports.waitForStatusChange(req.query.v, () => {
+            res.redirect("/assets/" + req.query.v + ".mp4")
+        })
+        return;
+    }
     if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
         yt2009_utils.saveMp4(req.query.v, (vid) => {
             let vidLink = vid.replace("../", "/")

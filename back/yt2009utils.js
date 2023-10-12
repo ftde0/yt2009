@@ -440,7 +440,10 @@ module.exports = {
                 "headers": constants.headers
             }).then(r => {
                 r.buffer().then(buffer => {
-                    fs.writeFileSync(`../assets/${fname}`, buffer)
+                    if(r.status !== 404) {
+                        fs.writeFileSync(`../assets/${fname}`, buffer)
+                    }
+                    
                 })
             })
         }

@@ -7,6 +7,7 @@ const videoExists = require("./cache_dir/video_exists_cache_mgr")
 const templates = require("./yt2009templates")
 const utils = require("./yt2009utils")
 const config = require("./config.json")
+const yt2009exports = require("./yt2009exports")
 
 let ip_request_count = {}
 
@@ -295,28 +296,25 @@ module.exports = function(req, res) {
         })
     }
     if(!fs.existsSync(`../assets/${id}.mp4`)) {
+        yt2009exports.updateFileDownload(id, 1)
         utils.saveMp4(id, (path) => {
-            setTimeout(function() {
-                if(waitForOgv) {
-                    child_process.exec(templates.createFffmpegOgg(id),
-                    (error, stdout, stderr) => {
-                        res.send(code.replace(
-                            "mp4_files",
-                            templates.embedVideoSources(id)
-                        ))
-                    })
-                } else {
-                    try {
-                        res.send(code.replace(
-                            "mp4_files",
-                            templates.embedVideoSources(id)
-                        ))
-                    }
-                    catch(error) {}
-                }
-                
-            }, 250)
+            yt2009exports.updateFileDownload(id, 2)
+            if(waitForOgv) {
+                child_process.exec(templates.createFffmpegOgg(id),
+                (error, stdout, stderr) => {
+                    res.send(code.replace(
+                        "mp4_files",
+                        templates.embedVideoSources(id)
+                    ))
+                })
+            }
         })
+        if(!waitForOgv) {
+            res.send(code.replace(
+                "mp4_files",
+                templates.embedVideoSources(id)
+            ))
+        }
     } else {
         res.send(code.replace(
             "mp4_files",

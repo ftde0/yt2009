@@ -16,6 +16,7 @@ const yt2009languages = require("./language_data/language_engine")
 const yt2009exports = require("./yt2009exports")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
+const userid = require("./cache_dir/userid_cache")
 
 const watchpage_code = fs.readFileSync("../watch.html").toString();
 const watchpage_feather = fs.readFileSync("../watch_feather.html").toString()
@@ -107,9 +108,12 @@ module.exports = {
             }
 
             if(!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload) {
+                yt2009exports.updateFileDownload(id, 1)
+                data.pMp4 = "/get_video?video_id=" + id + "/mp4"
                 yt2009utils.saveMp4(id, (path => {
-                    callback(v)
+                    yt2009exports.updateFileDownload(id, 2)
                 }))
+                callback(v)
             } else {
                 callback(v)
             }
@@ -192,6 +196,9 @@ module.exports = {
                 }
 
                 data.author_id = videoData.videoDetails.channelId
+                if(data.author_handle) {
+                    userid.write("/@" + data.author_handle, data.author_id)
+                }
 
                 // more basic data
                 data.author_img = ""
@@ -330,6 +337,9 @@ module.exports = {
 
                 // qualities
                 data.qualities = []
+                if(!videoData.streamingData.adaptiveFormats) {
+                    videoData.streamingData.adaptiveFormats = [{"qualityLabel": "360p"}]
+                }
                 videoData.streamingData.adaptiveFormats.forEach(quality => {
                     if(quality.qualityLabel
                     && !data.qualities.includes(quality.qualityLabel)) {
@@ -371,9 +381,19 @@ module.exports = {
                     }
 
                     // ytdl
-                    yt2009utils.saveMp4(id, (path => {
-                        on_mp4_save_finish(path)
-                    }))
+                    yt2009exports.updateFileDownload(id, 1)
+                    if(!waitForOgv) {
+                        data.pMp4 = "/get_video?video_id=" + id + "/mp4"
+                        yt2009utils.saveMp4(id, (path => {
+                            yt2009exports.updateFileDownload(id, 2)
+                        }))
+                        on_mp4_save_finish(`../assets/${id}`)
+                    } else {
+                        yt2009utils.saveMp4(id, (path => {
+                            on_mp4_save_finish(path)
+                        }))
+                    }
+                    
                     
                 } else {
                     data.mp4 = `/assets/${id}`
@@ -1094,9 +1114,19 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(!useFlash) {
             code = code.replace(
                 "mp4_files", 
-                `<source src="${data.mp4}.mp4" type="video/mp4"></source>
+                `<source src="${data.pMp4 || (data.mp4 + ".mp4")}" type="video/mp4"></source>
                 <source src="${data.mp4}.ogg" type="video/ogg"></source>`
             )
+            if(data.pMp4) {
+                code = code.replace(
+                    "//yt2009-pmp4",
+                    "showLoadingSprite()"
+                )
+                code = code.replace(
+                    `0:00 / 0:00`,
+                    `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
+                )
+            }
         }
         code = code.replace(
             "video_url",
