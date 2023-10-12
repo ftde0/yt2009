@@ -109,7 +109,6 @@ module.exports = {
 
             if(!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload) {
                 yt2009exports.updateFileDownload(id, 1)
-                data.pMp4 = "/get_video?video_id=" + id + "/mp4"
                 yt2009utils.saveMp4(id, (path => {
                     yt2009exports.updateFileDownload(id, 2)
                 }))
