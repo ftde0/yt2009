@@ -377,8 +377,18 @@ module.exports = {
     },
 
     
-    "genAbsoluteFakeDate": function() {
-        return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Math.floor(Math.random() * 12)] || "Feb"} ${Math.floor(Math.random() * 26) + 1}, 2009`
+    "genAbsoluteFakeDate": function(ogDate) {
+        if(ogDate) {
+            let year = ogDate.split(", ")[1]
+            return ogDate.replace(year, "2009")
+        }
+        let months = ["Jan", "Feb", "Mar",
+                      "Apr", "May", "Jun",
+                      "Jul", "Aug", "Sep", 
+                      "Oct", "Nov", "Dec"]
+        let month = months[Math.floor(Math.random() * 12)] || "Feb"
+        let day = Math.floor(Math.random() * 26) + 1
+        return `${month} ${day}, 2009`
     },
 
     

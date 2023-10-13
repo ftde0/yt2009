@@ -350,33 +350,29 @@ module.exports = {
 
                 if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload)) {
                     function on_mp4_save_finish(path) {
-                        setTimeout(function() {
-                            if(waitForOgv) {
-                                child_process.exec(
-                                    yt2009templates.createFffmpegOgg(id),
-                                    (error, stdout, stderr) => {
-                                        data.mp4 = `/assets/${id}`
-                                        fetchesCompleted++;
-                                        if(fetchesCompleted == 3) {
-                                            callback(data)
-                                        }  
-                                    }
-                                )
-                            } else {
-                                if((path || "").includes("googlevideo")) {
-                                    data.mp4 = path;
-                                } else {
+                        if(waitForOgv) {
+                            child_process.exec(
+                                yt2009templates.createFffmpegOgg(id),
+                                (error, stdout, stderr) => {
                                     data.mp4 = `/assets/${id}`
+                                    fetchesCompleted++;
+                                    if(fetchesCompleted >= 3) {
+                                        callback(data)
+                                    }  
                                 }
-                                fetchesCompleted++;
-                                if(fetchesCompleted == 3) {
-                                    callback(data)
-                                }
-                                cache.write(id, data)
-                                
+                            )
+                        } else {
+                            if((path || "").includes("googlevideo")) {
+                                data.mp4 = path;
+                            } else {
+                                data.mp4 = `/assets/${id}`
                             }
-                            
-                        }, 250)
+                            fetchesCompleted++;
+                            if(fetchesCompleted >= 3) {
+                                callback(data)
+                            }
+                            cache.write(id, data)
+                        }
                     }
 
                     // ytdl
@@ -912,10 +908,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let uploadDate = data.upload
         if(flags.includes("fake_upload_dateadapt")
         && new Date(uploadDate).getTime() > 1272664800000) {
-            uploadDate = yt2009utils.genAbsoluteFakeDate()
+            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
         } else if(flags.includes("fake_upload_date")
         && !flags.includes("fake_upload_dateadapt")) {
-            uploadDate = yt2009utils.genAbsoluteFakeDate()
+            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
         }
 
         uploadDate = uploadDate.replace("Streamed live on ", "")
@@ -1558,8 +1554,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     avgRating = avgRating.toString() + ".0"
                 }
                 code = code.replace(
-                    `<button class="yt2009-stars master-sprite ratingL ratingL-4.5" title="4.5"></button>`,
-                    `<button class="yt2009-stars master-sprite ratingL ratingL-${avgRating}" title="${avgRating}"></button>`
+                    yt2009templates.oneLineRating("4.5"),
+                    yt2009templates.oneLineRating(avgRating)
                 )
                 
                 if(rating == "0.0") {
@@ -1577,6 +1573,18 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
 
                 useRydRating = parseFloat(rating)
+
+                // fmode rating, more accurate to an actual page (when logged in)
+                if(useFlash) {
+                    code = code.replace(
+                        yt2009templates.oneLineRating(avgRating),
+                        yt2009templates.separatedRating(avgRating)
+                    )
+                    code = code.replace(
+                        `//yt2009-rating`,
+                        `var fullRating = ${avgRating};`
+                    )
+                }
 
                 callbacksMade++;
                 if(requiredCallbacks == callbacksMade) {
@@ -1603,6 +1611,17 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `<button class="yt2009-stars master-sprite ratingL ratingL-4.5" title="4.5"></button>`,
                 `<button class="yt2009-stars master-sprite ratingL ratingL-${avgRating}" title="${avgRating}"></button>`
             )
+            // fmode rating, more accurate to an actual page (when logged in)
+            if(useFlash) {
+                code = code.replace(
+                    yt2009templates.oneLineRating(avgRating),
+                    yt2009templates.separatedRating(avgRating)
+                )
+                code = code.replace(
+                    `//yt2009-rating`,
+                    `var fullRating = ${avgRating};`
+                )
+            }
         }
 
         // sharing

@@ -572,7 +572,64 @@ function toggleCommentsExpander(element) {
     }
 }
 
+// star ratings
+var ratingText = document.getElementById("defaultRatingMessage")
+                 .getElementsByTagName("span")[0]
+var defaultRatingText = ratingText.innerHTML
+function showStars(rating, source) {
+    if(document.cookie.indexOf("login_simulate") == -1) return;
+    rating = parseFloat(rating)
+    var starIndex = 1;
+    while(starIndex !== 6) {
+        var starType = "empty"
+        if(rating - starIndex >= 1
+        || rating - starIndex == 0
+        || rating - starIndex == 0.5) {
+            starType = "full"
+        } else if(rating - starIndex == -0.5) {
+            starType = "half"
+        }
+        var r = "master-sprite rating icn_star_" + starType + "_large"
+        document.getElementById("star__" + starIndex).className = r
+        starIndex++
+    }
 
+    if(source !== "unhover") {
+        // rating text
+        var ratingTexts = [
+            "Poor",
+            "Nothing special",
+            "Worth watching",
+            "Pretty cool",
+            "Awesome!"
+        ]
+        ratingText.innerHTML = ratingTexts[rating - 1]
+    } else {
+        ratingText.innerHTML = defaultRatingText
+    }
+}
+
+function clearStars() {
+    showStars(fullRating, "unhover")
+}
+
+function rateVid(rating) {
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("POST", "/video_rate")
+    r.setRequestHeader("rating", rating)
+    r.setRequestHeader("source", location.href)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            ratingText.innerHTML = "Thanks for rating!"
+        }
+    }
+}
 
 /*
 =======

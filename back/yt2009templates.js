@@ -1478,5 +1478,27 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             `
             </td>
         </tr>
-    </tbody>`]
+    </tbody>`],
+    "oneLineRating": function(rating) {
+        return `<button class="yt2009-stars master-sprite ratingL ratingL-${rating}" title="${rating}"></button>`
+    },
+    "separatedRating": function(rating) {
+        rating = parseFloat(rating)
+        let starIndex = 1;
+        let fullHTML = ""
+        while(starIndex !== 6) {
+            let starType = "empty"
+            if(rating - starIndex >= 1
+            || rating - starIndex == 0
+            || rating - starIndex == 0.5) {
+                starType = "full"
+            } else if(rating - starIndex == -0.5) {
+                starType = "half"
+            }
+            fullHTML += `<a href="#" onclick="rateVid(${starIndex}); return false;" onmouseover="showStars(${starIndex});" onmouseout="clearStars();"><button id="star__${starIndex}" class="master-sprite rating icn_star_${starType}_large" title=""></button></a>`
+            starIndex++
+        }
+
+        return fullHTML
+    }
 }
