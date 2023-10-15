@@ -291,16 +291,20 @@ module.exports = {
                         r.buffer().then(buffer => {
                             fs.writeFileSync(`../assets/${fname}.png`, buffer)
                             fetchesCompleted++;
+                            if(fetchesCompleted >= 3) {
+                                callback(data)
+                            }
+                            
                         })
                     })
                 } else {
                     fetchesCompleted++;
+                    if(fetchesCompleted >= 3) {
+                        callback(data)
+                    }
                 }
                 data.author_img = `/assets/${fname}.png`
             
-                if(fetchesCompleted == 3) {
-                    callback(data)
-                }
 
                 // fetch comments
                 try {
@@ -319,7 +323,7 @@ module.exports = {
                             (comment_data) => {
                                 data.comments = comment_data
                                 fetchesCompleted++;
-                                if(fetchesCompleted == 3) {
+                                if(fetchesCompleted >= 3) {
                                     callback(data)
                                 }
                             })
@@ -329,7 +333,7 @@ module.exports = {
                 catch(error) {
                     data.comments = []
                     fetchesCompleted++;
-                    if(fetchesCompleted == 3) {
+                    if(fetchesCompleted >= 3) {
                         callback(data)
                     }
                 }
@@ -393,7 +397,7 @@ module.exports = {
                 } else {
                     data.mp4 = `/assets/${id}`
                     fetchesCompleted++;
-                    if(fetchesCompleted == 3) {
+                    if(fetchesCompleted >= 3) {
                         callback(data)
                     }
                     cache.write(id, data);
@@ -1961,7 +1965,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     code = code.replace(
                         `<!--yt2009_bannercard-->`,
                         yt2009templates.watchBanner(
-                            channelUrl, "/assets/" + data.banner
+                            channelUrl, "/assets/" + (data.newBanner || data.banner)
                         )
                     )
                 }
@@ -1972,7 +1976,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     genRelay();
                     callback(code)
                 }
-            }}, "", true)
+            }}, "source:watch", true)
         }
         if(flags.includes("old_banners")
         && data.author_url.includes("channel/UC")) {

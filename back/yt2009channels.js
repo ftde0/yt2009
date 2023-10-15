@@ -365,15 +365,39 @@ module.exports = {
             // get the dominant color from the banner
             try {
                 let banner = r.header.c4TabbedHeaderRenderer.banner.thumbnails[0].url
-                let banner_fname = banner.split("/")[banner.split("/").length - 1]
-                data["banner"] = banner_fname + ".png"
-                yt2009utils.get_dominant_color(banner, (color) => {
-                    data["dominant_color"] = color;
+                let cId = data.id.replace("UC", "")
+                data.banner = cId + "_banner.jpg"
+                data.newBanner = cId + "_uniq_banner.jpg"
+                data.bannerUrl = banner
+
+                if(flags.includes("source:watch")) {
+                    
+                    if(!data.bannerUrl) {
+                        fs.writeFileSync(`../assets/${data.newBanner}`, "")
+                        additionalFetchesCompleted++;
+                        if(additionalFetchesCompleted >= fetchesRequired) {
+                            callback(data)
+                        }
+                        return;
+                    }
+                    fetch(banner, {
+                        "headers": yt2009constants.headers
+                    }).then(r => {
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(`../assets/${data.newBanner}`, buffer)
+                            additionalFetchesCompleted++;
+                            if(additionalFetchesCompleted >= fetchesRequired) {
+                                callback(data)
+                            }
+                        })
+                    })
+                } else {
                     additionalFetchesCompleted++;
                     if(additionalFetchesCompleted >= fetchesRequired) {
                         callback(data)
                     }
-                })
+                }
+                
             }
             catch(error) {
                 data["dominant_color"] = [180, 180, 180]
@@ -486,7 +510,7 @@ module.exports = {
     "applyHTML": function(data, flags, callback, req, flashMode) {
         let env = config.env
         let code = channel_code;
-        let stepsRequiredToCallback = 0;
+        let stepsRequiredToCallback = 1;
         let requireMoreFetch = false;
         let videosSource = data.videos;
         let stepsTaken = 0;
@@ -510,10 +534,6 @@ module.exports = {
             }
 
             stepsRequiredToCallback++
-        }
-
-        if(flags.includes("banners")) {
-            stepsRequiredToCallback++;
         }
         
         /*
@@ -597,7 +617,7 @@ module.exports = {
                 code = code.split("yt2009_text_color").join("white")
             }
         }
-        if(!flags.includes("banners")) {defaultBg()}
+        //if(!flags.includes("banners")) {defaultBg()}
         
         // use_ryd clientside
         if(flags.includes("use_ryd")) {
@@ -1403,177 +1423,160 @@ module.exports = {
         banners
         =======
         */
-        if(flags.includes("banners")) {
-            let cId = data.id.replace("UC", "")
-            let bannerSet = false;
-            let bgSet = false;
-            let banner = `https://i3.ytimg.com/u/${cId}/profile_header.jpg`
-            let oBg = overrideBgs[cId]
-            let bg = `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`
-            let bgfile = __dirname + "/../assets/" + cId + "_background.jpg"
-            let oldBgUsed = false;
+        let cId = data.id.replace("UC", "")
+        let oldBannerUsed = false;
 
-            // top banner
-            let b = __dirname + "/../assets/" + cId + "_banner.jpg"
-            let oldBannerUsed = false;
-            let useBanner = true;
-            if(!fs.existsSync(b)) {
-                if(oldbanner_unavail_cache.read().includes(cId)) {
-                    b = "/assets/" + data.banner
-                    if(!data.banner) {
-                        useBanner = false;
-                    }
-                    flags = flags.replace("banners", "")
-                    defaultBg()
-                    bannerSet = true;
-                    c()
-                    return;
-                }
-                fetch(banner, {
+        let banner = `https://i3.ytimg.com/u/${cId}/profile_header.jpg`
+        let oBg = overrideBgs[cId]
+        let bg = `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`
+        let bgfile = __dirname + "/../assets/" + cId + "_background.jpg"
+
+        // channel background
+        function getOldBg(source) {
+            let css = `#channel-body {
+                background-image: url("/assets/${cId}_background.jpg")
+            }
+            `
+            if(!oldBannerUsed && source == "404") {
+                c();
+                return;
+            }
+            // download old background if used
+            if(!fs.existsSync(bgfile)) {
+                fetch(bg, {
                     "headers": yt2009constants.headers
                 }).then(r => {
-                    let b = ""
                     if(r.status !== 404) {
-                        b = yt2009utils.saveBanner(banner)
-                        oldBannerUsed = true;
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(
+                                `../assets/${cId}_background.jpg`,
+                                buffer
+                            )
+                            code = code.replace(`/*yt2009_custom_bg*/`, css)
+                            oldBgUsed = true;
+                            c()
+                        })
                     } else {
-                        b = "/assets/" + data.banner
-                        if(!data.banner) {
-                            useBanner = false;
-                        }
-                        oldbanner_unavail_cache.write(cId)
+                        fs.writeFileSync(bgfile, "")
+                        c()
                     }
-    
-                    if(useBanner && (
-                        !oBg || oBg.showHeader || (oBg && !oBg.showHeader)
-                    )) {
-                        code = code.replace(
-                            `<!--yt2009_banner-->`,
-                            templates.banner(b)
-                        )
-                    } else {
-                        flags = flags.replace("banners", "")
-                        defaultBg()
-                    }
-    
-                    bannerSet = true;
-                    c()
                 })
+            } else if(fs.existsSync(bgfile) && fs.statSync(bgfile).size > 5) {
+                // use downloaded background
+                code = code.replace(`/*yt2009_custom_bg*/`, css)
+                oldBgUsed = true;
+                c()
             } else {
-                if(!oBg || oBg.showHeader || (oBg && !oBg.showHeader)) {
-                    code = code.replace(
-                        `<!--yt2009_banner-->`,
-                        templates.banner(`/assets/${cId}_banner.jpg`)
-                    )
-                }
-                bannerSet = true;
-                oldBannerUsed = true;
+                // just callback
                 c()
             }
+        }
 
-            // background
-            function getOldBg() {
-                let css = `#channel-body {
-                    background-image: url("/assets/${cId}_background.jpg")
-                }
-                `
-                if(!oldBannerUsed) {
-                    bgSet = true;
-                    c();
-                    return;
-                }
-                if(!fs.existsSync(bgfile)) {
-                    fetch(bg, {
-                        "headers": yt2009constants.headers
-                    }).then(r => {
-                        b = yt2009utils.saveBanner(bg, true)
-                        if(r.status !== 404) {
-                            code = code.replace(`/*yt2009_custom_bg*/`, css)
-                            oldBgUsed = true
-                        }
-                        bgSet = true
-                        c()
+        // top banner
+        let b = __dirname + "/../assets/" + cId + "_banner.jpg"
+        if(!fs.existsSync(b)) {
+            // try to get old top banner
+            fetch(banner, {
+                "headers": yt2009constants.headers
+            }).then(r => {
+                if(r.status !== 404) {
+                    // old banner exists, save
+                    r.buffer().then(buffer => {
+                        fs.writeFileSync(`../assets/${data.banner}`, buffer)
+                        code = code.replace(
+                            `<!--yt2009_banner-->`,
+                            templates.banner(`/assets/${data.banner}`)
+                        )
+                        oldBannerUsed = true;
+                        getOldBg()
                     })
                 } else {
-                    code = code.replace(`/*yt2009_custom_bg*/`, css)
-                    bgSet = true
-                    oldBgUsed = true;
-                    c()
+                    // doesn't exist, download current
+                    downCurrent()
                 }
-            }
+            })
 
-            // callback
-            function ac() {
-                stepsTaken++
-                if(stepsRequiredToCallback <= stepsTaken) {
-                    try{callback(code)}catch(error){}
-                }
-            }
-            function c() {
-                if(bannerSet && !bgSet) {
+            // failed :( get current banner
+            function downCurrent() {
+                if(!data.bannerUrl) {
+                    fs.writeFileSync(`../assets/${cId}_banner.jpg`, "")
                     getOldBg()
                     return;
                 }
-                if(bannerSet && bgSet) {
-                    // get dominant color of banner and set as bg
-                    let fname = oldBannerUsed
-                                ? `${__dirname}/../assets/${cId}_banner.jpg`
-                                : `${__dirname}/../assets/${data.banner}`
-                    if(oldBgUsed) {
-                        // wait for file
-                        let x = setInterval(function() {
-                            if(fs.existsSync(fname)) {
-                                fname = bgfile;
-                                applyBanner()
-                                clearInterval(x)
-                            }
-                        }, 250)
-                        return;
+                fetch(data.bannerUrl, {
+                    "headers": yt2009constants.headers
+                }).then(r => {
+                    r.buffer().then(buffer => {
+                        fs.writeFileSync(`../assets/${data.banner}`, buffer)
+                        code = code.replace(
+                            `<!--yt2009_banner-->`,
+                            templates.banner(`/assets/${data.banner}`)
+                        )
+                        getOldBg("404")
+                    })
+                })
+            }
+        } else {
+            if(fs.statSync(b).size > 5
+            && (!oBg || (oBg && !oBg.hideHeader))) {
+                code = code.replace(
+                    `<!--yt2009_banner-->`,
+                    templates.banner(`/assets/${cId}_banner.jpg`)
+                )
+            }
+            getOldBg()
+        }
+        
+        // callback
+        function ac() {
+            stepsTaken++
+            if(stepsRequiredToCallback <= stepsTaken) {
+                try{callback(code)}catch(error){}
+            }
+        }
+        function c() {
+            // get dominant color of banner and set as bg
+            let fname = `${__dirname}/../assets/${cId}_banner.jpg`
+            function applyBanner() {
+                dominant_color(fname, (color) => {
+                    code = code.split(`yt2009_main_bg`).join(
+                        oBg && oBg.primaryBg
+                        ? oBg.primaryBg : yt2009utils.createRgb(color)
+                    )
+                    let brighterBg = [
+                        color[0] + 10, color[1] + 10, color[2] + 10
+                    ]
+                    code = code.split(`yt2009_darker_bg`).join(
+                        oBg && oBg.secondaryBg
+                        ? oBg.secondaryBg : yt2009utils.createRgb(brighterBg)
+                    )
+                    if(brighterBg[0] + brighterBg[1] >= 340
+                    || (oBg && oBg.blackText)) {
+                        code = code.split("yt2009_text_color").join("black")
+                        code = code.split("yt2009_black").join("icon_black")
+                    } else {
+                        code = code.split("yt2009_text_color").join("white")
                     }
-                    function applyBanner() {
-                        dominant_color(fname, (color) => {
-                            code = code.split(`yt2009_main_bg`).join(
-                                oBg && oBg.primaryBg
-                                ? oBg.primaryBg : yt2009utils.createRgb(color)
-                            )
-                            let brighterBg = [
-                                color[0] + 10, color[1] + 10, color[2] + 10
-                            ]
-                            code = code.split(`yt2009_darker_bg`).join(
-                                oBg && oBg.secondaryBg
-                                ? oBg.secondaryBg : yt2009utils.createRgb(brighterBg)
-                            )
-                            if(brighterBg[0] + brighterBg[1] >= 340
-                            || (oBg && oBg.blackText)) {
-                                code = code.split("yt2009_text_color").join("black")
-                                code = code.split("yt2009_black").join("icon_black")
-                            } else {
-                                code = code.split("yt2009_text_color").join("white")
-                            }
-    
-    
-                            // callback
-                            ac()
-                        }, 32, true)
-                    }
-                    if((oldBannerUsed && !fs.existsSync(fname)
-                    || !oldBannerUsed && !fs.existsSync(fname))) {
-                        // wait for file
-                        let x = setInterval(function() {
-                            if(fs.existsSync(fname)) {
-                                applyBanner()
-                                clearInterval(x)
-                            }
-                        }, 250)
-                    } else if(
-                        (oldBannerUsed && fs.existsSync(fname))
-                    ||  (!oldBannerUsed && fs.existsSync(fname))) {
-                        applyBanner()
-                    }
-                    if(!useBanner) {
-                        ac()
-                    }
-                }
+
+
+                    // callback
+                    ac()
+                }, 32, true)
+            }
+            if(fs.statSync(fname).size < 5) {
+                // banner file doesn't exist, apply default colors
+                code = code.split(`yt2009_main_bg`).join(
+                    yt2009utils.createRgb([200, 200, 200])
+                )
+                code = code.split(`yt2009_darker_bg`).join(
+                    yt2009utils.createRgb([135, 135, 135])
+                )
+                code = code.split("yt2009_text_color").join("black")
+                code = code.split("yt2009_black").join("icon_black")
+                ac()
+            } else {
+                // exists!!
+                applyBanner()
             }
         }
 

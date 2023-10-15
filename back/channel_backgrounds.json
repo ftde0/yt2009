@@ -4,7 +4,7 @@
         "primaryBg":"#CCCCCC",
         "blackText":true,
         "secondaryBg":"#666666",
-        "showHeader":false,
+        "hideHeader":true,
         "showBg":true
     },
     "Lat8CECTXsvUTsclmDdFGw": {
@@ -14,6 +14,12 @@
         "imageId": "105"
     },
     "ljCD9VDAO7TWUCyb69SL-Q": {
+        "imageId": "102"
+    },
+    "WlUbUAlopX1P16J1KZYDsw": {
+        "imageId": "149"
+    },
+    "ZU9T1ceaOgwfLRq7OKFU4Q": {
         "imageId": "102"
     }
 }
