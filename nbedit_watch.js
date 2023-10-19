@@ -1173,3 +1173,45 @@ function relayPlaylistAdd(playlistId) {
         
     }, false)
 }
+
+/*
+======
+custom comment ratings
+======
+*/
+function sendCmtRating(commentId, rating) {
+    var c = document.getElementById("comment-" + commentId)
+    var thumbsUp = c.querySelector("[class*=\"watch-comment-up\"]")
+    var thumbsDown = c.querySelector("[class*=\"watch-comment-down\"]")
+    var initialRating = rating;
+    var r = new XMLHttpRequest();
+    r.open("POST", "/comment_rate")
+    r.setRequestHeader("rating", rating)
+    r.setRequestHeader("source", location.href)
+    r.setRequestHeader("comment", commentId)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        if(r.responseText.indexOf("rating:") == -1) return;
+        // new rating sent - successful response
+        var rating = parseInt(r.responseText.replace("rating:", ""))
+        var color = "green"
+        if(rating == 0) {color = "gray"}
+        if(rating < 0) {color = "red"}
+        if(rating > 0) {
+            rating = "+" + rating.toString()
+        }
+        c.querySelector(".watch-comment-score").innerHTML = rating
+
+        var scoreClass = "watch-comment-score watch-comment-" + color
+        c.querySelector(".watch-comment-score").className = scoreClass
+
+        // mark the button as hovered
+        if(initialRating == "like") {
+            thumbsUp.className = "master-sprite watch-comment-up-on"
+            thumbsDown.className = "master-sprite watch-comment-down-hover"
+        } else {
+            thumbsUp.className = "master-sprite watch-comment-up-hover"
+            thumbsDown.className = "master-sprite watch-comment-down-on"
+        }
+    }, false)
+}

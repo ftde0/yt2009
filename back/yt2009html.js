@@ -30,6 +30,10 @@ let videos_page = []
 let continuations_cache = {}
 let comment_page_cache = {}
 let saved_related_videos = {}
+let custom_comments = {}
+if(fs.existsSync("./cache_dir/comments.json")) {
+    custom_comments = require("./cache_dir/comments.json")
+}
 
 module.exports = {
     "innertube_get_data": function(id, callback) {
@@ -496,6 +500,54 @@ module.exports = {
         }
 
         let uploadJS = new Date(data.upload)
+
+        
+        // login_simulate comments
+        if(req.headers.cookie.includes("login_simulate")
+        && !req.headers.cookie.includes("relay_key")) {
+            code = code.replace(
+                `<!--yt2009_relay_comment_form-->`,
+                yt2009templates.videoCommentPost(false, null, data.id)
+            )
+        }
+
+        if(custom_comments[data.id]) {
+            let commentsHTML = ""
+            custom_comments[data.id].forEach(comment => {
+                let commentTime = yt2009utils.unixToRelative(comment.time)
+                commentTime = yt2009utils.relativeTimeCreate(
+                    commentTime, yt2009languages.get_language(req)
+                )
+                let commentHTML = yt2009templates.videoComment(
+                    "#", comment.author, commentTime,
+                    comment.text, flags, true, comment.rating,
+                    true, comment.id
+                )
+
+                // get liked/disliked status by user
+                let token = yt2009utils.get_used_token(req)
+                if(token == "") {
+                    token = "dev"
+                }
+                if(comment.ratingSources[token] == 1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-up-hover",
+                        "watch-comment-up-on"
+                    )
+                } else if(comment.ratingSources[token] == -1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-down-hover",
+                        "watch-comment-down-on"
+                    )
+                }
+
+                commentsHTML += commentHTML
+            })
+
+            code = code.replace(
+                `<!--yt2009_custom_comments-->`, commentsHTML
+            )
+        }
 
         // wayback_features
         if(flags.includes("wayback_features") &&
@@ -2054,6 +2106,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 code = code.replace(
                     `<!--yt2009_relay_comment_form-->`,
                     yt2009templates.videoCommentPost(
+                        true,
                         "http://127.0.0.1:" + relayPort,
                         data.id,
                         relayKey
@@ -2427,5 +2480,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(videos.length == 0) {
             callback();
         }
+    },
+
+    "receive_update_custom_comments": function(comments) {
+        custom_comments = comments;
     }
 }

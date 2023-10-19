@@ -2163,8 +2163,136 @@ app.get("/flags", (req, res) => {
     res.redirect("/flags_main.htm")
 })
 
+
+/*
+======
+yt2009 comments
+======
+*/
+app.post("/comment_post", (req, res) => {
+    // preconditions
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401);
+        return;
+    }
+    if(!req.headers.source
+    || !req.body
+    || !req.headers.cookie.includes("login_simulate")) {
+        res.sendStatus(400)
+        return;
+    }
+
+    // parse request
+    let body = {}
+    if(!req.body.toString().startsWith("{")) {
+        body = {"comment": req.body.toString()}
+    } else {
+        body = JSON.parse(req.body.toString())
+    }
+    body.video_id = req.headers.source.split("v=")[1]
+                    .split("&")[0].split("#")[0]
+    if(!fs.existsSync("./cache_dir/comments.json")) {
+        fs.writeFileSync("./cache_dir/comments.json", "{}")
+    }
+    let comments = JSON.parse(
+        fs.readFileSync("./cache_dir/comments.json").toString()
+    )
+    if(!comments[body.video_id]) {
+        comments[body.video_id] = []
+    }
+
+    // write comment
+    let author = req.headers.cookie
+                 .split("login_simulate")[1]
+                 .split(":")[0].split(";")[0]
+    let safeAuthor = yt2009_utils.xss(author)
+    let safeComment = yt2009_utils.xss(body.comment)
+    let commentId = Math.floor(Math.random() * 110372949)
+
+    comments[body.video_id].push({
+        "author": safeAuthor,
+        "text": safeComment,
+        "time": Date.now(),
+        "token": yt2009_utils.get_used_token(req),
+        "id": commentId,
+        "rating": 0,
+        "ratingSources": {}
+    })
+
+    res.send(yt2009_languages.apply_lang_to_code(
+        yt2009_templates.videoComment(
+            "#", safeAuthor, "1 second ago",
+            safeComment, "login_simulate" + safeAuthor, true, "0",
+            true, commentId
+        ), req)
+    )
+
+    fs.writeFileSync("./cache_dir/comments.json", JSON.stringify(comments))
+    yt2009.receive_update_custom_comments(comments)
+})
+
+app.post("/comment_rate", (req, res) => {
+    // preconditions
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401);
+        return;
+    }
+    if(!req.headers.source
+    || !req.headers.rating
+    || (req.headers.rating !== "like" && req.headers.rating !== "dislike")
+    || !req.headers.comment) {
+        res.sendStatus(400)
+        return;
+    }
+
+    let videoId = req.headers.source.split("v=")[1]
+                  .split("&")[0].split("#")[0]
+
+    // find the comment
+    let commentObject = undefined;
+    let comments = JSON.parse(
+        fs.readFileSync("./cache_dir/comments.json").toString()
+    )
+    if(!comments[videoId]) {res.sendStatus(400);return;}
+
+    comments[videoId].forEach(comment => {
+        if(comment.id == req.headers.comment) {
+            commentObject = comment;
+        }
+    })
+    if(!commentObject) {res.sendStatus(400);return;}
+
+    // add rating
+    let token = yt2009_utils.get_used_token(req)
+    if(token == "") {
+        token = "dev"
+    }
+    if(commentObject.ratingSources[token]) {
+        let r = commentObject.ratingSources[token]
+        if(r == 1) {
+            commentObject.rating -= 1
+        } else {
+            commentObject.rating += 1
+        }
+        delete commentObject.ratingSources[token];
+    }
+    if(req.headers.rating == "like") {
+        commentObject.rating += 1
+        commentObject.ratingSources[token] = 1
+    } else {
+        commentObject.rating -= 1
+        commentObject.ratingSources[token] = -1
+    }
+    res.send("rating:" + commentObject.rating)
+
+    // save comments with new rating
+    fs.writeFileSync("./cache_dir/comments.json", JSON.stringify(comments))
+    yt2009.receive_update_custom_comments(comments)
+})
+
 /*
 pizdec
 jp2gmd
 mleczsus :*
+Stawik
 */

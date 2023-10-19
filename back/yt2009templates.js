@@ -8,7 +8,7 @@ const config = require("./config.json")
 const langs = require("./language_data/language_engine")
 
 module.exports = {
-    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes) {
+    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes, customComment, id) {
         if(commentTime.includes("in playlist")) {
             commentTime = commentTime.split("in playlist")[0]
         }
@@ -21,7 +21,9 @@ module.exports = {
             likeColor = "red"
             likePrefix = "-"
         }
-        return `<div class="watch-comment-entry">
+        let dislikeCode = `onclick="sendCmtRating('${id}', 'dislike');return false;"`
+        let likeCode = `onclick="sendCmtRating('${id}', 'like');return false;"`
+        return `<div class="watch-comment-entry" ${id ? `id="comment-${id}"` : ""}>
             <div class="watch-comment-head">
                 <div class="watch-comment-info">
                     <a class="watch-comment-auth" href="${authorUrl}" rel="nofollow">${authorName}</a>
@@ -29,8 +31,8 @@ module.exports = {
                 </div>
                 <div class="watch-comment-voting">
                     <span class="watch-comment-score watch-comment-${likeColor}">${likePrefix}${likes || 0}</span>
-                    <a href="#"><button class="master-sprite watch-comment-down${flags.includes("login_simulate") ? "-hover" : ""}" title="Poor comment"></button></a>
-                    <a href="#"><button class="master-sprite watch-comment-up${flags.includes("login_simulate") ? "-hover" : ""}" title="Good comment"></button></a>
+                    <a href="#" ${customComment && flags.includes("login_simulate") ? dislikeCode : ""}><button class="master-sprite watch-comment-down${flags.includes("login_simulate") ? "-hover" : ""}" title="Poor comment"></button></a>
+                    <a href="#" ${customComment && flags.includes("login_simulate") ? likeCode : ""}><button class="master-sprite watch-comment-up${flags.includes("login_simulate") ? "-hover" : ""}" title="Good comment"></button></a>
                     <span class="watch-comment-msg"></span>
                 </div>
                 <span class="watch-comment-spam-bug">Marked as spam</span>
@@ -394,7 +396,7 @@ module.exports = {
             </div>
         </div>`
     },
-    "videoCommentPost": function(relay_url, id, relay_key) {
+    "videoCommentPost": function(useRelay, relay_url, id, relay_key) {
         return `
                         <div id="watch-comment-post">
                             <div class="floatR hid">
@@ -405,15 +407,15 @@ module.exports = {
                         <div>
                             <div style="float:left;width:650px;">
                                 <div id="div_main_comment" style="float:left;" class="">
-                                    <form name="comment_formmain_comment" id="comment_formmain_comment" onsubmit="return false;" method="post" action="${relay_url}/comment_post">
-                                        <input type="hidden" name="relay_key" value="${relay_key}">
-                                        <input type="hidden" name="video_id" value="${id}">
+                                    <form name="comment_formmain_comment" id="comment_formmain_comment" onsubmit="return false;" method="post" action="${useRelay ? relay_url : ""}/comment_post">
+                                        ${useRelay ? `<input type="hidden" name="relay_key" value="${relay_key}">` : ""}
+                                        <input type="hidden" name="video_id" value="${id}" id="comment_textarea_video_id">
                                         <input type="hidden" name="form_id" value="comment_formmain_comment">
                                         <input type="hidden" name="reply_parent_id" value="">
-                                        <textarea id="comment_textarea_main_comment" name="comment" class="comments-textarea" cols="46" rows="5" maxchars="500" oninput="updateCharacterCount();"></textarea>
+                                        <textarea id="comment_textarea_main_comment" name="comment" class="comments-textarea" cols="46" rows="5" maxchars="500" oninput="updateCharacterCount();" onkeypress="updateCharacterCount();"></textarea>
                                         <br>
                                         <div class="watch-comment-reply-form-actions">
-                                            <input type="button" name="add_comment_button" value="Post Comment" onclick="commentSend()">
+                                            <input type="button" name="add_comment_button" value="Post Comment" onclick="commentSend()" id="comment_add_btn">
                                             <span id="maxCharLabelmain_comment">Remaining character count: 500</span>
                                         </div>
                                     </form>

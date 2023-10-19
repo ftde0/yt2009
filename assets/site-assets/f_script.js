@@ -631,6 +631,79 @@ function rateVid(rating) {
     }
 }
 
+// watchpage: commenting
+function updateCharacterCount() {
+    var inputBox = document.getElementById("comment_textarea_main_comment")
+    var charsText = document.getElementById("maxCharLabelmain_comment")
+    var charsLeft = 500 - inputBox.value.length
+    charsText.innerHTML = "Remaining character count: " + charsLeft
+    if(charsLeft < 0) {
+        charsText.innerHTML = "Number of characters over the limit: " + Math.abs(charsLeft)
+    }
+}
+
+
+function commentSend() {
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("POST", document.getElementById("comment_formmain_comment")
+                   .getAttribute("action"))
+    r.setRequestHeader("source", location.href)
+    r.send(document.getElementById("comment_textarea_main_comment").value)
+    var btn = document.getElementById("comment_add_btn")
+    btn.setAttribute("disabled", "")
+    btn.setAttribute("value", "Adding comment...")
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            btn.setAttribute("value", "Comment Posted!")
+            $(".comments-container").innerHTML += r.responseText;
+        }
+    }
+}
+
+function sendCmtRating(commentId, rating) {
+    var c = document.getElementById("comment-" + commentId)
+    var thumbsUp = c.getElementsByTagName("button")[1]
+    var thumbsDown = c.getElementsByTagName("button")[0]
+    var commentScore = c.getElementsByTagName("span")[1]
+    var initialRating = rating;
+    var r = new XMLHttpRequest();
+    r.open("POST", "/comment_rate")
+    r.setRequestHeader("rating", rating)
+    r.setRequestHeader("source", location.href)
+    r.setRequestHeader("comment", commentId)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)
+        && (r.responseText.indexOf("rating:") !== -1)) {
+            var rating = parseInt(r.responseText.replace("rating:", ""))
+            var color = "green"
+            if(rating == 0) {color = "gray"}
+            if(rating < 0) {color = "red"}
+            if(rating > 0) {
+                rating = "+" + rating.toString()
+            }
+            commentScore.innerHTML = rating
+
+            var scoreClass = "watch-comment-score watch-comment-" + color
+            commentScore.className = scoreClass
+
+            // mark the button as hovered
+            if(initialRating == "like") {
+                thumbsUp.className = "master-sprite watch-comment-up-on"
+                thumbsDown.className = "master-sprite watch-comment-down-hover"
+            } else {
+                thumbsUp.className = "master-sprite watch-comment-up-hover"
+                thumbsDown.className = "master-sprite watch-comment-down-on"
+            }
+        }
+    }
+}
+
 /*
 =======
 channels

@@ -1129,5 +1129,27 @@ module.exports = {
 
         return distilledDescription;
 
+    },
+
+    "unixToRelative": function(unix) {
+        // unix time to relative
+        let string = ""
+
+        let timeDiff = (Date.now() - unix) / 1000
+        let formats = [
+            {"name": "seconds", v: timeDiff},
+            {"name": "minutes", v: timeDiff / 60},
+            {"name": "hours", v: timeDiff / 3600},
+            {"name": "days", v: timeDiff / 86400},
+            {"name": "weeks", v: timeDiff / 604800},
+            {"name": "months", v: timeDiff / 2419200},
+        ]
+        formats.forEach(f => {
+            if(f.v >= 1) {
+                string = Math.floor(f.v) + " " + f.name + " ago"
+            }
+        })
+
+        return string;
     }
 }
