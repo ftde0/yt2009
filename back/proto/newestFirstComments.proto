@@ -1,0 +1,25 @@
+syntax = "proto3";
+package newestCommentsPackage;
+
+message newestComments {
+    message pb1 {
+        int64 constant1 = 1;
+        fixed32 constant2 = 2;
+    }
+    repeated pb1 nestedmsg1 = 1;
+    message pb2 {
+        int64 constant1 = 1;
+        int64 constant2 = 2;
+        optional int64 constant3 = 3;
+    }
+    repeated pb2 nestedmsg2 = 2;
+    optional int64 zeroInt = 3;
+    message pb3 {
+        message pb4 {
+            int64 before = 1;
+            int64 otherVar = 2;
+        }
+        repeated pb4 nestedmsg4 = 1;
+    }
+    repeated pb3 nestedmsg3 = 4;
+}

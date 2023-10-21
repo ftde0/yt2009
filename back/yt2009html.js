@@ -35,6 +35,22 @@ if(fs.existsSync("./cache_dir/comments.json")) {
     custom_comments = require("./cache_dir/comments.json")
 }
 
+let oldCommentsCache = {}
+if(fs.existsSync("./cache_dir/old_comments.json")) {
+    try {
+        oldCommentsCache = require("./cache_dir/old_comments.json")
+    }
+    catch(error) {oldCommentsCache = {}}
+} else {
+    fs.writeFileSync("./cache_dir/old_comments.json", "{}")
+}
+let oldCommentsWrite = setInterval(function() {
+    fs.writeFileSync(
+        "./cache_dir/old_comments.json",
+        JSON.stringify(oldCommentsCache)
+    )
+}, 1000 * 60 * 60)
+
 module.exports = {
     "innertube_get_data": function(id, callback) {
         if(JSON.stringify(innertube_context) == "{}") {
@@ -1012,6 +1028,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             && !flags.includes("default_avataradapt")) {
             channelIcon = "/assets/site-assets/default.png"
         }
+        if(channelIcon == "default"
+        || channelIcon == "/assets/default.png") {
+            channelIcon = "/assets/site-assets/default.png"
+        }
 
 
         let views = yt2009utils.countBreakup(data.viewCount)
@@ -1213,7 +1233,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let comments_html = ""
         let unfilteredCommentCount = 0;
         let topLike = 0;
-        if(data.comments) {
+        if(data.comments
+        && !flags.includes("comments_remove_future")) {
 
             // hide show more comments if less than 21
             // (20 standard + continuation token)
@@ -1306,16 +1327,56 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 )
     
                 unfilteredCommentCount++;
+                
+            })
+            code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
+            code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
+        } else if(flags.includes("comments_remove_future")) {
+            requiredCallbacks++
+            this.get_old_comments(data, (comments) => {
+                comments.forEach(comment => {
+                    if(comment.continuation || comment.pinned) return;
+                    // flags
+                    unfilteredCommentCount++
+                    let commentTime = comment.time;
+                    if(flags.includes("fake_comment_dates")) {
+                        commentTime = yt2009utils.genFakeDate();
+                    }
+                    commentTime = yt2009utils.relativeTimeCreate(
+                        commentTime, yt2009languages.get_language(req)
+                    )
+
+                    // add html
+                    comments_html += yt2009templates.videoComment(
+                        comment.authorUrl,
+                        yt2009utils.asciify(comment.authorName),
+                        commentTime,
+                        comment.content,
+                        flags,
+                        true,
+                        comment.likes > 10
+                        ? Math.floor(Math.random() * 15) : comment.likes
+                    )
+                })
+                if(data.comments.length !== 21) {
+                    code = code.replace("yt2009_hook_more_comments", "hid")
+                }
+                code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
+                code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
+                callbacksMade++
+                if(requiredCallbacks == callbacksMade) {
+                    render_endscreen();
+                    fillFlashIfNeeded();
+                    genRelay();
+                    callback(code)
+                }
             })
         } else {
             code = code.replace("yt2009_hook_more_comments", "hid")
+            code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
+            code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
         }
         
-
-        // continuation token
-        code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
-        code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
-
         // add related videos
         let related_html = ""
         let related_index = 0;
@@ -2187,60 +2248,25 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             comment_page_cache[id] = {}
         }
         page = page + 1;
-        let completedPages = 0;
 
-        if(comment_page_cache[id][page]) {
-            // if we have the comment page, just callback it
-            callback(comment_page_cache[id][page])
-            return;
+        let commentDates = Date.now() - (page * 1000 * 60 * 60 * 24 * 7)
+        if(this.get_cache_video(id).upload) {
+            let fourMonthsUnix = 1000 * 60 * 60 * 24 * 31 * 4
+            let uploadDate = new Date(this.get_cache_video(id).upload)
+            if(uploadDate.getFullYear() >= 2011) {
+                commentDates = uploadDate.getTime() + ((page + 5) * fourMonthsUnix)
+            } else {
+                commentDates = new Date("2012").getTime()
+                               + ((page + 5) * fourMonthsUnix)
+            }
         }
 
-        // otherwise fetch
-        // get first continuation
-        this.innertube_get_data(id, (data) => {
-            let sections = data.contents.twoColumnWatchNextResults
-                               .results.results.contents
-            sections.forEach(section => {
-                if(section.itemSectionRenderer) {
-                    if(section.itemSectionRenderer.sectionIdentifier
-                        !== "comment-item-section") return;
-                    
-                    let token = section.itemSectionRenderer.contents[0]
-                                .continuationItemRenderer
-                                .continuationEndpoint
-                                .continuationCommand.token
-                    recurse_fetch(token)
-                }
-            })
-        })
-
-        // get continuations one-by-one and group into pages
-        let request_continuation = this.request_continuation;
-        function recurse_fetch(continuation) {
-            request_continuation(continuation, id, flags, (comments) => {
-                comment_page_cache[id][completedPages + 1] = comments
-                completedPages++;
-                if(completedPages == page) {
-                    // if that was the final page, callback
-                    callback(comments)
-                } else {
-                    // go with the next page if not done
-                    // (as long as we get a new continuation, otherwise callback)
-                    let newContinuation = false
-                    comments.forEach(cmt => {
-                        if(cmt.continuation) {
-                            newContinuation = cmt.continuation;
-                        }
-                    })
-
-                    if(newContinuation) {
-                        recurse_fetch(newContinuation)
-                    } else {
-                        callback(comments)
-                    }
-                }
-            })
-        }
+        this.get_old_comments(
+            {"id": id, "upload": "2011"},
+            (comments => {
+                callback(comments)
+            }), commentDates
+        )
     },
 
     "get_video_description": function(id) {
@@ -2484,5 +2510,83 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
     "receive_update_custom_comments": function(comments) {
         custom_comments = comments;
+    },
+
+    "get_old_comments": function(data, callback, overrideDate) {
+        // GET_OLD_COMMENTS
+        // use protobuf to generate a continuation token going
+        // as far back as any date we desire.
+        // for yt2009, if a video is uploaded before 2011, we're going to 2012.
+        // after 2011, 8 months after from the upload date.
+
+        let pbDate = "2012"
+        if(new Date(data.upload).getFullYear() >= 2011) {
+            let eightMonthsUnix = 1000 * 60 * 60 * 24 * 31 * 8
+            pbDate = new Date(data.upload).getTime() + eightMonthsUnix
+        }
+
+        if(overrideDate) {pbDate = overrideDate;}
+
+        pbDate = Math.floor(new Date(pbDate).getTime() / 1000)
+        if(oldCommentsCache[data.id + "/" + pbDate]) {
+            callback(oldCommentsCache[data.id + "/" + pbDate])
+            return;
+        }
+
+        // generate get_newest_first token
+        const pb = require("./proto/newestFirstComments_pb")
+        let msg = new pb.newestComments()
+
+        let nestedmsg1 = new pb.newestComments.pb1()
+        nestedmsg1.setConstant1(512)
+        nestedmsg1.setConstant2(953267991)
+        msg.addNestedmsg1(nestedmsg1)
+
+        msg.setZeroint(0)
+
+        let nestedmsg3 = new pb.newestComments.pb3()
+        let nestedmsg4 = new pb.newestComments.pb3.pb4()
+        nestedmsg4.setBefore(pbDate)
+        nestedmsg3.addNestedmsg4(nestedmsg4)
+        msg.addNestedmsg3(nestedmsg3)
+
+        let get_newest_first_token = Buffer.from(
+            msg.serializeBinary()
+        ).toString("base64")
+        .split("/").join("_")
+        .split("+").join("-")
+        .split("=").join("")
+
+        // generate comment continuation token
+        let id = data.id
+
+        const cmts_pb = require("./proto/cmts_pb")
+        let commentRequest = new cmts_pb.comments()
+        let videoMsg = new cmts_pb.comments.video()
+        videoMsg.setVideoid(id)
+        commentRequest.addVideomsg(videoMsg)
+        commentRequest.setType(6)
+
+        let commentsReqParamsMain = new cmts_pb.comments.commentsReq()
+        commentsReqParamsMain.setRankedstreams(
+            "get_newest_first--" + get_newest_first_token
+        )
+        commentsReqParamsMain.setSectiontype("comments-section")
+
+        let crpChild = new cmts_pb.comments.commentsReq.commentsData()
+        crpChild.setVideoid(id)
+        commentsReqParamsMain.addCommentsdatareq(crpChild)
+        commentRequest.addCommentsreqmsg(commentsReqParamsMain)
+
+        let continuationToken = encodeURIComponent(Buffer.from(
+            commentRequest.serializeBinary()
+        ).toString("base64"))
+
+        this.request_continuation(
+            continuationToken, id, "comments_remove_future", (comments) => {
+                callback(comments)
+                oldCommentsCache[id + "/" + pbDate] = comments
+            }
+        )
     }
 }

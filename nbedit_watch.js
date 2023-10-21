@@ -92,6 +92,9 @@ function onWatchCommentsShowMore() {
     r.send(null)
     r.addEventListener("load", function(e) {
         $("#watch-comments-show-more-td").style.display = "block"
+        if(r.responseText.length == 0) {
+            $("#watch-comments-show-more-td").style.display = "none"
+        }
         // add html sent from server
         $(".comments-container").innerHTML += r.responseText
                                                .split(";yt_continuation=")[0]

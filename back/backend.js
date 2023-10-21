@@ -1084,7 +1084,7 @@ video comments
 ======
 */
 app.get("/get_more_comments", (req, res) => {
-    let id = req.headers.source.split("watch?v=")[1].split("&")[0]
+    let id = req.headers.source.split("watch?v=")[1].split("&")[0].split("#")[0]
     let pageNumber = parseInt(req.headers.page)
     let flags = ""
     try {
@@ -1104,13 +1104,12 @@ app.get("/get_more_comments", (req, res) => {
 
     yt2009.comment_paging(id, pageNumber, flags, (data) => {
         data.forEach(comment => {
-            if(comment.continuation) {
-                comment_html += `;yt_continuation=${comment.continuation}`
-            } else {
+            if(!comment.continuation && !comment.pinned) {
                 comment_html += yt2009_templates.videoComment(
                     comment.authorUrl,
                     comment.authorName,
-                    comment.time,
+                    flags.includes("fake_comment_date")
+                    ? yt2009_utils.genFakeDate() : comment.time,
                     comment.content,
                     flags,
                     false

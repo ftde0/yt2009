@@ -162,7 +162,8 @@ module.exports = {
                     "time": comment_flags.includes("fake_comment_dates")
                             ? gen_fake_date()
                             : comment_path_short.publishedTimeText.runs[0].text,
-                    "likes": likeCount
+                    "likes": likeCount,
+                    "pinned": comment_path_short.pinnedCommentBadge ? true : false
                 })
             } else if(rawComment.continuationItemRenderer) {
                 // continuation token
