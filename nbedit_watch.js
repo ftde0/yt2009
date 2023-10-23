@@ -558,6 +558,13 @@ video cards (favorite/share/playlists/flag)
 */
 
 function switchWatchTab(tabName) {
+    // hide report menu if open
+    if(document.getElementById("watch-flag-menu")
+    && $("#watch-flag-menu").className.indexOf("show") !== -1) {
+        $("#watch-flag-menu").className = ""
+        flagMenuShown = false;
+    }
+
     // heading
     $(".watch-tab.watch-tab-sel").className = "watch-tab"
     $("#watch-tab-" + tabName).className = "watch-tab watch-tab-sel"
@@ -576,6 +583,10 @@ function switchWatchTab(tabName) {
     switch(tabName) {
         case "favorite": {
             favorite_video();
+            break;
+        }
+        case "flag": {
+            loadFlagMenu()
             break;
         }
     }
@@ -1217,4 +1228,84 @@ function sendCmtRating(commentId, rating) {
             thumbsDown.className = "master-sprite watch-comment-down-on"
         }
     }, false)
+}
+
+/*
+======
+simulated flagging
+======
+*/
+function loadFlagMenu() {
+    if(!document.getElementById("watch-flag-menu")) {
+        var r = new XMLHttpRequest();
+        r.open("GET", "/flag_menu_template")
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            $("#inappropriateVidDiv").innerHTML = r.responseText
+        }, false)
+    }
+}
+
+var flagMenuShown = false;
+function toggleFlagReason() {
+    flagMenuShown = !flagMenuShown
+    if(flagMenuShown) {
+        $("#watch-flag-menu").className = "show y-in"
+    } else {
+        $("#watch-flag-menu").className = "y-in"
+    }
+}
+
+function toggleFlagSubdrop(element) {
+    var subdrop = element.getElementsByTagName("ul")[0]
+    if(subdrop.className.indexOf("show") == -1) {
+        subdrop.className = "show"
+    } else {
+        subdrop.className = ""
+    }
+}
+
+function addMouseOver(element) {
+    element.className += " mouseover"
+}
+
+function hideFlagSubdrop(element) {
+    var subdrop = element.getElementsByTagName("ul")[0]
+    if(subdrop.className.indexOf("mouseover") == -1) {
+        subdrop.className = ""
+    }
+}
+
+function flagProcessSubcategory(element) {
+    toggleFlagReason()
+    var ul = $("#watch-flag-menu").getElementsByTagName("ul")
+    for(var i in ul) {
+        if(ul[i].nodeName && ul[i].className.indexOf("show") !== -1) {
+            ul[i].className = ""
+        }
+    }
+    var reasonName = element.getElementsByTagName("a")[0].innerHTML
+    $("#watch-flag-menu .parent").innerHTML = reasonName
+    switch(element.className) {
+        case "time-claim": {
+            $(".box.time").className = "box time"
+            $(".box.hatred").className = "box hatred hid"
+            break;
+        }
+        case "hatred-claim": {
+            $(".box.hatred").className = "box hatred"
+            $(".box.time").className = "box time hid"
+            break;
+        }
+        default: {
+            $(".box.time").className = "box time hid"
+            $(".box.hatred").className = "box hatred hid"
+            break;
+        }
+    }
+}
+
+function flagVideoSend() {
+    $("#inappropriateVidDiv").className = "watch-more-action hid"
+    $("#inappropriateMsgsDiv").className = ""
 }

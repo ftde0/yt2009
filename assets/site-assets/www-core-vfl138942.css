@@ -6945,7 +6945,8 @@ html>body .homepage-new-skin .feedmodule-data .list-view .video-entry {
 
 #watch-flag-menu {
   position: relative;
-  z-index: 1000
+  z-index: 2;
+  margin-top: 10px
 }
 
 #watch-flag-menu ul {
@@ -6963,10 +6964,19 @@ html>body .homepage-new-skin .feedmodule-data .list-view .video-entry {
   visibility: hidden
 }
 
+#watch-flag-menu.show ul ul {
+  visibility: visible;
+}
+
 #watch-flag-menu ul ul ul {
   top: 0;
   left: 221px;
-  width: 220px
+  width: 220px;
+  visibility: hidden !important;
+}
+
+#watch-flag-menu ul ul ul.show {
+  visibility: visible !important;
 }
 
 #watch-flag-menu li {

@@ -6187,3 +6187,87 @@ td.spons-vid-thumb .user-thumb-jumbo img {
 #language-picker-help, .picker-top h2 {
   float: left;
 }
+
+#watch-flag-menu {
+  position: relative;
+  z-index: 1000;
+  margin-top: 10px
+}
+
+#watch-flag-menu ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none
+}
+
+#watch-flag-menu ul ul {
+  top: 23px;
+  left: 0;
+  width: 220px;
+  height: 0;
+  position: absolute;
+  visibility: hidden
+}
+
+#watch-flag-menu.show ul ul {
+  visibility: visible;
+}
+
+#watch-flag-menu ul ul ul {
+  top: 0;
+  left: 221px;
+  width: 220px;
+  visibility: hidden !important;
+}
+
+#watch-flag-menu ul ul ul.show {
+  visibility: visible !important;
+}
+
+#watch-flag-menu li {
+  width: 220px;
+  float: left;
+  position: relative
+}
+
+#watch-flag-menu a,
+#watch-flag-menu a:visited {
+  display: block;
+  background-color: #fff;
+  color: #000;
+  width: 210px;
+  height: auto;
+  border: 1px solid #bcc;
+  border-width: 0 1px 0 1px;
+  padding: 4px 5px 4px 5px;
+  line-height: 1.2em;
+  text-decoration: none;
+  font-weight: normal
+}
+
+#watch-flag-menu a.parent,
+#watch-flag-menu a.parent:visited {
+  background: #fff url(/assets/site-assets/arrow_dropdown-vfl29016.gif) no-repeat 205px 5px;
+  border-width: 1px;
+  font-weight: bold
+}
+
+#watch-flag-menu ul ul a.sub,
+#watch-flag-menu ul ul a.sub:visited,
+#watch-flag-menu ul ul ul a,
+#watch-flag-menu ul ul ul a:visited {
+  background-color: #fff
+}
+
+#watch-flag-menu a:hover,
+#watch-flag-menu :hover>a,
+#watch-flag-menu ul ul a.sub:hover,
+#watch-flag-menu ul ul :hover>a.sub,
+#watch-flag-menu ul ul ul a:hover {
+  background-color: #d7deed
+}
+
+#watch-flag-menu a:hover,
+#watch-flag-menu :hover>a {
+  color: #000
+}

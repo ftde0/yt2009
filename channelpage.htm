@@ -47,11 +47,7 @@
 			height: 20px;
 			position: relative;
 		}
-
-		.panel-tab-indicator-cell svg {
-			fill: yt2009_main_bg;
-		}
-
+		
 		.playnav_comments {
 			overflow-y: scroll;
 			overflow-x: hidden;
@@ -68,6 +64,37 @@
 		.favorite-panel a {
 			color: blue !important;
 		}
+
+		#playnav-panel-flag a {
+			color: blue;
+		}
+		
+		.y-in {
+			display: inline-block;
+			float: none !important;
+		}
+
+		#playnav-panel-flag-menu {
+			padding: 8px 8px 8px 8px;
+			width: 595px;
+			border-radius: 5px;
+			color: black;
+		}
+
+		#watch-flag-menu, #watch-flag-menu * {
+			color: black !important;
+		}
+
+		#playnav-body.flag-opened,
+		#playnav-body.flag-opened #playnav-video-panel-inner {
+			overflow: visible;
+		}
+
+		#playnav-panel-flag h2 {
+			margin-bottom: 10px;
+		}
+
+
 	</style>
 
 	<style type="text/css" id="channel-theme-css" name="channel-theme-css">
@@ -263,7 +290,7 @@
 		}
 
 		.panel-tab-selected .panel-tab-indicator-arrow {
-			border-bottom-color: yt2009_darker_bg !important;
+			border-bottom-color: yt2009_main_bg !important;
 		}
 
 		.view-button .tri {
@@ -518,15 +545,7 @@
 																</tr>
 																<tr>
 																	<td class="panel-tab-indicator-cell inner-box-opacity">
-																		<div class="arrow-container" style="left: 10px;">
-																			<svg class="" width="40" height="20" viewBox="0 0 40 20">
-																				<path id="Selection" stroke-width="1"
-																					d="M 20.00,0.00
-																					C 25.56,3.98 36.14,13.96 39.00,20.00
-																						39.00,20.00 1.00,20.00 1.00,20.00
-																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
-																			</svg>
-																		</div>
+																		<div class="panel-tab-indicator-arrow"></div>
 																	</td>
 																</tr>
 															</tbody>
@@ -546,15 +565,7 @@
 																</tr>
 																<tr>
 																	<td class="panel-tab-indicator-cell inner-box-opacity">
-																		<div class="arrow-container" style="left: 25px;">
-																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
-																				<path id="Selection" stroke-width="1"
-																					d="M 20.00,0.00
-																					C 25.56,3.98 36.14,13.96 39.00,20.00
-																						39.00,20.00 1.00,20.00 1.00,20.00
-																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
-																			</svg>
-																		</div>
+																		<div class="panel-tab-indicator-arrow"></div>
 																	</td>
 																</tr>
 															</tbody>
@@ -574,15 +585,7 @@
 																</tr>
 																<tr>
 																	<td class="panel-tab-indicator-cell inner-box-opacity">
-																		<div class="arrow-container" style="left: 20px;">
-																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
-																				<path id="Selection" stroke-width="1"
-																					d="M 20.00,0.00
-																					C 25.56,3.98 36.14,13.96 39.00,20.00
-																						39.00,20.00 1.00,20.00 1.00,20.00
-																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
-																			</svg>
-																		</div>
+																		<div class="panel-tab-indicator-arrow"></div>
 																	</td>
 																</tr>
 															</tbody>
@@ -602,15 +605,7 @@
 																</tr>
 																<tr>
 																	<td class="panel-tab-indicator-cell inner-box-opacity">
-																		<div class="arrow-container" style="left: 15px;">
-																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
-																				<path id="Selection" stroke-width="1"
-																					d="M 20.00,0.00
-																					C 25.56,3.98 36.14,13.96 39.00,20.00
-																						39.00,20.00 1.00,20.00 1.00,20.00
-																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
-																			</svg>
-																		</div>
+																		<div class="panel-tab-indicator-arrow"></div>
 																	</td>
 																</tr>
 															</tbody>
@@ -630,15 +625,7 @@
 																</tr>
 																<tr>
 																	<td class="panel-tab-indicator-cell inner-box-opacity">
-																		<div class="arrow-container" style="left: 20px;">
-																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
-																				<path id="Selection" stroke-width="1"
-																					d="M 20.00,0.00
-																					C 25.56,3.98 36.14,13.96 39.00,20.00
-																						39.00,20.00 1.00,20.00 1.00,20.00
-																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
-																			</svg>
-																		</div>
+																		<div class="panel-tab-indicator-arrow"></div>
 																	</td>
 																</tr>
 															</tbody>
@@ -658,15 +645,7 @@
 																</tr>
 																<tr>
 																	<td class="panel-tab-indicator-cell inner-box-opacity">
-																		<div class="arrow-container" style="left: 10px;">
-																			<svg class="hid" width="40" height="20" viewBox="0 0 40 20">
-																				<path id="Selection" stroke-width="1"
-																					d="M 20.00,0.00
-																					C 25.56,3.98 36.14,13.96 39.00,20.00
-																						39.00,20.00 1.00,20.00 1.00,20.00
-																						1.00,20.00 20.00,0.00 20.00,0.00 Z" />
-																			</svg>
-																		</div>
+																		<div class="panel-tab-indicator-arrow"></div>
 																	</td>
 																</tr>
 															</tbody>
@@ -753,7 +732,15 @@
 													<div class="close" style="float: right;"><a href="#" title="close this layer" onclick="playlistResultBack();">lang_playnav_close</a></div>
 												</div>
 											</div>
-											<div id="playnav-panel-flag" class="hid">nie</div>
+											<div id="playnav-panel-flag" class="hid">
+												<div id="playnav-panel-flag-menu">
+													<div id="inappropriateVidDiv"></div>
+													<div id="inappropriateMsgsDiv" class="hid">
+														Thank you for sharing your concerns.
+													</div>
+												</div>
+												
+											</div>
 										</div>
 									</div>
 								</div>

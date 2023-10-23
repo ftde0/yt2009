@@ -276,6 +276,10 @@ function playnav_switchPanel(tabName) {
             favorite_video();
             break;
         }
+        case "flag": {
+            loadFlagMenu();
+            break;
+        }
     }
 }
 
@@ -415,6 +419,68 @@ plDropdown.addEventListener("change", function() {
         $(".playlist-add").style.display = "inline-block"
     }
 }, false)
+
+// flagging
+function loadFlagMenu() {
+    if(!document.getElementById("watch-flag-menu")) {
+        var r = new XMLHttpRequest();
+        r.open("GET", "/flag_menu_template")
+        r.setRequestHeader("source", "channel")
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            $("#inappropriateVidDiv").innerHTML = r.responseText
+        }, false)
+    }
+}
+
+var flagMenuShown = false;
+function toggleFlagReason() {
+    flagMenuShown = !flagMenuShown
+    if(flagMenuShown) {
+        $("#playnav-body").className = "flag-opened"
+        $("#watch-flag-menu").className = "show y-in"
+    } else {
+        $("#playnav-body").className = ""
+        $("#watch-flag-menu").className = "y-in"
+    }
+}
+
+function toggleFlagSubdrop(element) {
+    var subdrop = element.getElementsByTagName("ul")[0]
+    if(subdrop.className.indexOf("show") == -1) {
+        subdrop.className = "show"
+    } else {
+        subdrop.className = ""
+    }
+}
+
+function addMouseOver(element) {
+    element.className += " mouseover"
+}
+
+function hideFlagSubdrop(element) {
+    var subdrop = element.getElementsByTagName("ul")[0]
+    if(subdrop.className.indexOf("mouseover") == -1) {
+        subdrop.className = ""
+    }
+}
+
+function flagProcessSubcategory(element) {
+    toggleFlagReason()
+    var ul = $("#watch-flag-menu").getElementsByTagName("ul")
+    for(var i in ul) {
+        if(ul[i].nodeName && ul[i].className.indexOf("show") !== -1) {
+            ul[i].className = ""
+        }
+    }
+    var reasonName = element.getElementsByTagName("a")[0].innerHTML
+    $("#watch-flag-menu .parent").innerHTML = reasonName
+}
+
+function flagVideoSend() {
+    $("#inappropriateVidDiv").className = "watch-more-action hid"
+    $("#inappropriateMsgsDiv").className = ""
+}
 
 // dodaj obecny film do playlisty
 function addPlaylistVideo(playlistId) {

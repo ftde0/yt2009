@@ -280,6 +280,12 @@ if(location.href.indexOf("watch") !== -1) {
 
 // switch tabs (/watch)
 function switchWatchTab(tabName) {
+    if(document.getElementById("watch-flag-menu")
+    && $("#watch-flag-menu").className.indexOf("show") !== -1) {
+        $("#watch-flag-menu").className = ""
+        flagMenuShown = false;
+    }
+
     // hide previously shown tab
     var e = document.querySelectorAll(".watch-tab-body")
     for(var sel in e) {
@@ -309,6 +315,10 @@ function switchWatchTab(tabName) {
     switch(tabName) {
         case "favorite": {
             favorite_video();
+            break;
+        }
+        case "flag": {
+            loadFlagMenu()
             break;
         }
     }
@@ -671,7 +681,12 @@ function sendCmtRating(commentId, rating) {
     var thumbsDown = c.getElementsByTagName("button")[0]
     var commentScore = c.getElementsByTagName("span")[1]
     var initialRating = rating;
-    var r = new XMLHttpRequest();
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
     r.open("POST", "/comment_rate")
     r.setRequestHeader("rating", rating)
     r.setRequestHeader("source", location.href)
@@ -702,6 +717,110 @@ function sendCmtRating(commentId, rating) {
             }
         }
     }
+}
+
+/*
+======
+simulated flagging
+======
+*/
+var videoFlagSource = "video"
+function loadFlagMenu(channel) {
+    if(!document.getElementById("watch-flag-menu")) {
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        r.open("GET", "/flag_menu_template")
+        if(channel) {
+            videoFlagSource = "channel"
+            r.setRequestHeader("source", "channel")
+        }
+        r.send(null)
+        r.onreadystatechange = function(e) {
+            if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+                $("#inappropriateVidDiv").innerHTML = r.responseText
+            }
+        }
+    }
+    if(channel) {
+        $("#inappropriateMsgsDiv").className = "hid"
+        $("#inappropriateVidDiv").className = ""
+    }
+}
+
+var flagMenuShown = false;
+function toggleFlagReason() {
+    flagMenuShown = !flagMenuShown
+    if(flagMenuShown) {
+        $("#watch-flag-menu").className = "show y-in"
+        if(videoFlagSource == "channel") {
+            $("#playnav-body").className = "flag-opened"
+        }
+    } else {
+        $("#watch-flag-menu").className = "y-in"
+        if(videoFlagSource == "channel") {
+            $("#playnav-body").className = ""
+        }
+    }
+}
+
+function toggleFlagSubdrop(element) {
+    var subdrop = element.getElementsByTagName("ul")[0]
+    if(subdrop.className.indexOf("show") == -1) {
+        subdrop.className = "show"
+    } else {
+        subdrop.className = ""
+    }
+}
+
+function addMouseOver(element) {
+    element.className += " mouseover"
+}
+
+function hideFlagSubdrop(element) {
+    var subdrop = element.getElementsByTagName("ul")[0]
+    if(subdrop.className.indexOf("mouseover") == -1) {
+        subdrop.className = ""
+    }
+}
+
+function flagProcessSubcategory(element) {
+    toggleFlagReason()
+    var ul = document.getElementById("watch-flag-menu").getElementsByTagName("ul")
+    for(var i in ul) {
+        if(ul[i].nodeName && ul[i].className.indexOf("show") !== -1) {
+            ul[i].className = ""
+        }
+    }
+
+    var reasonName = element.getElementsByTagName("a")[0].innerHTML
+    $("#watch-flag-menu .parent").innerHTML = reasonName
+    if(videoFlagSource == "channel") return;
+    switch(element.className) {
+        case "time-claim": {
+            $(".box.time").className = "box time"
+            $(".box.hatred").className = "box hatred hid"
+            break;
+        }
+        case "hatred-claim": {
+            $(".box.hatred").className = "box hatred"
+            $(".box.time").className = "box time hid"
+            break;
+        }
+        default: {
+            $(".box.time").className = "box time hid"
+            $(".box.hatred").className = "box hatred hid"
+            break;
+        }
+    }
+}
+
+function flagVideoSend() {
+    $("#inappropriateVidDiv").className = "watch-more-action hid"
+    $("#inappropriateMsgsDiv").className = ""
 }
 
 /*
@@ -869,6 +988,10 @@ function playnav_switchPanel(tabName) {
         }
         case "favorite": {
             playnav_favorite_video();
+            break;
+        }
+        case "flag": {
+            loadFlagMenu(true)
             break;
         }
     }

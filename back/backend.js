@@ -2290,6 +2290,25 @@ app.post("/comment_rate", (req, res) => {
 })
 
 /*
+======
+flag menu
+======
+*/
+let flagMenu = fs.readFileSync(
+    "../assets/site-assets/flag-video-template.html"
+).toString()
+app.get("/flag_menu_template", (req, res) => {
+    if(req.headers.source == "channel") {
+        let response = flagMenu.split("\n")
+        response.shift()
+        response = response.join("\n")
+        res.send(response)
+        return;
+    }
+    res.send(flagMenu)
+})
+
+/*
 pizdec
 jp2gmd
 mleczsus :*

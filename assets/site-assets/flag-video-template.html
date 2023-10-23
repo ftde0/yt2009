@@ -1,0 +1,87 @@
+<div class="close"><a href="#" title="close this layer" onclick="switchWatchTab('share')">close</a></div>
+<h2>Report This Video as Inappropriate</h2>
+<span>Please select the category that most closely reflects your concern about this video,
+	so that we can review it and determine whether it violates our <a href="/t/community_guidelines">Community Guidelines</a>
+	 or isn't appropriate for all viewers. Abusing this feature is also a violation of the <a href="/t/community_guidelines">Community Guidelines</a>,
+	 so don't do it.</span><br>
+<div id="watch-flag-menu" class="y-in">
+	<a class="parent" onclick="toggleFlagReason()">- Select a Reason -</a>
+	<ul>
+		<ul>
+			<li onmouseenter="toggleFlagSubdrop(this)" onmouseleave="hideFlagSubdrop(this)">
+				<a>Sexual Content</a>
+				<ul onmouseenter="addMouseOver(this)" onmouseleave="toggleFlagSubdrop(this.parentNode)">
+					<li class="time-claim" onclick="flagProcessSubcategory(this)"><a>graphic sexual activity</a></li>
+					<li class="time-claim" onclick="flagProcessSubcategory(this)"><a>nudity</a></li>
+					<li class="time-claim" onclick="flagProcessSubcategory(this)"><a>suggestive, but without nudity</a></li>
+					<li class="time-claim" onclick="flagProcessSubcategory(this)"><a>other sexual content</a></li>
+				</ul>
+			</li>
+			<li onmouseenter="toggleFlagSubdrop(this)" onmouseleave="hideFlagSubdrop(this)">
+				<a>Violent or Repulsive Content</a>
+				<ul onmouseenter="addMouseOver(this)" onmouseleave="toggleFlagSubdrop(this.parentNode)">
+					<li onclick="flagProcessSubcategory(this)"><a>adults fighting</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>physical attack</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>youth violence</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>animal abuse</a></li>
+				</ul>
+			</li>
+			<li onmouseenter="toggleFlagSubdrop(this)" onmouseleave="hideFlagSubdrop(this)">
+				<a>Hateful or Abusive Content</a>
+				<ul onmouseenter="addMouseOver(this)" onmouseleave="toggleFlagSubdrop(this.parentNode)">
+					<li class="hatred-claim" onclick="flagProcessSubcategory(this)"><a>promotes hatred or violence</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>abusing vulnerable individuals</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>bullying</a></li>
+				</ul>
+			</li>
+			<li onclick="flagProcessSubcategory(this)"><a>Harmful Dangerous Acts</a></li>
+			<li onclick="flagProcessSubcategory(this)"><a>Child Abuse</a></li>
+			<li onmouseenter="toggleFlagSubdrop(this)" onmouseleave="hideFlagSubdrop(this)">
+				<a>Spam</a>
+				<ul onmouseenter="addMouseOver(this)" onmouseleave="toggleFlagSubdrop(this.parentNode)">
+					<li onclick="flagProcessSubcategory(this)"><a>mass advertising</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>misleading text</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>misleading thumbnail</a></li>
+				</ul>
+			</li>
+			<li onmouseenter="toggleFlagSubdrop(this)" onmouseleave="hideFlagSubdrop(this)">
+				<a>Infringes My Rights</a>
+				<ul onmouseenter="addMouseOver(this)" onmouseleave="toggleFlagSubdrop(this.parentNode)">
+					<li onclick="flagProcessSubcategory(this)" class="copyright-claim"><a>infringes my copyright</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>invades my privacy</a></li>
+					<li onclick="flagProcessSubcategory(this)"><a>reveals personal information</a></li>
+				</ul>
+			</li>
+		</ul>
+	</ul>
+</div>
+<div class="box hatred hid">
+	<span>Per our <a href="/t/community_guidelines">Community Guidelines</a>, we don't permit hate speech
+	(speech which attacks or demeans a protected group based on race or ethnic origin, religion,
+	disability, gender, age, veteran status or sexual orientation/gender identity). Please indicate
+	the group attacked.</span>
+	<select>
+		<option>-</option>
+		<option>age</option>
+		<option>color</option>
+		<option>disability</option>
+		<option>ethnic origin</option>
+		<option>gender identity</option>
+		<option>national origin</option>
+		<option>race</option>
+		<option>religion</option>
+		<option>sex</option>
+		<option>sexual orientation</option>
+		<option>veteran status</option>
+	</select>
+	<span style="margin-top: 30px"><br><br><br>Please also provide any additional information which you think could help us verify
+	the issue as quickly as possible.</span><br>
+	<textarea></textarea>
+</div>
+<div class="box time hid">
+	<span>To help us verify the issue as quickly as possible, please also tell us where in the
+	video the inappropriate material is located. Use these fields to enter the time
+	(minutes and seconds):</span>
+	<input type="text" name="flag_minutes">:<input type="text" name="flag_seconds">
+</div>
+<a class="yt-button y-in" id="flag-btn" href="#" onclick="flagVideoSend();return false;"><span>Flag This Video</span></a>

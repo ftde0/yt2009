@@ -114,3 +114,26 @@ a[href="/my_videos_upload"] span {
     position: relative;
     top: -28px;
 }
+
+#inappropriateVidDiv h2 {
+    margin-bottom: 10px;
+}
+
+#inappropriateVidDiv .box {
+    background-color: #dae1f9;
+    color: #666;
+    padding: 5px 5px;
+    margin-top: 10px;
+}
+
+#inappropriateVidDiv .box textarea {
+    height: 30px;
+    max-width: 585px;
+    width: 585px;
+}
+
+#inappropriateVidDiv .box.time input {
+    width: 15px;
+    margin-left: 2px;
+    margin-right: 2px;
+}

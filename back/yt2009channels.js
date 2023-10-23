@@ -709,7 +709,10 @@ module.exports = {
                 )
                 let ratings_est = yt2009utils.estRating(views)
                 let upload_date = yt2009utils.timeFlags(video.upload, flags)
-                videoUploadDates[video.id] = upload_date
+                if(videoUploadDates[video.id]) {
+                    upload_date = videoUploadDates[video.id]
+                }
+                
                 scrollbox_videos_html += templates.playnavVideo(
                     video,
                     video_index,
@@ -806,7 +809,7 @@ module.exports = {
                     
                     code = code.replace(`<!--yt2009_comments-->`, comments_html)
                     code = code.replace(`yt2009_channel_comment_count`, count)
-                } else {
+                } else if(!wayback_settings.includes("comments")) {
                     code = code.replace(
                         `<!--yt2009_no_comments-->`,
                         `<div class="alignC">There are no comments for this user.</div>`
