@@ -570,7 +570,8 @@ module.exports = {
         ) {
             channelAvatar = "/assets/site-assets/default.png"
         }
-        if(!wayback_settings.includes("basic")) {
+        if(!wayback_settings.includes("basic")
+        && !flags.includes("author_old_avatar")) {
             code = code.split("yt2009_channel_avatar").join(channelAvatar)
         }
 
@@ -1580,6 +1581,63 @@ module.exports = {
             } else {
                 // exists!!
                 applyBanner()
+            }
+        }
+
+        /*
+        =======
+        author_old_avatar
+        =======
+        */
+        function setChannelIcon() {
+            code = code.split("yt2009_channel_avatar").join(channelAvatar)
+        }
+        if(flags.includes("author_old_avatar")) {
+            stepsRequiredToCallback++
+            let id = data.id.replace("UC", "")
+            let avatarUrl = `https://i3.ytimg.com/u/${id}/channel_icon.jpg`
+            let fname = __dirname + "/../assets/" + id + "_old_avatar.jpg"
+            let oldChannelIconPath = "/assets/" + id + "_old_avatar.jpg"
+
+            // callback at the top
+            function markAsDone() {
+                stepsTaken++
+                if(stepsRequiredToCallback <= stepsTaken) {
+                    try{callback(code)}catch(error){}
+                }
+            }
+            // exists and not there = set default
+            if(fs.existsSync(fname)
+            && fs.statSync(fname).size < 10) {
+                setChannelIcon()
+                markAsDone()
+            }
+            // exists and there
+            else if(fs.existsSync(fname)
+            && fs.statSync(fname).size > 10) {
+                channelAvatar = oldChannelIconPath
+                setChannelIcon()
+                markAsDone()
+            }
+            // doesn't exist
+            else {
+                fetch(avatarUrl, {
+                    "headers": yt2009constants.headers
+                }).then(r => {
+                    if(r.status !== 404) {
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(fname, buffer)
+                            channelAvatar = oldChannelIconPath
+                            setChannelIcon()
+                            markAsDone()
+                        })
+                    } else {
+                        // no old icon, use current
+                        fs.writeFileSync(fname, "")
+                        setChannelIcon()
+                        markAsDone()
+                    }
+                })
             }
         }
 

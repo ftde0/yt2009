@@ -52,6 +52,7 @@ var languageData_EN = {
 
         "global-always-annotations": "automatically enables annotations for videos",
         "global-always-captions": "automatically enables captions for videos",
+        "global-author-old-avatar": "uses old avatars if present on youtube servers",
         "global-login-simulate": "simulates a logged in user",
         "global-no-controls-fade": "disables video controls fade out",
         "global-annotation-redirect": "redirects all youtube.com links within annotations to yt2009",

@@ -327,34 +327,70 @@ module.exports = {
             
 
                 // fetch comments
-                try {
-                    let sections = videoData.contents.twoColumnWatchNextResults
-                                    .results.results.contents
-                    sections.forEach(section => {
-                        if(section.itemSectionRenderer) {
-                            if(section.itemSectionRenderer.sectionIdentifier
-                                !== "comment-item-section") return;
-                            
-                            let token = section.itemSectionRenderer.contents[0]
-                                        .continuationItemRenderer
-                                        .continuationEndpoint
-                                        .continuationCommand.token
-                            this.request_continuation(token, id, "",
-                            (comment_data) => {
-                                data.comments = comment_data
-                                fetchesCompleted++;
-                                if(fetchesCompleted >= 3) {
-                                    callback(data)
-                                }
-                            })
+                // use_pb will most likely be integrated in the future.
+                // while it seems to be stable so far, i still consider
+                // it as testing, mainly whether it holds up over time.
+                // until then, use IFs.
+                if(config.use_pb) {
+                    const pb = require("./proto/cmts_pb")
+                    let commentRequest = new pb.comments()
+
+                    let videoMsg = new pb.comments.video()
+                    videoMsg.setVideoid(id)
+                    commentRequest.addVideomsg(videoMsg)
+
+                    commentRequest.setType(6)
+
+                    let commentsReqParamsMain = new pb.comments.commentsReq()
+                    commentsReqParamsMain.setSectiontype("comments-section")
+                    let crpChild = new pb.comments.commentsReq.commentsData()
+                    crpChild.setVideoid(id)
+                    commentsReqParamsMain.addCommentsdatareq(crpChild)
+                    commentRequest.addCommentsreqmsg(commentsReqParamsMain)
+
+                    let token = encodeURIComponent(Buffer.from(
+                        commentRequest.serializeBinary()
+                    ).toString("base64"))
+                    
+                    this.request_continuation(token, id, "",
+                        (comment_data) => {
+                            data.comments = comment_data
+                            fetchesCompleted++;
+                            if(fetchesCompleted >= 3) {
+                                callback(data)
+                            }
                         }
-                    })
-                }
-                catch(error) {
-                    data.comments = []
-                    fetchesCompleted++;
-                    if(fetchesCompleted >= 3) {
-                        callback(data)
+                    )
+                } else {
+                    try {
+                        let sections = videoData.contents.twoColumnWatchNextResults
+                                        .results.results.contents
+                        sections.forEach(section => {
+                            if(section.itemSectionRenderer) {
+                                if(section.itemSectionRenderer.sectionIdentifier
+                                    !== "comment-item-section") return;
+                                
+                                let token = section.itemSectionRenderer.contents[0]
+                                            .continuationItemRenderer
+                                            .continuationEndpoint
+                                            .continuationCommand.token
+                                this.request_continuation(token, id, "",
+                                (comment_data) => {
+                                    data.comments = comment_data
+                                    fetchesCompleted++;
+                                    if(fetchesCompleted >= 3) {
+                                        callback(data)
+                                    }
+                                })
+                            }
+                        })
+                    }
+                    catch(error) {
+                        data.comments = []
+                        fetchesCompleted++;
+                        if(fetchesCompleted >= 3) {
+                            callback(data)
+                        }
                     }
                 }
 
@@ -1033,6 +1069,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             channelIcon = "/assets/site-assets/default.png"
         }
 
+        function setChannelIcon() {
+            code = code.replace("channel_icon", channelIcon)
+        }
+
 
         let views = yt2009utils.countBreakup(data.viewCount)
         if(flags.includes("realistic_view_count")) {
@@ -1177,7 +1217,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         // podkładanie pod html podstawowych danych
         code = code.split("video_title").join(yt2009utils.xss(data.title).trim())
         code = code.replace("video_view_count", views)
-        code = code.replace("channel_icon", channelIcon)
+        if(!flags.includes("author_old_avatar")) {
+            setChannelIcon()
+        } else {
+            requiredCallbacks++
+        }
         code = code.replace("channel_name", yt2009utils.xss(author_name))
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
@@ -2149,6 +2193,59 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }
         } else {
             defaultBanner()
+        }
+
+        // old_author_avatar
+        if(flags.includes("author_old_avatar")
+        && data.author_url.includes("channel/UC")) {
+            let id = data.author_url.split("channel/UC")[1]
+            let avatarUrl = `https://i3.ytimg.com/u/${id}/channel_icon.jpg`
+            let fname = __dirname + "/../assets/" + id + "_old_avatar.jpg"
+            let oldChannelIconPath = "/assets/" + id + "_old_avatar.jpg"
+
+            // callback at the top
+            function markAsDone() {
+                callbacksMade++;
+                if(requiredCallbacks <= callbacksMade) {
+                    render_endscreen()
+                    fillFlashIfNeeded();
+                    genRelay();
+                    callback(code)
+                }
+            }
+            // exists and not there = set default
+            if(fs.existsSync(fname)
+            && fs.statSync(fname).size < 10) {
+                setChannelIcon()
+                markAsDone()
+            }
+            // exists and there
+            else if(fs.existsSync(fname)
+            && fs.statSync(fname).size > 10) {
+                channelIcon = oldChannelIconPath
+                setChannelIcon()
+                markAsDone()
+            }
+            // doesn't exist
+            else {
+                fetch(avatarUrl, {
+                    "headers": constants.headers
+                }).then(r => {
+                    if(r.status !== 404) {
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(fname, buffer)
+                            channelIcon = oldChannelIconPath
+                            setChannelIcon()
+                            markAsDone()
+                        })
+                    } else {
+                        // no old icon, use current
+                        fs.writeFileSync(fname, "")
+                        setChannelIcon()
+                        markAsDone()
+                    }
+                })
+            }
         }
 
         // relay
