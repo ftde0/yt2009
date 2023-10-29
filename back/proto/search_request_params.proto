@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package com.youtube.innertube.request;
+
+message SearchRequestParams {
+  enum Sort {
+    RELEVANCE = 0;
+    RATING = 1;
+    UPLOAD_DATE = 2;
+    VIEW_COUNT = 3;
+  }
+
+  message Filter {
+    enum UploadDate {
+      HOUR = 0;
+      DAY = 1;
+      WEEK = 2;
+      MONTH = 3;
+      YEAR = 4;
+    }
+  
+    enum Type {
+      DEFAULT_TYPE = 0; // Should not be used in place of video (1)
+      VIDEO = 1;
+      CHANNEL = 2;
+      PLAYLIST = 3;
+      MOVIE = 4;
+    }
+  
+    enum Duration {
+      SHORT = 0;
+      MEDIUM = 2;
+      LONG = 1;
+    }
+
+    optional UploadDate upload_date = 1;
+    optional Type type = 2;
+    optional Duration duration = 3;
+    optional bool hd = 4;
+    optional bool subtitles = 5;
+    optional bool creative_commons = 6;
+    optional bool three_d = 7;
+    optional bool live = 8;
+    optional bool purchased = 9;
+    optional bool four_k = 14;
+    optional bool three_sixty_degrees = 15;
+    optional bool location = 23;
+    optional bool hdr = 25;
+    optional bool vr180 = 26;
+  }
+
+  optional Sort sort = 1;
+  optional Filter filter = 2;
+
+  // Search index (offset)
+  // Typically, this should be equal to
+  // page number * 20
+  // for paged results
+  optional int32 index = 9;
+
+  // Unknown variable. This is set to an empty string (or a 00 byte)
+  // in the case of paginated navigation (without filters?)
+  optional string something = 61;
+}

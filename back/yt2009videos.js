@@ -2,6 +2,9 @@
 =======
 /videos handler
 =======
+if you're looking for watchpage handler,
+it's located in yt2009html.js.
+historical reasons.
 
 yt2009, 2022-2033
 */
@@ -264,13 +267,29 @@ module.exports = {
         if(!sortByPopular) {
             // no sorting (latest)
             let index = 0;
-            let startIndex = 24 * (pageNumber - 1)
+            let startIndex = 25 * (pageNumber - 1)
+            let f = yt2009html.featured()
+            // fix category sorting for most recent
+            if(categoryNumber !== 0) {
+                let tempVids = []
+                f.forEach(vid => {
+                    if(vid.category == categoryName) {
+                        tempVids.push(vid)
+                    }
+                })
+                tempVids.slice(startIndex, startIndex + 25).forEach(vid => {
+                    addVideo(vid)
+                })
+                return videos;
+            }
             yt2009html.featured().slice(startIndex).forEach(video => {
-                if(video.category !== categoryName
-                && parseInt(categoryNumber) !== 0
-                || index > 24) return;
-                addVideo(video)
-                index++;
+                if(index > 24) return;
+                if(video.category == categoryName
+                || parseInt(categoryNumber) == 0) {
+                    addVideo(video)
+                    index++;
+                }
+                
             })
         } else {
             // sort by most popular, then add

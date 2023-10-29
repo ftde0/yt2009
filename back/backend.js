@@ -435,7 +435,6 @@ app.get("/ryd_request", (req, res) => {
 /*
 ======
 search page
-some rework soon
 ======
 */
 
@@ -450,16 +449,10 @@ app.get("/results", (req, res) => {
     }
     let query = req.query.search_query
     let flags = req.query.flags || ""
-    let params = req.query.sp || ""
     let resetCache = false;
     // reset cache
     if(req.query.resetcache == "1") {
         resetCache = true;
-    }
-
-    // pages (needs rework)
-    if(req.query.page) {
-        params += "&page=" + req.query.page
     }
 
     try {
@@ -488,44 +481,21 @@ app.get("/results", (req, res) => {
         return;
     }
 
-    if(req.query.page && parseInt(req.query.page) > 1) {
-        // page looping
-        yt2009_search.loopPages(
-            query,
-            params,
-            parseInt(req.query.page),
-            (data) => {
-                res.send(yt2009_search.apply_search_html(
-                    data, query, flags,
-                    req.originalUrl,
-                    req.protocol, params,
-                    req.headers["user-agent"]
-                ))
-            },
-            flags.includes("only_old")
-        )
-    } else {
-        // normal search
-        yt2009_search.get_search(
-            query,
-            decodeURIComponent(flags),
-            params,
-            (data) => {
-                if(!data) {
-                    res.send(
-                        `[yt2009] coś poszło nie tak w parsowaniu wyników
-                        / something went wrong while parsing the results`)
-                    return;
-                }
-                res.send(yt2009_search.apply_search_html(
-                    data, query, flags,
-                    req.originalUrl,
-                    req.protocol, params,
-                    req.headers["user-agent"]
-                ))
-            },
-            yt2009_utils.get_used_token(req), resetCache)
-    }
+    yt2009_search.get_search(query, decodeURIComponent(flags), req.query,
+    (data) => {
+        if(!data) {
+            res.send(
+                `[yt2009] coś poszło nie tak w parsowaniu wyników
+                / something went wrong while parsing the results`)
+            return;
+        }
+        res.send(yt2009_search.apply_search_html(
+            data, query, flags,
+            req.originalUrl,
+            req.protocol,
+            req.headers["user-agent"]
+        ))
+    }, yt2009_utils.get_used_token(req), resetCache)
 
     
 })

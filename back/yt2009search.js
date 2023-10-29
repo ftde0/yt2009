@@ -8,6 +8,7 @@ const yt2009doodles = require("./yt2009doodles")
 const config = require("./config.json")
 const fs = require("fs")
 const search_code = fs.readFileSync("../search-generic-page.htm").toString();
+const searchParams = require("./proto/search_request_params_pb")
 
 let cache = require("./cache_dir/search_cache_manager")
 let pagingCache = require("./cache_dir/search_paging_cache_manager")
@@ -23,21 +24,144 @@ module.exports = {
             query += " " + this.handle_only_old(flags)
         }
 
-        
-        switch(encodeURIComponent(params.split("&")[0])) {
-            case "EgIQAw%3D%3D": {
-                query += "!yt2009_search_type_playlist"
-                break;
-            }
-            case "EgIQAg%3D%3D": {
-                query += "!yt2009_search_type_channel"
-                break;
+        let useProto = false;
+        let paramsMsg = new searchParams.SearchRequestParams()
+        let filtersMsg = new searchParams.SearchRequestParams.Filter
+        let protoFinal = ""
+        if(params.search_sort || params.uploaded || params.high_definition
+        || params.closed_captions || params.search_type) {
+            useProto = true
+        }
+
+        // sort options for search
+        if(params.search_sort) {
+            switch(params.search_sort) {
+                case "video_date_uploaded": {
+                    paramsMsg.setSort(2)
+                    break;
+                }
+                case "video_view_count": {
+                    paramsMsg.setSort(3)
+                    break;
+                }
+                case "video_avg_rating": {
+                    paramsMsg.setSort(1)
+                    break;
+                }
             }
         }
 
-        if(cache.read()[query] && !resetCache) {
+        // upload date filter
+        // before: and after: options that are used by only_old
+        // don't work with those so improvise
+        if(params.uploaded && !flags.includes("only_old")) {
+            switch(params.uploaded) {
+                case "d": {
+                    filtersMsg.setUploadDate(1)
+                    break;
+                }
+                case "w": {
+                    filtersMsg.setUploadDate(2)
+                    break;
+                }
+                case "m": {
+                    filtersMsg.setUploadDate(3)
+                    break;
+                }
+            }
+        } else if(params.uploaded) {
+            // remove the default only_old and generate a new setting
+            // after:<current_only_old - setting>
+            // before:<current_only_old>
+            query = query.replace(" " + this.handle_only_old(flags), "")
+            let onlyOld = this.handle_only_old(flags)
+            if(onlyOld.includes(" ")) {
+                onlyOld = onlyOld.split(" ")[1]
+            }
+            let onlyOldDate = new Date(onlyOld)
+            let diffUnix = 0
+            switch(params.uploaded) {
+                case "d": {
+                    diffUnix = 1000 * 60 * 60 * 24
+                    break;
+                }
+                case "w": {
+                    diffUnix = 1000 * 60 * 60 * 24 * 7
+                    break;
+                }
+                case "m": {
+                    diffUnix = 1000 * 60 * 60 * 24 * 31
+                    break;
+                }
+            }
+            let after = new Date(onlyOldDate - diffUnix)
+            let afterStr = after.getFullYear()
+                         + "-" + (after.getMonth() + 1)
+                         + "-" + after.getDate()
+            query += " before:" + onlyOld + " after:" + afterStr
+        }
+
+        // features filter (cc/hd)
+        if(params.closed_captions) {
+            filtersMsg.setSubtitles(true)
+        }
+        if(params.high_definition) {
+            filtersMsg.setHd(true)
+        }
+
+        // all/channel/playlists
+        if(params.search_type) {
+            switch(params.search_type) {
+                case "search_videos": {
+                    filtersMsg.setType(1)
+                    break;
+                }
+                case "search_users": {
+                    filtersMsg.setType(2)
+                    break;
+                }
+                case "search_playlists": {
+                    filtersMsg.setType(3)
+                    break;
+                }
+                case "search_movies": {
+                    filtersMsg.setType(4)
+                    break;
+                }
+            }
+        }
+
+        if(params.search_duration) {
+            switch(params.serach_duration) {
+                case "short": {
+                    filtersMsg.setDuration(0)
+                    break;
+                }
+                case "long": {
+                    filtersMsg.setDuration(2)
+                    break;
+                }
+            }
+        }
+
+        // paging
+        if(params.page) {
+            if(isNaN(parseInt(params.page))) {
+                params.page = 1
+            }
+            paramsMsg.setIndex(parseInt(params.page) * 20)
+        }
+
+        if(useProto) {
+            paramsMsg.setFilter(filtersMsg)
+            protoFinal = Buffer.from(
+                paramsMsg.serializeBinary()
+            ).toString("base64")
+        }
+
+        if(cache.read()[query + protoFinal] && !resetCache) {
             // cached data
-            callback(cache.read()[query])
+            callback(cache.read()[query + protoFinal])
             if(config.env == "dev") {
                 console.log(`(${token}) ${query} from cache ${Date.now()}`)
             }
@@ -50,10 +174,10 @@ module.exports = {
             // construct requestbody
             let requestBody = {
                 "context": yt2009contants.cached_innertube_context,
-                "query": query.split("!yt2009_")[0]
+                "query": query
             }
-            if(params) {
-                requestBody.params = params
+            if(protoFinal) {
+                requestBody.params = protoFinal
             }
 
             // send request
@@ -70,29 +194,168 @@ module.exports = {
                 let resultsToCallback = []
                 resultsToCallback = yt2009utils.search_parse(r)
                 
-                cache.write(query, JSON.parse(JSON.stringify(resultsToCallback)))
+                cache.write(
+                    query + protoFinal,
+                    JSON.parse(JSON.stringify(resultsToCallback))
+                )
                 callback(JSON.parse(JSON.stringify(resultsToCallback)))
             })))
         }
     },
 
-    "apply_search_html": function(results, query, flags, url, protocol, params, userAgent) {
+    "apply_search_html": function(results, query, flags, url, protocol, userAgent) {
         // apply get_search results to html
         let code = search_code;
         let results_html = ``
         let search_type = "all"
         let browser = userAgent.includes("Firefox/") ? "firefox" : "chrome"
 
-        switch(encodeURIComponent(params.split("&")[0])) {
-            case "EgIQAw%3D%3D": {
-                search_type = "playlist"
-                break;
-            }
-            case "EgIQAg%3D%3D": {
-                search_type = "channel"
-                break;
-            }
+        let params = url.split("&")
+        if(params[0].includes("?")) {
+            params[0] = params[0].split("?")[1]
         }
+        // properly show chosen filters
+        let sort = "Relevance"
+        let uploaded = "Anytime"
+        let type = "All"
+        let typesList = []
+        let url_without_sort = url;
+        let url_without_upload = url;
+        let url_without_type = url;
+        params.forEach(param => {
+            if(!param.includes("=")) return;
+            switch(param.split("=")[1]) {
+                // sort
+                case "video_date_uploaded": {
+                    sort = "Newest"
+                    url_without_sort = url_without_sort.replace(
+                        /[?|&]search_sort=video_date_uploaded/, ""
+                    )
+                    break;
+                }
+                case "video_date_uploaded_reverse": {
+                    sort = "Oldest"
+                    url_without_sort = url_without_sort.replace(
+                        /[?|&]search_sort=video_date_uploaded_reverse/, ""
+                    )
+                    break;
+                }
+                case "video_view_count": {
+                    sort = "View Count"
+                    url_without_sort = url_without_sort.replace(
+                        /[?|&]search_sort=video_view_count/, ""
+                    )
+                    break;
+                }
+                case "video_avg_rating": {
+                    sort = "Rating"
+                    url_without_sort = url_without_sort.replace(
+                        /[?|&]search_sort=video_avg_rating/, ""
+                    )
+                    break;
+                }
+                // upload date
+                case "d": {
+                    uploaded = "Today"
+                    url_without_upload = url_without_upload.replace(
+                        /[?|&]uploaded=d/, ""
+                    )
+                    break;
+                }
+                case "w": {
+                    uploaded = "This week"
+                    url_without_upload = url_without_upload.replace(
+                        /[?|&]uploaded=w/, ""
+                    )
+                    break;
+                }
+                case "m": {
+                    uploaded = "This month"
+                    url_without_upload = url_without_upload.replace(
+                        /[?|&]uploaded=m/, ""
+                    )
+                    break;
+                }
+                // all/channels/playlists type
+                case "search_users": {
+                    search_type = "channel"
+                    break;
+                }
+                case "search_playlists": {
+                    search_type = "playlist"
+                    break;
+                }
+            }
+            // type
+            switch(param.split("=")[0]) {
+                case "partner": {
+                    type = "Partner Videos"
+                    typesList.push("Partner Videos")
+                    url_without_type = url_without_type.replace(
+                        /[?|&]partner=1/, ""
+                    )
+                    break;
+                }
+                case "annotations": {
+                    type = "Annotations"
+                    typesList.push("Annotations")
+                    url_without_type = url_without_type.replace(
+                        /[?|&]annotations=1/, ""
+                    )
+                    break;
+                }
+                case "closed_captions": {
+                    type = "Closed Captions"
+                    typesList.push("Closed Captions")
+                    url_without_type = url_without_type.replace(
+                        /[?|&]closed_captions=1/, ""
+                    )
+                    break;
+                }
+                case "high_definition": {
+                    type = "HD"
+                    typesList.push("HD")
+                    url_without_type = url_without_type.replace(
+                        /[?|&]high_definition=1/, ""
+                    )
+                    break;
+                }
+            }
+        })
+        if(typesList.length == 0) {
+            typesList.push(type)
+        }
+        code = code.replace("chosen_sort", sort)
+        code = code.replace("chosen_upload", uploaded)
+        code = code.replace("chosen_type", typesList.join(", "))
+        // sort
+        code = code.replace(
+            "url_plus_newest", url_without_sort + "&search_sort=video_date_uploaded"
+        ).replace(
+            "url_plus_views", url_without_sort + "&search_sort=video_view_count"
+        ).replace(
+            "url_plus_rating", url_without_sort + "&search_sort=video_avg_rating"
+        ).replace(
+            "url_plus_relevance", url_without_sort
+        )
+        // upload date
+        code = code.replace(
+            "url_plus_today", url_without_upload + "&uploaded=d"
+        ).replace(
+            "url_plus_week", url_without_upload + "&uploaded=w"
+        ).replace(
+            "url_plus_month", url_without_upload + "&uploaded=m"
+        ).replace(
+            "url_plus_anytime", url_without_upload
+        )
+        // type
+        code = code.replace(
+            "url_plus_cc", url_without_type + "&closed_captions=1"
+        ).replace(
+            "url_plus_hd", url_without_type + "&high_definition=1"
+        ).replace(
+            "url_plus_type_all", url_without_type
+        )
 
         code = require("./yt2009loginsimulate")(flags, code)
         
@@ -177,6 +440,12 @@ module.exports = {
                             uploaderName = waybackData.authorName
                         }
                     }
+
+                    // verified check if partner=1
+                    if(typesList.includes("Partner Videos")
+                    && (!video.verified && !video.artist)) {
+                        cancelled = true;
+                    }
     
                     // apply html
                     if(!cancelled) {
@@ -230,10 +499,23 @@ module.exports = {
                 }
                 case "metadata": {
                     estResults = result.resultCount
+                    if(estResults == 0) {
+                        code = code.replace(
+                            `<!--yt2009_no_results-->`,
+                            yt2009templates.searchNoResults(query)
+                        )
+                    }
                     break;
                 }
             }
         })
+        
+        if(results.length == 0) {
+            code = code.replace(
+                `<!--yt2009_no_results-->`,
+                yt2009templates.searchNoResults(query)
+            )
+        }
 
         let visibleNames = {
             "channel": "Channels",
@@ -246,17 +528,18 @@ module.exports = {
             `<span class="yt2009-hook-${search_type}-selected search-type-selected" href="yt2009_search_${search_type}_link">${visibleNames[search_type]}</span>`
         )
 
+        let resultsUrl = `/results?search_query=${query.split(" ").join("+")}`
         code = code.replace(
             `yt2009_search_all_link`,
-            `/results?search_query=${query.split(" ").join("+")}`
+            resultsUrl
         )
         code = code.replace(
             `yt2009_search_channel_link`,
-            `/results?search_query=${query.split(" ").join("+")}&sp=EgIQAg%3D%3D`
+            `${resultsUrl}&search_type=search_users`
         )
         code = code.replace(
             `yt2009_search_playlist_link`,
-            `/results?search_query=${query.split(" ").join("+")}&sp=EgIQAw%3D%3D`
+            `${resultsUrl}&search_type=search_playlists`
         )
         code = code.replace(`yt2009_fill_flags`, flags)
         code = code.split(`yt2009_search_query`).join(query)
@@ -265,9 +548,11 @@ module.exports = {
 
         // paging
         let currentPage = 1;
-        if(params.includes("page=")) {
-            currentPage = parseInt(params.split("page=")[1].split(";")[0])
-        }
+        params.forEach(param => {
+            if(param.startsWith("page=")) {
+                currentPage = parseInt(param.split("page=")[1])
+            }
+        })
         // initial page numbers
         let pageNumbers = [
             currentPage - 3,
@@ -291,7 +576,11 @@ module.exports = {
         let pagingHTML = ``
         // show a previous page button if more than 1
         if(currentPage > 1) {
-            pagingHTML += `<a href="${url.replace("page=" + currentPage, "page=" + (currentPage - 1))}" class="pagerNotCurrent">Previous</a>`
+            let previous = url.replace(
+                "page=" + currentPage,
+                "page=" + (currentPage - 1)
+            )
+            pagingHTML += `<a href="${previous}" class="pagerNotCurrent">Previous</a>`
         }
         // create paging buttons if they fit within
         // estResults / 20 (estimated max page count)
@@ -300,13 +589,18 @@ module.exports = {
                 if(page == currentPage) {
                     pagingHTML += `<span class="pagerCurrent">${currentPage}</span>`
                 } else {
-                    pagingHTML += `<a href="${url.replace("page=" + currentPage, "page=" + page)}" class="pagerNotCurrent">${page}</a>`
+                    let pageLink = url.replace("page=" + currentPage, "page=" + page)
+                    pagingHTML += `<a href="${pageLink}" class="pagerNotCurrent">${page}</a>`
                 }
             }
         })
 
         if(estResults / 20 > currentPage * 20 || !estResults) {
-            pagingHTML += `...<a href="${url.replace("page=" + currentPage, "page=" + (currentPage + 1))}" class="pagerNotCurrent">Next</a>`
+            let next = url.replace(
+                "page=" + currentPage,
+                "page=" + (currentPage + 1)
+            )
+            pagingHTML += `...<a href="${next}" class="pagerNotCurrent">Next</a>`
         }
 
         code = code.replace(
@@ -315,6 +609,12 @@ module.exports = {
         )
 
         code = yt2009doodles.applyDoodle(code)
+
+        let baseUrl = `/results?search_query=${query.split(" ").join("+")}`
+        code = code.replace(
+            `var YT2009_BASE_SEARCH_URL = "";`,
+            `var YT2009_BASE_SEARCH_URL = "${baseUrl}";`
+        )
 
         return code;
     },
@@ -389,131 +689,6 @@ module.exports = {
         }, "exp_related")
     },
 
-    "loopPages": function(keyword, searchParameters, targetPage, callback, onlyOld) {
-        // this is STILL such a mess i hate this why haven't i made a proper paging
-        // system before fuckcufkcufkcufkcufkcufkcufkcckkk
-
-        let createPageEntry = this.createPageEntry
-
-        // initial search
-        if(onlyOld) {
-            keyword += " before:2010-04-01"
-        }
-        
-        let page = 1;
-        let lastPagingCachePage = 0;
-
-        // if the desired page is in cache, callback that
-        if(pagingCache.read(keyword)[targetPage]) {
-            callback(pagingCache.read(keyword)[targetPage])
-        } else {
-            // get 1st page as baseline (if not saved already)
-            if(!pagingCache.read(keyword)[1]) {
-                fetch(`https://www.youtube.com/youtubei/v1/search?key=${
-                    yt2009exports.read()["api_key"]
-                }`, {
-                    "headers": yt2009contants.headers,
-                    "method": "POST",
-                    "body": JSON.stringify({
-                        "query": keyword,
-                        "context": yt2009exports.read()["context"]
-                    })
-                }).then(res => res.json().then(r => {
-                    setTimeout(function() {
-                        let rPage = yt2009utils.search_parse(r)
-                        pagingCache.write(keyword, page, rPage)
-                        firstPageReceived()
-                    })
-                }))
-            } else {
-                firstPageReceived()
-            }
-        }
-
-        // on 1st page retrieve
-        function firstPageReceived() {
-            let continuationToken = ""
-            let endpoint = "/youtubei/v1/search"
-            pagingCache.read(keyword)[1].forEach(result => {
-                if(result.type == "continuation") {
-                    continuationToken = result.token
-                    endpoint = result.endpoint
-                }
-            })
-
-            fetchUntilAll(continuationToken, endpoint)
-        }
-
-        // recurse fetch until page == targetPage
-        function fetchUntilAll(continuation, endpoint) {
-            createPageEntry(endpoint, continuation, keyword, page, (results) => {
-                page++
-                if(page == targetPage) {
-                    callback(results)
-                } else {
-                    let newContinuation = ""
-                    results.forEach(result => {
-                        if(result.type == "continuation") {
-                            newContinuation = result.token;
-                            fetchUntilAll(newContinuation, endpoint)
-                        }
-                    })
-                }
-            })
-        }
-    },
-
-    "createPageEntry": function(endpoint, token, keyword, page, callback) {
-        if(pagingCache.read(keyword)[page]) {
-            // cache
-            callback(pagingCache.read(keyword)[page])
-        } else {
-            // clean fetch
-            let results = []
-            let currentContinuation = token;
-
-            // fetch on until 10 results or more
-            let fetchInterval = setInterval(function() {
-                fetch(`https://www.youtube.com${endpoint}?key=${yt2009exports.read()["api_key"]}`, {
-                    "headers": yt2009contants.headers,
-                    "method": "POST",
-                    "body": JSON.stringify({
-                        "continuation": currentContinuation,
-                        "context": yt2009exports.read()["context"]
-                    })
-                }).then(res => res.json().then(r => {
-                    // push results to a full results variable
-                    // if total results >= 10, callback
-                    // otherwise let the interval keep doing its thing
-                    let searchResults = yt2009utils.search_parse(
-                        r.onResponseReceivedCommands[0]
-                    )
-                    searchResults.forEach(result => {
-                        if(result.type !== "continuation") {
-                            results.push(result)
-                        } else {
-                            currentContinuation = result.token;
-                        }
-                    })
-
-                    if(results.length >= 10) {
-                        // add the last continuation token to the end
-                        searchResults.forEach(result => {
-                            if(result.type == "continuation") {
-                                results.push(result)
-                            }
-                        })
-
-                        // then callback the page
-                        pagingCache.write(keyword, page, results)
-                        callback(results)
-                        clearInterval(fetchInterval)
-                    }
-                }))
-            }, 1643)
-           
-        }
-    },
     "handle_only_old": function(flags) {
         let onlyOldFlag = ""
         let resultSyntax = ""

@@ -8,7 +8,8 @@
 		YouTube - yt2009_title_query
 	</title>
 
-	<link id="www-core-css" rel="stylesheet" href="www-core-vfl122413.css">
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+	<!--<link id="www-core-css" rel="stylesheet" href="/assets/site-assets/www-core-vfl138942.css">-->
 	<meta name="description" content="Share your videos with friends, family, and the world">
 	<meta name="keywords" content="video, sharing, camera phone, video phone, free, upload">
 	<style>
@@ -19,6 +20,32 @@
 		.yt2009_hidden, .yt2009_hidden * {
 			opacity: 0 !important;
 			cursor: default !important;
+		}
+
+		#search-advanced-form #panel1 input {
+			width: 215px;
+		}
+
+		#search-advanced-form .panel {
+			display: inline-block;
+			vertical-align: top;
+		}
+
+		#search-advanced-form #panel1 {
+			width: 290px;
+		}
+
+		#search-advanced-form #panel2 {
+			width: 265px;
+		}
+
+		#search-advanced-form #panel3 {
+			width: 330px;
+		}
+
+		#search-advanced-form #panel3 select {
+			width: 130px;
+			margin-right: 20px;
 		}
 
 
@@ -99,20 +126,20 @@
 						<span class="yt2009-hook-playlist-selected search-type-not-selected"><a href="yt2009_search_playlist_link">Playlists</a></span>
 					</td>
 
-					<td class="yt2009_hidden">
-						<span class="sort-by" style="display: flex;">
+					<td>
+						<span class="sort-by">
 							<span class="sort-by-title">Sort by:</span>
 							<span class="yt-menulink" id="" style=""
 								onmouseenter="this.className += ' yt-menulink-hover';"
 								onmouseleave="this.className = this.className.replace(' yt-menulink-hover', '');"><a
 									class="yt-menulink-btn yt-button yt-button-" href="#"
-									onclick="return false;">Relevance</a><a class="yt-menulink-arr" href="#"
+									onclick="return false;">chosen_sort</a><a class="yt-menulink-arr" href="#"
 									onclick="return false;"></a>
 								<ul class="yt-menulink-menu">
-									<li><a href="#">Newest</a></li>
-									<li><a href="#">View Count</a></li>
-									<li><a href="#">Rating</a></li>
-									<li><a href="#">Relevance</a></li>
+									<li><a href="url_plus_newest">Newest</a></li>
+									<li><a href="url_plus_views">View Count</a></li>
+									<li><a href="url_plus_rating">Rating</a></li>
+									<li><a href="url_plus_relevance">Relevance</a></li>
 								</ul>
 							</span>
 						</span>
@@ -123,13 +150,13 @@
 								onmouseenter="this.className += ' yt-menulink-hover';"
 								onmouseleave="this.className = this.className.replace(' yt-menulink-hover', '');"><a
 									class="yt-menulink-btn yt-button yt-button-" href="#"
-									onclick="return false;">Anytime</a><a class="yt-menulink-arr" href="#"
+									onclick="return false;">chosen_upload</a><a class="yt-menulink-arr" href="#"
 									onclick="return false;"></a>
 								<ul class="yt-menulink-menu">
-									<li><a href="#">Today</a></li>
-									<li><a href="#">This week</a></li>
-									<li><a href="#">This month</a></li>
-									<li><a href="#">Anytime</a></li>
+									<li><a href="url_plus_today">Today</a></li>
+									<li><a href="url_plus_week">This week</a></li>
+									<li><a href="url_plus_month">This month</a></li>
+									<li><a href="url_plus_anytime">Anytime</a></li>
 								</ul>
 							</span>
 						</span>
@@ -140,31 +167,100 @@
 								onmouseenter="this.className += ' yt-menulink-hover';"
 								onmouseleave="this.className = this.className.replace(' yt-menulink-hover', '');"><a
 									class="yt-menulink-btn yt-button yt-button-" href="#"
-									onclick="return false;">All</a><a class="yt-menulink-arr" href="#"
+									onclick="return false;">chosen_type</a><a class="yt-menulink-arr" href="#"
 									onclick="return false;"></a>
 								<ul class="yt-menulink-menu">
-									<li><a href="#">Closed Captions</a></li>
-									<li><a href="#">HD</a></li>
-									<li><a href="#">All</a></li>
+									<li><a href="url_plus_cc">Closed Captions</a></li>
+									<li><a href="url_plus_hd">HD</a></li>
+									<li><a href="url_plus_type_all">All</a></li>
 								</ul>
 							</span>
 						</span>
 					</td>
 
-					<td class="yt2009_hidden">Advanced Options</td>
+					<td id="search-advanced">
+						<a href="#" class="hLink" onclick="toggleAdvSearch();return false;">
+							Advanced Options
+						</a>
+					</td>
 				</tr>
 			</tbody>
 		</table>
 
 		<div id="search-advanced-form" class="hid">
-			<div class="search-setting-inner alignC">Loading...</div>
+			<div class="search-setting-inner">
+				<div class="search-section-header-toolbelt">
+					<h1 class="name">Advanced Search</h1>
+				</div>
+				<div class="panel" id="panel1">
+					<div id="search-section-header">
+						<span><b>Find results that have:</b></span>
+					</div>
+					<span>All these words</span><br>
+					<input type="text" autocomplete="off" spellcheck="false" id="input-all-words"><br><br>
+					<span>This exact phrase</span><br>
+					<input type="text" autocomplete="off" spellcheck="false" id="input-exact"><br><br>
+					<span>One or more of these words</span><br>
+					<input type="text" autocomplete="off" spellcheck="false" id="input-one-or-more"><br><br>
+					<span>None of these words</span><br>
+					<input type="text" autocomplete="off" spellcheck="false" id="input-none"><br><br>
+					<a class="yt-button yt-button-primary" onclick="sendAdvSearch()" id="" style="" href="#"><span>Search</span></a>
+					or
+					<a href="#" onclick="toggleAdvSearch();return false;">cancel</a>
+				</div>
+				<div class="panel" id="panel2">
+					<div id="search-section-header">
+						<span><b>Show these types of results:</b></span><br>
+					</div>
+					<input type="radio" id="radio-all" value="All" name="result-type" checked>
+					<label for="radio-all">All</label><br>
+					<input type="radio" id="radio-videos" value="Videos" name="result-type">
+					<label for="radio-videos">Videos</label><br>
+					<input type="radio" id="radio-users" value="Channels" name="result-type">
+					<label for="radio-channels">Channels</label><br>
+					<input type="radio" id="radio-playlists" value="Playlists" name="result-type">
+					<label for="radio-playlists">Playlists</label><br>
+					<input type="radio" id="radio-movies" value="Movies" name="result-type">
+					<label for="radio-movies">Movies</label><br>
+					<div id="search-section-header">
+						<span><b>Show only videos with these features:</b></span><br>
+					</div>
+					<input type="checkbox" id="check-hd" name="high_definition">
+					<label for="check-hd">HD (High Definition)</label><br>
+					<input type="checkbox" id="check-cc" name="closed_captions">
+					<label for="check-cc">Closed Captions</label><br>
+					<input type="checkbox" id="check-pv" name="partner">
+					<label for="check-v">Partner Videos</label>
+				</div>
+				<div class="panel" id="panel3">
+					<div id="search-section-header">
+						<span><b>Refine your search by:</b></span><br>
+					</div>
+					<div class="floatL">
+						<span>Duration</span><br>
+						<select id="select-duration">
+							<option name="anytime">Anytime</option>
+							<option name="short">Short</option>
+							<option name="long">Long</option>
+						</select>
+					</div>
+					<div class="floatL">
+						<span>Uploaded</span><br>
+						<select id="select-uploaded">
+							<option name="anytime">Anytime</option>
+							<option name="m">This month</option>
+							<option name="w">This week</option>
+							<option name="d">Today</option>
+						</select>
+					</div>
+				</div>
+				
+				
+			</div>
 		</div>
 
 		<div id="results-main-content">
-			<!--<div style="margin-top: 10px" id="search-no-results-message">
-				<img src="search-noresults-new_pliki/icn_cycds_warning-vfl33982.gif" alt="">&nbsp;No videos found for
-				<span>“”</span>
-			</div>-->
+			<!--yt2009_no_results-->
 
 			<div id="video_grid" class="list-view">
 				<!--yt2009_results-->
@@ -279,6 +375,10 @@
 	<script src="/assets/site-assets/yt2009quicklist.js"></script>
 	<a name="pageBottom"></a>
 	<script src="/assets/site-assets/yt2009langpicker.js"></script>
+	<script>
+		var YT2009_BASE_SEARCH_URL = "";
+	</script>
+	<script src="/assets/site-assets/yt2009advsearch.js"></script>
 </body>
 
 </html>

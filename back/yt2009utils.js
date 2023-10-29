@@ -264,6 +264,22 @@ module.exports = {
                                                     .browseEndpoint.browseId
                     }
 
+                    let verified = false;
+                    let artist = false;
+                    if(result.ownerBadges) {
+                        result.ownerBadges.forEach(badge => {
+                            if(badge.metadataBadgeRenderer
+                            && badge.metadataBadgeRenderer.style
+                            == "BADGE_STYLE_TYPE_VERIFIED") {
+                                verified = true;
+                            } else if(badge.metadataBadgeRenderer
+                            && badge.metadataBadgeRenderer.style
+                            == "BADGE_STYLE_TYPE_VERIFIED_ARTIST") {
+                                artist = true;
+                            }
+                        })
+                    }
+
                     // add video
                     resultsToCallback.push({
                         "type": "video",
@@ -278,7 +294,9 @@ module.exports = {
                         "author_name": result.ownerText.runs[0].text,
                         "author_url": author_url,
                         "author_handle": userHandle,
-                        "upload": uploadDate
+                        "upload": uploadDate,
+                        "verified": verified,
+                        "artist": artist
                     })
                 }
                 catch(error) {}
@@ -293,15 +311,21 @@ module.exports = {
                 && !channelUrl.startsWith("/channel/")) {
                     channelUrl = "/channel/" + result.channelId
                 }
+                let subCount = "0 subscribers"
+                if(result.subscriberCountText
+                && result.subscriberCountText.simpleText.includes("subscriber")) {
+                    subCount = result.subscriberCountText.simpleText
+                } else if(result.videoCountText
+                && result.videoCountText.simpleText.includes("subscriber")) {
+                    subCount = result.videoCountText.simpleText
+                }
                 resultsToCallback.push({
                     "type": "channel",
                     "name": result.title.simpleText,
                     "avatar": this.saveAvatar(
                                 result.thumbnail.thumbnails[0].url
                             ),
-                    "subscribers": result.subscriberCountText
-                                    ? result.subscriberCountText.simpleText
-                                    : "",
+                    "subscribers": subCount,
                     "url": channelUrl
                 })
             }

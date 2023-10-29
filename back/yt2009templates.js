@@ -1502,5 +1502,12 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         }
 
         return fullHTML
+    },
+    "searchNoResults": function(term) {
+        return `
+    <div style="margin-top: 10px" id="search-no-results-message">
+        <img src="/assets/site-assets/icn_cycds_warning-vfl33982.gif" alt="">&nbsp;No videos found for
+        <span>“${term}”</span>
+    </div>`
     }
 }

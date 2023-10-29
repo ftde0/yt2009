@@ -996,7 +996,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "uploaderName": data.author_name,
                     "uploaderUrl": data.author_url,
                     "time": data.length,
-                    "category": data.category
+                    "category": data.category,
+                    "qualities": data.qualities || false
                 })
                 videos_page.unshift({
                     "id": data.id,
@@ -1006,7 +1007,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "uploaderName": data.author_name,
                     "uploaderUrl": data.author_url,
                     "time": data.length,
-                    "category": data.category
+                    "category": data.category,
+                    "qualities": data.qualities || false
                 })
                 fs.writeFileSync("./cache_dir/watched_now.json",
                                 JSON.stringify(featured_videos))

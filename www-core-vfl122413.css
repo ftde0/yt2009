@@ -6271,3 +6271,227 @@ td.spons-vid-thumb .user-thumb-jumbo img {
 #watch-flag-menu :hover>a {
   color: #000
 }
+
+
+
+#search-advanced-form {
+  clear: both;
+  padding: 7px 0
+}
+
+#search-advanced-form .search-setting-inner {
+  border: 1px solid #ddd;
+  padding: 10px;
+  zoom: 1;
+  background-color: #f3f3f3
+}
+
+.search-section-header-toolbelt {
+  padding-bottom: 6px;
+  border-bottom: 1px solid #cccccc
+}
+
+.search-section-header-toolbelt .name,
+.search-section-header-toolbelt .name b {
+  font-size: 13px
+}
+
+#search-options-expander a {
+  font-weight: bold
+}
+
+#search-options-expander a #additional-search-options-expander a {
+  font-size: 12px
+}
+
+#search-options-expander .yt-uix-expander-arrow,
+#additional-search-options-expander .yt-uix-expander-arrow {
+  margin-right: 0
+}
+
+#toolbelt-left {
+  float: left;
+  width: 100px;
+  margin-right: 10px
+}
+
+#toolbelt-left .search-option-box {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dotted #999999
+}
+
+#toolbelt-top .search-option-box {
+  float: left;
+  width: 130px;
+  margin: 5px
+}
+
+#toolbelt-top .search-option-box-first {
+  margin-left: 16px
+}
+
+#toolbelt-container .search-link-box {
+  float: left;
+  width: 100px;
+  margin-top: 20px
+}
+
+#toolbelt-container .search-option-label {
+  padding-bottom: 1px
+}
+
+#toolbelt-container .search-option {
+  padding-bottom: 2px;
+  font-weight: bold
+}
+
+#toolbelt-container .search-option a {
+  font-weight: normal
+}
+
+#toolbelt-container #search-advanced-form .search-setting-sub-section {
+  border-top: 0;
+  padding: 0 0 5px 10px
+}
+
+#toolbelt-container #search-advanced-form .search-subsection {
+  width: 900px
+}
+
+#toolbelt-container #search-advanced-form .search-field {
+  float: left;
+  height: 40px;
+  padding-right: 20px
+}
+
+#toolbelt-container #search-advanced-form #search-advanced-header {
+  padding-top: 5px
+}
+
+#toolbelt-main #wonderwheel-toggle {
+  display: none
+}
+
+.toolbelt-open {
+  float: left;
+  width: 850px
+}
+
+.toolbelt-open #results-main-content {
+  width: 488px;
+}
+
+.toolbelt-open #search-related-terms .search-related-items {
+  width: 678px;
+}
+
+.toolbelt-open .video-main-content,
+.toolbelt-open .playlist-main-content,
+.toolbelt-open .playlist-facets {
+  width: 340px;
+}
+
+.toolbelt-open .show-main-content,
+.toolbelt-open .movie-main-content {
+  width: 330px;
+}
+
+.toolbelt-open .channel-recent-video-div {
+  width: 100px;
+  margin-top: 0;
+  margin-left: 5px;
+}
+
+.toolbelt-open .channel-recent-video-title {
+  width: 100%;
+  margin-left: 0
+}
+
+.toolbelt-top-options-container {
+  float: left;
+  margin-left: 40px
+}
+
+.toolbelt-top-options-container .search-sort {
+  font-size: 12px;
+  padding-top: 1px
+}
+
+.toolbelt-top-options-container .sort-by {
+  margin: 0 6px
+}
+
+.toolbelt-top-options-container .sort-by-title {
+  color: #666
+}
+
+#search-related-terms {
+  clear: both;
+  padding: 0 3px 7px 3px
+}
+
+#search-related-terms a {
+  white-space: nowrap
+}
+
+#search-related-terms .top {
+  height: 20px
+}
+
+#search-related-terms .bottom {
+  height: 60px
+}
+
+#search-related-terms .search-related-title {
+  float: left;
+  margin-right: 6px;
+  color: #666
+}
+
+#search-related-terms .search-related-items {
+  float: left;
+  width: 790px;
+  overflow-x: hidden;
+  overflow-y: hidden
+}
+
+#search-related-terms .search-related-items div {
+  float: left
+}
+
+#search-related-terms .search-related-item {
+  margin-right: 18px
+}
+
+#search-related-terms .search-related-item .search-related-text {
+  clear: both;
+  height: 20px
+}
+
+#search-related-terms .search-related-thumbs {
+  clear: both
+}
+
+#search-related-terms .search-related-thumbs .search-related-thumb {
+  margin-right: 5px;
+  padding-bottom: 7px
+}
+
+#search-related-terms #wonderwheel-toggle {
+  width: 105px;
+  padding-bottom: 5px
+}
+
+#search-related-terms #wonderwheel-toggle .wonderwheel-toggle-option {
+  font-weight: bold;
+  margin-right: 0;
+  padding-left: 5px;
+  white-space: normal
+}
+
+#search-related-terms #wonderwheel-icon {
+  background-position: 0 -80px;
+  width: 15px;
+  height: 15px
+}
