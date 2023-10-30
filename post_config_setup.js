@@ -367,6 +367,10 @@ let files = [
     {
         "url": "http://web.archive.org/web/20100815042625if_/http://s.ytimg.com/yt/m/mobile/img/blazer_sprite_low-vfl176462.png",
         "path": "./assets/site-assets/blazer_sprite_low-vfl176462.png"
+    },
+    {
+        "url": "https://s.ytimg.com/yt/img/icn_cycds_warning-vfl33982.gif",
+        "path": "./assets/site-assets/icn_cycds_warning-vfl33982.gif"
     }
 ]
 const initialFileCount = files.length

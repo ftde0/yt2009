@@ -243,6 +243,11 @@ module.exports = {
         // category & sorting options
         let categoryNumber = req.query.c || "0"
         let pageNumber = parseInt(req.query.p) || 1
+        let maxResults = parseInt(req.query.max) || 24
+        if(maxResults > 1000) {
+            maxResults = 1000
+        }
+        let startIndexOverride = parseInt(req.query.index)
         if(isNaN(pageNumber)) {
             pageNumber = 1;
         }
@@ -267,23 +272,23 @@ module.exports = {
         if(!sortByPopular) {
             // no sorting (latest)
             let index = 0;
-            let startIndex = 25 * (pageNumber - 1)
+            let startIndex = startIndexOverride || 25 * (pageNumber - 1)
             let f = yt2009html.featured()
             // fix category sorting for most recent
-            if(categoryNumber !== 0) {
+            if(categoryName !== "All Categories") {
                 let tempVids = []
                 f.forEach(vid => {
                     if(vid.category == categoryName) {
                         tempVids.push(vid)
                     }
                 })
-                tempVids.slice(startIndex, startIndex + 25).forEach(vid => {
+                tempVids.slice(startIndex, startIndex + maxResults).forEach(vid => {
                     addVideo(vid)
                 })
                 return videos;
             }
-            yt2009html.featured().slice(startIndex).forEach(video => {
-                if(index > 24) return;
+            yt2009html.featured().slice(startIndex, startIndex + maxResults).forEach(video => {
+                if(maxResults > 24) return;
                 if(video.category == categoryName
                 || parseInt(categoryNumber) == 0) {
                     addVideo(video)
@@ -305,8 +310,8 @@ module.exports = {
                 })
             }
 
-            let startIndex = 24 * (pageNumber - 1)
-            sortedVideos = sortedVideos.slice(startIndex, startIndex + 24)
+            let startIndex = startIndexOverride || 24 * (pageNumber - 1)
+            sortedVideos = sortedVideos.slice(startIndex, startIndex + maxResults)
 
             // add videos
             sortedVideos.forEach(video => {

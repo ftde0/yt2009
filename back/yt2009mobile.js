@@ -498,6 +498,17 @@ module.exports = {
             return;
         }
         // default feeds
+        let start = parseInt(req.query["start-index"] || 1)
+        if(start < 0) {
+            start = 0;
+        }
+        let max = parseInt(req.query["max-results"] || 25)
+        if(max < 0) {
+            max = start + 25
+        }
+        if(max > 1000) {
+            max = 1000
+        }
         if(req.originalUrl.includes("featured")
         || (req.originalUrl.includes("most_discussed")
         && req.headers["user-agent"]
@@ -505,8 +516,10 @@ module.exports = {
             // send full feed on recently_featured
             // 25 recently watched
             let response = templates.gdata_feedStart
+                           .split(">25<").join(`>${max}<`)
+                           .split(">1<").join(`>${start}<`)
             let videosAdded = 0;
-            yt2009html.featured().slice(0, 25).forEach(video => {
+            yt2009html.featured().slice(start, max + 1).forEach(video => {
                 yt2009html.fetch_video_data(video.id, (data) => {
                     let authorName = utils.asciify(video.uploaderName)
                     if(data.author_url.includes("/@")) {
@@ -525,7 +538,7 @@ module.exports = {
                         mobileflags.get_flags(req).watch
                     )
                     videosAdded++;
-                    if(videosAdded >= 25) {
+                    if(videosAdded >= max) {
                         response += templates.gdata_feedEnd
                         res.send(response)
                     }
@@ -534,9 +547,14 @@ module.exports = {
         } else if(req.originalUrl.includes("most_popular")) {
             // grab popular videos (100k+ views) from featured 25-50
             // and put them into the feed
+            if(!req.query["max-results"]) {
+                max = 25
+            }
             let response = templates.gdata_feedStart
+                           .split(">25<").join(`>${max}<`)
+                           .split(">1<").join(`>${start}<`)
             if(yt2009html.featured().length > 25) {
-                yt2009html.featured().slice(25, 50).forEach(video => {
+                yt2009html.featured().slice(start + 25, start + 25 + max).forEach(video => {
                     yt2009html.fetch_video_data(video.id, (data) => {
                         if(utils.bareCount(video.views) > 100000) {
                             response += templates.gdata_feedVideo(
@@ -959,13 +977,19 @@ module.exports = {
     "categoryFeeds": function(req, res) {
         let categoryName = req.originalUrl.split("_")[2].split("?")[0]
         let categoryNumber = categories[categoryName]
+        let max = req.query["max-results"] || 25
+        let start = req.query["start-index"] || 0
         let videos = videostab.internal_getVideos({
             "query": {
                 "c": categoryNumber,
-                "s": "mr"
+                "s": "mr",
+                "max": max,
+                "index": start
             }
         }, "")
         let response = templates.gdata_feedStart
+                       .split(">25<").join(`>${max}<`)
+                       .split(">1<").join(`>${start}<`)
         videos.forEach(video => {
             let cacheVideo = yt2009html.get_cache_video(video.id)
             response += templates.gdata_feedVideo(
