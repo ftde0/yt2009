@@ -756,9 +756,7 @@
 												<div class="outer-scrollbox yt2009-scrollbox scrollbox-all">
 													<div id="playnav-play-all-items" class="inner-scrollbox">
 														<div class="playnav-playlist-header">
-															<a style="text-decoration:none" class="title title-text-color">
-																<span id="playnav-playlist-all-all-title" class="title">lang_playnav_videos</span>
-															</a>
+															<div class="spacer">&nbsp;</div>
 														</div>
 														<!--yt2009_all_scrollbox_uploads-->
 														<div class="playnav-play-column-all">
@@ -776,11 +774,29 @@
 												<div class="outer-scrollbox yt2009-scrollbox scrollbox-uploads hid">
 													<div id="playnav-play-all-items" class="inner-scrollbox">
 														<div class="playnav-playlist-header">
-															<a style="text-decoration:none" class="title title-text-color">
+															<div class="search-box">
+																<input type="text" id="upload_search_query-play" class="box-outline-color" style="width:120px;border-width:1px;border-style:solid;padding: 1px" onkeypress="if (event.keyCode == 13) { playnav_searchChannel(); }">
+																&nbsp;
+																<a class="yt-button" id="" style="" href="javascript:;" onclick="playnav_searchChannel();return false;"><span>Search</span></a>
+															</div>
+
+															<div style="display:none" id="uploads-sort">date</div>
+															<div class="sorters">
+																<a style="" href="javascript:;" onmousedown="playnav_sort('date')">Date Added</a>
+																|
+																<a style="" href="javascript:;" onmousedown="playnav_sort('popularity')">Most Viewed</a>
+																|
+																<a style="" href="javascript:;" onmousedown="playnav_sort('rating')">Top Rated</a>
+															</div>
+															<!--<a style="text-decoration:none" class="title title-text-color">
 																<span id="playnav-playlist-uploads-all-title" class="title">lang_playnav_videos</span>
-															</a>
+															</a>-->
+															<div class="scrollbox-separator">
+																<div class="outer-box-bg-as-border"></div>
+															</div>
 														</div>
 														<!--yt2009_uploads-->
+														<div class="uploads-filtered hid"></div>
 														<div class="spacer">&nbsp;</div>
 
 														<div class="scrollbox-separator">
@@ -799,7 +815,19 @@
 								</div>
 							</div>
 						</div>
+						
+						<div id="playnav-play-loading" class="loading" style="display: none;">
+							<div class="cover outer-box-bg-color"></div>
+							<div class="image-holder">
+								<div class="image-holder-middle">
+									<div class="image-holder-inner">
+										<img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
+
 					<div id="playnav-gridview" class="" style="display: none;">
 						<div id="playnav-grid-panel">
 							<div id="playnav-grid-content">

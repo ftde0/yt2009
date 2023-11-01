@@ -1509,5 +1509,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         <img src="/assets/site-assets/icn_cycds_warning-vfl33982.gif" alt="">&nbsp;No videos found for
         <span>“${term}”</span>
     </div>`
-    }
+    },
+    "latestChip": "8gYuGix6KhImCiQ2NTQ1MjBkZS0wMDAwLTJkOGYtYjkwNS1kNGY1NDdlYWM4OGMYAQ%3D%3D",
+    "popularChip": "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D"
 }

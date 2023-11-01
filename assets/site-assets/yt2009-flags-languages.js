@@ -1,12 +1,8 @@
 var languageData_EN = {
     "tooltips": {
-        "watch-always-morefrom": "always shows a 'More from' section, even if the channel videos aren't cached.",
-        "watch-author-old-names": "if the creator has a /user/ link, use the name from it instead of their current name.",
-        "watch-autoplay": "start video playback automatically (may require enabling autoplay in your browser)",
         "watch-comments-remove-future": "remove comments that contain years 2011-2022",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
-        "watch-exp-hd": "shows a HQ button in the player if available.",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
         "watch-fake-comment-dates": "fake comment dates",
         "watch-fake-upload-date": "fake upload date (ranging anywhere in 2009)",
@@ -15,7 +11,6 @@ var languageData_EN = {
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",
         "watch-remove-username-space": "removes spaces from usernames",
         "watch-share-behavior": "sets how the Share section should work",
-        "watch-use-ryd": "use data from Return YouTube Dislike (https://returnyoutubedislike.com/) for correct star ratings",
         "watch-username-asciify": "remove special characters from usernames",
         "watch-wayback-features": "use Wayback Machine data for yt2009",
 
@@ -32,15 +27,11 @@ var languageData_EN = {
         "channel-auto-user": "always try to redirect to a /user/ url if one can be found",
         "channel-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "channel-default-color": "use the default gray color instead of taking one from the banner",
-        "channel-exp-fill-comments": "fill the channel comments section with comments from the top video",
-        "channel-exp-friends": "fills the Friends and Subscriptions sections if possible",
-        "channel-exp-playlists": "adds support for playlists",
         "channel-fake-upload-date": "fake upload dates for videos (ex. 11 years ago -> 3 months ago)",
         "channel-index-contribute": "visited channels will be visible in /channels",
         "channel-only-old": "will only show videos uploaded in the specified date range on channels (default before 2010-04-01)",
         "channel-realistic-view-count": "more realistic for 2009 view counts",
         "channel-remove-username-space": "removes spaces from usernames",
-        "channel-use-ryd": "use data from Return YouTube Dislike (https://returnyoutubedislike.com/) for correct star ratings",
         "channel-username-asciify": "remove special characters from usernames",
 
         "mainpage-disable-fallback": "hides fallback mode warning",

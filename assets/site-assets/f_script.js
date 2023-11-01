@@ -1224,6 +1224,61 @@ function unsubscribe() {
     document.cookie = "sublist=" + sub + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 }
 
+// playnav search/sort
+function playnav_searchChannel() {
+    if($("#upload_search_query-play").value == "") {
+        $(".uploads-filtered").className = "uploads-filtered hid"
+        $(".uploads").className = "uploads"
+        return;
+    }
+    $("#playnav-play-loading").style.display = "block"
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/search_channel")
+    r.setRequestHeader("source", location.pathname)
+    r.setRequestHeader("query", $("#upload_search_query-play").value)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            $("#playnav-play-loading").style.display = "none"
+            $(".uploads").className = "uploads hid"
+            $(".uploads-filtered").className = "uploads-filtered"
+            $(".uploads-filtered").innerHTML = r.responseText
+        }
+    }
+}
+
+function playnav_sort(sortMode) {
+    if(sortMode == "popularity") {
+        $(".uploads-filtered").className = "uploads-filtered hid"
+        $(".uploads").className = "uploads"
+        return;
+    }
+    $("#playnav-play-loading").style.display = "block"
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/channel_sort")
+    r.setRequestHeader("source", location.pathname)
+    r.setRequestHeader("sort", sortMode)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            $("#playnav-play-loading").style.display = "none"
+            $(".uploads").className = "uploads hid"
+            $(".uploads-filtered").className = "uploads-filtered"
+            $(".uploads-filtered").innerHTML = r.responseText
+        }
+    }
+}
+
 // flip!!
 // taken from nbedit_watch.js
 // if you see this before apr 1, don't ruin the surprise to others!

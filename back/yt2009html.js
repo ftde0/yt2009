@@ -546,8 +546,7 @@ module.exports = {
             }
         }
 
-        if(flags.includes("author_old_names")
-        && data.author_url.includes("/user/")) {
+        if(data.author_url.includes("/user/")) {
             author_name = data.author_url.split("/user/")[1]
         }
 
@@ -1098,57 +1097,19 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         )
         
 
-        // "more from" section if we already have a channel fetched
-        // .. or we just use always_morefrom
+        // "more from" section
         let authorUrl = data.author_url
         if(authorUrl.startsWith("/")) {
             authorUrl = authorUrl.replace("/", "")
         }
-        if(yt2009channelcache.read("main")[authorUrl]
-        || flags.includes("always_morefrom")) {
-            let moreFromCode = yt2009templates.morefromEntry(author_name)
-
-            try {
-                yt2009channelcache.read("main")[authorUrl]
-                .videos.splice(0, 11).forEach(video => {
-                    if(video.id == data.id) return;
-                    let viewCount = parseInt(video.views.replace(/[^0-9]/g, ""))
-                    if(flags.includes("realistic_view_count")
-                    && viewCount >= 100000) {
-                        viewCount = yt2009utils.countBreakup(
-                            Math.floor(viewCount / 90)
-                        )
-                    } else {
-                        viewCount = yt2009utils.countBreakup(viewCount)
-                    }
-                    viewCount = "lang_views_prefix" + viewCount + "lang_views_suffix"
-                    moreFromCode += yt2009templates.relatedVideo(
-                        video.id,
-                        video.title,
-                        protocol,
-                        "",
-                        viewCount,
-                        "",
-                        "",
-                        flags
-                    )
-                })
-            }
-            catch(error) {
-                moreFromCode += 
-                `<div class="yt2009-mark-morefrom-fetch">Loading...</div>`
-            }
-            
-
-            moreFromCode += `
-				        <div class="clearL"></div>
-			        </div>
-                </div>
-            </div>`
-
-
-            code = code.replace(`<!--yt2009_more_from_panel-->`, moreFromCode)
-        }
+        let moreFromCode = yt2009templates.morefromEntry(author_name)
+        moreFromCode += `
+                    <div class="yt2009-mark-morefrom-fetch">Loading...</div>
+			        <div class="clearL"></div>
+		        </div>
+            </div>
+        </div>`
+        code = code.replace(`<!--yt2009_more_from_panel-->`, moreFromCode)
 
         // if flash player is used
         // hide the html5 js, fix the layout, put a flash player
@@ -1328,8 +1289,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     commentPoster = yt2009utils.asciify(commentPoster)
                 }
     
-                if(flags.includes("author_old_names")
-                && comment.authorUrl.includes("/user/")) {
+                if(comment.authorUrl.includes("/user/")) {
                     commentPoster = comment.authorUrl.split("/user/")[1]
                 }
 
@@ -1674,8 +1634,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
-        // autoplay flag
-        if(flags.includes("autoplay") && !useFlash) {
+        // autoplay
+        if(!useFlash) {
             code = code.replace(`<!--yt2009_hook_autoplay_flag-->`, `
             
             <script>
@@ -1692,88 +1652,49 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             </script>`)
         }
 
-        // exp_ryd / use_ryd
+        // exp_ryd / use_ryd / merged
         let useRydRating = "4.5"
         let endRating = "4.5"
-        if(flags.includes("exp_ryd") || flags.includes("use_ryd")) {
-            requiredCallbacks++;
+        requiredCallbacks++;
+        yt2009ryd.fetch(data.id, (rating) => {
+            if(!rating.toString().includes(".5")) {
+                rating = rating.toString() + ".0"
+            }
+            useRydRating = rating;
 
-            yt2009ryd.fetch(data.id, (rating) => {
-                if(!rating.toString().includes(".5")) {
-                    rating = rating.toString() + ".0"
-                }
-                useRydRating = rating;
-
-                let userRating = yt2009userratings.read(data.id, true)
-                let avgRating = yt2009utils.custom_rating_round(
-                    (userRating + parseFloat(useRydRating)) / 2
-                )
-                if(userRating == 0) {
-                    avgRating = useRydRating;
-                }
-                endRating = avgRating
-                if(!avgRating.toString().endsWith(".5")
-                && !avgRating.toString().endsWith(".0")) {
-                    avgRating = avgRating.toString() + ".0"
-                }
-                code = code.replace(
-                    yt2009templates.oneLineRating("4.5"),
-                    yt2009templates.oneLineRating(avgRating)
-                )
-                
-                if(rating == "0.0") {
-                    // if no actual ratings, change onsite rating number to 0
-                    let ratingCount = 
-                    code.split(
-                        `id="defaultRatingMessage"><span class="smallText">`
-                        )[1]
-                        .split(` lang_ratings_suffix`)[0]
-                    code = code.replace(
-                        `id="defaultRatingMessage"><span class="smallText">${ratingCount}`,
-                        `id="defaultRatingMessage"><span class="smallText">0`
-                    )
-
-                }
-
-                useRydRating = parseFloat(rating)
-
-                // fmode rating, more accurate to an actual page (when logged in)
-                if(useFlash) {
-                    code = code.replace(
-                        yt2009templates.oneLineRating(avgRating),
-                        yt2009templates.separatedRating(avgRating)
-                    )
-                    code = code.replace(
-                        `//yt2009-rating`,
-                        `var fullRating = ${avgRating};`
-                    )
-                }
-
-                callbacksMade++;
-                if(requiredCallbacks == callbacksMade) {
-                    render_endscreen();
-                    fillFlashIfNeeded();
-                    genRelay();
-                    callback(code)
-                }
-            })
-        } else {
-            // other frontend user ratings
             let userRating = yt2009userratings.read(data.id, true)
             let avgRating = yt2009utils.custom_rating_round(
                 (userRating + parseFloat(useRydRating)) / 2
             )
             if(userRating == 0) {
-                avgRating = useRydRating
-            }
-            if(Math.floor(avgRating) == avgRating) {
-                avgRating = avgRating.toString() + ".0"
+                avgRating = useRydRating;
             }
             endRating = avgRating
+            if(!avgRating.toString().endsWith(".5")
+            && !avgRating.toString().endsWith(".0")) {
+                avgRating = avgRating.toString() + ".0"
+            }
             code = code.replace(
-                `<button class="yt2009-stars master-sprite ratingL ratingL-4.5" title="4.5"></button>`,
-                `<button class="yt2009-stars master-sprite ratingL ratingL-${avgRating}" title="${avgRating}"></button>`
+                yt2009templates.oneLineRating("4.5"),
+                yt2009templates.oneLineRating(avgRating)
             )
+            
+            if(rating == "0.0") {
+                // if no actual ratings, change onsite rating number to 0
+                let ratingCount = 
+                code.split(
+                    `id="defaultRatingMessage"><span class="smallText">`
+                    )[1]
+                    .split(` lang_ratings_suffix`)[0]
+                code = code.replace(
+                    `id="defaultRatingMessage"><span class="smallText">${ratingCount}`,
+                    `id="defaultRatingMessage"><span class="smallText">0`
+                )
+
+            }
+
+            useRydRating = parseFloat(rating)
+
             // fmode rating, more accurate to an actual page (when logged in)
             if(useFlash) {
                 code = code.replace(
@@ -1785,7 +1706,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     `var fullRating = ${avgRating};`
                 )
             }
-        }
+
+            callbacksMade++;
+            if(requiredCallbacks == callbacksMade) {
+                render_endscreen();
+                fillFlashIfNeeded();
+                genRelay();
+                callback(code)
+            }
+        })
 
         // sharing
         let shareBehaviorServices = constants.shareBehaviorServices
@@ -2054,8 +1983,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             if(flags.includes("username_asciify")) {
                                 authorName = yt2009utils.asciify(authorName)
                             }
-                            if(flags.includes("author_old_names")
-                            && video.creatorUrl.includes("/user/")) {
+                            if(video.creatorUrl.includes("/user/")) {
                                 authorName = video.creatorUrl.split("/user/")[1]
                                                             .split("?")[0]
                             }
@@ -2247,6 +2175,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         markAsDone()
                     }
                 })
+            }
+        } else if(flags.includes("author_old_avatar")
+        && !data.author_url.includes("channel/UC")) {
+            setChannelIcon()
+            callbacksMade++;
+            if(requiredCallbacks <= callbacksMade) {
+                render_endscreen()
+                fillFlashIfNeeded();
+                genRelay();
+                callback(code)
             }
         }
 

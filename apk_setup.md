@@ -131,7 +131,7 @@ start a terminal inside the apkrenamer directory, and piece together your comman
 java -jar renamer.jar -a F:\trash\ytapk\youtube\dist\youtube.apk -o F:\trash\ApkRenamer\out\ -d -p ftde0.yt2009
 ```
 
-follow the instructions in the README of [ApkRenamer](https://github.com/dvaoru/ApkRenamer).
+follow the instructions in the README of [ApkRenamer](https://github.com/dvaoru/ApkRenamer) for more info and options.
 
 ## if needed: sign
 

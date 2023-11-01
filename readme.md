@@ -26,6 +26,8 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 
 - patch the flash player(s) by following [flash_player_patch.md](flash_player_patch.md) and looking through [alt-swf/readme.md](alt-swf/readme.md)
 
+- set up an android app by following [apk_setup.md](apk_setup.md)
+
 ---
 
 ## usage

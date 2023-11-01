@@ -20,21 +20,34 @@ module.exports = {
             if(url.includes("channel/")) {
                 let id = url.split("channel/")[1]
                 callback(id)
-                this.write(url, id)
             } else {
-                fetch(`https://www.youtube.com/${url}`, {
-                    "headers": constants.headers
-                }).then(r => r.text().then(r => {
-                    if(!r.split("/channel/")[1]) {
+                fetch("https://www.youtube.com/youtubei/v1/navigation/resolve_url", {
+                    "headers": constants.headers,
+                    "referrer": "https://www.youtube.com/",
+                    "referrerPolicy": "origin-when-cross-origin",
+                    "body": JSON.stringify({
+                        "context": constants.cached_innertube_context,
+                        "deviceTheme": "DEVICE_THEME_SUPPORTED",
+                        "userInterfaceTheme": "USER_INTERFACE_THEME_DARK",
+                        "url": `https://www.youtube.com/${url}`
+                    }),
+                    "method": "POST",
+                    "mode": "cors",
+                    "credentials": "include"
+                }).then(r => {
+                    if(r.status == 404) {
                         callback(false)
                         return;
                     }
-                    let id = r.split("ios-app")[1]
-                              .split("/channel/")[1]
-                              .split(`"`)[0]
-                    callback(id)
-                    this.write(url, id)
-                }))
+                    r.json().then(r => {
+                        if(r.endpoint.browseEndpoint
+                        && r.endpoint.browseEndpoint.browseId) {
+                            let id = r.endpoint.browseEndpoint.browseId
+                            callback(id)
+                            this.write(url, id)
+                        }
+                    })
+                })
             }
         }
     }

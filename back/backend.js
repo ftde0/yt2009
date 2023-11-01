@@ -2279,6 +2279,194 @@ app.get("/flag_menu_template", (req, res) => {
 })
 
 /*
+======
+channel filtering
+======
+*/
+app.get("/search_channel", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {res.sendStatus(401);return;}
+    if(!req.headers.source || !req.headers.query) {
+        res.sendStatus(400);return;
+    }
+
+    // get channel flags so those work
+    let channelFlags = ""
+    let useOnlyOld = false;
+    if(req.headers.cookie
+    && req.headers.cookie.includes("channel_flags")) {
+        channelFlags = req.headers.cookie
+                       .split("channel_flags=")[1]
+                       .split(";")[0]
+                       .split(":").join(";")
+    }
+    if(channelFlags.includes("only_old")) {
+        useOnlyOld = yt2009_search.handle_only_old(
+            req.headers.cookie.split(":").join(";")
+        )
+    }
+
+    // get channel by source
+    yt2009_channels.main(
+        {"path": req.headers.source,
+        "headers": {},
+        "query": {}},
+        {"send": function(data) {
+            yt2009_search.get_search(
+                `${data.name} ${req.headers.query} ${useOnlyOld ? useOnlyOld : ""}`,
+                "", {}, (search => {
+                    let matchingVids = []
+                    search.forEach(result => {
+                        if(result.type == "video"
+                        && result.title.toLowerCase().includes(
+                            req.headers.query.toLowerCase()
+                        )
+                        && result.author_url.includes(data.id)) {
+                            matchingVids.push(result)
+                        }
+                    })
+                    render(matchingVids)
+                }
+            ), yt2009_utils.get_used_token(req), false)
+        }
+    }, "", true)
+
+    // serverside render html
+    function render(results) {
+        let createdHTML = ``
+        let i = 1;
+        results.forEach(result => {
+            let views = yt2009_utils.viewFlags(result.views, channelFlags)
+            let upload = yt2009_utils.timeFlags(result.upload, channelFlags)
+            createdHTML += yt2009_templates.playnavVideo(
+                result,
+                i,
+                views,
+                upload,
+                Math.floor(yt2009_utils.bareCount(views) / 150),
+                req.protocol
+            )
+            i++
+        })
+
+        res.send(createdHTML)
+    }
+})
+
+app.get("/channel_sort", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {res.sendStatus(401);return;}
+    if(!req.headers.source || !req.headers.sort) {
+        res.sendStatus(400);return;
+    }
+
+    // get channel flags so those work
+    let channelFlags = ""
+    let useOnlyOld = false;
+    if(req.headers.cookie
+    && req.headers.cookie.includes("channel_flags")) {
+        channelFlags = req.headers.cookie
+                       .split("channel_flags=")[1]
+                       .split(";")[0]
+                       .split(":").join(";")
+    }
+    if(channelFlags.includes("only_old")) {
+        useOnlyOld = yt2009_search.handle_only_old(
+            req.headers.cookie.split(":").join(";")
+        )
+    }
+
+    // init search params
+    let vids = []
+    let page = 1;
+    let params = {"page": page}
+    switch(req.headers.sort) {
+        case "date": {
+            params.search_sort = "video_date_uploaded"
+            break;
+        }
+        case "popularity": {
+            params.search_sort = "video_view_count"
+            break;
+        }
+        case "rating": {
+            params.search_sort = "video_avg_rating"
+            break;
+        }
+    }
+
+    // get channel by source
+    yt2009_channels.main(
+        {"path": req.headers.source,
+        "headers": {},
+        "query": {}},
+        {"send": function(data) {
+            // get chips if set to most popular/latest and no only_old
+            // search in any other case
+            if(req.headers.sort == "date" && !useOnlyOld) {
+                getByChip(yt2009_templates.latestChip, data.id)
+                return;
+            }
+            if(req.headers.sort == "popularity" && !useOnlyOld) {
+                getByChip(yt2009_templates.popularChip, data.id)
+                return;
+            }
+            
+            getNextPage(data.name, data.id)
+            
+        }
+    }, "", true)
+
+    // loop search until 10 videos (or 5 fetches to avoid infinite)
+    function getNextPage(name, id) {
+        yt2009_search.get_search(
+            `${name} ${useOnlyOld ? useOnlyOld : ""}`,
+            "", params, (search => {
+                search.forEach(result => {
+                    if(result.type == "video"
+                    && result.author_url.includes(id)) {
+                        vids.push(result)
+                    }
+                })
+                if(vids.length <= 10 && page < 5) {
+                    page++
+                    params.page = page;
+                    getNextPage(name, id)
+                } else {
+                    render(vids)
+                }
+            }
+        ), yt2009_utils.get_used_token(req), false)
+    }
+
+    // get by chip if possible
+    function getByChip(chipParam, channelId) {
+        yt2009_channels.get_direct_by_chipparam(chipParam, channelId, (v) => {
+            render(v)
+        })
+    }
+
+    // serverside render html
+    function render(results) {
+        let createdHTML = ``
+        let i = 1;
+        results.forEach(result => {
+            let views = yt2009_utils.viewFlags(result.views, channelFlags)
+            let upload = yt2009_utils.timeFlags(result.upload, channelFlags)
+            createdHTML += yt2009_templates.playnavVideo(
+                result,
+                i,
+                views,
+                upload,
+                Math.floor(yt2009_utils.bareCount(views) / 150),
+                req.protocol
+            )
+            i++
+        })
+
+        res.send(createdHTML)
+    }
+})
+
+/*
 pizdec
 jp2gmd
 mleczsus :*

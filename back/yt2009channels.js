@@ -51,6 +51,10 @@ module.exports = {
         let getAdditionalSections = this.get_additional_sections
 
         userid_cache.read(url, (id) => {
+            if(!id) {
+                res.send(`[yt2009] channel not found`)
+                return;
+            }
             writeTimingData("userid get")
             // read from cache
             if((n_impl_yt2009channelcache.read("main")[url]
@@ -574,60 +578,13 @@ module.exports = {
         && !flags.includes("author_old_avatar")) {
             code = code.split("yt2009_channel_avatar").join(channelAvatar)
         }
-
-        // custom colors
-        // main background
-        function defaultBg() {
-            let mainBg = yt2009utils.createRgb([
-                data.dominant_color[0] + 20,
-                data.dominant_color[1] + 20,
-                data.dominant_color[2] + 20
-            ])
-            if(flags.includes("default_color")) {
-                mainBg = yt2009utils.createRgb([200, 200, 200])
-            }
-            if(!flags.includes("banners")) {
-                code = code.split("yt2009_main_bg").join(mainBg)
-            }
-    
-            // darker background
-            let darkerBg = [
-                data.dominant_color[0] - 45,
-                data.dominant_color[1] - 45,
-                data.dominant_color[2] - 45
-            ]
-            if(darkerBg[0] < 0
-            || darkerBg[1] < 0
-            || darkerBg[2] < 0) {
-                darkerBg = data.dominant_color
-            }
-            let darkBg = yt2009utils.createRgb(darkerBg)
-            if(flags.includes("default_color")) {
-                mainBg = yt2009utils.createRgb([135, 135, 135])
-            }
-            if(!flags.includes("banners")) {
-                code = code.split("yt2009_darker_bg").join(darkBg)
-            }
-
-            // find text color
-            if(data.dominant_color[0] + data.dominant_color[1] >= 340
-            || flags.includes("default_color")) {
-                code = code.split("yt2009_text_color").join("black")
-                code = code.split("yt2009_black").join("icon_black")
-            } else {
-                code = code.split("yt2009_text_color").join("white")
-            }
-        }
-        //if(!flags.includes("banners")) {defaultBg()}
         
         // use_ryd clientside
-        if(flags.includes("use_ryd")) {
-            code = code.replace(`<!--yt2009_ryd_set-->`, `
-            <script>
-                use_ryd = true;
-                use_ryd_first_video();
-            </script>`)
-        }
+        code = code.replace(`<!--yt2009_ryd_set-->`, `
+        <script>
+            use_ryd = true;
+            use_ryd_first_video();
+        </script>`)
 
         // shows_tab
         if(flags.includes("shows_tab")) {
@@ -700,7 +657,7 @@ module.exports = {
                 scrollbox_all_html
             )
             // "Videos" scrollbox
-            let scrollbox_videos_html = ``
+            let scrollbox_videos_html = `<div class="uploads">`
             let scrollbox_videos = JSON.parse(JSON.stringify(videosSource))
             video_index = 0;
             scrollbox_videos.forEach(video => {
@@ -726,6 +683,7 @@ module.exports = {
                 )
                 video_index++;
             })
+            scrollbox_videos_html += "</div>"
             code = code.replace(
                 "<!--yt2009_uploads-->",
                 scrollbox_videos_html
@@ -769,7 +727,6 @@ module.exports = {
                 let comments_html = ``
                 if(saved_channel_comments[video.id]
                 && saved_channel_comments[video.id].length > 0
-                && flags.includes("exp_fill_comments")
                 && !wayback_settings.includes("comments")) {
                     let comments = saved_channel_comments[video.id]
                     let count = 0;
@@ -985,7 +942,7 @@ module.exports = {
 
         /*
         =======
-        exp_friends
+        exp_friends // merged
         =======
         */
         let subscriptions_count = 0;
@@ -1054,14 +1011,13 @@ module.exports = {
 
         /*
         =======
-        exp_playlists
+        exp_playlists // merged
         =======
         */
         let all_scrollbox_playlists_html = templates.allScrollboxPlaylistHead
         let playlists_scrollbox_html = templates.playlistScrollboxHead
         let savedPlaylists = n_impl_yt2009channelcache.read("playlist")[data.id]
-        if(flags.includes("exp_playlists")
-        && savedPlaylists && savedPlaylists.length > 0) {
+        if(savedPlaylists && savedPlaylists.length > 0) {
             let playlists = n_impl_yt2009channelcache.read("playlist")[data.id]
 
             // "all" scrollbox playlists
@@ -1811,6 +1767,10 @@ module.exports = {
         }
 
         function compare() {
+            if(!userHandle) {
+                require("./yt2009channels").main(req, res, flags, false)
+                return;
+            }
             userHandle = userHandle.replace("@", "")
             userid_cache.read(`/user/${userHandle}`, (id) => {
                 if(userId == id) {
@@ -1838,5 +1798,70 @@ module.exports = {
             // clean fetch the channel
             callback(id)
         })
+    },
+
+    "get_direct_by_chipparam": function(chipParam, channelId, callback) {
+        let videos = []
+        function createVideosFromChip(chip) {
+            chip.forEach(video => {
+                if(video.richItemRenderer || video.gridVideoRenderer) {
+                    video = (video.richItemRenderer || video.gridVideoRenderer)
+                            .content.videoRenderer
+                    videos.push({
+                        "id": video.videoId,
+                        "title": video.title.runs[0].text,
+                        "views": (video.viewCountText
+                              || {"simpleText": "0 views"}).simpleText,
+                        "upload": video.publishedTimeText.simpleText,
+                        "thumbnail": "http://i.ytimg.com/vi/"
+                                    + video.videoId
+                                    + "/hqdefault.jpg",
+                        "length": (video.lengthText || {"simpleText": "00:00"})
+                                  .simpleText
+                    })
+                }
+            })
+            
+            callback(videos)
+        }
+
+        const popularVids = require("./proto/popularVidsChip_pb")
+        let vidsContinuation = new popularVids.vidsChip()
+        let msg = new popularVids.vidsChip.nestedMsg1()
+        msg.setChannelid(channelId)
+        msg.setChipparam(chipParam)
+        vidsContinuation.addMsg(msg)
+        let chip = encodeURIComponent(Buffer.from(
+            vidsContinuation.serializeBinary()
+        ).toString("base64"))
+
+        fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
+            yt2009html.get_api_key()
+        }`, {
+            "headers": yt2009constants.headers,
+            "referrer": "https://www.youtube.com/",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": yt2009constants.cached_innertube_context,
+                "continuation": chip
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            if(!r.onResponseReceivedActions) {
+                createVideosFromChip([])
+                return;
+            }
+            r.onResponseReceivedActions.forEach(action => {
+                if(action.reloadContinuationItemsCommand.slot
+                == "RELOAD_CONTINUATION_SLOT_BODY") {
+                    videosTabAvailable = true
+                    createVideosFromChip(
+                        action.reloadContinuationItemsCommand
+                              .continuationItems
+                    )
+                }
+            })
+        })})
     }
 }

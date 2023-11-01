@@ -37,9 +37,9 @@
 	<div id="baseDiv" class="date-20091111 video-info ">
 		<!-- begin top section -->
 		<div class="languages">
-			<input id="lang-pl" type="radio" checked onclick="location.reload();">
+			<input id="lang-pl" type="radio" onclick="location.reload();" name="langs-radio" checked>
 			<label for="lang-pl">pl</label>
-			<input id="lang-en" type="radio" onclick="setEnglish();">
+			<input id="lang-en" type="radio" onclick="setEnglish();" name="langs-radio">
 			<label for="lang-en">en</label>
 		</div>
 
@@ -47,12 +47,6 @@
 
 		<div class="group1">
 			<h2>/watch</h2>
-			<input type="checkbox" id="watch-always-morefrom" title="pokazuje sekcję More From nawet jak nie ma w cache filmów z kanału.">
-			<label for="watch-always-morefrom">always_morefrom</label><br>
-			<input type="checkbox" id="watch-author-old-names" title="jeśli kanały mają link /user/, używaj nazwy z niego zamiast obecnej - twórca filmu, komentarze, related, more from">
-			<label for="watch-author-old-names">author_old_names</label><br>
-			<input type="checkbox" id="watch-autoplay" title="automatycznie zaczyna odtwarzanie filmu (w nowszych przeglądarkach wymagane będzie zezwolenie na autoplay dla strony)">
-			<label for="watch-autoplay">autoplay</label><br>
 			<input type="checkbox" id="watch-comments-remove-future" title="filtruje komentarze zawierające lata 2011-2022">
 			<label for="watch-comments-remove-future">comments_remove_future</label><br>
 			<input type="checkbox" id="watch-default-avatar" title="domyślny awatar z 2009 zamiast awatara twórcy">
@@ -72,8 +66,6 @@
 			- moderate - wszystko co poor + niektóre słowa<br>
 			- max - usuwa całe linijki tekstu których zawartość pasuje do moderate<br>
 			(zostawienie pola pustego/inna wartość oznacza max)</p>
-			<input type="checkbox" id="watch-exp-hd" title="pokazuj przycisk HQ jak film jest dostępny w 720p">
-			<label for="watch-exp-hd">exp_hd</label><br>
 			<input type="checkbox" id="watch-exp-related" title="pokazuje podobne filmy bazując na tagach oglądanego filmu">
 			<label for="watch-exp-related">exp_related</label><br>
 			<input type="checkbox" id="watch-fake-comment-dates" title="fake daty komentarzy">
@@ -104,8 +96,6 @@
 			- only_remove - tylko usuwa niedziałające platformy<br>
 			- only_add - tylko dodaje nowe działające platformy<br>
 			- both - usuwa niedziałające &amp; dodaje nowe platformy</p>
-			<input type="checkbox" id="watch-use-ryd" title="używaj API Return YouTube Dislike (https://returnyoutubedislike.com/) pod poprawny rating gwiazdkami">
-			<label for="watch-use-ryd">use_ryd</label><br>
 			<input type="checkbox" id="watch-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
 			<label for="watch-username-asciify">username_asciify</label><br>
 			<input type="checkbox" id="watch-wayback-features" title="użyj zapisów z Wayback Machine na yt2009">
@@ -153,12 +143,6 @@
 			<span id="default-avatar-notice">zobacz default_avatar na /watch dla możliwych wartości</span><br>
 			<input type="checkbox" id="channel-default-color" title="domyślne kolory tła (szare) zamiast brania ich z baneru">
 			<label for="channel-default-color">default_color</label><br>
-			<input type="checkbox" id="channel-exp-fill-comments" title="zapełni sekcję komentarzy kanału komentarzami z najwyższego filmu">
-			<label for="channel-exp-fill-comments">exp_fill_comments</label><br>
-			<input type="checkbox" id="channel-exp-friends" title="zapełni sekcję subskrypcji i znajomych w ramach możliwości (znajomi - polecane kanały)">
-			<label for="channel-exp-friends">exp_friends</label><br>
-			<input type="checkbox" id="channel-exp-playlists" title="eksperymentalna obsługa playlist na kanałach">
-			<label for="channel-exp-playlists">exp_playlists</label><br>
 			<input type="checkbox" id="channel-fake-upload-date" title="fake data wrzucenia filmów na kanale">
 			<label for="channel-fake-upload-date">fake_upload_date</label><br>
 			<input type="checkbox" id="channel-index-contribute" title="kanały które odwiedzisz będą widoczne (anonimowo) dla wszystkich na /channels">
@@ -171,8 +155,6 @@
 			<label for="channel-realistic-view-count">realistic_view_count</label><br>
 			<input type="checkbox" id="channel-remove-username-space" title="usuwa spacje z nazw użytkowników">
 			<label for="channel-remove-username-space">remove_username_space</label><br>
-			<input type="checkbox" id="channel-use-ryd" title="używa API Return YouTube Dislike (https://returnyoutubedislike.com/) aby pokazywać rating gwiazdkami na filmach">
-			<label for="channel-use-ryd">use_ryd</label><br>
 			<input type="checkbox" id="channel-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
 			<label for="channel-username-asciify">username_asciify</label><br>
 			<input type="checkbox" id="channel-wayback-features" title="użyj zapisów z Wayback Machine na yt2009">

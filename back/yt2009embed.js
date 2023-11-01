@@ -208,13 +208,10 @@ module.exports = function(req, res) {
     catch(error) {}
 
     // flag autoplay
-    watchflags += ";"
-    if(watchflags.includes("autoplay")) {
-        code = code.replace(
-            `<!--autoplay_hook-->`,
-            templates.embedAutoplayCode
-        )
-    }
+    code = code.replace(
+        `<!--autoplay_hook-->`,
+        templates.embedAutoplayCode
+    )
 
     // flag annotation_redirect
     if((req.headers.cookie || "").includes("annotation_redirect")) {

@@ -710,5 +710,21 @@ module.exports = {
             resultSyntax = "before:2010-04-01"
         }
         return resultSyntax;
+    },
+
+    "get_channel_vids_from_search": function(channelName, additionalQuery, params, channelId) {
+        // loop search pages until we get 10 vids from a channel
+        let matchingResults = []
+        let page = 1;
+        let getSearch = this.get_search
+        function getNextPage() {
+            let p = params || {};
+            p.page = page;
+            getSearch(`${channelName} ${additionalQuery}`, "", p,
+            (data) => {
+                console.log(data)
+            }, "", false)
+        }
+        
     }
 }

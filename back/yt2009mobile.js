@@ -519,7 +519,8 @@ module.exports = {
                            .split(">25<").join(`>${max}<`)
                            .split(">1<").join(`>${start}<`)
             let videosAdded = 0;
-            yt2009html.featured().slice(start, max + 1).forEach(video => {
+            let vids = yt2009html.featured().slice(start, start + max)
+            vids.forEach(video => {
                 yt2009html.fetch_video_data(video.id, (data) => {
                     let authorName = utils.asciify(video.uploaderName)
                     if(data.author_url.includes("/@")) {
@@ -538,7 +539,7 @@ module.exports = {
                         mobileflags.get_flags(req).watch
                     )
                     videosAdded++;
-                    if(videosAdded >= max) {
+                    if(videosAdded >= vids.length) {
                         response += templates.gdata_feedEnd
                         res.send(response)
                     }

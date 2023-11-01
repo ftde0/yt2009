@@ -629,3 +629,44 @@ function grid_fillFromScrollbox() {
         })
     }
 }
+
+// playnav search/sort
+function playnav_searchChannel() {
+    if($("#upload_search_query-play").value == "") {
+        $(".uploads-filtered").className = "uploads-filtered hid"
+        $(".uploads").className = "uploads"
+        return;
+    }
+    $("#playnav-play-loading").style.display = "block"
+    var r = new XMLHttpRequest();
+    r.open("GET", "/search_channel")
+    r.setRequestHeader("source", location.pathname)
+    r.setRequestHeader("query", $("#upload_search_query-play").value)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        $("#playnav-play-loading").style.display = "none"
+        $(".uploads").className = "uploads hid"
+        $(".uploads-filtered").className = "uploads-filtered"
+        $(".uploads-filtered").innerHTML = r.responseText
+    }, false)
+}
+
+function playnav_sort(sortMode) {
+    if(sortMode == "popularity") {
+        $(".uploads-filtered").className = "uploads-filtered hid"
+        $(".uploads").className = "uploads"
+        return;
+    }
+    $("#playnav-play-loading").style.display = "block"
+    var r = new XMLHttpRequest();
+    r.open("GET", "/channel_sort")
+    r.setRequestHeader("source", location.pathname)
+    r.setRequestHeader("sort", sortMode)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        $("#playnav-play-loading").style.display = "none"
+        $(".uploads").className = "uploads hid"
+        $(".uploads-filtered").className = "uploads-filtered"
+        $(".uploads-filtered").innerHTML = r.responseText
+    }, false)
+}
