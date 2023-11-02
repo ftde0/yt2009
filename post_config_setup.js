@@ -53,7 +53,6 @@ create cache files
 =======
 */
 const cacheFiles = {
-    "channel_banner_cache.json": {},
     "channel_friend_cache.json": {},
     "channel_main_cache.json": {},
     "channel_playlist_cache.json": {},
@@ -61,19 +60,16 @@ const cacheFiles = {
     "hd_availability_cache.json": {},
     "playlist_cache.json": {},
     "public_channel_listing.json": {},
-    "qualitylist_cache.json": {},
     "rating_cache.json": {},
     "ryd_cache.json": {},
     "search_cache.json": {},
-    "search_paging_cache.json": {},
     "userid.json": {},
     "video_cache.json": {},
     "video_exists_cache.json": {},
     "watched_now.json": [],
     "wayback_channel_cache.json": {},
     "wayback_watch_cache.json": {},
-    "captions_cache.json": {},
-    "oldbanner_unavail_cache.json": []
+    "captions_cache.json": {}
 }
 console.log("creating cache files")
 for(let file in cacheFiles) {

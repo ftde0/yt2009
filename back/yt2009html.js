@@ -5,9 +5,7 @@ const child_process = require("child_process");
 
 const yt2009utils = require("./yt2009utils")
 const yt2009playlists = require("./yt2009playlists")
-const yt2009channelcache = require("./cache_dir/channel_cache");
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager");
-const yt2009qualitycache = require("./cache_dir/qualitylist_cache_manager")
 const yt2009search = require("./yt2009search");
 const yt2009ryd = require("./cache_dir/ryd_cache_manager");
 const yt2009waybackwatch = require("./cache_dir/wayback_watchpage")
@@ -21,7 +19,6 @@ const userid = require("./cache_dir/userid_cache")
 const watchpage_code = fs.readFileSync("../watch.html").toString();
 const watchpage_feather = fs.readFileSync("../watch_feather.html").toString()
 let cache = require("./cache_dir/video_cache_manager")
-let hd_availability_cache = require("./cache_dir/hd_cache")
 let yt2009userratings = require("./cache_dir/rating_cache_manager")
 let innertube_context = {}
 let api_key = ""
@@ -327,72 +324,35 @@ module.exports = {
             
 
                 // fetch comments
-                // use_pb will most likely be integrated in the future.
-                // while it seems to be stable so far, i still consider
-                // it as testing, mainly whether it holds up over time.
-                // until then, use IFs.
-                if(config.use_pb) {
-                    const pb = require("./proto/cmts_pb")
-                    let commentRequest = new pb.comments()
+                const pb = require("./proto/cmts_pb")
+                let commentRequest = new pb.comments()
 
-                    let videoMsg = new pb.comments.video()
-                    videoMsg.setVideoid(id)
-                    commentRequest.addVideomsg(videoMsg)
+                let videoMsg = new pb.comments.video()
+                videoMsg.setVideoid(id)
+                commentRequest.addVideomsg(videoMsg)
 
-                    commentRequest.setType(6)
+                commentRequest.setType(6)
 
-                    let commentsReqParamsMain = new pb.comments.commentsReq()
-                    commentsReqParamsMain.setSectiontype("comments-section")
-                    let crpChild = new pb.comments.commentsReq.commentsData()
-                    crpChild.setVideoid(id)
-                    commentsReqParamsMain.addCommentsdatareq(crpChild)
-                    commentRequest.addCommentsreqmsg(commentsReqParamsMain)
+                let commentsReqParamsMain = new pb.comments.commentsReq()
+                commentsReqParamsMain.setSectiontype("comments-section")
+                let crpChild = new pb.comments.commentsReq.commentsData()
+                crpChild.setVideoid(id)
+                commentsReqParamsMain.addCommentsdatareq(crpChild)
+                commentRequest.addCommentsreqmsg(commentsReqParamsMain)
 
-                    let token = encodeURIComponent(Buffer.from(
-                        commentRequest.serializeBinary()
-                    ).toString("base64"))
-                    
-                    this.request_continuation(token, id, "",
-                        (comment_data) => {
-                            data.comments = comment_data
-                            fetchesCompleted++;
-                            if(fetchesCompleted >= 3) {
-                                callback(data)
-                            }
-                        }
-                    )
-                } else {
-                    try {
-                        let sections = videoData.contents.twoColumnWatchNextResults
-                                        .results.results.contents
-                        sections.forEach(section => {
-                            if(section.itemSectionRenderer) {
-                                if(section.itemSectionRenderer.sectionIdentifier
-                                    !== "comment-item-section") return;
-                                
-                                let token = section.itemSectionRenderer.contents[0]
-                                            .continuationItemRenderer
-                                            .continuationEndpoint
-                                            .continuationCommand.token
-                                this.request_continuation(token, id, "",
-                                (comment_data) => {
-                                    data.comments = comment_data
-                                    fetchesCompleted++;
-                                    if(fetchesCompleted >= 3) {
-                                        callback(data)
-                                    }
-                                })
-                            }
-                        })
-                    }
-                    catch(error) {
-                        data.comments = []
+                let token = encodeURIComponent(Buffer.from(
+                    commentRequest.serializeBinary()
+                ).toString("base64"))
+                
+                this.request_continuation(token, id, "",
+                    (comment_data) => {
+                        data.comments = comment_data
                         fetchesCompleted++;
                         if(fetchesCompleted >= 3) {
                             callback(data)
                         }
                     }
-                }
+                )
 
                 // qualities
                 data.qualities = []
@@ -1869,7 +1829,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `
             fadeControlsEnable = false;
             var s = document.createElement("style")
-            s.innerHTML = "video:not(.showing-endscreen) {\\
+            s.innerHTML = "video {\\
                 height: calc(100% - 25px) !important;\\
             }#watch-player-div {\\
                 background: black !important;\\
@@ -2321,66 +2281,33 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(cache.read()[id]) {
             callback(cache.read()[id].comments);
         } else {
-            if(config.use_pb) {
-                const pb = require("./proto/cmts_pb")
-                let commentRequest = new pb.comments()
+            const pb = require("./proto/cmts_pb")
+            let commentRequest = new pb.comments()
 
-                let videoMsg = new pb.comments.video()
-                videoMsg.setVideoid(id)
-                commentRequest.addVideomsg(videoMsg)
+            let videoMsg = new pb.comments.video()
+            videoMsg.setVideoid(id)
+            commentRequest.addVideomsg(videoMsg)
 
-                commentRequest.setType(6)
+            commentRequest.setType(6)
 
-                let commentsReqParamsMain = new pb.comments.commentsReq()
-                commentsReqParamsMain.setSectiontype("comments-section")
-                let crpChild = new pb.comments.commentsReq.commentsData()
-                crpChild.setVideoid(id)
-                crpChild.setH(0)
-                crpChild.setD(2)
-                commentsReqParamsMain.addCommentsdatareq(crpChild)
-                commentRequest.addCommentsreqmsg(commentsReqParamsMain)
+            let commentsReqParamsMain = new pb.comments.commentsReq()
+            commentsReqParamsMain.setSectiontype("comments-section")
+            let crpChild = new pb.comments.commentsReq.commentsData()
+            crpChild.setVideoid(id)
+            crpChild.setH(0)
+            crpChild.setD(2)
+            commentsReqParamsMain.addCommentsdatareq(crpChild)
+            commentRequest.addCommentsreqmsg(commentsReqParamsMain)
 
-                let token = encodeURIComponent(Buffer.from(
-                    commentRequest.serializeBinary()
-                ).toString("base64"))
-                
-                this.request_continuation(token, id, (flags || ""),
-                    (comment_data) => {
-                        callback(comment_data)
-                    }
-                )
-                return;
-            }
-            this.innertube_get_data(id, (data) => {
-                try {
-                    let sections = data.contents.twoColumnWatchNextResults
-                                        .results.results.contents
-                    let hasCommentsToken = false;
-                    sections.forEach(section => {
-                        if(section.itemSectionRenderer) {
-                            if(section.itemSectionRenderer.sectionIdentifier
-                                !== "comment-item-section") return;
-                            hasCommentsToken = true;
-                            let token = section.itemSectionRenderer.contents[0]
-                                                .continuationItemRenderer
-                                                .continuationEndpoint
-                                                .continuationCommand.token
-                            this.request_continuation(token, id, (flags || ""),
-                                (comment_data) => {
-                                    callback(comment_data)
-                                }
-                            )
-                        }
-                    })
-
-                    if(!hasCommentsToken) {
-                        callback([])
-                    }
+            let token = encodeURIComponent(Buffer.from(
+                commentRequest.serializeBinary()
+            ).toString("base64"))
+            
+            this.request_continuation(token, id, (flags || ""),
+                (comment_data) => {
+                    callback(comment_data)
                 }
-                catch(error) {
-                    callback([])
-                }
-            })
+            )
         }
     },
 
@@ -2488,9 +2415,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
     },
 
     "get_qualities": function(id, callback) {
-        if(yt2009qualitycache.read()[id]) {
-            callback(yt2009qualitycache.read()[id])
-        } else if(this.get_cache_video(id).qualities) {
+        if(this.get_cache_video(id).qualities) {
             callback(this.get_cache_video(id).qualities)
         } else {
             callback([])

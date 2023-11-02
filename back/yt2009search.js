@@ -11,9 +11,6 @@ const search_code = fs.readFileSync("../search-generic-page.htm").toString();
 const searchParams = require("./proto/search_request_params_pb")
 
 let cache = require("./cache_dir/search_cache_manager")
-let pagingCache = require("./cache_dir/search_paging_cache_manager")
-
-let saved_searches = {}
 
 module.exports = {
     "get_search": function(query, flags, params, callback, token, resetCache) {
@@ -29,7 +26,7 @@ module.exports = {
         let filtersMsg = new searchParams.SearchRequestParams.Filter
         let protoFinal = ""
         if(params.search_sort || params.uploaded || params.high_definition
-        || params.closed_captions || params.search_type) {
+        || params.closed_captions || params.search_type || params.page) {
             useProto = true
         }
 

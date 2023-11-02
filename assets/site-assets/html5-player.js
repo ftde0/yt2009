@@ -13,6 +13,8 @@ var captionsTimeIndex = {};
 var captionsLangIndex = {};
 var captionsEnabled = false;
 var browserModernFeatures = false;
+var fullscreen_anim_playing = false;
+var fullscreen_btn = $(".video_controls .fullscreen");
 
 function initPlayer(parent, fullscreenEnabled) {
     mainElement = parent;
@@ -36,10 +38,6 @@ function initPlayer(parent, fullscreenEnabled) {
     }
 
     if(fullscreenEnabled) {
-        // fullscreen
-        var fullscreen_btn = $(".video_controls .fullscreen");
-        var fullscreen_anim_playing = false;
-
         // button
         fullscreen_btn.addEventListener("mouseover", function() {
             if(fullscreen_anim_playing || player_fullscreen) return;
@@ -54,13 +52,13 @@ function initPlayer(parent, fullscreenEnabled) {
                     clearInterval(anim);
                     fullscreen_anim_playing = false;
                 }
-            }, 40)
+            }, 25)
         }, false)
 
         fullscreen_btn.addEventListener("mouseout", function() {
             setTimeout(function() {
                 if(player_fullscreen) return;
-                fullscreen_btn.style.backgroundPosition = "0px 0px"
+                retractFullscreen()
             }, 420)
         }, false)
 
@@ -152,8 +150,7 @@ function initPlayer(parent, fullscreenEnabled) {
                 controlsFadeProgress = false;
                 // revert fullscreen animation to 1st frame
                 if(fullscreenEnabled) {
-                    $(".video_controls .fullscreen")
-                    .style.backgroundPosition = "0px 0px"
+                    retractFullscreen()
                 }
             }, 400)
 
@@ -168,7 +165,7 @@ function initPlayer(parent, fullscreenEnabled) {
             }
 
             if(player_add_popout.style.bottom == "25px") {
-                non_css_anim_remove(player_add_popout, "bottom", 25, -51)
+                non_css_anim_remove(player_add_popout, "bottom", 25, -59)
             }
         }, false)
 
@@ -203,7 +200,6 @@ function initPlayer(parent, fullscreenEnabled) {
                 mousedown = false;
 
                 // hide volume if it were to get glitched
-                
                 if(volume_up) {
                     volume_up = false;
                     volume_popping = false;
@@ -213,7 +209,7 @@ function initPlayer(parent, fullscreenEnabled) {
 
                 // player_additions
                 if(player_add_popout.style.bottom == "25px") {
-                    non_css_anim_remove(player_add_popout, "bottom", 25, -51)
+                    non_css_anim_remove(player_add_popout, "bottom", 25, -59)
                     $(".annotations-tooltip").className
                     = "annotations-tooltip player-tooltip hid"
                     $(".captions_popup").style.display = "none"
@@ -244,6 +240,23 @@ function initPlayer(parent, fullscreenEnabled) {
     }
 }
 
+// reversed fullscreen anim
+function retractFullscreen() {
+    if(fullscreen_anim_playing || player_fullscreen) return;
+    //fullscreen_anim_playing = true
+    var anim_frame = 10;
+    var anim = setInterval(function() {
+        if(player_fullscreen) return;
+        anim_frame--;
+        fullscreen_btn.style.backgroundPosition
+        = "0px -" + (anim_frame * 22) + "px"
+        if(anim_frame <= 0) {
+            clearInterval(anim);
+            //fullscreen_anim_playing = false;
+        }
+    }, 25)
+}
+
 // sprawdzanie boundsów
 function checkBounds(element, mouse_left, mouse_top) {
     var bounds = element.getBoundingClientRect()
@@ -270,27 +283,39 @@ function non_css_anim_add(element, cssProperty, from, to) {
     }, 200)
     element.style[cssProperty] = from + "px"
     var current = from;
+    var ff = false;
+    if(navigator.userAgent.indexOf("Firefox") !== -1) {
+        ff = true
+    }
     var x = setInterval(function() {
-        current += 4;
+        current += 11;
+        if(current / to > 0.6) {
+            current -= 11
+            current += 5
+        }
         element.style[cssProperty] = current + "px"
         if(current >= to) {
             element.style[cssProperty] = to + "px"
             clearInterval(x);
         }
-    }, 5)
+    }, ff ? 20 : 33)
 }
 function non_css_anim_remove(element, cssProperty, from, to) {
     if(element.style[cssProperty] == to + "px") return;
     element.style[cssProperty] = from + "px"
     upAnimationDebounce = false;
     var current = from;
+    var ff = false;
+    if(navigator.userAgent.indexOf("Firefox") !== -1) {
+        ff = true
+    }
     var x = setInterval(function() {
-        current -= 4;
+        current -= 12;
         element.style[cssProperty] = current + "px"
         if(current <= to) {
             clearInterval(x);
         }
-    }, 5)
+    }, ff ? 20 : 33)
 }
 function $(element) {
     if(document.querySelectorAll(element).length !== 1) {
@@ -363,7 +388,7 @@ function flash_middle_btn(buttonType) {
     if(mainElement == document) return;
     var btn = $(".flashing-btn." + buttonType)
     btn.className = btn.className.split(" hid").join("")
-    btn.style.opacity = 0.7;
+    btn.style.opacity = 0.9;
     setTimeout(function() {
         btn.style.width = "100px"
         btn.style.height = "100px"
@@ -371,9 +396,9 @@ function flash_middle_btn(buttonType) {
     }, 10)
     setTimeout(function() {
         btn.className += " hid"
-        btn.style.width = "0px"
-        btn.style.height = "0px"
-        btn.style.opacity = 0.7;
+        btn.style.width = "75px"
+        btn.style.height = "75px"
+        btn.style.opacity = 0.9;
     }, 550)
 }
 
@@ -438,9 +463,29 @@ function timeUpdate() {
     if(document.querySelector(".html5-loading")
                 .className.indexOf("hid") == -1) {
         $(".html5-loading").className += " hid"
+        stopLoadingRototo()
+    }
+
+    // hide endscreen if shown while video is playing
+    if(video.currentTime !== video.duration
+    && $(".endscreen").className.indexOf("hid") == -1) {
+        $("video").className = "html5_video"
+        $(".endscreen").className = "endscreen hid"
     }
 }
 video.addEventListener("timeupdate", timeUpdate, false)
+
+// fix video height if old browser
+function setVidHeight() {
+    // also adjust the video size if no_controls_fade
+    if(!browserModernFeatures && !fadeControlsEnable
+    && document.getElementById("watch-this-vid")) {
+        var h = document.getElementById("watch-this-vid")
+                        .getBoundingClientRect().height
+        video.style.height = (h - 25) + "px"
+    }
+}
+setTimeout(setVidHeight, 100)
 
 var progressContainer = $(".progress_container")
 // set the width of the seekbar
@@ -484,6 +529,8 @@ function adjustSeekbarWidth() {
     $(".player_auto_css").innerHTML += ".embed-play-btn {left: "
                                         + embedPlayX + "px;top: " 
                                         + embedPlayY + "px;}"
+
+    setVidHeight()
 }
 
 window.addEventListener("resize", adjustSeekbarWidth, false);
@@ -522,9 +569,12 @@ function mouseup() {
 
 function videoSeek(e) {
     if(mousedown) {
+        $(".seek_btn").className = "seek_btn hovered"
         var offsetX = e.pageX - seekbar.getBoundingClientRect().left;
         video.currentTime = (offsetX / seekbar.getBoundingClientRect().width)
                             * video.duration
+    } else {
+        $(".seek_btn").className = "seek_btn"
     }
 }
 
@@ -588,7 +638,9 @@ volume_panel.addEventListener("mouseout", function(e) {
     || checkBounds(volume_panel, mouse_left, mouse_top)) return;
     volume_up = false;
     volume_popping = true;
-    non_css_anim_remove(volume_panel, "bottom", 25, -64)
+    setTimeout(function() {
+        non_css_anim_remove(volume_panel, "bottom", 25, -64)
+    }, 200)    
     setTimeout(function() {
         volume_popping = false;
     }, 500)
@@ -627,7 +679,7 @@ if(document.querySelector(".fullscreen")) {
         }, 500)
         volume_panel_mousedown = false;
 
-        non_css_anim_remove(player_add_popout, "bottom", 25, -51)
+        non_css_anim_remove(player_add_popout, "bottom", 25, -59)
     }, false)
 }
 
@@ -728,7 +780,7 @@ function showEndscreen() {
     videoEnded = true;
     video.className += " showing-endscreen"
     $(".endscreen").className = "endscreen"
-    non_css_anim_remove($(".video_controls"), "bottom", 0, -23);
+    //non_css_anim_remove($(".video_controls"), "bottom", 0, -23);
     if(volume_up) {
         volume_up = false;
         non_css_anim_remove(volume_panel, "bottom", 25, -64)
@@ -765,7 +817,7 @@ function videoReplay() {
     video.currentTime = 0;
     video.play()
 
-    non_css_anim_add($(".video_controls"), "bottom", -23, 0);
+    //non_css_anim_add($(".video_controls"), "bottom", -23, 0);
     setTimeout(function() {
         mousein = true;
     }, 400)
@@ -840,7 +892,7 @@ var player_add_popout_debounce = false;
 // najeżdżanie na dodatki
 player_add_btn.addEventListener("mouseover", function() {
     if(player_add_popout_debounce) return;
-    non_css_anim_add(player_add_popout, "bottom", -51, 25)
+    non_css_anim_add(player_add_popout, "bottom", -59, 25)
     player_add_popout_debounce = true;
     setTimeout(function() {
         player_add_popout_debounce = false;
@@ -857,10 +909,12 @@ player_add_popout.addEventListener("mouseout", function(e) {
     && $(".captions_popup").style.display == "block")) return;
     $(".captions_popup").style.display = "none"
     player_add_popout_debounce = true;
-    non_css_anim_remove(player_add_popout, "bottom", 25, -51)
+    setTimeout(function() {
+        non_css_anim_remove(player_add_popout, "bottom", 25, -59)
+    }, 200)
     setTimeout(function() {
         player_add_popout_debounce = false;
-    }, 400)
+    }, 500)
 }, false)
 
 
@@ -1304,18 +1358,6 @@ function annotationsMain() {
     annotationsEnabled = !annotationsEnabled;
 
     if(annotationsEnabled) {
-        // set z-index for controls to prevent stuff like
-        // volume popout being covered by annotations
-        $(".video_controls").style.zIndex = 4;
-        $(".player_additions_popout").style.zIndex = 3;
-        $(".volume_popout").style.zIndex = 3;
-        $(".seek_time").style.zIndex = 5;
-        $(".endscreen").style.zIndex = 5;
-
-        // show loading tooltip
-        /*$(".annotations-tooltip").className = "annotations-tooltip player-tooltip"
-        $(".annotations-tooltip .main-text").innerHTML = "Loading..."*/
-
         // request
         var r = new XMLHttpRequest();
         r.open("GET", "/json_annotations")
@@ -1593,10 +1635,10 @@ try {
         if(!document.fullscreenElement) {
             // exited
             player_fullscreen = false;
-            $(".video_controls .fullscreen").className = "fullscreen"
+            var f = $(".video_controls .fullscreen")
+            f.className = "fullscreen"
             setTimeout(function() {
-                $(".video_controls .fullscreen").style
-                                                .backgroundPosition = "0px 0px"
+                f.style.backgroundPosition = "0px 0px"
             }, 500)
         }
     }, false)
@@ -1606,10 +1648,38 @@ catch(error) {}
 
 // loading sprite
 function showLoadingSprite() {
-    mainElement
-    .querySelector(".html5-loading")
-    .className = mainElement.querySelector(".html5-loading").className
-                                                            .replace("hid", "")
+    var className = $(".html5-loading").className
+    $(".html5-loading").className = className.replace("hid", "")
+    if(!$(".html5-loading").style.left) {
+        var vidBounds = video.getBoundingClientRect()
+        $(".html5-loading").style.left = vidBounds.width / 2 - 16 + "px";
+        $(".html5-loading").style.top = vidBounds.height / 2 - 16 + "px";
+    }
+    setupLoadingRototo()
+}
+
+var loadingRototo;
+
+function setupLoadingRototo() {
+    var rotate = 0
+    loadingRototo = setInterval(function() {
+        rotate += 45
+        if(rotate >= 360) {
+            rotate = 0
+        }
+        var rototoStyle = ""
+        rototoStyle += "left: " + $(".html5-loading").style.left + ";"
+        rototoStyle += "top: " + $(".html5-loading").style.top + ";"
+        rototoStyle += "-webkit-transform: rotate(" + rotate + "deg);"
+        rototoStyle += "-moz-transform: rotate(" + rotate + "deg);"
+        rototoStyle += "transform: rotate(" + rotate + "deg)"
+        $(".html5-loading").style = rototoStyle
+    }, 125)
+}
+
+function stopLoadingRototo() {
+    clearInterval(loadingRototo)
+    $(".html5-loading").style = ""
 }
 
 
@@ -1646,6 +1716,7 @@ video.querySelector("source").addEventListener("error", function() {
 
     video.addEventListener("error", function() {
         $(".html5-loading").className += " hid"
+        stopLoadingRototo()
     }, false)
 }, false)
 

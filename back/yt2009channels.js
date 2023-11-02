@@ -14,7 +14,6 @@ const templates = require("./yt2009templates")
 const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
 const overrideBgs = require("./channel_backgrounds.json")
-const oldbanner_unavail_cache = require("./cache_dir/oldbanner_unavail_cache")
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
@@ -123,10 +122,7 @@ module.exports = {
     ========
     */
     "parse_main_response": function(r, flags, callback) {
-        let fetchesRequired = 3;
-        if(config.use_pb) {
-            fetchesRequired = 2;
-        }
+        let fetchesRequired = 2;
         let additionalFetchesCompleted = 0;
 
         // basic extract
@@ -161,36 +157,21 @@ module.exports = {
         // fetch videos tab
         let videosTabAvailable = false;
         data.tabParams = {}
-        if(config.use_pb) {
-            const popularVids = require("./proto/popularVidsChip_pb")
-            let vidsContinuation = new popularVids.vidsChip()
-            let msg = new popularVids.vidsChip.nestedMsg1()
-            msg.setChannelid(data.id)
-            // need to figure out what that does, leaving it in as it's
-            // what came out of decode
-            msg.setChipparam(
-                "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D"
-            )
-            vidsContinuation.addMsg(msg)
-            let chip = encodeURIComponent(Buffer.from(
-                vidsContinuation.serializeBinary()
-            ).toString("base64"))
-            fetchChip(chip)
-        }
+        const popularVids = require("./proto/popularVidsChip_pb")
+        let vidsContinuation = new popularVids.vidsChip()
+        let msg = new popularVids.vidsChip.nestedMsg1()
+        msg.setChannelid(data.id)
+        // need to figure out what that does, leaving it in as it's
+        // what came out of decode
+        msg.setChipparam(
+            "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D"
+        )
+        vidsContinuation.addMsg(msg)
+        let chip = encodeURIComponent(Buffer.from(
+            vidsContinuation.serializeBinary()
+        ).toString("base64"))
+        fetchChip(chip)
         r.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
-            if(tab.tabRenderer
-            && tab.tabRenderer.title.toLowerCase() == "videos"
-            && !config.use_pb) {
-                videosTabAvailable = true;
-                setTimeout(function() {
-                    let param = tab.tabRenderer.endpoint
-                                   .browseEndpoint.params
-                    let browseId = tab.tabRenderer.endpoint
-                                      .browseEndpoint.browseId
-                    getVideosByParam(param, browseId)
-                }, 162)
-            }
-
             // get params for other tabs for future use
             try {
                 let tabName = tab.tabRenderer.title.toLowerCase()
@@ -298,56 +279,6 @@ module.exports = {
                 }
             })
             additionalFetchesCompleted++;
-            onVideosCreate()
-        }
-
-        // fallback: no videos tab (eg topic channels)
-        if(!videosTabAvailable && !config.use_pb) {
-            additionalFetchesCompleted = fetchesRequired
-            try {
-                r.contents.twoColumnBrowseResultsRenderer.tabs[1].tabRenderer
-                 .content.sectionListRenderer.contents[0].itemSectionRenderer
-                 .contents[0].gridRenderer.items.forEach(video => {
-                    if(video.gridVideoRenderer) {
-                        video = video.gridVideoRenderer
-                        data.videos.push({
-                            "id": video.videoId,
-                            "title": video.title.runs[0].text,
-                            "views": video.viewCountText.simpleText,
-                            "upload": video.publishedTimeText.simpleText,
-                            "thumbnail": "http://i.ytimg.com/vi/"
-                                        + video.videoId
-                                        + "/hqdefault.jpg",
-                            "length": (video.lengthText || {"simpleText": "00:00"})
-                                      .simpleText
-                        })
-                    }
-                })
-            }
-            catch(error) {
-                try {
-                    r.contents.twoColumnBrowseResultsRenderer.tabs[1]
-                     .tabRenderer.content.richGridRenderer
-                     .contents.forEach(video => {
-                        if(video.richItemRenderer) {
-                            video = video.richItemRenderer
-                                    .content.videoRenderer
-                            data.videos.push({
-                                "id": video.videoId,
-                                "title": video.title.runs[0].text,
-                                "views": video.viewCountText.simpleText,
-                                "upload": video.publishedTimeText.simpleText,
-                                "thumbnail": "http://i.ytimg.com/vi/"
-                                            + video.videoId
-                                            + "/hqdefault.jpg",
-                                "length": (video.lengthText || {"simpleText": "00:00"})
-                                          .simpleText
-                            })
-                        }
-                    })
-                }
-                catch(error) {}
-            }
             onVideosCreate()
         }
 
@@ -1377,6 +1308,64 @@ module.exports = {
             }), (req.query.resetcache == 1 || req.query.resetwayback == 1))
         }
 
+        
+        /*
+        =======
+        author_old_avatar
+        =======
+        */
+        function setChannelIcon() {
+            code = code.split("yt2009_channel_avatar").join(channelAvatar)
+        }
+        if(flags.includes("author_old_avatar")) {
+            stepsRequiredToCallback++
+            let id = data.id.replace("UC", "")
+            let avatarUrl = `https://i3.ytimg.com/u/${id}/channel_icon.jpg`
+            let fname = __dirname + "/../assets/" + id + "_old_avatar.jpg"
+            let oldChannelIconPath = "/assets/" + id + "_old_avatar.jpg"
+
+            // callback at the top
+            function markAsDone() {
+                stepsTaken++
+                if(stepsRequiredToCallback <= stepsTaken) {
+                    try{callback(code)}catch(error){}
+                }
+            }
+            // exists and not there = set default
+            if(fs.existsSync(fname)
+            && fs.statSync(fname).size < 10) {
+                setChannelIcon()
+                markAsDone()
+            }
+            // exists and there
+            else if(fs.existsSync(fname)
+            && fs.statSync(fname).size > 10) {
+                channelAvatar = oldChannelIconPath
+                setChannelIcon()
+                markAsDone()
+            }
+            // doesn't exist
+            else {
+                fetch(avatarUrl, {
+                    "headers": yt2009constants.headers
+                }).then(r => {
+                    if(r.status !== 404) {
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(fname, buffer)
+                            channelAvatar = oldChannelIconPath
+                            setChannelIcon()
+                            markAsDone()
+                        })
+                    } else {
+                        // no old icon, use current
+                        fs.writeFileSync(fname, "")
+                        setChannelIcon()
+                        markAsDone()
+                    }
+                })
+            }
+        }
+
 
         /*
         =======
@@ -1537,63 +1526,6 @@ module.exports = {
             } else {
                 // exists!!
                 applyBanner()
-            }
-        }
-
-        /*
-        =======
-        author_old_avatar
-        =======
-        */
-        function setChannelIcon() {
-            code = code.split("yt2009_channel_avatar").join(channelAvatar)
-        }
-        if(flags.includes("author_old_avatar")) {
-            stepsRequiredToCallback++
-            let id = data.id.replace("UC", "")
-            let avatarUrl = `https://i3.ytimg.com/u/${id}/channel_icon.jpg`
-            let fname = __dirname + "/../assets/" + id + "_old_avatar.jpg"
-            let oldChannelIconPath = "/assets/" + id + "_old_avatar.jpg"
-
-            // callback at the top
-            function markAsDone() {
-                stepsTaken++
-                if(stepsRequiredToCallback <= stepsTaken) {
-                    try{callback(code)}catch(error){}
-                }
-            }
-            // exists and not there = set default
-            if(fs.existsSync(fname)
-            && fs.statSync(fname).size < 10) {
-                setChannelIcon()
-                markAsDone()
-            }
-            // exists and there
-            else if(fs.existsSync(fname)
-            && fs.statSync(fname).size > 10) {
-                channelAvatar = oldChannelIconPath
-                setChannelIcon()
-                markAsDone()
-            }
-            // doesn't exist
-            else {
-                fetch(avatarUrl, {
-                    "headers": yt2009constants.headers
-                }).then(r => {
-                    if(r.status !== 404) {
-                        r.buffer().then(buffer => {
-                            fs.writeFileSync(fname, buffer)
-                            channelAvatar = oldChannelIconPath
-                            setChannelIcon()
-                            markAsDone()
-                        })
-                    } else {
-                        // no old icon, use current
-                        fs.writeFileSync(fname, "")
-                        setChannelIcon()
-                        markAsDone()
-                    }
-                })
             }
         }
 

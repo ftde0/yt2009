@@ -17,12 +17,16 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_SSLPORT` sets the HTTPS port (default: `443`)
 - `YT2009_SSLPATH` sets the path for the SSL certificate (default: `/yt2009/cert.crt`)
 - `YT2009_SSLKEY` sets the path for the SSL certificate private key (default: `/yt2009/cert.key`)
-- `YT2009_PB` allows you to enable experimental protobuf support (default: `false`)
 
 ## troubleshooting
 #### persistent auth tokens
 
 if you need your auth tokens to save when the container is removed, setup a bind mount that points to `/yt2009/back/config.json` (the config gets regenerated every time the container launches but auth tokens persist), for example: `docker run --rm -p 80:80 -v $(pwd)/config.json:/yt2009/back/config.json -e YT2009_ENV=prod yt2009` (make sure to create the file before launching the container, otherwise it won't work)
+
 #### reading auth tokens from a running container
 
 auth tokens are located in `/yt2009/back/config.json`, you can use this command to read them: `docker exec [container name] cat /yt2009/back/config.json`
+
+#### persistent comments
+
+if you need your comments to save when the container is removed, setup a bind mount (as explained above) that points to `/yt2009/back/cache_dir/comments.json`

@@ -7,6 +7,7 @@
     background-image: url("/player-imgs/main-bg.png");
     width: 100%;
     height: 23px;
+    z-index: 6;
 }
 
 .video_controls .play_btn, .video_controls .pause_btn {
@@ -74,6 +75,10 @@
     height: 16px;
 }
 
+.video_controls .seek_btn.hovered {
+    background-position: -68px -84px;
+}
+
 .video_controls .timer {
     position: absolute;
     top: 5px;
@@ -116,11 +121,12 @@
 .volume_popout {
     position: absolute;
     bottom: -64px;
-    width: 30px;
+    width: 29px;
     right: 68px;
-    height: 64px;
+    height: 63px;
     background-image: url("/player-imgs/volume-popup.png");
     user-select: none;
+    z-index: 6;
 }
 
 .volume_popout .volume_head {
@@ -214,9 +220,10 @@
     right: 1px;
     width: 45px;
     height: 51px;
-    bottom: -51px;
+    bottom: -59px;
     background-image: url("/player-imgs/player_additions_bg.png");
     cursor: pointer;
+    z-index: 6;
 }
 
 .player_additions_popout .annotations, .player_additions_popout .cc {
@@ -262,6 +269,7 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
     color: white;
+    z-index: 5;
 }
 
 .endscreen .yt-center {
@@ -394,7 +402,8 @@
     position: absolute;
     width: 32px;
     height: 32px;
-    background-image: url("/player-imgs/loading.gif");
+    background-image: url("/player-imgs/load-static.png");
+    background-repeat: no-repeat;
 }
 
 
@@ -404,13 +413,14 @@
     width: 36px;
     height: 26px;
     color: white;
+    z-index: 6;
 }
 
 
 .seek_time_text {
-    font-size: 9px;
+    font-size: 10px;
     text-align: center;
-    margin-top: 6px;
+    margin-top: 5px;
 }
 
 
@@ -505,6 +515,7 @@
     position: absolute;
     cursor: pointer;
     background-size: contain;
+    border-radius: 5px;
 }
 
 .flashing-btn.modern {
