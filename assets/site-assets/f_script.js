@@ -669,6 +669,16 @@ function commentSend() {
     btn.setAttribute("value", "Adding comment...")
     r.onreadystatechange = function(e) {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.responseText == "empty") {
+                btn.setAttribute("value", "You must enter a comment!")
+                return;
+            } else if(r.responseText == "long") {
+                btn.setAttribute(
+                    "value",
+                    "Your comment must be shorter than 500 characters!"
+                )
+                return;
+            }
             btn.setAttribute("value", "Comment Posted!")
             $(".comments-container").innerHTML += r.responseText;
         }
@@ -716,6 +726,237 @@ function sendCmtRating(commentId, rating) {
                 thumbsDown.className = "master-sprite watch-comment-down-on"
             }
         }
+    }
+}
+
+
+/*
+======
+comment reply form
+======
+*/
+function showReplyForm(comment) {
+    if(document.cookie.indexOf("login_simulate") == -1) {
+        location.href = "/signin"
+        return;
+    }
+    comment = comment.parentNode.parentNode.parentNode
+    var body;
+    var divs = comment.getElementsByTagName("div")
+    for(var i in divs) {
+        if(divs[i].nodeName
+        && divs[i].className.indexOf("watch-comment-body") !== -1) {
+            body = divs[i].parentNode
+        }
+    }
+
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/reply_template")
+    r.setRequestHeader("source", location.href)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+            body.innerHTML += r.responseText
+
+            var replyTo = body.parentNode.getElementsByTagName("a")[0].innerHTML
+            var t = body.getElementsByTagName("textarea")[0]
+            t.value = "@" + replyTo + " "
+        }
+    }
+}
+
+function updateCharCount(id) {
+    var overLimit = "Number of characters over the limit: "
+    var remain = "Remaining character count: "
+
+    var charsLeft = 500 - document.getElementById(
+        "comment_textarea_comment_form_id_" + id
+    ).value.length
+    document.getElementById(
+        "charCountcomment_form_id_" + id
+    ).value = Math.abs(charsLeft)
+    if(charsLeft < 0) {
+        document.getElementById(
+            "maxCharLabelcomment_form_id_" + id
+        ).innerHTML = overLimit
+    } else {
+        document.getElementById(
+            "maxCharLabelcomment_form_id_" + id
+        ).innerHTML = remain
+    }
+}
+
+function rmReply(id) {
+    var element = document.getElementById(
+        "comment_formcomment_form_id_" + id
+    ).parentNode
+    element.parentNode.removeChild(element)
+}
+
+function submitReply(id) {
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("POST", "/comment_post")
+    r.setRequestHeader("source", location.href)
+    r.send('{"comment":"' + document.getElementById(
+        "comment_textarea_comment_form_id_" + id
+    ).value.split('"').join('\\"') + '"}')
+    var btn = document.getElementById("post-comment-" + id)
+    btn.setAttribute("disabled", "")
+    btn.setAttribute("value", "Adding comment...")
+    r.onreadystatechange = function(e) {
+        if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+            if(r.responseText == "empty") {
+                btn.setAttribute("value", "You must enter a comment!")
+                return;
+            } else if(r.responseText == "long") {
+                btn.setAttribute(
+                    "value",
+                    "Your comment must be shorter than 500 characters!"
+                )
+                return;
+            }
+            btn.setAttribute("value", "Comment Posted!")
+            $(".comments-container").innerHTML += r.responseText;
+        }
+    }
+}
+
+/*
+======
+simulated mark as spam
+======
+*/
+function showComment(comment) {
+    var body;
+    var voting;
+    var showBtn;
+    var hideBtn;
+    var els = comment.getElementsByTagName("*")
+    for(var i in els) {
+        switch(els[i].className || "") {
+            case "watch-comment-body hid": {
+                body = els[i]
+                break;
+            }
+            case "watch-comment-voting-off": {
+                voting = els[i]
+                break;
+            }
+            case "watch-comment-head-link show-btn": {
+                showBtn = els[i]
+                break;
+            }
+            case "watch-comment-head-link hide-btn hid": {
+                hideBtn = els[i]
+                break;
+            }
+        }
+    }
+    body.className = body.className.replace(" hid", "")
+    voting.className = "watch-comment-voting"
+    showBtn.className = "watch-comment-head-link show-btn hid"
+    showBtn.style.visibility = "hidden"
+    hideBtn.className = "watch-comment-head-link hide-btn"
+    hideBtn.style.visibility = "visible"
+}
+
+function hideComment(comment) {
+    var body;
+    var voting;
+    var showBtn;
+    var hideBtn;
+    var els = comment.getElementsByTagName("*")
+    for(var i in els) {
+        switch(els[i].className || "") {
+            case "watch-comment-body": {
+                body = els[i]
+                break;
+            }
+            case "watch-comment-voting": {
+                voting = els[i]
+                break;
+            }
+            case "watch-comment-head-link show-btn hid": {
+                showBtn = els[i]
+                break;
+            }
+            case "watch-comment-head-link hide-btn": {
+                hideBtn = els[i]
+                break;
+            }
+        }
+    }
+    body.className += " hid"
+    voting.className = "watch-comment-voting-off"
+    try {
+        showBtn.className = "watch-comment-head-link show-btn"
+        showBtn.style.visibility = "visible"
+        hideBtn.className = "watch-comment-head-link hide-btn hid"
+        hideBtn.style.visibility = "hidden"
+    }
+    catch(error) {}
+}
+
+function mSpam(comment) {
+    comment = comment.parentNode.parentNode.parentNode
+    var action;
+    var body;
+    var headLink;
+    var commentInfo;
+    var els = comment.getElementsByTagName("*")
+    for(var i in els) {
+        switch(els[i].className || "") {
+            case "watch-comment-action": {
+                action = els[i]
+                break;
+            }
+            case "watch-comment-body": {
+                body = els[i]
+                break;
+            }
+            case "watch-comment-head-link": {
+                headLink = els[i]
+                break;
+            }
+            case "watch-comment-info": {
+                commentInfo = els[i]
+                break;
+            }
+        }
+    }
+    action.className = "watch-comment-action hid"
+    if(body.className.indexOf("hid") == -1) {
+        if(!headLink) {
+            // create elements
+            var showBtn = document.createElement("a")
+            showBtn.className = "watch-comment-head-link show-btn"
+            showBtn.onclick = function() {
+                showComment(comment)
+            }
+            showBtn.style.visibility = "visible"
+            showBtn.innerHTML = "Show"
+            commentInfo.appendChild(showBtn)
+
+            var hideBtn = document.createElement("a")
+            hideBtn.className = "watch-comment-head-link hide-btn hid"
+            hideBtn.onclick = function() {
+                hideComment(comment)
+            }
+            hideBtn.style.visibility = "hidden"
+            hideBtn.innerHTML = "Hide"
+            commentInfo.appendChild(hideBtn)
+        }
+        hideComment(comment)
     }
 }
 

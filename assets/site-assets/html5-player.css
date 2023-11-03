@@ -400,8 +400,8 @@
 
 .html5-loading {
     position: absolute;
-    width: 32px;
-    height: 32px;
+    width: 31px;
+    height: 31px;
     background-image: url("/player-imgs/load-static.png");
     background-repeat: no-repeat;
 }

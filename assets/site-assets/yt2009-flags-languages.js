@@ -3,6 +3,7 @@ var languageData_EN = {
         "watch-comments-remove-future": "remove comments that contain years 2011-2022",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
+        "watch-exclude-cs": "hides comments you post from /comment_search",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
         "watch-fake-comment-dates": "fake comment dates",
         "watch-fake-upload-date": "fake upload date (ranging anywhere in 2009)",

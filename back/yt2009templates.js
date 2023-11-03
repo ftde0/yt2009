@@ -37,10 +37,10 @@ module.exports = {
                 </div>
                 <span class="watch-comment-spam-bug">Marked as spam</span>
                 <div class="watch-comment-action">
-                    <a>${useLanguage ? "lang_comment_reply" : "Reply"}</a>
+                    <a onclick="showReplyForm(this)">${useLanguage ? "lang_comment_reply" : "Reply"}</a>
                     ${flags.includes("login_simulate") ? `
                     |
-                    <a title="Flag this comment as Spam">Spam</a>` : ""}
+                    <a title="Flag this comment as Spam" onclick="mSpam(this)">Spam</a>` : ""}
                 </div>
                 <div class="clearL"></div>
             </div>
@@ -1511,5 +1511,64 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     </div>`
     },
     "latestChip": "8gYuGix6KhImCiQ2NTQ1MjBkZS0wMDAwLTJkOGYtYjkwNS1kNGY1NDdlYWM4OGMYAQ%3D%3D",
-    "popularChip": "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D"
+    "popularChip": "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D",
+    "replyTemplate": function(commentIndex, video, loginSimulateName) {
+        return `
+    <div id="div_comment_form_id_${commentIndex}">
+        <form name="comment_formcomment_form_id_${commentIndex}" id="comment_formcomment_form_id_${commentIndex}" onsubmit="return false;" method="post" action="/comment_reply">
+            <input type="hidden" name="video_id" value="${video}">
+            <input type="hidden" name="session_token" value="${loginSimulateName}">
+            <input type="hidden" name="form_id" value="comment_formcomment_form_id_${commentIndex}">
+            <input type="hidden" name="reply_parent_id" value="${commentIndex}">
+            <textarea id="comment_textarea_comment_form_id_${commentIndex}" name="comment" class="comments-textarea" cols="46" rows="5" maxchars="500" onkeyup="updateCharCount('${commentIndex}')" onpaste="updateCharCount('${commentIndex}')" oninput="updateCharCount('${commentIndex}')"></textarea>
+            <br>
+            <div class="watch-comment-reply-form-actions"><input type="button" id="post-comment-${commentIndex}" name="add_comment_button" value="Post Comment" onclick="submitReply('${commentIndex}')">
+            <input type="button" name="discard_comment_button" value="Discard" onclick="rmReply('${commentIndex}')">
+            <span id="maxCharLabelcomment_form_id_${commentIndex}">Remaining character count: </span>
+            <input readonly="true" class="watch-comment-char-count inner-box-colors" type="text" id="charCountcomment_form_id_${commentIndex}" value="500"></div>
+        </form><br class="clear">
+    </div>`
+    },
+    "commentSearchResult": function(comment) {
+        function atReply(name) {
+            return `<a class="watch-comment-atlink" href="/comment_search?username=${name}">@${name}</a>`
+        }
+        let commentContent = comment.text
+        if(commentContent.startsWith("@")) {
+            // first word is a @ mention
+            let at = commentContent.split(" ")[0]
+            let username = at.replace("@", "")
+            commentContent = atReply(username) + commentContent.replace(at, "")
+        }
+        return `
+    <div class="comment-result">
+        <div class="comment-result-video">
+            <div class="v90WideEntry">
+                <div class="v90WrapperOuter">
+                    <div class="v90WrapperInner">
+                        <a href="/watch?v=${comment.video}" class="video-thumb-link" rel="nofollow">
+                            <img title="${comment.videoTitle || ""}" thumb="http://i.ytimg.com/vi/${comment.video}/hqdefault.jpg" src="http://i.ytimg.com/vi/${comment.video}/hqdefault.jpg" class="vimg90" alt="${comment.videoTitle || ""}">
+                        </a>
+                    </div>
+                </div>
+            </div>
+            </a>
+        </div>
+        <div class="comment-facets">
+            <div class="comment-snippet">
+                <span class="comment-result-comment">
+                    ${commentContent}
+                </span>
+            </div>
+            <div class="comment-footer">posted ${comment.relativeTime} by <span class="comment-result-user"><a class="comment-user-link" href="/comment_search?username=${comment.author}">${comment.author}</a></span></div>
+            <div class="comment-header ${!comment.videoTitle ? " hid" : ""}">on <span class="comment-result-title"><a href="/watch?v=${comment.video}">${comment.videoTitle || ""}</a></span></div>
+            
+            
+        </div>
+        <div class="clear"></div>
+    </div>`
+    },
+    "csPager": function(pageNum, url, prev) {
+        return `<a href="${url}" class="pagerNotCurrent" data-page="${pageNum}">${prev ? "Previous" : "Next"}</a>`
+    }
 }

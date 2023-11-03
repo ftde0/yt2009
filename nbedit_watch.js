@@ -1119,6 +1119,16 @@ function commentSend() {
     btn.setAttribute("disabled", "")
     btn.setAttribute("value", "Adding comment...")
     r.addEventListener("load", function(e) {
+        if(r.responseText == "empty") {
+            btn.setAttribute("value", "You must enter a comment!")
+            return;
+        } else if(r.responseText == "long") {
+            btn.setAttribute(
+                "value",
+                "Your comment must be shorter than 500 characters!"
+            )
+            return;
+        }
         btn.setAttribute("value", "Comment Posted!")
         $(".comments-container").innerHTML += r.responseText;
     }, false)
@@ -1308,4 +1318,130 @@ function flagProcessSubcategory(element) {
 function flagVideoSend() {
     $("#inappropriateVidDiv").className = "watch-more-action hid"
     $("#inappropriateMsgsDiv").className = ""
+}
+
+/*
+======
+comment reply form
+======
+*/
+function showReplyForm(comment) {
+    if(document.cookie.indexOf("login_simulate") == -1) {
+        location.href = "/signin"
+        return;
+    }
+    comment = comment.parentNode.parentNode.parentNode
+    var body = comment.querySelector(".watch-comment-body").parentNode
+
+    var r = new XMLHttpRequest();
+    r.open("GET", "/reply_template")
+    r.setRequestHeader("source", location.href)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        body.innerHTML += r.responseText
+
+        var replyTo = body.parentNode.getElementsByTagName("a")[0].innerHTML
+        var t = body.getElementsByTagName("textarea")[0]
+        t.value = "@" + replyTo + " "
+    }, false)
+}
+
+function updateCharCount(id) {
+    var overLimit = "Number of characters over the limit: "
+    var remain = "Remaining character count: "
+
+    var charsLeft = 500 - $("#comment_textarea_comment_form_id_" + id).value.length
+    $("#charCountcomment_form_id_" + id).value = Math.abs(charsLeft)
+    if(charsLeft < 0) {
+        $("#maxCharLabelcomment_form_id_" + id).innerHTML = overLimit
+    } else {
+        $("#maxCharLabelcomment_form_id_" + id).innerHTML = remain
+    }
+}
+
+function rmReply(id) {
+    var element = $("#comment_formcomment_form_id_" + id).parentNode
+    element.parentNode.removeChild(element)
+}
+
+function submitReply(id) {
+    var r = new XMLHttpRequest();
+    r.open("POST", "/comment_post")
+    r.setRequestHeader("source", location.href)
+    r.send(JSON.stringify({
+        "comment": $("#comment_textarea_comment_form_id_" + id).value
+    }))
+    var btn = $("#post-comment-" + id)
+    btn.setAttribute("disabled", "")
+    btn.setAttribute("value", "Adding comment...")
+    r.addEventListener("load", function(e) {
+        if(r.responseText == "empty") {
+            btn.setAttribute("value", "You must enter a comment!")
+            return;
+        } else if(r.responseText == "long") {
+            btn.setAttribute(
+                "value",
+                "Your comment must be shorter than 500 characters!"
+            )
+            return;
+        }
+        btn.setAttribute("value", "Comment Posted!")
+        $(".comments-container").innerHTML += r.responseText;
+    }, false)
+}
+
+function showComment(comment) {
+    var body = comment.querySelector(".watch-comment-body")
+    body.className = body.className.replace(" hid", "")
+    var voting = comment.querySelector(".watch-comment-voting-off")
+    voting.className = "watch-comment-voting"
+    var showBtn = comment.querySelector(".show-btn")
+    showBtn.className = "watch-comment-head-link show-btn hid"
+    showBtn.style.visibility = "hidden"
+    var hideBtn = comment.querySelector(".hide-btn")
+    hideBtn.className = "watch-comment-head-link hide-btn"
+    hideBtn.style.visibility = "visible"
+}
+
+function hideComment(comment) {
+    var body = comment.querySelector(".watch-comment-body")
+    body.className += " hid"
+    var voting = comment.querySelector(".watch-comment-voting")
+    voting.className = "watch-comment-voting-off"
+    var showBtn = comment.querySelector(".show-btn")
+    showBtn.className = "watch-comment-head-link show-btn"
+    showBtn.style.visibility = "visible"
+    var hideBtn = comment.querySelector(".hide-btn")
+    hideBtn.className = "watch-comment-head-link hide-btn hid"
+    hideBtn.style.visibility = "hidden"
+}
+
+function mSpam(comment) {
+    comment = comment.parentNode.parentNode.parentNode
+    var action = comment.querySelector(".watch-comment-action")
+    action.className = "watch-comment-action hid"
+    var body = comment.querySelector(".watch-comment-body")
+    if(body.className.indexOf("hid") == -1) {
+        if(!comment.querySelector(".watch-comment-head-link")) {
+            // create elements
+            var showBtn = document.createElement("a")
+            showBtn.className = "watch-comment-head-link show-btn"
+            showBtn.onclick = function() {
+                showComment(comment)
+            }
+            showBtn.style.visibility = "visible"
+            showBtn.innerHTML = "Show"
+            comment.querySelector(".watch-comment-info").appendChild(showBtn)
+
+            var hideBtn = document.createElement("a")
+            hideBtn.className = "watch-comment-head-link hide-btn"
+            hideBtn.onclick = function() {
+                hideComment(comment)
+            }
+            hideBtn.style.visibility = "hidden"
+            hideBtn.innerHTML = "Hide"
+            comment.querySelector(".watch-comment-info").appendChild(hideBtn)
+        }
+        hideComment(comment)
+    }
 }

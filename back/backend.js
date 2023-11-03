@@ -2163,6 +2163,13 @@ app.post("/comment_post", (req, res) => {
     if(!fs.existsSync("./cache_dir/comments.json")) {
         fs.writeFileSync("./cache_dir/comments.json", "{}")
     }
+    if(!body.comment) {
+        res.send("empty")
+        return;
+    } else if(body.comment.length > 500) {
+        res.send("long")
+        return;
+    }
     let comments = JSON.parse(
         fs.readFileSync("./cache_dir/comments.json").toString()
     )
@@ -2178,7 +2185,7 @@ app.post("/comment_post", (req, res) => {
     let safeComment = yt2009_utils.xss(body.comment)
     let commentId = Math.floor(Math.random() * 110372949)
 
-    comments[body.video_id].push({
+    let commentObject = {
         "author": safeAuthor,
         "text": safeComment,
         "time": Date.now(),
@@ -2186,7 +2193,13 @@ app.post("/comment_post", (req, res) => {
         "id": commentId,
         "rating": 0,
         "ratingSources": {}
-    })
+    }
+
+    if(req.headers.cookie.includes("exclude_cs")) {
+        commentObject.csHide = true
+    }
+
+    comments[body.video_id].push(commentObject)
 
     res.send(yt2009_languages.apply_lang_to_code(
         yt2009_templates.videoComment(
@@ -2257,6 +2270,35 @@ app.post("/comment_rate", (req, res) => {
     // save comments with new rating
     fs.writeFileSync("./cache_dir/comments.json", JSON.stringify(comments))
     yt2009.receive_update_custom_comments(comments)
+})
+
+app.get("/reply_template", (req, res) => {
+    if(!req.headers.source
+    || !req.headers.cookie
+    || (req.headers.cookie
+    && !req.headers.cookie.includes("login_simulate"))) {
+        res.sendStatus(400)
+        return;
+    }
+
+    let video = req.headers.source
+                .split("v=")[1]
+                .split("&")[0]
+                .split("#")[0]
+    let loginName = yt2009_utils.xss(
+        req.headers.cookie
+        .split("login_simulate")[1]
+        .split(":")[0].split(";")[0]
+        .split("\"").join("'")
+    )
+
+    res.send(yt2009_templates.replyTemplate(
+        Math.floor(Math.random() * 17112023), video, loginName
+    ))
+})
+
+app.post("/comment_reply", (req, res) => {
+    res.send("sus")
 })
 
 /*
@@ -2464,6 +2506,143 @@ app.get("/channel_sort", (req, res) => {
 
         res.send(createdHTML)
     }
+})
+
+/*
+======
+comment search
+======
+*/
+const shtml = fs.readFileSync("../comment_search.htm").toString()
+app.get("/comment_search", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.redirect("/unauth.htm")
+        return;
+    }
+    let code = shtml;
+
+    // enumerate
+    let comments = {}
+    if(fs.existsSync("./cache_dir/comments.json")) {
+        comments = JSON.parse(
+            fs.readFileSync("./cache_dir/comments.json").toString()
+        )
+    }
+    let commentsA = []
+    for(let i in comments) {
+        comments[i].forEach(comment => {
+            let commentObject = JSON.parse(JSON.stringify(comment))
+            commentObject.video = i;
+            let commentTime = yt2009_utils.unixToRelative(comment.time)
+            commentObject.relativeTime = yt2009_utils.relativeTimeCreate(
+                commentTime, yt2009_languages.get_language(req)
+            )
+            if(yt2009.get_cache_video(i)) {
+                commentObject.videoTitle = yt2009.get_cache_video(i).title
+            }
+            if(commentObject.text.length == 0 || commentObject.csHide) return;
+            commentsA.push(commentObject)
+        })
+    }
+
+    // sort
+    // by rating, otherwise by time
+    let param = req.url.includes("?") ? "&" : "?"
+    if(req.query.so == "pagerank") {
+        commentsA = commentsA.sort((a, b) => b.rating - a.rating)
+        code = code.replace(
+            `<!--sort_by_rating-->`,
+            `<b>Sort by Rating</b>`
+        )
+        code = code.replace(
+            `<!--sort_by_time-->`,
+            `<a href="${req.url.replace("so=pagerank", "")}">Sort by Time</a>`
+        )
+    } else {
+        commentsA = commentsA.sort((a, b) => b.time - a.time)
+        code = code.replace(
+            `<!--sort_by_time-->`,
+            `<b>Sort by Time</b>`
+        )
+        code = code.replace(
+            `<!--sort_by_rating-->`,
+            `<a href="${req.url}${param}so=pagerank">Sort by Rating</a>`
+        )
+    }
+    
+    // filter comments
+    // by user
+    if(req.query.username) {
+        req.query.username = yt2009_utils.xss(req.query.username)
+        commentsA = commentsA.filter(s => s.author == req.query.username)
+        code = code.replace(
+            `<!--from_suffix-->`,
+            `from <b>${req.query.username}</b>`
+        )
+    }
+    // by content
+    if(req.query.q) {
+        commentsA = commentsA.filter(s => s.text.toLowerCase().includes(
+            req.query.q.toLowerCase()
+        ))
+        code = code.replace(
+            `yt2009_query`,
+            req.query.q.split(`"`).join("&quot;")
+        )
+    } else {
+        code = code.replace(`yt2009_query`, "")
+    }
+    // by page
+    let page = parseInt(req.query.page || 1) - 1
+    if(page < 0) {page = 0}
+    let unpagedComments = JSON.parse(JSON.stringify(commentsA))
+    commentsA = commentsA.slice(13 * page, (13 * page) + 13)
+
+    // render
+    let commentsHTML = ""
+    commentsA.forEach(comment => {
+        commentsHTML += yt2009_templates.commentSearchResult(comment)
+    })
+
+    // pager render
+    let pagerHTML = "Page " + (req.query.page || 1)
+    if(req.query.page && parseInt(req.query.page) > 1) {
+        let previousPage = parseInt(req.query.page) - 1
+        let nextPage = parseInt(req.query.page) + 1
+        let prev = req.url.replace(
+            "page=" + req.query.page,
+            "page=" + previousPage
+        )
+        let next = req.url.replace(
+            "page=" + req.query.page,
+            "page=" + nextPage
+        )
+        let prevPagehtml = yt2009_templates.csPager(previousPage, prev, true)
+        let nextPagehtml = " - " + yt2009_templates.csPager(nextPage, next)
+        if(!unpagedComments[(page + 1) * 13]) {nextPagehtml = ""}
+        pagerHTML = `${prevPagehtml} - ${pagerHTML}${nextPagehtml}`
+    } else {
+        let nextPage = parseInt(req.query.page) + 1
+        let next = req.url + param + "page=2"
+        if(req.url.includes("page=")) {
+            next = req.url.replace(
+                "page=" + req.query.page,
+                "page=" + nextPage
+            )
+        }
+        let nextPagehtml = " - " + yt2009_templates.csPager(nextPage, next)
+        if(!unpagedComments[(page + 1) * 13]) {nextPagehtml = ""}
+        pagerHTML = `${pagerHTML}${nextPagehtml}`
+    }
+    code = code.replace(
+        `<!--yt2009_pager-->`, pagerHTML
+    )
+
+    code = code.replace(`<!--yt2009_comments-->`, commentsHTML)
+    code = require("./yt2009loginsimulate")(req, code, true)
+    code = yt2009_languages.apply_lang_to_code(code, req)
+
+    res.send(code)
 })
 
 /*
