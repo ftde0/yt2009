@@ -956,7 +956,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "uploaderUrl": data.author_url,
                     "time": data.length,
                     "category": data.category,
-                    "qualities": data.qualities || false
+                    "qualities": data.qualities || false,
+                    "upload": data.upload
                 })
                 videos_page.unshift({
                     "id": data.id,
@@ -967,7 +968,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "uploaderUrl": data.author_url,
                     "time": data.length,
                     "category": data.category,
-                    "qualities": data.qualities || false
+                    "qualities": data.qualities || false,
+                    "upload": data.upload
                 })
                 fs.writeFileSync("./cache_dir/watched_now.json",
                                 JSON.stringify(featured_videos))
@@ -1232,8 +1234,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
                 // flags
                 let commentTime = comment.time;
-                if(flags.includes("fake_comment_dates")) {
-                    commentTime = yt2009utils.genFakeDate();
+                if(flags.includes("fake_dates")) {
+                    commentTime = yt2009utils.fakeDatesModern(req, comment.time)
                 }
                 let commentPoster = comment.authorName || "";
                 if(flags.includes("remove_username_space")) {
@@ -1305,8 +1307,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     // flags
                     unfilteredCommentCount++
                     let commentTime = comment.time;
-                    if(flags.includes("fake_comment_dates")) {
-                        commentTime = yt2009utils.genFakeDate();
+                    if(flags.includes("fake_dates")) {
+                        commentTime = yt2009utils.fakeDatesModern(req, comment.time)
                     }
                     commentTime = yt2009utils.relativeTimeCreate(
                         commentTime, yt2009languages.get_language(req)

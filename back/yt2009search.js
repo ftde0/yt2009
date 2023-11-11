@@ -396,9 +396,7 @@ module.exports = {
                         cancelled = true;
                     }
 
-                    if(flags.includes("fake_upload_dates")) {
-                        uploadDate = yt2009utils.genFakeDate();
-                    }
+                    uploadDate = yt2009utils.fakeDatesModern(flags, video.upload)
                     let uploaderName = video.author_name;
                     if(flags.includes("remove_username_space")) {
                         uploaderName = uploaderName.split(" ").join("")

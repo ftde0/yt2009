@@ -176,6 +176,12 @@ module.exports = {
                                    .split(":").join(";")
                 }
             })
+            if(req.headers.cookie.includes("fake_dates")) {
+                let date = req.headers.cookie
+                           .split("fake_dates")[1]
+                           .split(":")[1].split(";")[0]
+                flags += ";fake_dates" + date
+            }
         }
         catch(error) {}
 

@@ -867,24 +867,6 @@ module.exports = {
         })
         return tr;
     },
-    
-   
-    "timeFlags": function(input, flags, additionalInput) {
-        let tr = input;
-        if(flags.startsWith("undefined")) {
-            flags = flags.replace("undefined", "")
-        }
-        flags = flags.split(";")
-        flags.forEach(flag => {
-            switch(flag) {
-                case "fake_upload_date": {
-                    tr = this.genFakeDate()
-                    break;
-                }
-            }
-        })
-        return tr;
-    },
 
     "viewFlags": function(input, flags, additionalInput) {
         let tr = input;
@@ -972,7 +954,7 @@ module.exports = {
             relativeTimeRules = require("./language_data/language_engine")
                                 .raw_language_data("en").relativeTimeRules
         }
-        
+
         let timeValue = parseInt(baseString.split(" ")[0])
         
         let timeType = baseString.split(" ")[1].toLowerCase();
@@ -1156,18 +1138,22 @@ module.exports = {
 
     },
 
-    "unixToRelative": function(unix) {
+    "unixToRelative": function(unix, customBaseUnix) {
         // unix time to relative
         let string = ""
 
-        let timeDiff = (Date.now() - unix) / 1000
+        let timeDiff = ((customBaseUnix || Date.now()) - unix) / 1000
+        if(timeDiff < 0 && customBaseUnix) {
+            timeDiff = 2678400
+        }
         let formats = [
             {"name": "seconds", v: timeDiff},
             {"name": "minutes", v: timeDiff / 60},
             {"name": "hours", v: timeDiff / 3600},
             {"name": "days", v: timeDiff / 86400},
             {"name": "weeks", v: timeDiff / 604800},
-            {"name": "months", v: timeDiff / 2419200},
+            {"name": "months", v: timeDiff / 2678400},
+            {"name": "years", v: timeDiff / 28462400}
         ]
         formats.forEach(f => {
             if(f.v >= 1) {
@@ -1175,6 +1161,42 @@ module.exports = {
             }
         })
 
+        if(string.split(" ")[0] == "1") {
+            let month = string.split(" ")[1]
+            month = month.substring(0, month.length - 1)
+            string = string.replace(string.split(" ")[1], month)
+        }
+
         return string;
+    },
+
+    "fakeDatesModern": function(req, uploadDate) {
+        let date = Date.now()
+        if(typeof(req) == "string") {
+            date = req;
+        } else if(req.headers
+            && req.headers.cookie
+            && req.headers.cookie.includes("fake_dates")
+        ) {
+            // fake date through the cookies
+            date = req.headers.cookie
+                   .split("fake_dates")[1]
+                   .split(":")[0]
+                   .split(";")[0]
+        }
+        if(typeof(req) == "string" && req.includes("fake_dates")) {
+            // fake date through the cookies
+            date = req.split("fake_dates")[1]
+                   .split(":")[0]
+                   .split(";")[0]
+        }
+        if(typeof(date) !== "number") {
+            date = new Date(date).getTime()
+        }
+        if(uploadDate.includes("ago")) {
+            uploadDate = this.relativeToAbsoluteApprox(uploadDate)
+        }
+        uploadDate = new Date(uploadDate).getTime()
+        return this.unixToRelative(uploadDate, date)
     }
 }

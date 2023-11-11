@@ -70,8 +70,6 @@
 			<label for="watch-exclude-cs">exclude_cs</label><br>
 			<input type="checkbox" id="watch-exp-related" title="pokazuje podobne filmy bazując na tagach oglądanego filmu">
 			<label for="watch-exp-related">exp_related</label><br>
-			<input type="checkbox" id="watch-fake-comment-dates" title="fake daty komentarzy">
-			<label for="watch-fake-comment-dates">fake_comment_dates</label><br>
 			<input type="checkbox" id="watch-fake-upload-date" title="fake data wrzucenia filmu (01.01.2009 - 31.12.2009)">
 			<label for="watch-fake-upload-date">fake_upload_date</label>
 			<input type="text" id="watch-fake-upload-date-input" autocomplete="off" spellcheck="false" placeholder="tryb">
@@ -114,8 +112,6 @@
 			<h2>/results</h2>
 			<input type="checkbox" id="results-author-old-names" title="jeśli kanały mają link /user/, używaj nazwy z niego zamiast obecnej">
 			<label for="results-author-old-names">author_old_names</label><br>
-			<input type="checkbox" id="results-fake-upload-dates" title="fake daty wrzuceń filmów (np. 11 lat temu -> 3 miesiące temu)">
-			<label for="results-fake-upload-dates">fake_upload_dates</label><br>
 			<input type="checkbox" id="results-only-old" title="pokazuje w wyszukiwarce tylko filmy wrzucone przed podanym zakresem dat (domyślnie 01.04.2010)">
 			<label for="results-only-old">only_old</label>
 			<input type="text" id="results-only-old-input" autocomplete="off" spellcheck="false" placeholder="sprawdź moż. wartości">
@@ -145,8 +141,6 @@
 			<span id="default-avatar-notice">zobacz default_avatar na /watch dla możliwych wartości</span><br>
 			<input type="checkbox" id="channel-default-color" title="domyślne kolory tła (szare) zamiast brania ich z baneru">
 			<label for="channel-default-color">default_color</label><br>
-			<input type="checkbox" id="channel-fake-upload-date" title="fake data wrzucenia filmów na kanale">
-			<label for="channel-fake-upload-date">fake_upload_date</label><br>
 			<input type="checkbox" id="channel-index-contribute" title="kanały które odwiedzisz będą widoczne (anonimowo) dla wszystkich na /channels">
 			<label for="channel-index-contribute">index_contribute</label><br>
 			<input type="checkbox" id="channel-only-old" title="pokazuje na kanałach tylko filmy wrzucone w zakresie/przed datą (domyślnie 01.04.2010)">
@@ -174,8 +168,6 @@
 			<h2>/, /videos, /channels, /my_subscriptions</h2>
 			<input type="checkbox" id="mainpage-disable-fallback" title="ukrywa ostrzeżenie o trybu fallback">
 			<label for="mainpage-disable-fallback">disable_fallback</label><br>
-			<input type="checkbox" id="mainpage-fake-upload-date" title="fake daty wrzuceń filmów (np. 11 lat temu -> 3 miesiące temu)">
-			<label for="mainpage-fake-upload-date">fake_upload_date</label><br>
 			<input type="checkbox" id="mainpage-homepage-recommended" title="pokazuje polecane filmy na stronie głównej na podstawie 3 ostatnio obejrzanych">
 			<label for="mainpage-homepage-recommended">homepage_recommended</label><br>
 			<input type="checkbox" id="mainpage-realistic-view-count" title="bardziej realistyczna na 2009 liczba wyświetleń">
@@ -197,6 +189,10 @@
 			<label for="global-annotation-redirect">annotation_redirect</label><br>
 			<input type="checkbox" id="global-author-old-avatar" title="używa starych awatarów jak są na serwerach yt.">
 			<label for="global-author-old-avatar">author_old_avatar</label><br>
+			<input type="checkbox" id="global-fake-dates" title="fake daty komentarzy i opublikowania bazując na wpisanej.">
+			<label for="global-fake-dates">fake_dates</label>
+			<input type="text" id="global-fake-dates-input" autocomplete="off" spellcheck="false" placeholder="data">
+			<span id="fake-dates-notice">(wpisz datę w formacie YYYY-MM-DD)</span><br>
 			<input type="checkbox" id="global-login-simulate" title="symuluje zalogowanego użytkownika">
 			<label for="global-login-simulate">login_simulate</label>
 			<input type="text" id="global-login-simulate-input" autocomplete="off" spellcheck="false" placeholder="nazwa"><br>

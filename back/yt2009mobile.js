@@ -128,7 +128,7 @@ module.exports = {
                     data.forEach(video => {
                         if(utils.time_to_seconds(video.length) >= 1800
                         || relatedIndex > 4) return;
-                        video.upload = utils.genFakeDate()
+                        video.upload = utils.fakeDatesModern("2012", video.upload)
 
                         relatedHTML += templates.mobile_video(video)
                         relatedIndex++;
@@ -171,11 +171,12 @@ module.exports = {
             let videoIndex = 0;
             data.forEach(video => {
                 if(videoIndex > 10 || video.type !== "video") return;
+                let videoUpload = JSON.parse(JSON.stringify(video.upload))
                 if((req.headers.cookie || "").includes("old_experience=1")) {
-                    video.upload = utils.genFakeDate()
+                    videoUpload = utils.fakeDatesModern("2012", video.upload)
                 }
 
-                searchHTML += templates.mobile_video(video)
+                searchHTML += templates.mobile_video(video, videoUpload)
                 videoIndex++;
             })
 
@@ -311,7 +312,12 @@ module.exports = {
             )
             code = code.split(`v${index}_title`).join(video.title)
             code = code.split(`v${index}_views`).join(video.views)
-            code = code.split(`v${index}_date`).join(utils.genFakeDate())
+            code = code.split(`v${index}_date`).join(
+                video.upload && req.headers.cookie
+                && req.headers.cookie.includes("old_experience=1")
+                ? utils.fakeDatesModern("2012", video.upload)
+                : utils.genFakeDate()
+            )
         })
         res.send(code)
     },
@@ -349,9 +355,14 @@ module.exports = {
             data.comments.forEach(comment => {
                 if(!comment.content) return;
                 if(comment.content.length > 500) return;
+                let commentTime = comment.time
+                if(req.headers.cookie
+                && req.headers.cookie.includes("old_experience=1")) {
+                    commentTime = utils.fakeDatesModern("2012", comment.time)
+                }
                 actual_comments += `
             <div style="border-top:1px dashed #ADADAD;padding-top:8px">
-                <a href="#">${utils.asciify(comment.authorName)}</a>&nbsp;&nbsp;${comment.time}
+                <a href="#">${utils.asciify(comment.authorName)}</a>&nbsp;&nbsp;${commentTime}
             </div>
             <div style="padding-top:3px;padding-bottom:5px">${comment.content}</div>`
             })
@@ -421,7 +432,7 @@ module.exports = {
             if((req.headers.cookie || "").includes("old_experience=1")) {
                 ytsearch.get_search(
                     `"${data.name}" before:2010-04-01`,
-                    "realistic_view_count;fake_upload_dates",
+                    "realistic_view_count;fake_dates2012",
                     "",
                     (data) => {
                         let videoCount = 0;
@@ -466,7 +477,7 @@ module.exports = {
             videos.slice(0, 10).forEach(v => {
                 if(!v.type || v.type == "video") {
                     if((req.headers.cookie || "").includes("old_experience=1")) {
-                        v.upload = utils.genFakeDate()
+                        v.upload = utils.fakeDatesModern("2012", v.upload)
                     }
                     videosHTML += templates.mobile_video(v)
                 }

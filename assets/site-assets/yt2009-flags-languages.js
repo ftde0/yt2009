@@ -5,7 +5,6 @@ var languageData_EN = {
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
         "watch-exclude-cs": "hides comments you post from /comment_search",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
-        "watch-fake-comment-dates": "fake comment dates",
         "watch-fake-upload-date": "fake upload date (ranging anywhere in 2009)",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",
         "watch-old-banners": "uses old channel banners without wayback_features if possible",
@@ -17,7 +16,6 @@ var languageData_EN = {
 
 
         "results-author-old-names": "if the creator has a /user/ link, use the name from it instead of their current name.",
-        "results-fake-upload-dates": "fake upload dates (ex. 11 years ago -> 3 months ago)",
         "results-only-old": "only shows videos uploaded in a specified time range (default before 2010-04-01)",
         "results-realistic-view-count": "more realistic for 2009 view counts",
         "results-remove-username-space": "removes spaces from usernames",
@@ -28,7 +26,6 @@ var languageData_EN = {
         "channel-auto-user": "always try to redirect to a /user/ url if one can be found",
         "channel-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "channel-default-color": "use the default gray color instead of taking one from the banner",
-        "channel-fake-upload-date": "fake upload dates for videos (ex. 11 years ago -> 3 months ago)",
         "channel-index-contribute": "visited channels will be visible in /channels",
         "channel-only-old": "will only show videos uploaded in the specified date range on channels (default before 2010-04-01)",
         "channel-realistic-view-count": "more realistic for 2009 view counts",
@@ -36,7 +33,6 @@ var languageData_EN = {
         "channel-username-asciify": "remove special characters from usernames",
 
         "mainpage-disable-fallback": "hides fallback mode warning",
-        "mainpage-fake-upload-date": "fake upload dates (ex. 11 years ago -> 3 months ago)",
         "mainpage-homepage-recommended": "show a recommended section on the homepage based on the last 3 videos watched",
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
         "mainpage-remove-username-space": "removes spaces from usernames",
@@ -45,6 +41,7 @@ var languageData_EN = {
         "global-always-annotations": "automatically enables annotations for videos",
         "global-always-captions": "automatically enables captions for videos",
         "global-author-old-avatar": "uses old avatars if present on youtube servers",
+        "global-fake-dates": "fake upload and comment dates based on the entered date",
         "global-login-simulate": "simulates a logged in user",
         "global-no-controls-fade": "disables video controls fade out",
         "global-annotation-redirect": "redirects all youtube.com links within annotations to yt2009",
@@ -110,7 +107,9 @@ var languageData_EN = {
         - poor - removes emojis and hashtags<br>\
         - moderate - everything from poor + known new words<br>\
         - max - removes whole lines of text matching moderate<br>\
-        (leaving this box empty/different value = max.)"
+        (leaving this box empty/different value = max.)",
+
+        "#fake-dates-notice": "(enter a YYYY-MM-DD formatted date)"
     },
 
     "placeholders": {
@@ -122,6 +121,7 @@ var languageData_EN = {
         "channel-default-avatar-input": "mode",
         "channel-only-old-input": "check possible values",
         "channel-wayback-features-input": "mode",
+        "global-fake-dates-input": "date",
         "global-login-simulate-input": "username",
         "results-only-old-input": "check possible values"
     }

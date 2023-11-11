@@ -622,7 +622,7 @@ module.exports = {
             </div>
         </div>`
     },
-    "mobile_video": function(video) {
+    "mobile_video": function(video, upload) {
         return `
             <table width="100%">
                 <tr valign="top">
@@ -634,7 +634,7 @@ module.exports = {
                             <a accesskey="1" href="watch?v=${video.id}">${video.title}</a>
                         </div>
                         <div style="color:#333;font-size:80%">${video.time || video.length || ""}&nbsp;&nbsp;<img src="/assets/site-assets/stars_5.0_49x9-vfl84759.gif" alt="5.0 stars" width="49" height="9" style="border:0;margin:0px;" /></div>
-                        ${video.upload ? `<div style="color:#333;font-size:80%">${video.upload}</div>` : ""}
+                        ${video.upload ? `<div style="color:#333;font-size:80%">${upload || video.upload}</div>` : ""}
                         <div style="color:#333;font-size:80%">${video.views}</div>
                     </td>
                 </tr>
@@ -789,7 +789,7 @@ module.exports = {
     </entry>`
     },
     "subscriptionVideo": function(video, flags, videoIndex) {
-        let uploadDate = flags.includes("fake_upload_date")
+        let uploadDate = flags.includes("fake_dates")
                         ? utils.genFakeDate(videoIndex) : video.upload
         let viewCount = video.views;
         if(flags.includes("realistic_view_count")
@@ -1251,7 +1251,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                         </div>
                     </span>
                     <span id="video-added-time-${video.id}" class="video-date-added">${utils.relativeTimeCreate(
-                        utils.genFakeDate(), langs.get_language(req)
+                        utils.fakeDatesModern(req, utils.relativeToAbsoluteApprox(video.upload)), langs.get_language(req)
                     )}</span>
                     <span id="video-num-views-${video.id}" class="video-view-count">lang_views_prefix${utils.countBreakup(
                         utils.bareCount(video.views)

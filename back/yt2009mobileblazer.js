@@ -207,6 +207,12 @@ module.exports = {
             }
         }
 
+        let fakeCommentDates = false;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("comments-fake-dates")) {
+            fakeCommentDates = true
+        }
+
         yt2009html.get_video_comments(id, (data) => {
             data.forEach(comment => {
                 if(comment.continuation) return;
@@ -230,7 +236,9 @@ module.exports = {
                     response.content.comments.push({
                         "author_name": utils.asciify(comment.authorName),
                         "comment": commentContent,
-                        "time_ago": utils.genFakeDate()
+                        "time_ago": fakeCommentDates
+                                  ? utils.fakeDatesModern(req, comment.time)
+                                  : comment.time
                     })
                 }
             })

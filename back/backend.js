@@ -667,6 +667,16 @@ app.get("/feeds/api/videos/", (req, res) => {
     yt2009_cps.get_search(req, res)
 })
 
+//left this when messing about with leanbacklite_v3
+// this gets it partially working lol
+app.post("/feeds/api/videos/", (req, res) => {
+    if(!req.query.q) {
+        yt2009_mobile.videoData(req, res)
+        return;
+    }
+    yt2009_cps.get_search(req, res)
+})
+
 /*
 ======
 cpb.swf (flash embed playlists)
@@ -1054,19 +1064,18 @@ video comments
 ======
 */
 app.get("/get_more_comments", (req, res) => {
-    let id = req.headers.source.split("watch?v=")[1].split("&")[0].split("#")[0]
+    let id = req.headers.source
+             .split("watch?v=")[1]
+             .split("&")[0].split("#")[0]
     let pageNumber = parseInt(req.headers.page)
     let flags = ""
     try {
-        req.headers.cookie.split(";").forEach(cookie => {
-            if(cookie.trimStart().startsWith("watch_flags=")) {
-                flags += cookie.trimStart().replace("watch_flags=", "").split(":").join(";")
-            }
-            if(cookie.trimStart().startsWith("global_flags=")) {
-                flags += cookie.trimStart().replace("global_flags=", "")
-            }
-        })
-        flags += req.headers.url_flags.split("flags=")[1].split("&")[0];
+        if(req.headers.cookie
+        && req.headers.cookie.includes("global_flags=")) {
+            flags += req.headers.cookie
+                     .split("global_flags=")[1]
+                     .split(";")[0]
+        }
     }
     catch(error) {}
 
@@ -1078,8 +1087,9 @@ app.get("/get_more_comments", (req, res) => {
                 comment_html += yt2009_templates.videoComment(
                     comment.authorUrl,
                     comment.authorName,
-                    flags.includes("fake_comment_date")
-                    ? yt2009_utils.genFakeDate() : comment.time,
+                    flags.includes("fake_dates")
+                    ? yt2009_utils.fakeDatesModern(req, comment.time)
+                    : comment.time,
                     comment.content,
                     flags,
                     false
@@ -2378,7 +2388,7 @@ app.get("/search_channel", (req, res) => {
         let i = 1;
         results.forEach(result => {
             let views = yt2009_utils.viewFlags(result.views, channelFlags)
-            let upload = yt2009_utils.timeFlags(result.upload, channelFlags)
+            let upload = yt2009_utils.fakeDatesModern(req, result.upload)
             createdHTML += yt2009_templates.playnavVideo(
                 result,
                 i,
@@ -2492,7 +2502,7 @@ app.get("/channel_sort", (req, res) => {
         let i = 1;
         results.forEach(result => {
             let views = yt2009_utils.viewFlags(result.views, channelFlags)
-            let upload = yt2009_utils.timeFlags(result.upload, channelFlags)
+            let upload = yt2009_utils.fakeDatesModern(req, result.upload)
             createdHTML += yt2009_templates.playnavVideo(
                 result,
                 i,

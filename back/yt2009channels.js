@@ -569,7 +569,7 @@ module.exports = {
                     views, yt2009languages.get_language(req)
                 )
                 let ratings_est = yt2009utils.estRating(views)
-                let upload_date = yt2009utils.timeFlags(video.upload, flags)
+                let upload_date = yt2009utils.fakeDatesModern(req, video.upload)
                 videoUploadDates[video.id] = upload_date;
                 scrollbox_all_html += templates.playnavVideo(
                     video,
@@ -597,7 +597,7 @@ module.exports = {
                     views, yt2009languages.get_language(req)
                 )
                 let ratings_est = yt2009utils.estRating(views)
-                let upload_date = yt2009utils.timeFlags(video.upload, flags)
+                let upload_date = yt2009utils.fakeDatesModern(req, video.upload)
                 if(videoUploadDates[video.id]) {
                     upload_date = videoUploadDates[video.id]
                 }
@@ -687,7 +687,7 @@ module.exports = {
                                     comment.authorUrl,
                                     authorAvatar,
                                     authorName,
-                                    yt2009utils.timeFlags(comment.time, flags),
+                                    yt2009utils.fakeDatesModern(req, comment.time),
                                     comment.content.split("\n")[0]
                                 )
                                 count++;
