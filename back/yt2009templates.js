@@ -8,7 +8,7 @@ const config = require("./config.json")
 const langs = require("./language_data/language_engine")
 
 module.exports = {
-    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes, customComment, id) {
+    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes, id) {
         if(commentTime.includes("in playlist")) {
             commentTime = commentTime.split("in playlist")[0]
         }
@@ -19,8 +19,27 @@ module.exports = {
             likePrefix = "+"
         } else if(likes < 0) {
             likeColor = "red"
-            likePrefix = "-"
         }
+        // check for timestamps in contents
+        content.split(" ").forEach(c => {
+            if(c.includes(":")) {
+                let dIndex = c.indexOf(":")
+                let cBefore = c.substring(dIndex - 1, dIndex)
+                let cAfter = c.substring(dIndex + 1, dIndex + 2)
+                if(!isNaN(parseInt(cBefore))
+                && !isNaN(parseInt(cAfter))) {
+                    // timestamp!!
+                    let timestamp = c.replace(/[^0-9+:]/g, "")
+                    let minutes = parseInt(c.split(":")[0]) * 60
+                    let seconds = parseInt(c.split(":")[1])
+                    let total = minutes + seconds
+                    content = content.replace(
+                        timestamp,
+                        `<a href="#" onclick="skipAhead(${total});return false;">${timestamp}</a>`
+                    )
+                }
+            }
+        })
         let dislikeCode = `onclick="sendCmtRating('${id}', 'dislike');return false;"`
         let likeCode = `onclick="sendCmtRating('${id}', 'like');return false;"`
         return `<div class="watch-comment-entry" ${id ? `id="comment-${id}"` : ""}>
@@ -31,8 +50,8 @@ module.exports = {
                 </div>
                 <div class="watch-comment-voting">
                     <span class="watch-comment-score watch-comment-${likeColor}">${likePrefix}${likes || 0}</span>
-                    <a href="#" ${customComment && flags.includes("login_simulate") ? dislikeCode : ""}><button class="master-sprite watch-comment-down${flags.includes("login_simulate") ? "-hover" : ""}" title="Poor comment"></button></a>
-                    <a href="#" ${customComment && flags.includes("login_simulate") ? likeCode : ""}><button class="master-sprite watch-comment-up${flags.includes("login_simulate") ? "-hover" : ""}" title="Good comment"></button></a>
+                    <a href="#" ${id && flags.includes("login_simulate") ? dislikeCode : ""}><button class="master-sprite watch-comment-down${flags.includes("login_simulate") ? "-hover" : ""}" title="Poor comment"></button></a>
+                    <a href="#" ${id && flags.includes("login_simulate") ? likeCode : ""}><button class="master-sprite watch-comment-up${flags.includes("login_simulate") ? "-hover" : ""}" title="Good comment"></button></a>
                     <span class="watch-comment-msg"></span>
                 </div>
                 <span class="watch-comment-spam-bug">Marked as spam</span>
@@ -373,7 +392,7 @@ module.exports = {
                 <div class="v120WideEntry">
                     <div class="v120WrapperOuter">
                         <div class="v120WrapperInner">
-                            <a class="video-thumb-link" href="/watch?v=${id}" rel="nofollow"><img title="${title.split("\"").join("&quot;")}" src="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg"></a>
+                            <a class="video-thumb-link" href="/watch?v=${id}" rel="nofollow"><img title="${title.split("\"").join("&quot;")}" src="${protocol}://i.ytimg.com/vi/${id}/hqdefault.jpg" onmouseover="videosPreview(this, '${id}')" onmouseout="removeVideoPreview()"></a>
 
                             <div class="addtoQL90"><a href="#" ql="${id}" title="${noLang ? "lang_add_to_ql": "Add Video to Quickist"}"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(uploaderName.split(" ").join(""))}')"></button></a>
                                 <div class="hid quicklist-inlist"><a href="#">${noLang ? "lang_ql_added" : "Added to Quicklist"}</a></div>
@@ -452,7 +471,7 @@ module.exports = {
                         <span class="endscreen-arrow-left" onclick="endscreen_section_change(-1)"></span>
                         <span class="endscreen-arrow-right" onclick="endscreen_section_change(1)"></span>
                         <div class="buttons yt-center">
-                            <div class="button-share">
+                            <div class="button-share" onclick="shareVideoFromFlash();">
                                 <img src="/player-imgs/share.png"/>
                                 <h2>Share</h2>
                             </div>
@@ -479,7 +498,7 @@ module.exports = {
         </div>`
     },
     "flashObject": function(url) {
-        return `<object width="640" height="385" class="fl flash-video"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
+        return `<object width="640" height="385" class="fl flash-video"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" id="movie_player" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
     },
     "html5Embed": function(id, elementId) {
         return `<iframe id="${elementId}" allowfullscreen src="/embed/${id}"></iframe>`

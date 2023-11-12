@@ -56,7 +56,7 @@ function show_playlist(element) {
     }
     element.className = "subfolder selected"
 
-    var id = element.getAttribute("data-id")
+    var id = element.getAttribute("data-id").replace('"', "")
     var rawVideos = document.cookie.split(id + "=")[1].split(";")[0]
     rawVideos = rawVideos.split(":")
     var videoIndex = 0;

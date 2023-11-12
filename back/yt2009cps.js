@@ -101,6 +101,7 @@ module.exports = {
             + "\n" + videos
             + templates.cpsSearchEnd;
 
+            res.set("content-type", "application/atom+xml")
             res.send(response)
         }
     }

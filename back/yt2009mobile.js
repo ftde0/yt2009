@@ -527,8 +527,8 @@ module.exports = {
             // send full feed on recently_featured
             // 25 recently watched
             let response = templates.gdata_feedStart
-                           .split(">25<").join(`>${max}<`)
                            .split(">1<").join(`>${start}<`)
+                           .split(">25<").join(`>${max}<`)
             let videosAdded = 0;
             let vids = yt2009html.featured().slice(start, start + max)
             vids.forEach(video => {
@@ -552,6 +552,7 @@ module.exports = {
                     videosAdded++;
                     if(videosAdded >= vids.length) {
                         response += templates.gdata_feedEnd
+                        res.set("content-type", "application/atom+xml")
                         res.send(response)
                     }
                 }, "", "", false, false, true)
@@ -563,8 +564,8 @@ module.exports = {
                 max = 25
             }
             let response = templates.gdata_feedStart
-                           .split(">25<").join(`>${max}<`)
                            .split(">1<").join(`>${start}<`)
+                           .split(">25<").join(`>${max}<`)
             if(yt2009html.featured().length > 25) {
                 yt2009html.featured().slice(start + 25, start + 25 + max).forEach(video => {
                     yt2009html.fetch_video_data(video.id, (data) => {
@@ -587,9 +588,11 @@ module.exports = {
                 })
             }
             response += templates.gdata_feedEnd
+            res.set("content-type", "application/atom+xml")
             res.send(response)
         } else {
             // send empty video feeds on other requests
+            res.set("content-type", "application/atom+xml")
             res.send(templates.gdata_feedStart + templates.gdata_feedEnd)
         }
     },
@@ -612,6 +615,7 @@ module.exports = {
                 (data.tags || []).join(),
                 data.category
             )
+            res.set("content-type", "application/atom+xml")
             res.send(response)
         }, "", "", false, false, true)
     },
@@ -688,6 +692,7 @@ module.exports = {
                 })
 
                 response += templates.gdata_feedEnd
+                res.set("content-type", "application/atom+xml")
                 res.send(response)
             }), "", false)
         }, "", "", false, false, true)
@@ -730,6 +735,7 @@ module.exports = {
                 })
             }
             response += templates.gdata_feedEnd
+            res.set("content-type", "application/atom+xml")
             res.send(response)
         }, "", "", false, false, true)
     },
@@ -764,6 +770,7 @@ module.exports = {
             }
 
             let channelViewCount = Math.floor(videoViewCount / 90)
+            res.set("content-type", "application/atom+xml")
             res.send(templates.gdata_user(
                 id,
                 utils.asciify(data.name),
@@ -808,6 +815,7 @@ module.exports = {
             })
 
             response += templates.gdata_feedEnd;
+            res.set("content-type", "application/atom+xml")
             res.send(response)
         }}, "", true)
     },
@@ -836,6 +844,7 @@ module.exports = {
                         })
                     }
                     response += templates.gdata_feedEnd;
+                    res.set("content-type", "application/atom+xml")
                     res.send(response)
                 })
             }}, "", true)
@@ -883,6 +892,7 @@ module.exports = {
         
                                     // send response
                                     response += templates.gdata_feedEnd;
+                                    res.set("content-type", "application/atom+xml")
                                     res.send(response)
                                 })) 
                             }
@@ -891,6 +901,7 @@ module.exports = {
                     if(!hasFavoritesPlaylist) {
                         // no favorites playlist, send empty feed
                         response += templates.gdata_feedEnd;
+                        res.set("content-type", "application/atom+xml")
                         res.send(response)
                         return;
                     }
@@ -928,6 +939,7 @@ module.exports = {
                     )
                 })
                 response += templates.gdata_feedEnd
+                res.set("content-type", "application/atom+xml")
                 res.send(response)
             }
         }, true)
@@ -982,6 +994,7 @@ module.exports = {
 
             // finalize
             response += templates.gdata_feedEnd
+            res.set("content-type", "application/atom+xml")
             res.send(response)
         })
     },
@@ -1000,8 +1013,8 @@ module.exports = {
             }
         }, "")
         let response = templates.gdata_feedStart
-                       .split(">25<").join(`>${max}<`)
                        .split(">1<").join(`>${start}<`)
+                       .split(">25<").join(`>${max}<`)
         videos.forEach(video => {
             let cacheVideo = yt2009html.get_cache_video(video.id)
             response += templates.gdata_feedVideo(
@@ -1018,6 +1031,7 @@ module.exports = {
             )
         })
         response += templates.gdata_feedEnd
+        res.set("content-type", "application/atom+xml")
         res.send(response)
     }
 }

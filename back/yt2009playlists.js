@@ -198,6 +198,7 @@ module.exports = {
             xmlResponse += `
             </feed>`
 
+            res.set("content-type", "application/atom+xml")
             res.send(xmlResponse)
         })
     }

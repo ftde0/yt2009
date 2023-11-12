@@ -90,6 +90,13 @@ var sub = ""
 watchpage
 =======
 */
+function expandShare() {
+    $("#more-options").style.display = "none"
+    $("#watch-share-services-collapsed").style.display = "none"
+    $("#watch-share-services-expanded").style.display = ""
+    $("#fewer-options").style.display = ""
+}
+
 if(location.href.indexOf("watch") !== -1) {
     // descriptions
     $("#watch-video-details-toggle-less").onclick = function() {
@@ -107,12 +114,7 @@ if(location.href.indexOf("watch") !== -1) {
     }
 
     // sharing
-    $("#more-options").onclick = function() {
-        $("#more-options").style.display = "none"
-        $("#watch-share-services-collapsed").style.display = "none"
-        $("#watch-share-services-expanded").style.display = ""
-        $("#fewer-options").style.display = ""
-    }
+    $("#more-options").onclick = expandShare
     $("#fewer-options").onclick = function() {
         $("#more-options").style.display = ""
         $("#watch-share-services-collapsed").style.display = ""
@@ -411,6 +413,28 @@ function onWatchCommentsShowMore() {
     }
 }
 
+// share vid
+function shareVideoFromFlash() {
+    location.hash = "watch-main-area"
+    expandShare()
+}
+
+// skipping
+function skipAhead(seconds) {
+    var vid = document.getElementById("movie_player")
+    vid.seekTo(seconds, true, true);
+    vid.playVideo()
+}
+
+// tooltips
+function showSimpleTooltip(tip) {
+    tip = tip.parentNode.getElementsByTagName("div")[0]
+    tip.style.display = "block"
+}
+function hideSimpleTooltip(tip) {
+    tip = tip.parentNode.getElementsByTagName("div")[0]
+    tip.style.display = "none"
+}
 
 var plSelectedOption = false;
 // watchpage: add to playlist tab, read the playlist index, create one if non-existent
@@ -461,7 +485,8 @@ function onPlaylistChange() {
         }
     }
 
-    if(plSelectedOption.getAttribute("value") == "override-createnew") {
+    if(!plSelectedOption
+    || plSelectedOption.getAttribute("value") == "override-createnew") {
         $(".playlist-add").style.display = "none"
         $(".playlist-create").style.display = "block"
     } else {
@@ -498,7 +523,21 @@ function playlistAdd(id) {
     var currentId = $(".email-video-url").value.split("?v=")[1]
     var videoName = $(".watch-vid-ab-title").innerHTML
     var viewCount = $("#watch-view-count").innerHTML
-    var starRating = $(".ratingL").className.split(" ")[2].split("-")[1]
+    var starRating = "5.0"
+    var tempStars = 0
+    var stars = document.getElementById("ratingStars").getElementsByTagName("a")
+    for(var star in stars) {
+        if(stars[star].nodeName
+        && stars[star].getElementsByTagName("button")[0]
+           .className.indexOf("icn_star_full") !== -1) {
+            tempStars += 1
+        } else if(stars[star].nodeName
+        && stars[star].getElementsByTagName("button")[0]
+           .className.indexOf("icn_star_half") !== -1) {
+            tempStars += 0.5
+        }
+    }
+    starRating = tempStars.toFixed(1)
     var currentDate = new Date();
     var months = ["Jan", "Feb", "Mar",
                   "Apr", "May", "Jun",
@@ -579,6 +618,33 @@ function toggleCommentsExpander(element) {
         getElementsByClassName(
             element.parentNode, "yt-uix-expander-body"
         )[0].className = "yt-uix-expander-body hid"
+    }
+}
+
+//morefrom_load
+function morefrom_load() {
+    var site = location.protocol.replace(":", "") + '://' + location.host
+    site = document.querySelector(".yt2009-channel-link").href.replace(site, "")
+    var name = document.querySelector(".yt2009-channel-link").innerHTML
+    // request
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("POST", "/morefrom_load")
+    r.setRequestHeader("channel", site)
+    r.setRequestHeader("source", location.href)
+    r.send(name)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            $("#watch-channel-discoverbox").innerHTML += r.responseText
+
+            // remove indicator so it doesn't load all the time
+            var mark = document.querySelector(".yt2009-mark-morefrom-fetch")
+            mark.parentNode.removeChild(mark)
+        }
     }
 }
 
@@ -707,8 +773,18 @@ function sendCmtRating(commentId, rating) {
         && (r.responseText.indexOf("rating:") !== -1)) {
             var rating = parseInt(r.responseText.replace("rating:", ""))
             var color = "green"
+            var prevRating = parseInt(commentScore.innerHTML)
+            if(thumbsUp.className.indexOf("-up-on") !== -1) {
+                prevRating -= 1
+            } else if(thumbsDown.className.indexOf("down-on") !== -1) {
+                prevRating += 1
+            }
+            rating = prevRating + rating
             if(rating == 0) {color = "gray"}
-            if(rating < 0) {color = "red"}
+            if(rating < 0) {
+                rating = rating.toString()
+                color = "red"
+            }
             if(rating > 0) {
                 rating = "+" + rating.toString()
             }

@@ -367,6 +367,14 @@ let files = [
     {
         "url": "https://s.ytimg.com/yt/img/icn_cycds_warning-vfl33982.gif",
         "path": "./assets/site-assets/icn_cycds_warning-vfl33982.gif"
+    },
+    {
+        "url": "https://s.ytimg.com/yt/img/tooltip-reverse-vfl88394.gif",
+        "path": "./assets/site-assets/tooltip-reverse-vfl88394.gif"
+    },
+    {
+        "url": "https://s.ytimg.com/yt/img/tooltip-vfl56131.gif",
+        "path": "./assets/site-assets/tooltip-vfl56131.gif"
     }
 ]
 const initialFileCount = files.length

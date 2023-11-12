@@ -50,6 +50,22 @@ function yt2009_search() {
 
     window.location = "/results?search_query=" + query.split(" ").join("+")
 }
+function shareVideoFromFlash() {
+    location.hash = "watch-main-area"
+    expandShare()
+}
+function skipAhead(seconds) {
+    $("video").currentTime = seconds;
+    $("video").play()
+}
+function showSimpleTooltip(tip) {
+    tip = tip.parentNode.getElementsByTagName("div")[0]
+    tip.style.display = "block"
+}
+function hideSimpleTooltip(tip) {
+    tip = tip.parentNode.getElementsByTagName("div")[0]
+    tip.style.display = "none"
+}
 
 /*
 ======
@@ -217,11 +233,10 @@ function morefrom_load() {
     var name = $(".yt2009-channel-link").innerHTML
     // request
     var r = new XMLHttpRequest();
-    r.open("GET", "/morefrom_load")
+    r.open("POST", "/morefrom_load")
     r.setRequestHeader("channel", site)
-    r.setRequestHeader("name", name)
     r.setRequestHeader("source", location.href)
-    r.send(null)
+    r.send(name)
     r.addEventListener("load", function(e) {
         // add html sent from server
         $("#watch-channel-discoverbox").innerHTML += r.responseText
@@ -691,11 +706,14 @@ sharing
 ======
 */
 // more options
-$("#watch-sharetab-options #more-options a").addEventListener("click", function() {
+function expandShare() {
     $("#watch-sharetab-options #more-options").style.display = "none"
     $("#watch-share-services-collapsed").style.display = "none"
     $("#watch-share-services-expanded").style.display = ""
     $("#watch-sharetab-options #fewer-options").style.display = ""
+}
+$("#watch-sharetab-options #more-options a").addEventListener("click", function() {
+    expandShare()
 }, false)
 // less options
 $("#watch-sharetab-options #fewer-options a").addEventListener("click", function() {
@@ -1219,8 +1237,20 @@ function sendCmtRating(commentId, rating) {
         // new rating sent - successful response
         var rating = parseInt(r.responseText.replace("rating:", ""))
         var color = "green"
+        var prevRating = parseInt(
+            c.querySelector(".watch-comment-score").innerHTML
+        )
+        if(thumbsUp.className.indexOf("-up-on") !== -1) {
+            prevRating -= 1
+        } else if(thumbsDown.className.indexOf("down-on") !== -1) {
+            prevRating += 1
+        }
+        rating = prevRating + rating
         if(rating == 0) {color = "gray"}
-        if(rating < 0) {color = "red"}
+        if(rating < 0) {
+            rating = rating.toString()
+            color = "red"
+        }
         if(rating > 0) {
             rating = "+" + rating.toString()
         }

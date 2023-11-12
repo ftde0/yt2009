@@ -3341,10 +3341,10 @@ html>body #watch-main-area .watch-tabs a {
   display: block
 }
 
-#watch-this-vid #movie_player {
+/*#watch-this-vid #movie_player {
   height: 385px;
   width: 640px
-}
+}*/
 
 #watch-checker-div {
   position: absolute;

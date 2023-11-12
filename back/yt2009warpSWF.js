@@ -106,15 +106,15 @@ module.exports = {
 
     // handling /get_video (flv)
     "get_flv": function(req, res) {
-        if(req.query.noflv == 1) {
-            res.send("")
-            return;
-        }
         if(req.query.fmt == 5
         || req.query.video_id.includes("/mp4")
         || (req.headers.referer || "").includes("/mp4")) {
             req.query.video_id = req.query.video_id.replace("/mp4", "")
             res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
+            return;
+        }
+        if(req.query.noflv == 1) {
+            res.send("")
             return;
         }
         if(req.query.eurl

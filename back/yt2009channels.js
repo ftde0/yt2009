@@ -1431,10 +1431,10 @@ module.exports = {
                 if(r.status !== 404) {
                     // old banner exists, save
                     r.buffer().then(buffer => {
-                        fs.writeFileSync(`../assets/${data.banner}`, buffer)
+                        fs.writeFileSync(`/../assets/${cId}_banner.jpg`, buffer)
                         code = code.replace(
                             `<!--yt2009_banner-->`,
-                            templates.banner(`/assets/${data.banner}`)
+                            templates.banner(`/assets/${cId}_banner.jpg`)
                         )
                         oldBannerUsed = true;
                         getOldBg()
@@ -1456,10 +1456,10 @@ module.exports = {
                     "headers": yt2009constants.headers
                 }).then(r => {
                     r.buffer().then(buffer => {
-                        fs.writeFileSync(`../assets/${data.banner}`, buffer)
+                        fs.writeFileSync(`../assets/${cId}_banner.jpg`, buffer)
                         code = code.replace(
                             `<!--yt2009_banner-->`,
-                            templates.banner(`/assets/${data.banner}`)
+                            templates.banner(`${`/assets/${cId}_banner.jpg`}`)
                         )
                         getOldBg("404")
                     })

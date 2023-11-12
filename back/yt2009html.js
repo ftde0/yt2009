@@ -15,6 +15,7 @@ const yt2009exports = require("./yt2009exports")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
 const userid = require("./cache_dir/userid_cache")
+const crypto = require("crypto")
 
 const watchpage_code = fs.readFileSync("../watch.html").toString();
 const watchpage_feather = fs.readFileSync("../watch_feather.html").toString()
@@ -430,6 +431,8 @@ module.exports = {
         let requiredCallbacks = 1;
         let callbacksMade = 0;
         let endscreen_queue = []
+        let commentId = this.commentId
+        let hasComment = this.hasComment
 
         // basic data
         // flags
@@ -522,9 +525,11 @@ module.exports = {
             )
         }
 
+        let totalCommentCount = 0;
         if(custom_comments[data.id]) {
             let commentsHTML = ""
             custom_comments[data.id].forEach(comment => {
+                if(!comment.time) return;
                 let commentTime = yt2009utils.unixToRelative(comment.time)
                 commentTime = yt2009utils.relativeTimeCreate(
                     commentTime, yt2009languages.get_language(req)
@@ -532,7 +537,7 @@ module.exports = {
                 let commentHTML = yt2009templates.videoComment(
                     "#", comment.author, commentTime,
                     comment.text, flags, true, comment.rating,
-                    true, comment.id
+                    comment.id
                 )
 
                 // get liked/disliked status by user
@@ -552,6 +557,7 @@ module.exports = {
                     )
                 }
 
+                totalCommentCount++
                 commentsHTML += commentHTML
             })
 
@@ -789,16 +795,44 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             commentTime = yt2009utils.relativeTimeCreate(
                                 commentTime, yt2009languages.get_language(req)
                             )
+
+                            let id = commentId(comment.authorUrl, comment.content)
+
+                            let likes = comment.likes || Math.floor(Math.random() * 2)
+                            let customRating = 0;
+                            let customData = hasComment(data.id, id)
+                            if(customData) {
+                                likes += customData.rating
+                                let token = yt2009utils.get_used_token(req)
+                                token == "" ? token = "dev" : ""
+                                if(customData.ratingSources[token]) {
+                                    customRating = customData.ratingSources[token]
+                                }
+                            }
+
                             // add comment
-                            commentsHTML += yt2009templates.videoComment(
+                            let commentHTML = yt2009templates.videoComment(
                                 comment.authorUrl,
                                 comment.authorName,
                                 commentTime,
                                 comment.content,
                                 flags,
                                 true,
-                                comment.likes || Math.floor(Math.random() * 2)
+                                likes,
+                                id
                             )
+                            if(customRating == 1) {
+                                commentHTML = commentHTML.replace(
+                                    "watch-comment-up-hover",
+                                    "watch-comment-up-on"
+                                )
+                            } else if(customRating == -1) {
+                                commentHTML = commentHTML.replace(
+                                    "watch-comment-down-hover",
+                                    "watch-comment-down-on"
+                                )
+                            }
+                            commentsHTML += commentHTML
                         })
                         commentsHTML += `<!--Default YT comments below.-->`
                         code = code.replace(`<!--yt2009_wayback_comments-->`,
@@ -1082,6 +1116,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             swfFilePath = decodeURIComponent(
                 req.headers.cookie.split("alt_swf_path=")[1].split(";")[0]
             )
+            if(!swfFilePath) {swfFilePath = "/watch.swf"}
         }
         if(req.headers.cookie.includes("alt_swf_arg")) {
             swfArgPath = decodeURIComponent(
@@ -1092,7 +1127,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if((req.headers["cookie"] || "").includes("f_h264")) {
             flash_url += "%2Fmp4"
         }
-        flash_url += `&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module-${env}.swf`
+        flash_url += `&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module.swf`
         if(useFlash) {
             code = code.replace(
                 `<!DOCTYPE HTML>`,
@@ -1137,6 +1172,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `id="watch-longform-popup" class="master-sprite"`,
                 `id="watch-longform-popup" class="master-sprite not-pos-exclude"`
             )
+        }
+        if(!useFlash) {
+            code = code.replace("yt2009_ch5", "yt2009_html5")
         }
 
         // podkładanie pod html podstawowych danych
@@ -1284,17 +1322,49 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 if(topLike < 10) {
                     presentedLikeCount = comment.likes
                 }
-                comments_html += yt2009templates.videoComment(
+
+                if(isNaN(presentedLikeCount)) {presentedLikeCount = 0;}
+
+                // comment id
+                let id = commentId(comment.authorUrl, comment.content)
+
+                let customRating = 0;
+                let customData = hasComment(data.id, id)
+                if(customData) {
+                    presentedLikeCount += customData.rating
+                    let token = yt2009utils.get_used_token(req)
+                    token == "" ? token = "dev" : ""
+                    if(customData.ratingSources[token]) {
+                        customRating = customData.ratingSources[token]
+                    }
+                }
+
+                let commentHTML = yt2009templates.videoComment(
                     comment.authorUrl,
                     commentPoster,
                     commentTime,
                     commentContent,
                     flags,
                     true,
-                    presentedLikeCount
+                    presentedLikeCount,
+                    id
                 )
+
+                if(customRating == 1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-up-hover",
+                        "watch-comment-up-on"
+                    )
+                } else if(customRating == -1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-down-hover",
+                        "watch-comment-down-on"
+                    )
+                }
+
+                comments_html += commentHTML
     
-                unfilteredCommentCount++;
+                totalCommentCount++
                 
             })
             code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
@@ -1305,7 +1375,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 comments.forEach(comment => {
                     if(comment.continuation || comment.pinned) return;
                     // flags
-                    unfilteredCommentCount++
+                    totalCommentCount++
                     let commentTime = comment.time;
                     if(flags.includes("fake_dates")) {
                         commentTime = yt2009utils.fakeDatesModern(req, comment.time)
@@ -1314,22 +1384,51 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         commentTime, yt2009languages.get_language(req)
                     )
 
+                    let id = commentId(comment.authorUrl, comment.content)
+
+                    let likes = comment.likes > 10
+                              ? Math.floor(Math.random() * 15) : comment.likes
+                    let customRating = 0;
+                    let customData = hasComment(data.id, id)
+                    if(customData) {
+                        likes += customData.rating
+                        let token = yt2009utils.get_used_token(req)
+                        token == "" ? token = "dev" : ""
+                        if(customData.ratingSources[token]) {
+                            customRating = customData.ratingSources[token]
+                        }
+                    }
+
                     // add html
-                    comments_html += yt2009templates.videoComment(
+                    let commentHTML = yt2009templates.videoComment(
                         comment.authorUrl,
                         yt2009utils.asciify(comment.authorName),
                         commentTime,
                         comment.content,
                         flags,
                         true,
-                        comment.likes > 10
-                        ? Math.floor(Math.random() * 15) : comment.likes
+                        likes,
+                        id
                     )
+
+                    if(customRating == 1) {
+                        commentHTML = commentHTML.replace(
+                            "watch-comment-up-hover",
+                            "watch-comment-up-on"
+                        )
+                    } else if(customRating == -1) {
+                        commentHTML = commentHTML.replace(
+                            "watch-comment-down-hover",
+                            "watch-comment-down-on"
+                        )
+                    }
+
+                    comments_html += commentHTML
                 })
                 if(data.comments.length !== 21) {
                     code = code.replace("yt2009_hook_more_comments", "hid")
                 }
-                code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
+                code = code.replace(`yt2009_comment_count`, totalCommentCount)
                 code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
                 callbacksMade++
                 if(requiredCallbacks == callbacksMade) {
@@ -1341,7 +1440,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             })
         } else {
             code = code.replace("yt2009_hook_more_comments", "hid")
-            code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
+            code = code.replace(`yt2009_comment_count`, totalCommentCount)
             code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
         }
         
@@ -1812,6 +1911,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 } else {
                     flash_url += "&cc_load_policy=2"
                 }
+
+                flash_url += "&enablejsapi=1"
                 
                 code = code.replace(
                     `<!--yt2009_f-->`,
@@ -2552,5 +2653,23 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 oldCommentsCache[id + "/" + pbDate] = comments
             }
         )
+    },
+
+    "commentId": function(name, text) {
+        return crypto.createHash("sha1").update(`${name}${text}`)
+                     .digest("hex").substring(0, 4)
+    },
+
+    "hasComment": function(video, commentId) {
+        let temp = []
+        if(custom_comments[video]) {
+            temp = JSON.parse(JSON.stringify(custom_comments[video]))
+                   .filter(s => s.id == commentId)
+        }
+        if(temp[0]) {
+            return temp[0]
+        } else {
+            return false;
+        }
     }
 }

@@ -254,7 +254,7 @@ app.post("/videoresponse_load", (req, res) => {
 more from: load section
 ======
 */
-app.get("/morefrom_load", (req, res) => {
+app.post("/morefrom_load", (req, res) => {
     let channelFlags = req.headers.cookie || ""
     if(channelFlags.includes("channel_flags")) {
         channelFlags = channelFlags.split("channel_flags")[1]
@@ -265,7 +265,7 @@ app.get("/morefrom_load", (req, res) => {
     if(channelFlags.includes("only_old")) {
         useOnlyOld = true;
         onlyOldQuery = yt2009_search.handle_only_old(
-            channelFlags.split(":").join(";")
+            channelFlags.split(":").join(";").replace("=", "").replace(":", "")
         )
     }
     let videosHTML = ``
@@ -293,12 +293,12 @@ app.get("/morefrom_load", (req, res) => {
 
     if(useOnlyOld) {
         // use only_old as video source
-        if(!req.headers.name) {
+        if(!req.body) {
             res.status(400).send("no name header specified");
             return;
         }
         let onlyOldVideos = []
-        let name = req.headers.name.trim()
+        let name = req.body.toString().trim()
         let query = `"${name}" ${onlyOldQuery}`
         yt2009_search.get_search(query, channelFlags, "", (results => {
             // actual results
@@ -1084,7 +1084,20 @@ app.get("/get_more_comments", (req, res) => {
     yt2009.comment_paging(id, pageNumber, flags, (data) => {
         data.forEach(comment => {
             if(!comment.continuation && !comment.pinned) {
-                comment_html += yt2009_templates.videoComment(
+                let commentId = yt2009.commentId(comment.authorUrl, comment.content)
+                let likes = comment.likes ? comment.likes : 0
+                let customRating = 0;
+                let customData = yt2009.hasComment(id, commentId)
+                if(customData) {
+                    likes += customData.rating
+                    let token = yt2009_utils.get_used_token(req)
+                    token == "" ? token = "dev" : ""
+                    if(customData.ratingSources[token]) {
+                        customRating = customData.ratingSources[token]
+                    }
+                }
+
+                let commentHTML = yt2009_templates.videoComment(
                     comment.authorUrl,
                     comment.authorName,
                     flags.includes("fake_dates")
@@ -1092,8 +1105,24 @@ app.get("/get_more_comments", (req, res) => {
                     : comment.time,
                     comment.content,
                     flags,
-                    false
+                    false,
+                    likes,
+                    commentId
                 )
+
+                if(customRating == 1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-up-hover",
+                        "watch-comment-up-on"
+                    )
+                } else if(customRating == -1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-down-hover",
+                        "watch-comment-down-on"
+                    )
+                }
+
+                comment_html += commentHTML
             }
         })
         res.send(comment_html)
@@ -2215,7 +2244,7 @@ app.post("/comment_post", (req, res) => {
         yt2009_templates.videoComment(
             "#", safeAuthor, "1 second ago",
             safeComment, "login_simulate" + safeAuthor, true, "0",
-            true, commentId
+            commentId
         ), req)
     )
 
@@ -2245,14 +2274,23 @@ app.post("/comment_rate", (req, res) => {
     let comments = JSON.parse(
         fs.readFileSync("./cache_dir/comments.json").toString()
     )
-    if(!comments[videoId]) {res.sendStatus(400);return;}
+    if(!comments[videoId]) {
+        comments[videoId] = []
+    }
 
     comments[videoId].forEach(comment => {
         if(comment.id == req.headers.comment) {
             commentObject = comment;
         }
     })
-    if(!commentObject) {res.sendStatus(400);return;}
+    if(!commentObject) {
+        commentObject = {
+            "rating": 0,
+            "ratingSources": {},
+            "id": req.headers.comment
+        }
+        comments[videoId].push(commentObject)
+    }
 
     // add rating
     let token = yt2009_utils.get_used_token(req)
