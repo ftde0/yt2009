@@ -2579,6 +2579,7 @@ app.get("/comment_search", (req, res) => {
     let commentsA = []
     for(let i in comments) {
         comments[i].forEach(comment => {
+            if(!comment.time) return;
             let commentObject = JSON.parse(JSON.stringify(comment))
             commentObject.video = i;
             let commentTime = yt2009_utils.unixToRelative(comment.time)
