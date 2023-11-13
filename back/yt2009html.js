@@ -1148,6 +1148,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 ``
             )
             code = code.replace(`initPlayer(`, `//initPlayer(`)
+            let removePart = code.split(`<!--yt2009_html5_rm_1-->`)[1]
+                                 .split(`<!--yt2009_html5_rm_2-->`)[0]
+            code = code.replace(removePart, "")
             code = code.replace(
                 `class="flash-player"`,
                 `class="flash-player hid"`
@@ -1161,6 +1164,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `<!--<script src="nbedit_watch.js"></script>-->`
             )
         }
+
+        code = code.replace(`<!--yt2009_html5_rm_1-->`, "")
+                   .replace(`<!--yt2009_html5_rm_2-->`, "")
 
         if(!userAgent.includes("MSIE") && !userAgent.includes("Chrome/")
         && !useFlash) {
@@ -1994,6 +2000,20 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 "//yt2009-always-captions",
                 "captionsMain();"
             )
+        }
+
+        // turn_down_lights
+        if(flags.includes("turn_down_lights")) {
+            let posExclude = (
+                !userAgent.includes("MSIE")
+                && !userAgent.includes("Chrome/")
+                && !useFlash
+            )
+            code = code.replace(
+                `<!--yt2009_turn_down_lights-->`,
+                yt2009templates.watchpageTurn(posExclude)
+            )
+
         }
 
         // exp_related

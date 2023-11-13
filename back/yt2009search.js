@@ -692,6 +692,7 @@ module.exports = {
                 onlyOldFlag = flag;
             }
         })
+        onlyOldFlag = onlyOldFlag.replace(":", "")
         if(onlyOldFlag.includes(" ")) {
             // 2 dates
             resultSyntax = "after:" + onlyOldFlag.split(" ")[0]

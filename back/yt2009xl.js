@@ -41,6 +41,36 @@ module.exports = {
             category = "34"
         }
 
+        let categoryTable = {
+            "vehicles": "2",
+            "comedy": "35",
+            "education": "34",
+            "entertainment": "24",
+            "film": "1",
+            "gadgets": "33",
+            "howto": "26",
+            "music": "31",
+            "news": "32",
+            "nonprofits": "29",
+            "people": "22",
+            "animals": "15",
+            "sports": "30",
+            "travel": "19"
+        }
+        if(req.query.c) {
+            category = categoryTable[req.query.c] || "0"
+        }
+        let useSmallThumbs = false;
+        if(req.headers.referer
+        && req.headers.referer.includes("leanback")) {
+            useSmallThumbs = true
+        }
+
+        if(req.query.c == "you") {
+            res.redirect("/xl/console_profile_recommendation?source=leanback")
+            return;
+        }
+
         let videos = videospage.internal_getVideos({
             "query": {
                 "c": category,
@@ -93,7 +123,9 @@ module.exports = {
 
         // finalize request
         videos.forEach(vid => {
-            response.content.push(templates.XLFormatVideo(vid, req.protocol))
+            response.content.push(
+                templates.XLFormatVideo(vid, req.protocol, useSmallThumbs)
+            )
         })
 
         videos = videos.slice(0, 40)
@@ -232,8 +264,8 @@ module.exports = {
         }
 
         let flags = ""
-        if(req.headers.cookie.includes("search_flags")) {
-            flags = req.headers.cookie.split("search_flags=")[1].split(";")[0]
+        if(req.headers.cookie.includes("results_flags")) {
+            flags = req.headers.cookie.split("results_flags=")[1].split(";")[0]
         }
         /*
         =======
@@ -248,11 +280,17 @@ module.exports = {
             "return": 0
         }
 
+        let useSmallThumbs = false;
+        if(req.headers.referer
+        && req.headers.referer.includes("leanback")) {
+            useSmallThumbs = true
+        }
+
         search.get_search(req.query.vq || "", flags, "", (data => {
             data.forEach(video => {
                 if(video.type !== "video") return;
                 response.content.push(
-                    templates.XLFormatVideo(video, req.protocol)
+                    templates.XLFormatVideo(video, req.protocol, useSmallThumbs)
                 )
             })
 
@@ -406,6 +444,10 @@ module.exports = {
     // get channel's playlists
     "get_channel_playlists": function(req, callback) {
         let vlist = []
+        if(!req.query.user) {
+            callback(vlist)
+            return;
+        }
         channels.main({
             path: "/@" + req.query.user,
             query: {
@@ -422,7 +464,8 @@ module.exports = {
                         vlist.push({
                             "title": playlist.name,
                             "playlist_id": playlist.id,
-                            "image_url": playlist.thumbnail
+                            "image_url": playlist.thumbnail,
+                            "video_id": playlist.thumbnail.split("vi/")[1].split("/")[0]
                         })
                     })
 
@@ -542,10 +585,16 @@ module.exports = {
         let processedVideos = 0;
         let videoSuggestions = []
         let results = []
+        let smallThumbs = false
+        let cookieName = "xl_history="
+        if(req.query.source == "leanback") {
+            cookieName = "leanback_history="
+            smallThumbs = true
+        }
         if(req.headers.cookie
-        && req.headers.cookie.includes("xl_history=")) {
+        && req.headers.cookie.includes(cookieName)) {
             sourceVids = req.headers.cookie
-                         .split("xl_history=")[1]
+                         .split(cookieName)[1]
                          .split(";")[0]
                          .split(":")
         }
@@ -596,7 +645,9 @@ module.exports = {
                 }
 
                 
-                results.push(templates.XLFormatVideo(randomVideo, req.protocol))
+                results.push(templates.XLFormatVideo(
+                    randomVideo, req.protocol, smallThumbs
+                ))
             }
 
             // XL RESPONSE

@@ -563,6 +563,27 @@ app.get("/xl/console_profile_recommendation", (req, res) => {
     yt2009_xl.get_recommendations(req, res)
 })
 
+let xlRedirectors = [
+    "/console_browse",
+    "/console_related",
+    "/console_results",
+    "/console_profile",
+    "/console_profile_videos",
+    "/console_profile_favorites",
+    "/console_profile_playlists",
+    "/console_profile_recommendation"
+]
+xlRedirectors.forEach(redir => {
+    app.get(redir, (req, res) => {
+        let getParams = "?"
+        for(let p in req.query) {
+            getParams += p + "=" + req.query[p] + "&"
+        }
+        getParams = getParams.substring(0, getParams.length - 1)
+        res.redirect("/xl" + redir + getParams)
+    })
+})
+
 app.get("/apiplayer", (req, res) => {
     res.redirect("/xl/apiplayer.swf")
 })
@@ -572,6 +593,26 @@ app.get("/swf/apiplayer.swf", (req, res) => {
 })
 
 app.get("/get_video_info", (req, res) => {
+    if(req.query.el == "leanback") {
+        // add to history if leanback
+        let history = ""
+        if(req.headers.cookie
+        && req.headers.cookie.includes("leanback_history=")) {
+            history = req.headers.cookie
+                      .split("leanback_history=")[1].split(";")[0]
+        }
+        history = history.split(":")
+        if(history.length >= 3) {
+            history.pop()
+        }
+        history.unshift(req.query.video_id.replace("/mp4", ""))
+        let cookieParams = [
+            `leanback_history=${history.join(":")}; `,
+            `Path=/; `,
+            `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+        ]
+        res.set("set-cookie", cookieParams.join(""))
+    }
     req.query.video_id = req.query.video_id.replace("/mp4", "")
     yt2009.fetch_video_data(req.query.video_id, (data => {
         yt2009.get_qualities(req.query.video_id, (qualities => {
@@ -1301,6 +1342,23 @@ app.get("/yt2009_flags.htm", (req, res) => {
     res.send(flagsPage)
 })
 
+/*
+======
+auth-protect leanback
+======
+*/
+let leanbackEndpoints = ["/leanback", "/leanback/", "/leanback/index.htm"]
+let leanback = fs.readFileSync("../leanback/index.html").toString()
+leanbackEndpoints.forEach(lbe => {
+    app.get(lbe, (req, res) => {
+        if(!yt2009_utils.isAuthorized(req)) {
+            res.redirect("/unauth.htm")
+            return;
+        }
+        res.send(leanback)
+    })
+})
+
 app.use(express.static("../"))
 
 
@@ -1385,7 +1443,9 @@ app.get("/get_480", (req, res) => {
             )
             child_process.exec(cmd, (error, stdout, stderr) => {
                 res.redirect(`/assets/${id}-480.mp4`)
-                fs.unlinkSync(videoFilename)
+                if(fs.existsSync(videoFilename)) {
+                    fs.unlinkSync(videoFilename)
+                }
             })
         })
         require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
@@ -2036,19 +2096,6 @@ app.get("/retry_video", (req, res) => {
 
 /*
 ======
-leanback, soon
-======
-*/
-/*app.get("/console_profile_playlists", (req, res) => {
-    yt2009_leanback.daily_playlist(req, res)
-})
-app.get("/console_feed", (req, res) => {
-    yt2009_leanback.feed(req, res)
-})*/
-
-
-/*
-======
 signin endpoints
 ======
 */
@@ -2266,6 +2313,12 @@ app.post("/comment_rate", (req, res) => {
         return;
     }
 
+    let displayRating = 0
+    if(req.headers.initial
+    && !isNaN(parseInt(req.headers.initial))) {
+        displayRating = parseInt(req.headers.initial)
+    }
+
     let videoId = req.headers.source.split("v=")[1]
                   .split("&")[0].split("#")[0]
 
@@ -2309,9 +2362,11 @@ app.post("/comment_rate", (req, res) => {
     if(req.headers.rating == "like") {
         commentObject.rating += 1
         commentObject.ratingSources[token] = 1
+        displayRating++
     } else {
         commentObject.rating -= 1
         commentObject.ratingSources[token] = -1
+        displayRating--
     }
     res.send("rating:" + commentObject.rating)
 

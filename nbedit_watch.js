@@ -1225,27 +1225,20 @@ function sendCmtRating(commentId, rating) {
     var c = document.getElementById("comment-" + commentId)
     var thumbsUp = c.querySelector("[class*=\"watch-comment-up\"]")
     var thumbsDown = c.querySelector("[class*=\"watch-comment-down\"]")
-    var initialRating = rating;
+    var commentScore = c.querySelector(".watch-comment-score")
+    var isLike = (rating == "like")
     var r = new XMLHttpRequest();
     r.open("POST", "/comment_rate")
     r.setRequestHeader("rating", rating)
     r.setRequestHeader("source", location.href)
     r.setRequestHeader("comment", commentId)
+    r.setRequestHeader("initial", commentScore.getAttribute("data-initial"))
     r.send(null)
     r.addEventListener("load", function(e) {
         if(r.responseText.indexOf("rating:") == -1) return;
         // new rating sent - successful response
         var rating = parseInt(r.responseText.replace("rating:", ""))
         var color = "green"
-        var prevRating = parseInt(
-            c.querySelector(".watch-comment-score").innerHTML
-        )
-        if(thumbsUp.className.indexOf("-up-on") !== -1) {
-            prevRating -= 1
-        } else if(thumbsDown.className.indexOf("down-on") !== -1) {
-            prevRating += 1
-        }
-        rating = prevRating + rating
         if(rating == 0) {color = "gray"}
         if(rating < 0) {
             rating = rating.toString()
@@ -1260,7 +1253,7 @@ function sendCmtRating(commentId, rating) {
         c.querySelector(".watch-comment-score").className = scoreClass
 
         // mark the button as hovered
-        if(initialRating == "like") {
+        if(isLike) {
             thumbsUp.className = "master-sprite watch-comment-up-on"
             thumbsDown.className = "master-sprite watch-comment-down-hover"
         } else {
@@ -1473,5 +1466,26 @@ function mSpam(comment) {
             comment.querySelector(".watch-comment-info").appendChild(hideBtn)
         }
         hideComment(comment)
+    }
+}
+
+/*
+======
+lights
+======
+*/
+var lightsOff = false;
+function toggleLights() {
+    lightsOff = !lightsOff;
+    if(lightsOff) {
+        document.body.className += " watch-lights-off"
+        var height = $("#baseDiv").offsetHeight + "px"
+        $("#watch-longform-shade").style.height = height
+        $("#watch-longform-shade").style.display = "block"
+    } else {
+        var className = document.body.className
+        className = className.replace(" watch-lights-off", "")
+        document.body.className = className;
+        $("#watch-longform-shade").style.display = "none"
     }
 }

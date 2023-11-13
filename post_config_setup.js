@@ -375,6 +375,10 @@ let files = [
     {
         "url": "https://s.ytimg.com/yt/img/tooltip-vfl56131.gif",
         "path": "./assets/site-assets/tooltip-vfl56131.gif"
+    },
+    {
+        "url": "https://s.ytimg.com/yt/img/longform-underlay-1x1-vfl55396.png",
+        "path": "./assets/site-assets/longform-underlay-1x1-vfl55396.png"
     }
 ]
 const initialFileCount = files.length

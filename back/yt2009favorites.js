@@ -46,6 +46,10 @@ module.exports = {
 
         if(typeof(favorites) == "object") {
             favorites.forEach(video => {
+                try {
+                    decodeURIComponent(title)
+                }
+                catch(error) {return;}
                 let s = video.split("&")
                 let title = s[0]
                 let views = s[1]

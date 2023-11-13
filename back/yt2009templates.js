@@ -49,7 +49,7 @@ module.exports = {
                     <span class="watch-comment-time"> (${commentTime}) </span>
                 </div>
                 <div class="watch-comment-voting">
-                    <span class="watch-comment-score watch-comment-${likeColor}">${likePrefix}${likes || 0}</span>
+                    <span class="watch-comment-score watch-comment-${likeColor}" data-initial="${likes || 0}">${likePrefix}${likes || 0}</span>
                     <a href="#" ${id && flags.includes("login_simulate") ? dislikeCode : ""}><button class="master-sprite watch-comment-down${flags.includes("login_simulate") ? "-hover" : ""}" title="Poor comment"></button></a>
                     <a href="#" ${id && flags.includes("login_simulate") ? likeCode : ""}><button class="master-sprite watch-comment-up${flags.includes("login_simulate") ? "-hover" : ""}" title="Good comment"></button></a>
                     <span class="watch-comment-msg"></span>
@@ -134,7 +134,7 @@ module.exports = {
         <div class="clear"></div>
     </div>
     `,
-    "XLFormatVideo": function(video, protocol) {
+    "XLFormatVideo": function(video, protocol, smallThumbs) {
         let authorName = video.author_handle
                          || video.uploaderHandle
                          || video.creatorHandle
@@ -169,7 +169,9 @@ module.exports = {
                                 utils.time_to_seconds(time)
                                 : ""),
             "restricted": 0,
-            "image_url": protocol + "://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg",
+            "image_url": protocol + "://i.ytimg.com/vi/" + video.id + (
+                smallThumbs ? "/default.jpg" : "/hqdefault.jpg"
+            ),
             "user_id": "/",
             "description": video.description || "",
             "title": video.title,
@@ -498,7 +500,7 @@ module.exports = {
         </div>`
     },
     "flashObject": function(url) {
-        return `<object width="640" height="385" class="fl flash-video"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" id="movie_player" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
+        return `<object width="640" height="385" class="fl flash-video" id="watch-player-div"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" id="movie_player" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
     },
     "html5Embed": function(id, elementId) {
         return `<iframe id="${elementId}" allowfullscreen src="/embed/${id}"></iframe>`
@@ -1589,5 +1591,22 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     },
     "csPager": function(pageNum, url, prev) {
         return `<a href="${url}" class="pagerNotCurrent" data-page="${pageNum}">${prev ? "Previous" : "Next"}</a>`
+    },
+    "watchpageTurn": function(posExclude) {
+        return `
+        <div id="lights-off-switch" class="reverse-tooltip-wrapper" style="z-index: 0;">
+            <button id="watch-longform-lights-off" class="master-sprite ${posExclude ? "not-pos-exclude" : ""}" onclick="toggleLights(true);" onmouseover="showSimpleTooltip(this)" onmouseout="hideSimpleTooltip(this)"></button>
+            <div class="reverse-tooltip-wrapper-box" style="display: none;">
+                <div class="reverse-tooltip-box">Turn down the lights</div>
+                <img class="reverse-tooltip-box-bot" src="/assets/site-assets/pixel-vfl73.gif">
+            </div>
+        </div>
+        <div id="lights-on-switch" class="reverse-tooltip-wrapper" style="z-index: 0;">
+            <button id="watch-longform-lights-on" class="master-sprite ${posExclude ? "not-pos-exclude" : ""}" onclick="toggleLights(true);" onmouseover="showSimpleTooltip(this)" onmouseout="hideSimpleTooltip(this)"></button>
+            <div class="reverse-tooltip-wrapper-box" style="display: none;">
+                <div class="reverse-tooltip-box">Turn up the lights</div>
+                <img class="reverse-tooltip-box-bot" src="/assets/site-assets/pixel-vfl73.gif">
+            </div>
+        </div>`
     }
 }

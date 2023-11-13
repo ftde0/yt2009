@@ -11,6 +11,7 @@ var languageData_EN = {
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",
         "watch-remove-username-space": "removes spaces from usernames",
         "watch-share-behavior": "sets how the Share section should work",
+        "watch-turn-down-lights": "shows a button to turn down the lights. was available for some videos in 2009.",
         "watch-username-asciify": "remove special characters from usernames",
         "watch-wayback-features": "use Wayback Machine data for yt2009",
 

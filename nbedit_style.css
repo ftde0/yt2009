@@ -105,7 +105,7 @@ a[href="/my_videos_upload"] span {
     display: block;
 }
 
-#watch-longform-player.not-pos-exclude, #watch-longform-popup.not-pos-exclude {
+.not-pos-exclude {
     position: relative;
     top: -5px;
 }
@@ -149,4 +149,9 @@ a[href="/my_videos_upload"] span {
 .yt2009_html5 .tooltip-box-bot {
     position: relative;
     top: -5px;
+}
+
+.watch-lights-off #watch-longform-lights-on.not-pos-exclude,
+.watch-lights-off #watch-longform-lights-off.not-pos-exclude {
+    top: 0px;
 }
