@@ -155,9 +155,10 @@ module.exports = function(req, res) {
             `id="iyt-login-suggest-side-box" class="homepage-side-block"`,
             `id="iyt-login-suggest-side-box" class="homepage-side-block hid"`
         )
-        // show inbox
-        code = code.replace(
-            `hid yt2009-login-only-box`,
+        // show login-only stuff
+        code = code.split(
+            `hid yt2009-login-only-box`
+        ).join(
             `yt2009-login-only-box`
         )
     }

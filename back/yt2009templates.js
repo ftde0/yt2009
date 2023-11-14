@@ -30,8 +30,8 @@ module.exports = {
                 && !isNaN(parseInt(cAfter))) {
                     // timestamp!!
                     let timestamp = c.replace(/[^0-9+:]/g, "")
-                    let minutes = parseInt(c.split(":")[0]) * 60
-                    let seconds = parseInt(c.split(":")[1])
+                    let minutes = parseInt(timestamp.split(":")[0]) * 60
+                    let seconds = parseInt(timestamp.split(":")[1])
                     let total = minutes + seconds
                     content = content.replace(
                         timestamp,

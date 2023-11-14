@@ -1,5 +1,7 @@
 FROM node:lts-alpine3.18
-RUN apk add --no-cache imagemagick ffmpeg
+RUN apk add --no-cache imagemagick ffmpeg && \
+    mkdir /data && \
+    chown node /data
 
 ADD --chown=node . /yt2009
 WORKDIR /yt2009
@@ -14,8 +16,10 @@ ENV YT2009_PORT=80 \
     YT2009_SSLPATH=/yt2009/cert.crt \
     YT2009_SSLKEY=/yt2009/cert.key
 
-RUN echo "{\"env\": \"dev\"}" > back/config.json
-RUN node post_config_setup.js
+RUN ln -s /data/config.json back/config.json && \
+    ln -s /data/comments.json back/cache_dir/comments.json && \
+    echo "{\"env\": \"dev\"}" > back/config.json && \
+    node post_config_setup.js
 
 CMD ["node", "backend.js"]
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]

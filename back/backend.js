@@ -111,6 +111,18 @@ app.get('/', (req,res) => {
     if(config.env == "dev") {
         console.log(`(${yt2009_utils.get_used_token(req)}) mainpage ${Date.now()}`)
     }
+
+    if(!req.headers.cookie
+    || !req.headers.cookie.includes("global_flags")) {
+        res.cookie("watch_flags", "", {
+            "path": "/",
+            "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+        })
+        res.cookie("global_flags", "no_controls_fade:", {
+            "path": "/",
+            "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+        })
+    }
     yt2009_home(req, res)
 })
 
@@ -158,6 +170,18 @@ app.get("/watch", (req, res) => {
     // reset cache
     if(req.query.resetcache == "1") {
         resetCache = true;
+    }
+
+    if(!req.headers.cookie
+    || !req.headers.cookie.includes("global_flags")) {
+        res.cookie("watch_flags", "", {
+            "path": "/",
+            "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+        })
+        res.cookie("global_flags", "no_controls_fade:", {
+            "path": "/",
+            "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+        })
     }
 
     yt2009.fetch_video_data(id, (data) => {
@@ -1349,6 +1373,9 @@ auth-protect leanback
 */
 let leanbackEndpoints = ["/leanback", "/leanback/", "/leanback/index.htm"]
 let leanback = fs.readFileSync("../leanback/index.html").toString()
+leanback = leanback.split(`http_url`).join(
+    "http://" + config.ip + ":" + config.port
+)
 leanbackEndpoints.forEach(lbe => {
     app.get(lbe, (req, res) => {
         if(!yt2009_utils.isAuthorized(req)) {
@@ -1357,6 +1384,27 @@ leanbackEndpoints.forEach(lbe => {
         }
         res.send(leanback)
     })
+})
+
+/*
+======
+virt /account management
+======
+*/
+const accountHTML = fs.readFileSync("../account.html").toString()
+app.get("/account", (req, res) => {
+    if(!req.headers.cookie
+    || (req.headers.cookie
+    && !req.headers.cookie.includes("login_simulate"))) {
+        res.redirect("/signin")
+        return;
+    }
+
+    let code = accountHTML;
+    code = require("./yt2009loginsimulate")(req, code, true)
+    code = yt2009_languages.apply_lang_to_code(code, req)
+    res.send(code)
+
 })
 
 app.use(express.static("../"))

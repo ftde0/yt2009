@@ -1,10 +1,12 @@
 # yt2009
 a fairly accurate 2009 youtube frontend.
 
+<img src="doc-imgs/ie6-ss.png" width="400">
+<img src="doc-imgs/ie6-ss2.png" width="400">
 ---
 
 ## setup
-###### if you prefer using docker rather than installing directly, go [here](docker.md) for setup instructions instead
+### if you prefer using docker rather than installing directly, go [here](docker.md) for setup instructions instead
 
 - **make sure you have [imagemagick](https://imagemagick.org/) and [ffmpeg](https://ffmpeg.org/) in your PATH.**
 
@@ -24,7 +26,13 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 
 ## optional after-setup steps
 
-- patch the flash player(s) by following [flash_player_patch.md](flash_player_patch.md) and looking through [alt-swf/readme.md](alt-swf/readme.md)
+### - **if experiencing issues with ytdl-core, apply this pull. https://github.com/fent/node-ytdl-core/pull/1217**
+
+**as of november 2023, it still isn't merged with the main repo.**
+
+- patch the flash player(s) by following [flash_player_patch.md](flash_player_patch.md) and looking through [alt-swf/readme.md](alt-swf/readme.md).
+
+### some SWFs included here may be pre-patched for a different yt2009 url. make sure to replace the urls to your own if you come across those. 
 
 - set up an android app by following [apk_setup.md](apk_setup.md)
 
@@ -32,11 +40,11 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 
 ## usage
 
-now that you're in, you can just use it as it is, but there is quite a bit more you can do.
+now that you're in, you can just use it as it is, but there is a bit more you can do.
 
-navigate to **/yt2009_flags.htm** to change settings locally. here, for example, you can set up The Wayback Machine as a video data source. but look through, there is a lot more.
+navigate to **/flags** to change settings locally. here, for example, you can set up The Wayback Machine as a video data source. but look through, there is a lot more.
 
-navigate to **/relay** to create a connection between the remotely-hosted frontend and your actual yt account.
+feel free to nav to **/toggle_f** if you've set up flash players as described above to make the frontend work on older browsers, such as ie6.
 
 and just click around! you might find some useful features you didn't expect to work.
 
