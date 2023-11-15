@@ -32,6 +32,7 @@ module.exports = {
         catch(error) {}
        
         let code = page;
+        let pageNumber = parseInt(req.query.p || 1)
 
         // resetflags=1
         if(req.query.resetflags == 1) {
@@ -48,7 +49,9 @@ module.exports = {
 
         code = require("./yt2009loginsimulate")(req, code)
 
-        let channelList = channels.get_saved_channels()
+        let channelList = channels.get_saved_channels().slice(
+            20 * (pageNumber - 1), 20 * (pageNumber - 1) + 24
+        )
         let listedChannels = []
         let index = 0;
         let channelsHTML = ``
@@ -60,7 +63,6 @@ module.exports = {
             }
         }
 
-        listedChannels = listedChannels.reverse()
         listedChannels.forEach(channel => {
             channel = channelList[channel]
 
@@ -70,8 +72,45 @@ module.exports = {
             channelsHTML += templates.channelspageChannel(channel, channelName)
         })
 
-        code = code.replace(`<!--yt2009_channels_insert-->`, channelsHTML)
+        // paging
+        let pagingHTML = `
+        <div class="searchFooterBox">
+            <div class="pagingDiv">
+                <span class="pagerLabel smallText label">Pages: </span>`
+        let pageNumbers = [
+            pageNumber - 2,
+            pageNumber - 1,
+            pageNumber,
+            pageNumber + 1,
+            pageNumber + 2
+        ]
+        if(pageNumbers[1] >= 1) {
+            pagingHTML += `<a href="?p=${pageNumber - 1}" class="pagerNotCurrent">Previous</a>`
+        }
+        let addedPages = []
+        pageNumbers.forEach(page => {
+            if(page > 0) {
+                if(page == pageNumber) {
+                    pagingHTML += `<span class="pagerCurrent">${page}</span>`
+                } else {
+                    pagingHTML += `<a href="?p=${page}" class="pagerNotCurrent">${page}</a>`
+                }
+                addedPages.push(page)
+            }
+        })
+        while(addedPages.length !== 5) {
+            let lastPage = addedPages[addedPages.length - 1]
+            let p = lastPage + 1
+            addedPages.push(lastPage + 1)
+            pagingHTML += `<a href="?p=${p}" class="pagerNotCurrent">${p}</a>`
+        }
+        pagingHTML += `<a href="?p=${pageNumber + 1}" class="pagerNotCurrent">Next</a>`
+        pagingHTML += `
+            </div>
+        </div>`
 
+        // final
+        code = code.replace(`<!--yt2009_channels_insert-->`, channelsHTML + pagingHTML)
         code = doodles.applyDoodle(code)
 
         res.send(code)

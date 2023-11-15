@@ -1147,6 +1147,7 @@ app.get("/get_more_comments", (req, res) => {
     let comment_html = "";
 
     yt2009.comment_paging(id, pageNumber, flags, (data) => {
+        let theoreticalIndex = (pageNumber - 1) * 20
         data.forEach(comment => {
             if(!comment.continuation && !comment.pinned) {
                 let commentId = yt2009.commentId(comment.authorUrl, comment.content)
@@ -1166,7 +1167,7 @@ app.get("/get_more_comments", (req, res) => {
                     comment.authorUrl,
                     comment.authorName,
                     flags.includes("fake_dates")
-                    ? yt2009_utils.fakeDatesModern(req, comment.time)
+                    ? yt2009_utils.fakeDateSmall(theoreticalIndex)
                     : comment.time,
                     comment.content,
                     flags,
@@ -1188,6 +1189,7 @@ app.get("/get_more_comments", (req, res) => {
                 }
 
                 comment_html += commentHTML
+                theoreticalIndex++
             }
         })
         res.send(comment_html)

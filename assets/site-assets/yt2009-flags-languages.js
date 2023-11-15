@@ -108,9 +108,7 @@ var languageData_EN = {
         - poor - removes emojis and hashtags<br>\
         - moderate - everything from poor + known new words<br>\
         - max - removes whole lines of text matching moderate<br>\
-        (leaving this box empty/different value = max.)",
-
-        "#fake-dates-notice": "(enter a YYYY-MM-DD formatted date)"
+        (leaving this box empty/different value = max.)"
     },
 
     "placeholders": {
@@ -122,7 +120,6 @@ var languageData_EN = {
         "channel-default-avatar-input": "mode",
         "channel-only-old-input": "check possible values",
         "channel-wayback-features-input": "mode",
-        "global-fake-dates-input": "date",
         "global-login-simulate-input": "username",
         "results-only-old-input": "check possible values"
     }

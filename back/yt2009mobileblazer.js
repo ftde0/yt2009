@@ -237,7 +237,7 @@ module.exports = {
                         "author_name": utils.asciify(comment.authorName),
                         "comment": commentContent,
                         "time_ago": fakeCommentDates
-                                  ? utils.fakeDatesModern(req, comment.time)
+                                  ? utils.fakeDatesModern("2012", comment.time)
                                   : comment.time
                     })
                 }

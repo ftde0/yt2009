@@ -1029,7 +1029,7 @@ module.exports = {
             }
         }
 
-        return `${year}-${month}-${day}`
+        return `${year}-${month + 1}-${day}`
     },
 
     "approxSubcount": function(count) {
@@ -1146,6 +1146,9 @@ module.exports = {
         if(timeDiff < 0 && customBaseUnix) {
             timeDiff = 2678400
         }
+        if(timeDiff == 0) {
+            timeDiff = 86400
+        }
         let formats = [
             {"name": "seconds", v: timeDiff},
             {"name": "minutes", v: timeDiff / 60},
@@ -1198,5 +1201,55 @@ module.exports = {
         }
         uploadDate = new Date(uploadDate).getTime()
         return this.unixToRelative(uploadDate, date)
+    },
+    "fakeDateSmall": function(index) {
+        let predefined = [
+            "3 minutes ago",
+            "9 minutes ago",
+            "17 minutes ago",
+            "27 minutes ago",
+            "31 minutes ago",
+            "46 minutes ago",
+            "51 minutes ago",
+            "1 hour ago",
+            "1 hour ago",
+            "2 hours ago"
+        ]
+        let indexTime = predefined[index || 0]
+        if(!indexTime) {
+            indexTime = Math.floor(Math.random() * 23) + " hours ago"
+        }
+
+        let numberVariation = parseInt(
+            indexTime.split(" ")[0]) + Math.floor(Math.random() * 2
+        )
+        indexTime = numberVariation + " " + indexTime.split(" ")[1] + " ago"
+
+        return indexTime
+    },
+    "fakeDatesScale": function(unixDates) {
+        // find the difference between oldest and newest comment
+        // and scale it down to a smaller difference
+        let yearUnix = 1000 * 60 * 60 * 24 * 365
+        let dates = []
+        let iw = 0;
+        unixDates.forEach(ct => {
+            dates.push(unixDates[0] - (ct / unixDates[0]) * yearUnix)
+        })
+        let displayDates = []
+        let tempI = 0;
+        dates.forEach(d => {
+            let date = this.unixToRelative(
+                dates[tempI], dates[dates.length - 1]
+            )
+            if(date == undefined || date.startsWith("0")) {
+                date = this.fakeDateSmall(10 - iw)
+                iw++
+            }
+            displayDates.push(date)
+            tempI++
+        })
+        displayDates.reverse()
+        return displayDates
     }
 }

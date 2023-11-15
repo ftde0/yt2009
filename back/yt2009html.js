@@ -230,18 +230,8 @@ module.exports = {
                 catch(error) {
                     data.author_img = "default"
                 }
-                data.upload = ""
-                try {
-                    data.upload = videoData.contents
-                                  .twoColumnWatchNextResults
-                                  .results.results.contents[0]
-                                  .videoPrimaryInfoRenderer.dateText
-                                  .simpleText
-                }
-                catch(error) {
-                    data.upload = videoData.microformat
-                                  .playerMicroformatRenderer.uploadDate
-                }
+                data.upload = videoData.microformat
+                              .playerMicroformatRenderer.uploadDate
                 data.tags = videoData.videoDetails.keywords || [];
                 data.related = []
                 data.length = parseInt(videoData.microformat
@@ -1267,6 +1257,19 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
 
             // add html
+            let commentTimes = []
+            data.comments.forEach(comment => {
+                if(comment.continuation || !comment.time) return;
+                commentTimes.push(new Date(
+                    yt2009utils.relativeToAbsoluteApprox(comment.time)
+                ).getTime())
+            })
+            commentTimes = commentTimes.sort((a, b) => b - a)
+            // find the difference between oldest and newest comment
+            // and scale it down to a smaller difference
+            let i = 0;
+            let displayDates = yt2009utils.fakeDatesScale(commentTimes)
+
             data.comments.forEach(comment => {
                 if(comment.continuation) {
                     continuationFound = true;
@@ -1279,7 +1282,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 // flags
                 let commentTime = comment.time;
                 if(flags.includes("fake_dates")) {
-                    commentTime = yt2009utils.fakeDatesModern(req, comment.time)
+                    commentTime = displayDates[i]
+                    i++
                 }
                 let commentPoster = comment.authorName || "";
                 if(flags.includes("remove_username_space")) {
@@ -1373,22 +1377,20 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 totalCommentCount++
                 
             })
-            code = code.replace(`yt2009_comment_count`, unfilteredCommentCount)
+            code = code.replace(`yt2009_comment_count`, totalCommentCount)
             code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
         } else if(flags.includes("comments_remove_future")) {
             requiredCallbacks++
             this.get_old_comments(data, (comments) => {
+                let index = 0;
                 comments.forEach(comment => {
                     if(comment.continuation || comment.pinned) return;
                     // flags
                     totalCommentCount++
                     let commentTime = comment.time;
                     if(flags.includes("fake_dates")) {
-                        commentTime = yt2009utils.fakeDatesModern(req, comment.time)
+                        commentTime = yt2009utils.fakeDateSmall(index)
                     }
-                    commentTime = yt2009utils.relativeTimeCreate(
-                        commentTime, yt2009languages.get_language(req)
-                    )
 
                     let id = commentId(comment.authorUrl, comment.content)
 
@@ -1430,6 +1432,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     }
 
                     comments_html += commentHTML
+                    index++
                 })
                 if(data.comments.length !== 21) {
                     code = code.replace("yt2009_hook_more_comments", "hid")

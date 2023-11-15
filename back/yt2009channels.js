@@ -549,6 +549,26 @@ module.exports = {
             )
         }
 
+        // index_contribute
+        if(flags.includes("index_contribute")) {
+            let temp = featured_channels.filter(s => s.id !== data.id)
+            if(temp.length > 0) {
+                featured_channels = featured_channels.filter(s => s.id !== data.id)
+            }
+            featured_channels.unshift({
+                "url": data.url,
+                "avatar": channelAvatar,
+                "name": data.name,
+                "properties": {
+                    "subscribers": data.properties.subscribers
+                }
+            })
+            fs.writeFileSync(
+                "./cache_dir/public_channel_listing.json",
+                JSON.stringify(featured_channels)
+            )
+        }
+
         /*
         =======
         videos
@@ -560,6 +580,34 @@ module.exports = {
         let watch_url = "/watch.swf"
         let watch_arg = "video_id"
         function videosRender() {
+            // fake_dates shenanigans
+            let cutoffDate = false
+            if(flags.includes("fake_dates")) {
+                if(flags.includes("only_old")) {
+                    // use only_old as cutoff date
+                    let onlyOld = flags.split("only_old")[1].split(";")[0]
+                    if(onlyOld.includes(" ")) {
+                        onlyOld = onlyOld.split(" ")[1]
+                    }
+                    if(onlyOld.length == 0) {
+                        onlyOld = "2010-04-01"
+                    }
+                    cutoffDate = onlyOld
+                } else {
+                    // use newest video as cutoff date
+                    // and scale back just like in watchpages
+                    let cutoffDates = []
+                    JSON.parse(JSON.stringify(videosSource)).forEach(v => {
+                        cutoffDates.push(new Date(
+                            yt2009utils.relativeToAbsoluteApprox(v.upload)
+                        ).getTime())
+                    })
+                    cutoffDates = cutoffDates.sort((a, b) => b - a)
+                    cutoffDate = yt2009utils.fakeDatesScale(cutoffDates)
+                    cutoffDate.reverse()
+                }
+            }
+
             // "All" scrollbox
             let scrollbox_all_videos = JSON.parse(JSON.stringify(videosSource))
                                         .splice(0, 10)
@@ -569,7 +617,16 @@ module.exports = {
                     views, yt2009languages.get_language(req)
                 )
                 let ratings_est = yt2009utils.estRating(views)
-                let upload_date = yt2009utils.fakeDatesModern(req, video.upload)
+                let upload_date = video.upload
+                if(cutoffDate) {
+                    if(typeof(cutoffDate) == "string") {
+                        upload_date = yt2009utils.fakeDatesModern(
+                            cutoffDate, video.upload
+                        )
+                    } else {
+                        upload_date = cutoffDate[video_index]
+                    }
+                }
                 videoUploadDates[video.id] = upload_date;
                 scrollbox_all_html += templates.playnavVideo(
                     video,
@@ -597,7 +654,16 @@ module.exports = {
                     views, yt2009languages.get_language(req)
                 )
                 let ratings_est = yt2009utils.estRating(views)
-                let upload_date = yt2009utils.fakeDatesModern(req, video.upload)
+                let upload_date = video.upload
+                if(cutoffDate) {
+                    if(typeof(cutoffDate) == "string") {
+                        upload_date = yt2009utils.fakeDatesModern(
+                            cutoffDate, video.upload
+                        )
+                    } else {
+                        upload_date = cutoffDate[video_index]
+                    }
+                }
                 if(videoUploadDates[video.id]) {
                     upload_date = videoUploadDates[video.id]
                 }
@@ -687,7 +753,7 @@ module.exports = {
                                     comment.authorUrl,
                                     authorAvatar,
                                     authorName,
-                                    yt2009utils.fakeDatesModern(req, comment.time),
+                                    yt2009utils.fakeDateSmall(count),
                                     comment.content.split("\n")[0]
                                 )
                                 count++;
@@ -1583,15 +1649,7 @@ module.exports = {
     },
 
     "get_saved_channels": function() {
-        let croppedFeaturedChannels = {}
-        let i = 0;
-        for(let c in featured_channels) {
-            if(i <= 25) {
-                croppedFeaturedChannels[c] = featured_channels[c]
-                i++;
-            }
-        }
-        return croppedFeaturedChannels;
+        return featured_channels;
     },
 
     "get_cache": n_impl_yt2009channelcache,

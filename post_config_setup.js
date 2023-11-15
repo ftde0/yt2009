@@ -59,7 +59,7 @@ const cacheFiles = {
     "default_avatar_adapt.json": {},
     "hd_availability_cache.json": {},
     "playlist_cache.json": {},
-    "public_channel_listing.json": {},
+    "public_channel_listing.json": [],
     "rating_cache.json": {},
     "ryd_cache.json": {},
     "search_cache.json": {},

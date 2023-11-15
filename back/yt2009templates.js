@@ -949,7 +949,7 @@ module.exports = {
                         <div class="channel-facets">
                             <span class="result-type">Channel</span>
                             <span class="channel-video-count"></span>
-                            <span>${channel.properties.subscribers !== "[disabled]" ? channel.properties.subscribers : "0"} <span class="channel-text-break-grid"></span>Subscribers</span>
+                            <span>${channel.properties.subscribers ? channel.properties.subscribers : "0"} <span class="channel-text-break-grid"></span>Subscribers</span>
                             <span class="channel-username"><a class="hLink" href="/${channel.url}">${channelName}</a></span>
                         </div>
                     </div>
@@ -1272,7 +1272,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                         </div>
                     </span>
                     <span id="video-added-time-${video.id}" class="video-date-added">${utils.relativeTimeCreate(
-                        utils.fakeDatesModern(req, utils.relativeToAbsoluteApprox(video.upload)), langs.get_language(req)
+                        utils.fakeDatesModern("2010-04-02", utils.relativeToAbsoluteApprox(video.upload)), langs.get_language(req)
                     )}</span>
                     <span id="video-num-views-${video.id}" class="video-view-count">lang_views_prefix${utils.countBreakup(
                         utils.bareCount(video.views)

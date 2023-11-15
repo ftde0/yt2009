@@ -366,12 +366,38 @@ module.exports = {
 
         let estResults = 0;
 
+        // fake_dates handle
+        let vIndex = 0;
+        let cutoffDate = false;
+        if(flags.includes("fake_dates")) {
+            if(flags.includes("only_old")) {
+                let onlyOld = flags.split("only_old")[1].split(";")[0]
+                if(onlyOld.includes(" ")) {
+                    onlyOld = onlyOld.split(" ")[1]
+                }
+                if(onlyOld.length == 0) {
+                    onlyOld = "2010-04-01"
+                }
+                cutoffDate = onlyOld
+            } else {
+                let cutoffDates = []
+                results.forEach(v => {
+                    if(!v.upload) return;
+                    cutoffDates.push(new Date(
+                        yt2009utils.relativeToAbsoluteApprox(v.upload)
+                    ).getTime())
+                })
+                cutoffDates = cutoffDates.sort((a, b) => b - a)
+                cutoffDate = yt2009utils.fakeDatesScale(cutoffDates)
+                cutoffDate.reverse()
+            }
+        }
+
         results.forEach(result => {
             switch(result.type) {
                 case "video": {
                     let cancelled = false;
                     let video = result;
-
 
                     // flags
                     let uploadDate = video.upload
@@ -387,16 +413,24 @@ module.exports = {
                                         - parseInt(beforeYear)
                         }
                     }
-                    if(flags.includes("only_old") && (
-                        (!uploadDate.includes("years")) ||
-                        (uploadDate.includes("years") &&
-                            parseInt(uploadDate.split(" ")[0]) < yearsDiff)
-                        )
-                    ) {
+                    if(flags.includes("only_old") &&
+                    ((!uploadDate.includes("years"))
+                    || (uploadDate.includes("years")
+                    && parseInt(uploadDate.split(" ")[0]) < yearsDiff))) {
                         cancelled = true;
                     }
 
-                    uploadDate = yt2009utils.fakeDatesModern(flags, video.upload)
+                    if(cutoffDate) {
+                        if(typeof(cutoffDate) == "string") {
+                            uploadDate = yt2009utils.fakeDatesModern(
+                                cutoffDate, video.upload
+                            )
+                        } else {
+                            uploadDate = cutoffDate[vIndex]
+                        }
+                        vIndex++
+                    }
+
                     let uploaderName = video.author_name;
                     if(flags.includes("remove_username_space")) {
                         uploaderName = uploaderName.split(" ").join("")
