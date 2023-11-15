@@ -551,17 +551,15 @@ module.exports = {
 
         // index_contribute
         if(flags.includes("index_contribute")) {
-            let temp = featured_channels.filter(s => s.id !== data.id)
-            if(temp.length > 0) {
-                featured_channels = featured_channels.filter(s => s.id !== data.id)
-            }
+            featured_channels = featured_channels.filter(s => s.id !== data.id)
             featured_channels.unshift({
-                "url": data.url,
+                "url": data.url.replace(`https://www.youtube.com`, ``),
                 "avatar": channelAvatar,
                 "name": data.name,
                 "properties": {
                     "subscribers": data.properties.subscribers
-                }
+                },
+                "id": data.id
             })
             fs.writeFileSync(
                 "./cache_dir/public_channel_listing.json",
