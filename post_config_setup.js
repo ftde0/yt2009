@@ -53,7 +53,6 @@ create cache files
 =======
 */
 const cacheFiles = {
-    "channel_friend_cache.json": {},
     "channel_main_cache.json": {},
     "channel_playlist_cache.json": {},
     "default_avatar_adapt.json": {},

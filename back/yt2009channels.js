@@ -181,53 +181,6 @@ module.exports = {
             catch(error) {}
         })
 
-        function getVideosByParam(param, browseId) {
-            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                yt2009html.get_api_key()
-            }`, {
-                "headers": yt2009constants.headers,
-                "referrer": "https://www.youtube.com/",
-                "referrerPolicy": "strict-origin-when-cross-origin",
-                "body": JSON.stringify({
-                    "context": yt2009constants.cached_innertube_context,
-                    "browseId": browseId,
-                    "params": param
-                }),
-                "method": "POST",
-                "mode": "cors"
-            }).then(r => {r.json().then(r => {
-                // videos tab response, send a popular chip click after that
-                additionalFetchesCompleted++
-                r.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
-                    if(tab.tabRenderer
-                    && tab.tabRenderer.selected) {
-                        let h = tab.tabRenderer.content.richGridRenderer.header
-                        if(h
-                        && h.feedFilterChipBarRenderer
-                        && h.feedFilterChipBarRenderer.contents) {
-                            h.feedFilterChipBarRenderer.contents.forEach(chip => {
-                                // https://www.youtube.com/watch?v=WIRK_pGdIdA
-                                if(chip.chipCloudChipRenderer.text.simpleText
-                                .toLowerCase() == "popular") {
-                                    fetchChip(
-                                        chip.chipCloudChipRenderer
-                                        .navigationEndpoint.continuationCommand
-                                        .token
-                                    )
-                                }
-                            })
-                        } else {
-                            // no chips :( we gotta continue tho
-                            createVideosFromChip(
-                                tab.tabRenderer.content.richGridRenderer
-                                   .contents
-                            )
-                        }
-                    }
-                })
-            })})
-        }
-
         function fetchChip(chipToken) {
             fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
                 yt2009html.get_api_key()
@@ -281,6 +234,47 @@ module.exports = {
             additionalFetchesCompleted++;
             onVideosCreate()
         }
+
+        // find featured channels (/channels tab removed / 2023-11-16)
+        let homeTab;
+        let featuredChannels = {}
+        r.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
+            if(tab.tabRenderer
+            && tab.tabRenderer.selected) {
+                homeTab = tab.tabRenderer.content
+            }
+        })
+        if(homeTab && homeTab.sectionListRenderer) {
+            homeTab.sectionListRenderer.contents.forEach(section => {
+                let parsedSection = []
+                if(!section.itemSectionRenderer
+                || !section.itemSectionRenderer.contents[0]
+                || !section.itemSectionRenderer.contents[0].shelfRenderer) return;
+
+                let s = section.itemSectionRenderer.contents[0]
+                if(!s.shelfRenderer
+                || !s.shelfRenderer.content
+                || !s.shelfRenderer.content.horizontalListRenderer.items) return;
+
+                let items = s.shelfRenderer.content.horizontalListRenderer.items
+                if(items[0].gridChannelRenderer) {
+                    items.forEach(i => {
+                        let channel = i.gridChannelRenderer
+                        parsedSection.push({
+                            "name": channel.title.simpleText,
+                            "avatar": channel.thumbnail.thumbnails[1].url,
+                            "id": channel.channelId,
+                            "url": channel.navigationEndpoint.browseEndpoint
+                                                             .canonicalBaseUrl
+                        })
+                    })
+                }
+                let shelfTitle = s.shelfRenderer.title.runs[0].text
+                featuredChannels[shelfTitle] = parsedSection
+            })
+        }
+
+        data.friends = featuredChannels;
 
         // exec when videos are done fetching
         function onVideosCreate() {
@@ -352,7 +346,7 @@ module.exports = {
 
     "get_additional_sections": function(data, flags, callback) {
         // mark a step as done
-        let callbacksRequired = 3;
+        let callbacksRequired = 2;
         let callbacksMade = 0;
         function markCompleteStep() {
             callbacksMade++;
@@ -378,35 +372,6 @@ module.exports = {
         } else {
             markCompleteStep()
         }
-
-       // friends
-       let channels_list = {}
-       if(n_impl_yt2009channelcache.read("friend")[data.id]
-       || !data.tabParams
-       || !data.tabParams["channels"]) {
-           markCompleteStep()
-       } else {
-           yt2009utils.channelGetSectionByParam(
-               data.id, data.tabParams["channels"], (r => {
-                   let tab = yt2009utils.channelJumpTab(r, "channels").content
-                   try {
-                       channels_list = yt2009utils.parseChannelsSections(
-                           tab.sectionListRenderer.contents,
-                           tab.sectionListRenderer.subMenu
-                       )
-                   }
-                   catch(error) {}
-           
-                   n_impl_yt2009channelcache.write(
-                       "friend",
-                       data.id,
-                       JSON.parse(JSON.stringify(channels_list))
-                   )
-                   markCompleteStep()
-               }
-           ))
-       }
-
 
        // playlists
        let playlist_list = {}
@@ -942,9 +907,8 @@ module.exports = {
         */
         let subscriptions_count = 0;
         let friends_count = 0;
-        if(n_impl_yt2009channelcache.read("friend")[data.id]
-        && !wayback_settings.includes("sections")) {
-            let friends = n_impl_yt2009channelcache.read("friend")[data.id]
+        if(data.friends && !wayback_settings.includes("sections")) {
+            let friends = data.friends
             let subscriptions_html = ``
             let friends_html = ``
             for(let list in friends) {
@@ -1495,7 +1459,7 @@ module.exports = {
                 if(r.status !== 404) {
                     // old banner exists, save
                     r.buffer().then(buffer => {
-                        fs.writeFileSync(`/../assets/${cId}_banner.jpg`, buffer)
+                        fs.writeFileSync(`../assets/${cId}_banner.jpg`, buffer)
                         code = code.replace(
                             `<!--yt2009_banner-->`,
                             templates.banner(`/assets/${cId}_banner.jpg`)

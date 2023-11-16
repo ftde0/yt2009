@@ -8,7 +8,6 @@ let cacheList = {
 if(!config.fallbackMode) {
     cacheList = {
         "mainCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_main_cache.json`).toString()),
-        "friendCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_friend_cache.json`).toString()),
         "playlistCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_playlist_cache.json`).toString())
     }
 }
@@ -28,6 +27,5 @@ module.exports = {
 let cacheWrite = setInterval(() => {
     if(config.fallbackMode) return;
     fs.writeFileSync(`${__dirname}/channel_main_cache.json`, JSON.stringify(cacheList.mainCache))
-    fs.writeFileSync(`${__dirname}/channel_friend_cache.json`, JSON.stringify(cacheList.friendCache))
     fs.writeFileSync(`${__dirname}/channel_playlist_cache.json`, JSON.stringify(cacheList.playlistCache))
 }, 3600000)

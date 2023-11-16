@@ -1673,6 +1673,30 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }</a>\n                                   `
         })
         code = code.replace("video_tags_html", tags_html)
+        
+        // category
+        const category_numbers = {
+            "Autos & Vehicles": 2,
+            "Comedy": "35",
+            "Education": "34",
+            "Entertainment": "24",
+            "Film & Animation": "1",
+            "Gaming": "33",
+            "Howto & Style": "26",
+            "Music": "31",
+            "News & Politics": "32",
+            "Nonprofits & Activism": "29",
+            "People & Blogs": "22",
+            "Pets & Animals": "15",
+            "Science & Technology": "28",
+            "Sports": "30",
+            "Travel & Events": "19"
+        }
+        code = code.replace(`category_name`, data.category)
+        code = code.replace(
+            `category_link`,
+            "/videos?c=" + (category_numbers[data.category] || 0)
+        )
 
         // sub button
         let subscribed = false;
