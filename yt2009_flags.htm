@@ -47,7 +47,7 @@
 
 		<div class="group1">
 			<h2>/watch</h2>
-			<input type="checkbox" id="watch-comments-remove-future" title="filtruje komentarze zawierające lata 2011-2022">
+			<input type="checkbox" id="watch-comments-remove-future" title="pokazuje stare komentarze na filmach">
 			<label for="watch-comments-remove-future">comments_remove_future</label><br>
 			<input type="checkbox" id="watch-default-avatar" title="domyślny awatar z 2009 zamiast awatara twórcy">
 			<label for="watch-default-avatar">default_avatar</label>
@@ -70,15 +70,15 @@
 			<label for="watch-exclude-cs">exclude_cs</label><br>
 			<input type="checkbox" id="watch-exp-related" title="pokazuje podobne filmy bazując na tagach oglądanego filmu">
 			<label for="watch-exp-related">exp_related</label><br>
-			<input type="checkbox" id="watch-fake-upload-date" title="fake data wrzucenia filmu (01.01.2009 - 31.12.2009)">
+			<input type="checkbox" id="watch-fake-upload-date" title="fake rok wrzucenia filmu jako 2009">
 			<label for="watch-fake-upload-date">fake_upload_date</label>
 			<input type="text" id="watch-fake-upload-date-input" autocomplete="off" spellcheck="false" placeholder="tryb">
 			<a id="watch-upload-expander" href="javascript:toggleExpander('watch-fake-upload-date-expander')">(możliwe wartości)</a><br>
 			<p id="watch-fake-upload-date-expander" class="hid">tryby fake_upload_date:<br>
 			- adapt - ustawia datę wrzucenia z 2009 tylko jak film był opublikowany po kwietniu 2010<br>
-			- always - tak jak ta flaga działała do tej pory - niezależnie od filmu ustawia datę z 2009<br>
+			- always - niezależnie od filmu ustawia datę z 2009<br>
 			(wszystko inne/zostawienie pola pustego oznaczy always)</p>
-			<input type="checkbox" id="watch-homepage-contribute" title="filmy obejrzane przez ciebie, wrzucone przed 2011 będą pokazywane na 'videos being watched now' na stronie głównej i na /videos">
+			<input type="checkbox" id="watch-homepage-contribute" title="filmy obejrzane przez ciebie, wrzucone przed 2011 będą pokazywane na stronie głównej i na /videos">
 			<label for="watch-homepage-contribute">homepage_contribute</label><br>
 			<!--<input type="checkbox" id="watch-old-avatars" title="używa starych awatarów kiedy możliwe bez używania wayback_features.">
 			<label for="watch-old-avatars">old_avatars</label><br> soon-->
@@ -88,7 +88,7 @@
 			<label for="watch-realistic-view-count">realistic_view_count</label><br>
 			<input type="checkbox" id="watch-remove-username-space" title="usuwa spacje z nazw użytkowników">
 			<label for="watch-remove-username-space">remove_username_space</label><br>
-			<input type="checkbox" id="watch-share-behavior" title="ustawia zachowanie stron na które można udostępniać filmy (zaznacz aby zobaczyć tryby)">
+			<input type="checkbox" id="watch-share-behavior" title="ustawia zachowanie stron na które można udostępniać filmy">
 			<label for="watch-share-behavior">share_behavior</label>
 			<input type="text" id="watch-share-behavior-input" autocomplete="off" spellcheck="false" placeholder="tryb">
 			<a id="watch-share-expander" href="javascript:toggleExpander('watch-share-behavior-expander')">(możliwe wartości)</a><br>
@@ -132,12 +132,11 @@
 
 		<div class="group3">
 			<h2>/channel, /user, /c</h2>
-			<h4 id="i_exp_notice">flagi zaczynające się na "exp" są eksperymentalne i nie zawsze mogą działać. bug reporty mile widziane.</h4>
 			<input type="checkbox" id="channel-author-old-names" title="jeśli kanały mają link /user/, używaj nazwy z niego zamiast obecnej - twórca, friends+subscriptions, komentarze">
 			<label for="channel-author-old-names">author_old_names</label><br>
-			<input type="checkbox" id="channel-auto-user" title="za każdym wejściem na kanał próbuj przekierować na link /user/">
+			<input type="checkbox" id="channel-auto-user" title="próbuj przekierować na link /user/ jak znaleziony">
 			<label for="channel-auto-user">auto_user</label><br>
-			<input type="checkbox" id="channel-default-avatar" title="domyślny awatar z 2009">
+			<input type="checkbox" id="channel-default-avatar" title="pokazuj domyślny awatar z 2009">
 			<label for="channel-default-avatar">default_avatar</label>
 			<input type="text" id="channel-default-avatar-input" autocomplete="off" spellcheck="false" placeholder="tryb">
 			<span id="default-avatar-notice">zobacz default_avatar na /watch dla możliwych wartości</span><br>
@@ -182,7 +181,7 @@
 
 		<div class="group4">
 			<h2>[global]</h2>
-			<h4 id="i_all_pages">te flagi działają na wszystkich podstronach. mogą kompletnie inaczej działać (lub nie działać).</h4>
+			<h4 id="i_all_pages">te flagi działają na wszystkich podstronach które będą ich używać.</h4>
 			<input type="checkbox" id="global-always-annotations" title="automatycznie włącza adnotacje na filmach">
 			<label for="global-always-annotations">always_annotations</label><br>
 			<input type="checkbox" id="global-always-captions" title="automatycznie włącza napisy na filmach">
@@ -191,7 +190,7 @@
 			<label for="global-annotation-redirect">annotation_redirect</label><br>
 			<input type="checkbox" id="global-author-old-avatar" title="używa starych awatarów jak są na serwerach yt.">
 			<label for="global-author-old-avatar">author_old_avatar</label><br>
-			<input type="checkbox" id="global-fake-dates" title="fake daty komentarzy i opublikowania bazując na wpisanej.">
+			<input type="checkbox" id="global-fake-dates" title="podstawione daty komentarzy i opublikowania">
 			<label for="global-fake-dates">fake_dates</label><br>
 			<input type="checkbox" id="global-login-simulate" title="symuluje zalogowanego użytkownika">
 			<label for="global-login-simulate">login_simulate</label>

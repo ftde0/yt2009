@@ -1,11 +1,11 @@
 var languageData_EN = {
     "tooltips": {
-        "watch-comments-remove-future": "remove comments that contain years 2011-2022",
+        "watch-comments-remove-future": "show old comments on a video",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
         "watch-exclude-cs": "hides comments you post from /comment_search",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
-        "watch-fake-upload-date": "fake upload date (ranging anywhere in 2009)",
+        "watch-fake-upload-date": "fake 2009 upload year",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",
         "watch-old-banners": "uses old channel banners without wayback_features if possible",
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",
@@ -42,7 +42,7 @@ var languageData_EN = {
         "global-always-annotations": "automatically enables annotations for videos",
         "global-always-captions": "automatically enables captions for videos",
         "global-author-old-avatar": "uses old avatars if present on youtube servers",
-        "global-fake-dates": "fake upload and comment dates based on the entered date",
+        "global-fake-dates": "fake upload and comment dates",
         "global-login-simulate": "simulates a logged in user",
         "global-no-controls-fade": "disables video controls fade out",
         "global-annotation-redirect": "redirects all youtube.com links within annotations to yt2009",
@@ -65,7 +65,7 @@ var languageData_EN = {
 
         "#watch-fake-upload-date-expander": "fake_upload_date mode:\
         <br>- adapt - sets a 2009 upload date only if a video was uploaded after April 2010\
-        <br>- always - the same way this flag used to work - set a 2009 date regardless of the video.\
+        <br>- always - set a 2009 date regardless of the video.\
         <br>setting anything else/leaving the mode box empty will be treated as always.",
 
         "#watch-share-behavior-expander": "share_behavior modes:\
@@ -78,7 +78,7 @@ var languageData_EN = {
         <br>- always - sets a default avatar regardless of the current uploader's avatar.\
         <br>(leaving this box empty/setting anything else will be treated as always).",
 
-        "#watch-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, ex. <code>related+metadata</code>.\
+        "#watch-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, e.g. <code>related+metadata</code>.\
         you can also type <code>all</code> to use them all at once.\
         <br>- metadata - main video data - title, description, tags\
         <br>- author - name, avatar of the creator\
@@ -86,13 +86,12 @@ var languageData_EN = {
         <br>- comments - will show comments from the save\
         <br><b>wayback_features will not work for videos uploaded after 2013-01-01.</b>",
 
-        "#i_exp_notice": "flags starting with \"exp_\" are experimental and may not always work. bug reports appreciated.",
-        "#i_all_pages": "these flags work with all pages. they may behave in a different way than the other ones.",
+        "#i_all_pages": "these flags will affect all pages they will have a use on.",
         "#i_save": "save",
         "#default-avatar-notice": "check default_avatar in /watch for possible values",
         "#only-old-notice": "check only_old in /results for possible values",
 
-        "#channel-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, ex. <code>fields+comments</code>.\
+        "#channel-wayback-features-expander": "when using multiple values, separate them with a <code>+</code>, e.g. <code>fields+comments</code>.\
         you can also type <code>all</code> to use them all at once.<br>\
         - fields - one-line information visible on the left side, usually filled by the creator, like a website link or a description<br>\
         - basic - basic channel data, such as avatar and colors<br>\
