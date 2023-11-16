@@ -254,12 +254,14 @@ module.exports = {
                 let s = section.itemSectionRenderer.contents[0]
                 if(!s.shelfRenderer
                 || !s.shelfRenderer.content
-                || !s.shelfRenderer.content.horizontalListRenderer.items) return;
+                || (!s.shelfRenderer.content.horizontalListRenderer
+                && !s.shelfRenderer.content.expandedShelfContentsRenderer)) return;
 
-                let items = s.shelfRenderer.content.horizontalListRenderer.items
-                if(items[0].gridChannelRenderer) {
+                let items = (s.shelfRenderer.content.horizontalListRenderer
+                          || s.shelfRenderer.content.expandedShelfContentsRenderer).items
+                if(items[0].gridChannelRenderer || items[0].channelRenderer) {
                     items.forEach(i => {
-                        let channel = i.gridChannelRenderer
+                        let channel = i.gridChannelRenderer || i.channelRenderer
                         parsedSection.push({
                             "name": channel.title.simpleText,
                             "avatar": channel.thumbnail.thumbnails[1].url,
