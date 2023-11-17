@@ -459,33 +459,6 @@ module.exports = {
         return `/assets/${fname}.png`
     },
 
-    "saveBanner": function(link, bg, header) {
-        if(link.startsWith("//")) {
-            link = link.replace("//", "https://")
-        }
-        let fname = link.split("/")[link.split("/").length - 2] + "_banner.jpg"
-        if(bg) {
-            fname = fname.replace("_banner", "_background")
-        }
-        if(header) {
-            fname = fname.replace("_banner", "_header")
-        }
-        if(!fs.existsSync(`../assets/${fname}`)) {
-            fetch(link, {
-                "headers": constants.headers
-            }).then(r => {
-                r.buffer().then(buffer => {
-                    if(r.status !== 404) {
-                        fs.writeFileSync(`../assets/${fname}`, buffer)
-                    }
-                    
-                })
-            })
-        }
-
-        return `/assets/${fname}`
-    },
-
     "get_dominant_color": function(banner, callback, cropSide) {
         let banner_fname = banner.split("/")[banner.split("/").length - 1]
         if(!fs.existsSync(`../assets/${banner_fname}.png`)) {

@@ -442,6 +442,8 @@ module.exports = {
         // modern qualitylist
         if(data.qualities) {
             qualityList = data.qualities;
+        } else {
+            qualityList = []
         }
 
         // playlist
@@ -2186,36 +2188,37 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 fetch(header, {
                     "headers": constants.headers
                 }).then(r => {
-                    let b = ""
+                    function onSaveDone(b) {
+                        code = code.replace(
+                            `<!--yt2009_bannercard-->`,
+                            yt2009templates.watchBanner(
+                                data.author_url, b
+                            )
+                        )
+                        callbacksMade++;
+                        if(requiredCallbacks <= callbacksMade) {
+                            render_endscreen()
+                            fillFlashIfNeeded();
+                            genRelay();
+                            callback(code)
+                        }
+                    }
                     if(r.status !== 404) {
-                        b = yt2009utils.saveBanner(header, false, true)
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(fname, buffer)
+                            onSaveDone("/assets/" + id + "_banner.jpg")
+                        })
                     } else {
                         requiredCallbacks -= 1;
                         defaultBanner()
+                        fs.writeFileSync(fname, "")
                         return;
                     }
 
-                    code = code.replace(
-                        `<!--yt2009_bannercard-->`,
-                        yt2009templates.watchBanner(
-                            data.author_url, b
-                        )
-                    )
-                    callbacksMade++;
-                    // wait for f
-                    let x = setInterval(function() {
-                        if(fs.existsSync(fname)) {
-                            clearInterval(x)
-                            callbacksMade++
-                            if(requiredCallbacks <= callbacksMade) {
-                                render_endscreen()
-                                fillFlashIfNeeded();
-                                genRelay();
-                                callback(code)
-                            }
-                        }
-                    }, 250)
+                    
                 })
+            } else if(fs.statSync(fname).size < 5) {
+                defaultBanner()
             } else {
                 code = code.replace(
                     `<!--yt2009_bannercard-->`,

@@ -2,7 +2,6 @@ const fs = require("fs")
 const config = require("../config.json")
 let cacheList = {
     "mainCache": {},
-    "friendCache": {},
     "playlistCache": {}
 }
 if(!config.fallbackMode) {

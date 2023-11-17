@@ -196,13 +196,11 @@ app.get("/watch", (req, res) => {
             - the video cannot be downloaded (paywalled, age restricted etc.)`)
             return;
         }
-        yt2009.get_qualities(id, (qualities) => {
-            yt2009.applyWatchpageHtml(data, req, (code => {
-                code = yt2009_languages.apply_lang_to_code(code, req)
-                code = yt2009_doodles.applyDoodle(code)
-                res.send(code)
-            }), qualities)
-        })
+        yt2009.applyWatchpageHtml(data, req, (code => {
+            code = yt2009_languages.apply_lang_to_code(code, req)
+            code = yt2009_doodles.applyDoodle(code)
+            res.send(code)
+        }))
     }, req.headers["user-agent"],
         yt2009_utils.get_used_token(req),
         useFlash, 

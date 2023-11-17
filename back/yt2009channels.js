@@ -55,15 +55,12 @@ module.exports = {
                 return;
             }
             writeTimingData("userid get")
+            let cached = n_impl_yt2009channelcache.read("main")[id]
+                      || n_impl_yt2009channelcache.read("main")[url]
             // read from cache
-            if((n_impl_yt2009channelcache.read("main")[url]
-            || n_impl_yt2009channelcache.read("main")[id])
-            && req.query.resetcache !== "1") {
+            if(cached && req.query.resetcache !== "1") {
                 writeTimingData("cache retrieve")
-                sendResponse(
-                    n_impl_yt2009channelcache.read("main")[id]
-                    || n_impl_yt2009channelcache.read("main")[url]
-                )
+                sendResponse(cached)
             } else {
                 // clean fetch the channel
                 fetch(`https://www.youtube.com/youtubei/v1/browse?key=${

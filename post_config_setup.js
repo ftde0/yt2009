@@ -9,7 +9,7 @@ const fs = require("fs")
 check external clis
 =======
 */
-let check_tools = ["ffmpeg -h", "magick --help", "convert"]
+let check_tools = ["ffmpeg -h", "magick --help", "convert --version"]
 check_tools.forEach(tool => {
     console.log("== checking external tool: " + tool.split(" ")[0])
     try {
@@ -56,7 +56,6 @@ const cacheFiles = {
     "channel_main_cache.json": {},
     "channel_playlist_cache.json": {},
     "default_avatar_adapt.json": {},
-    "hd_availability_cache.json": {},
     "playlist_cache.json": {},
     "public_channel_listing.json": [],
     "rating_cache.json": {},
