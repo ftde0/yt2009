@@ -2160,7 +2160,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             "headers": {"cookie": ""},
             "query": {"f": 0}}, 
             {"send": function(data) {
-                if(data.banner) {
+                if(data.newBanner) {
                     code = code.replace(
                         `<!--yt2009_bannercard-->`,
                         yt2009templates.watchBanner(
@@ -2179,7 +2179,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
         if(flags.includes("old_banners")
         && data.author_url.includes("channel/UC")) {
-            //requiredCallbacks++
             let id = data.author_url.split("channel/UC")[1]
             let header = `https://i3.ytimg.com/u/${id}/watch_header.jpg`
             let fname = __dirname + "/../assets/" + id + "_header.jpg"
@@ -2206,7 +2205,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     if(r.status !== 404) {
                         r.buffer().then(buffer => {
                             fs.writeFileSync(fname, buffer)
-                            onSaveDone("/assets/" + id + "_banner.jpg")
+                            requiredCallbacks -= 1
+                            onSaveDone("/assets/" + id + "_header.jpg")
                         })
                     } else {
                         requiredCallbacks -= 1;

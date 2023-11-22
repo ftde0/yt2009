@@ -298,34 +298,25 @@ module.exports = {
                 data.newBanner = cId + "_uniq_banner.jpg"
                 data.bannerUrl = banner
 
-                if(flags.includes("source:watch")) {
-                    
-                    if(!data.bannerUrl) {
-                        fs.writeFileSync(`../assets/${data.newBanner}`, "")
-                        additionalFetchesCompleted++;
-                        if(additionalFetchesCompleted >= fetchesRequired) {
-                            callback(data)
-                        }
-                        return;
-                    }
-                    fetch(banner, {
-                        "headers": yt2009constants.headers
-                    }).then(r => {
-                        r.buffer().then(buffer => {
-                            fs.writeFileSync(`../assets/${data.newBanner}`, buffer)
-                            additionalFetchesCompleted++;
-                            if(additionalFetchesCompleted >= fetchesRequired) {
-                                callback(data)
-                            }
-                        })
-                    })
-                } else {
+                if(!data.bannerUrl) {
+                    fs.writeFileSync(`../assets/${data.newBanner}`, "")
                     additionalFetchesCompleted++;
                     if(additionalFetchesCompleted >= fetchesRequired) {
                         callback(data)
                     }
+                    return;
                 }
-                
+                fetch(banner, {
+                    "headers": yt2009constants.headers
+                }).then(r => {
+                    r.buffer().then(buffer => {
+                        fs.writeFileSync(`../assets/${data.newBanner}`, buffer)
+                        additionalFetchesCompleted++;
+                        if(additionalFetchesCompleted >= fetchesRequired) {
+                            callback(data)
+                        }
+                    })
+                })
             }
             catch(error) {
                 data["dominant_color"] = [180, 180, 180]

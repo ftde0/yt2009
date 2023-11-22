@@ -273,6 +273,7 @@ proto.com.youtube.innertube.request.SearchRequestParams.Filter.toObject = functi
     fourK: jspb.Message.getBooleanFieldWithDefault(msg, 14, false),
     threeSixtyDegrees: jspb.Message.getBooleanFieldWithDefault(msg, 15, false),
     location: jspb.Message.getBooleanFieldWithDefault(msg, 23, false),
+    locationParam: jspb.Message.getFieldWithDefault(msg, 24, ""),
     hdr: jspb.Message.getBooleanFieldWithDefault(msg, 25, false),
     vr180: jspb.Message.getBooleanFieldWithDefault(msg, 26, false)
   };
@@ -358,6 +359,10 @@ proto.com.youtube.innertube.request.SearchRequestParams.Filter.deserializeBinary
     case 23:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setLocation(value);
+      break;
+    case 24:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setLocationParam(value);
       break;
     case 25:
       var value = /** @type {boolean} */ (reader.readBool());
@@ -477,6 +482,13 @@ proto.com.youtube.innertube.request.SearchRequestParams.Filter.serializeBinaryTo
   if (f != null) {
     writer.writeBool(
       23,
+      f
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 24));
+  if (f != null) {
+    writer.writeString(
+      24,
       f
     );
   }
@@ -957,6 +969,42 @@ proto.com.youtube.innertube.request.SearchRequestParams.Filter.prototype.clearLo
  */
 proto.com.youtube.innertube.request.SearchRequestParams.Filter.prototype.hasLocation = function() {
   return jspb.Message.getField(this, 23) != null;
+};
+
+
+/**
+ * optional string location_param = 24;
+ * @return {string}
+ */
+proto.com.youtube.innertube.request.SearchRequestParams.Filter.prototype.getLocationParam = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 24, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.com.youtube.innertube.request.SearchRequestParams.Filter} returns this
+ */
+proto.com.youtube.innertube.request.SearchRequestParams.Filter.prototype.setLocationParam = function(value) {
+  return jspb.Message.setField(this, 24, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.com.youtube.innertube.request.SearchRequestParams.Filter} returns this
+ */
+proto.com.youtube.innertube.request.SearchRequestParams.Filter.prototype.clearLocationParam = function() {
+  return jspb.Message.setField(this, 24, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.com.youtube.innertube.request.SearchRequestParams.Filter.prototype.hasLocationParam = function() {
+  return jspb.Message.getField(this, 24) != null;
 };
 
 

@@ -391,7 +391,10 @@ module.exports = {
                         res.redirect(`/xl/html5-embed/?video_id=${id}&v=ogg`)
                     })
                 } else {
-                    res.redirect(`/xl/html5-embed/?video_id=${id}`)
+                    try {
+                        res.redirect(`/xl/html5-embed/?video_id=${id}`)
+                    }
+                    catch(error) {}
                 }
             })
         } else {
@@ -401,7 +404,10 @@ module.exports = {
                     res.redirect(`/xl/html5-embed/?video_id=${id}&v=ogg`)
                 })
             } else {
-                res.redirect(`/xl/html5-embed/?video_id=${id}`)
+                try {
+                    res.redirect(`/xl/html5-embed/?video_id=${id}`)
+                }
+                catch(error) {}
             }
         }
     },

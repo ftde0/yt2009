@@ -26,7 +26,8 @@ module.exports = {
         let filtersMsg = new searchParams.SearchRequestParams.Filter
         let protoFinal = ""
         if(params.search_sort || params.uploaded || params.high_definition
-        || params.closed_captions || params.search_type || params.page) {
+        || params.closed_captions || params.search_type || params.page
+        || params.location) {
             useProto = true
         }
 
@@ -139,6 +140,11 @@ module.exports = {
                     break;
                 }
             }
+        }
+
+        if(params.location) {
+            filtersMsg.setLocation(1)
+            filtersMsg.setLocationParam(params.location)
         }
 
         // paging

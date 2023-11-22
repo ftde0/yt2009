@@ -127,14 +127,12 @@
                     </div>
                     <div class="section-page page-homepage hid">
                         <div class="message">
-                            <div id="response-holder-template" style="display: none">
-                                {message}
-                            </div>
+                            <div id="response-holder-template" class="confirmBox page-homepage-message" style="display: none">Changes saved.</div>
                         </div>
                         <div class="header">
                             <div class="page">
                                 <div id="save-template" class="save-button">
-                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveContainer(this);return false;"><span>Save Changes</span></a>
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveHomepage();return false;"><span>Save Changes</span></a>
                                     <div class="cb"></div>
                                 </div>
                             </div>
@@ -180,6 +178,10 @@
 											<label for="activity">Recent Activity</label><br>
 											<input type="checkbox" id="watched">
 											<label for="watched">Videos Being Watched Now</label><br>
+											<input type="checkbox" id="featured">
+											<label for="featured">Featured Videos</label><br>
+											<input type="checkbox" id="pop">
+											<label for="pop">Most Popular</label><br>
 											<input type="checkbox" id="insmap">
 											<label for="insmap">Insight Map</label><br>
 											<input type="checkbox" id="inschrt">
@@ -202,7 +204,7 @@
                         <div class="footer">
                             <div class="page">
                                 <div id="save-template" class="save-button">
-                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveContainer(this);return false;"><span>Save Changes</span></a>
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveHomepage();return false;"><span>Save Changes</span></a>
                                     <div class="cb"></div>
                                 </div>
                             </div>

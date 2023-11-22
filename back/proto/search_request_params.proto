@@ -45,6 +45,7 @@ message SearchRequestParams {
     optional bool four_k = 14;
     optional bool three_sixty_degrees = 15;
     optional bool location = 23;
+    optional string location_param = 24;
     optional bool hdr = 25;
     optional bool vr180 = 26;
   }

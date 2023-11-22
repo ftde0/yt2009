@@ -1212,13 +1212,13 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                                 </div>
                                 <div class="feedmodule-updown">
                                     <span id="medit-REC" class="iyt-edit-link iyt-edit-link-gray">lang_hp_edit</span>
-                                    <span id="mup-REC" class="up-button">
+                                    <span id="mup-REC" class="up-button" onclick="moveUp('rec')">
                                         <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif">
                                     </span>
-                                    <span id="mdown-REC" class="down-button">
+                                    <span id="mdown-REC" class="down-button" onclick="moveDown('rec')">
                                         <img class="master-sprite img-php-down-arrow"  src="/assets/site-assets/pixel-vfl73.gif">
                                     </span>
-                                    <span id="mclose-REC">
+                                    <span id="mclose-REC" onclick="removeModule('rec')">
                                         <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif">
                                     </span>
                                 </div>
@@ -1272,9 +1272,9 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                             <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
                         </div>
                     </span>
-                    <span id="video-added-time-${video.id}" class="video-date-added">${utils.relativeTimeCreate(
+                    <span id="video-added-time-${video.id}" class="video-date-added">${!video.o ? utils.relativeTimeCreate(
                         utils.fakeDatesModern("2010-04-02", utils.relativeToAbsoluteApprox(video.upload)), langs.get_language(req)
-                    )}</span>
+                    ) : video.upload}</span>
                     <span id="video-num-views-${video.id}" class="video-view-count">lang_views_prefix${utils.countBreakup(
                         utils.bareCount(video.views)
                     )}lang_views_suffix</span>
@@ -1609,5 +1609,898 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 <img class="reverse-tooltip-box-bot" src="/assets/site-assets/pixel-vfl73.gif">
             </div>
         </div>`
-    }
+    },
+    "homepage_watched": `
+    <div id="feedmodule-POP" class="feedmodule-anchor yt2009_mark_hid_if_needed">
+        <div class="feedmodule-modheader" id="POP-titlebar">
+
+            <div id="feed_popular">
+                <div class="fm2-title-border-box-gray yt-rounded">
+                    <div class="fm2-title">
+                        <img class="img_feed_popular master-sprite fm2-icon" src="/assets/site-assets/pixel-vfl73.gif" />
+                        <span class="fm2-titleText" id="feed_popular-titleText">lang_hp_watched</span>
+                    </div>
+
+                    <div class="feedmodule-preamble">
+                        <a href="/videos?s=pop">lang_hp_viewall</a>
+                    </div>
+                    <div class="feedmodule-updown">
+                        <span id="medit-POP" class="iyt-edit-link iyt-edit-link-gray">lang_hp_edit</span>
+                        <span id="mup-POP" class="up-button" onclick="moveUp('watched')">
+                        <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                        <span id="mdown-POP" class="down-button" onclick="moveDown('watched')">
+                        <img class="master-sprite img-php-down-arrow" src="/assets/site-assets/pixel-vfl73.gif"/></span>
+                        <span id="mclose-POP" onclick="removeModule('watched')">
+                        <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="clear feedmodule-border-gray yt-rounded" id="feed_popular-content">
+            <div id="POP-data" class="feedmodule-data">
+                <div class="feedmodule-body bigthumb-view">
+                    <div class="feeditem-bigthumb super-large-video yt-uix-hovercard ">
+                        <div style="font-size: 12px;" class="floatL">
+                            <div class="feedmodule-thumbnail">
+                                <div class="v220WideEntry">
+                                    <div class="v220WrapperOuter">
+                                        <div class="v220WrapperInner">
+                                            <a class="video-thumb-link" href="/yt2009_watchednow0_watch" rel="nofollow"><img title="yt2009_watchednow0_title" src="/yt2009_watchednow0_thumbnail" class="vimg220 yt-uix-hovercard-target"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feedmodule-singleform-info">
+                            <div class="video-title"><a href="/yt2009_watchednow0_watch" class="yt-uix-hovercard-target" title="yt2009_watchednow0_title">yt2009_watchednow0_title</a></div>
+                            <div>yt2009_watchednow0_views</div>
+                            <div><nobr><a href="yt2009_watchednow0_uploader_url">yt2009_watchednow0_uploader_name</a></nobr></div>
+                            <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                        </div>
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-bigthumb normal-size-video yt-uix-hovercard ">
+                        <div style="font-size: 12px;" class="floatL">
+                            <div class="feedmodule-thumbnail">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_watchednow1_watch" rel="nofollow"><img title="yt2009_watchednow1_title" src="/yt2009_watchednow1_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feedmodule-singleform-info">
+                            <div class="video-title">
+                            <a href="/yt2009_watchednow1_watch" class="yt-uix-hovercard-target">yt2009_watchednow1_title</a></div>
+                            <div>yt2009_watchednow1_views</div>
+                            <div><nobr><a href="yt2009_watchednow1_uploader_url">yt2009_watchednow1_uploader_name</a></nobr></div>
+                            <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button></span></div>
+                        </div>
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-bigthumb normal-size-video yt-uix-hovercard ">
+                        <div style="font-size: 12px;" class="floatL">
+                            <div class="feedmodule-thumbnail">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_watchednow2_watch" rel="nofollow"><img title="yt2009_watchednow2_title" src="/yt2009_watchednow2_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feedmodule-singleform-info">
+                            <div class="video-title">
+                            <a href="/yt2009_watchednow2_watch" class="yt-uix-hovercard-target">yt2009_watchednow2_title</a></div>
+                            <div>yt2009_watchednow2_views</div>
+                            <div><nobr><a href="yt2009_watchednow2_uploader_url">yt2009_watchednow2_uploader_name</a></nobr></div>
+                            <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button></span></div>
+                        </div>
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-bigthumb normal-size-video yt-uix-hovercard ">
+                        <div style="font-size: 12px;" class="floatL">
+                            <div class="feedmodule-thumbnail">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_watchednow3_watch" rel="nofollow"><img title="yt2009_watchednow3_title" src="/yt2009_watchednow3_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feedmodule-singleform-info">
+                            <div class="video-title">
+                            <a href="/yt2009_watchednow3_watch" class="yt-uix-hovercard-target">yt2009_watchednow3_title</a></div>
+                            <div>yt2009_watchednow3_views</div>
+                            <div><nobr><a href="yt2009_watchednow3_uploader_url">yt2009_watchednow3_uploader_name</a></nobr></div>
+                            <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button></span></div>
+                        </div>
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+
+                    <div class="spacer">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
+    "homepage_featured": `
+    <div id="feedmodule-PRO" class="feedmodule-anchor">
+        <div class="feedmodule-modheader" id="PRO-titlebar">
+            <div id="feed_promoted">
+                <div class="fm2-title-border-box-blue yt-rounded">
+                    <div class="fm2-title">
+                        <img class="img_feed_promoted master-sprite fm2-icon" src="/assets/site-assets/pixel-vfl73.gif" />
+                        <span class="fm2-titleText" id="feed_promoted-titleText">lang_hp_featured</span>
+                    </div>
+
+                    <div class="feedmodule-updown">
+                        <span id="mup-PRO" class="up-button" onclick="moveUp('featured')">
+                        <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif"/></span>
+                        <span id="mdown-PRO" class="down-button" onclick="moveDown('featured')">
+                        <img class="master-sprite img-php-down-arrow" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                        <span id="mclose-PRO" onclick="removeModule('featured')">
+                        <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="clear feedmodule-border-blue yt-rounded" id="feed_promoted-content">
+            <div id="PRO-data" class="feedmodule-data">
+
+                <div class="feedmodule-body grid-view">
+                    <div class="clearL">
+
+                        <div class="video-cell" style="width:24.5%">
+                            <div class="video-entry yt-uix-hovercard">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link yt2009_f" href="/yt2009_featured0_watch" rel="nofollow"><img title="yt2009_featured0_title" src="/yt2009_featured0_thumbnail"></a>
+                                            <div class="video-time"><a href="/yt2009_featured0_watch" rel="nofollow">yt2009_featured0_time</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="video-main-content">
+                                    <div class="video-title ">
+                                        <div class="video-short-title">
+                                            <a href="/yt2009_featured0_watch" class="yt-uix-hovercard-target" title="yt2009_featured0_title" rel="nofollow">yt2009_featured0_title</a>
+                                        </div>
+                                    </div>
+                                    <div class="video-facets">
+                                        <span class="video-rating-list "><div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div></span>
+                                        <span class="video-view-count">yt2009_featured0_views</span>
+                                        <span class="video-rating-grid ">
+                                        <div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div>
+                                        </span>
+                                        <span class="video-username"><a class="hLink" href="yt2009_featured0_uploader_url">yt2009_featured0_uploader_name</a></span>
+                                    </div>
+                                </div>
+                                <div class="video-clear-list-left"></div>
+                            </div>
+                        </div>
+
+                        <div class="video-cell" style="width:24.5%">
+                            <div class="video-entry yt-uix-hovercard">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link yt2009_f" href="/yt2009_featured1_watch" rel="nofollow"><img title="yt2009_featured1_title" src="/yt2009_featured1_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                            <div class="video-time"><a href="/yt2009_featured1_watch" rel="nofollow">yt2009_featured1_time</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="video-main-content">
+                                    <div class="video-title ">
+                                        <div class="video-short-title">
+                                            <a href="/yt2009_featured1_watch" class="yt-uix-hovercard-target"  rel="nofollow">yt2009_featured1_title</a>
+                                        </div>
+                                    </div>
+                                    <div class="video-facets">
+                                        <span class="video-rating-list "><div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div></span>
+                                        <span class="video-view-count">yt2009_featured1_views</span>
+                                        <span class="video-rating-grid ">
+                                        <div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div>
+                                        </span>
+                                        <span class="video-username"><a class="hLink" href="yt2009_featured1_uploader_url">yt2009_featured1_uploader_name</a></span>
+                                    </div>
+                                </div>
+                                <div class="video-clear-list-left"></div>
+                            </div>
+                        </div>
+
+                        <div class="video-cell" style="width:24.5%">
+                            <div class="video-entry yt-uix-hovercard">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link yt2009_f" href="/yt2009_featured2_watch" rel="nofollow"><img title="yt2009_featured2_title" src="/yt2009_featured2_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                            <div class="video-time"><a href="/yt2009_featured2_watch" rel="nofollow">yt2009_featured2_time</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="video-main-content">
+                                    <div class="video-title ">
+                                        <div class="video-short-title">
+                                            <a href="/yt2009_featured2_watch" class="yt-uix-hovercard-target"  rel="nofollow">yt2009_featured2_title</a>
+                                        </div>
+                                    </div>
+                                    <div class="video-facets">
+                                        <span class="video-rating-list "><div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div></span>
+                                        <span class="video-view-count">yt2009_featured2_views</span>
+                                        <span class="video-rating-grid ">
+                                        <div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div>
+                                        </span>
+                                        <span class="video-username"><a class="hLink" href="yt2009_featured2_uploader_url">yt2009_featured2_uploader_name</a></span>
+                                    </div>
+                                </div>
+                                <div class="video-clear-list-left"></div>
+                            </div>
+                        </div>
+
+                        <div class="video-cell" style="width:24.5%">
+                            <div class="video-entry yt-uix-hovercard">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link yt2009_f" href="/yt2009_featured3_watch" rel="nofollow"><img  src="/yt2009_featured3_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                            <div class="video-time"><a href="/yt2009_featured3_watch" rel="nofollow">yt2009_featured3_time</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="video-main-content">
+                                    <div class="video-title ">
+                                        <div class="video-short-title">
+                                            <a href="/yt2009_featured3_watch" class="yt-uix-hovercard-target"  rel="nofollow">yt2009_featured3_title</a>
+                                        </div>
+                                    </div>
+                                    <div class="video-facets">
+                                        <span class="video-rating-list "><div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div></span>
+                                        <span class="video-view-count">yt2009_featured3_views</span>
+                                        <span class="video-rating-grid ">
+                                        <div><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></div>
+                                        </span>
+                                        <span class="video-username"><a class="hLink" href="yt2009_featured3_uploader_url">yt2009_featured3_uploader_name</a></span>
+                                    </div>
+                                </div>
+                                <div class="video-clear-list-left"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
+    "homepage_mostpopular": `
+    <div id="feedmodule-TOP" class="feedmodule-anchor">
+        <div class="feedmodule-modheader" id="TOP-titlebar">
+
+            <div id="feed_top_videos">
+                <div class="fm2-title-border-box-gray yt-rounded">
+                    <div class="fm2-title">
+                        <img class="img_feed_top_videos master-sprite fm2-icon" src="/assets/site-assets/pixel-vfl73.gif" />
+                        <span class="fm2-titleText" id="feed_top_videos-titleText">lang_hp_pop</span>
+                    </div>
+
+                    <div class="feedmodule-preamble">
+                        <a href="/videos?s=pop">lang_hp_viewall</a>
+                    </div>
+                    <div class="feedmodule-updown">
+                        <span id="mup-TOP" class="up-button" onclick="moveUp('pop')">
+                        <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                        <span id="mdown-TOP" class="down-button" onclick="moveDown('pop')">
+                        <img class="master-sprite img-php-down-arrow" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                        <span id="mclose-TOP" onclick="removeModule('pop')">
+                        <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="clear feedmodule-border-gray yt-rounded" id="feed_top_videos-content">
+            <div id="TOP-data" class="feedmodule-data">
+
+                <div class="feedmodule-body compressed-view">
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=24">lang_cat_entertainment</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_entertainment_watch" rel="nofollow"><img  src="/yt2009_entertainment_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_entertainment_watch" rel="nofollow">yt2009_entertainment_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_entertainment_watch" class="yt-uix-hovercard-target" >yt2009_entertainment_title</a></div>
+                                    <div>yt2009_entertainment_views</div>
+                                    <div><nobr><a href="yt2009_entertainment_uploader_url">yt2009_entertainment_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=31">lang_cat_music</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_music_watch" rel="nofollow"><img title="yt2009_music_title" src="/yt2009_music_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_music_watch" rel="nofollow">yt2009_music_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_music_watch" class="yt-uix-hovercard-target" title="yt2009_music_title">yt2009_music_title</a></div>
+                                    <div>yt2009_music_views</div>
+                                    <div><nobr><a href="yt2009_music_uploader_url">yt2009_music_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=32">lang_cat_news</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_news_watch" rel="nofollow"><img title="yt2009_news_title" src="/yt2009_news_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_news_watch" rel="nofollow">yt2009_news_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_news_watch" class="yt-uix-hovercard-target" title="yt2009_news_title">yt2009_news_title</a></div>
+                                    <div>yt2009_news_views</div>
+                                    <div><nobr><a href="yt2009_news_uploader_url">yt2009_news_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=1">lang_cat_film</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_film_animation_watch" rel="nofollow"><img title="yt2009_film_animation_title" src="/yt2009_film_animation_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_film_animation_watch" rel="nofollow">yt2009_film_animation_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_film_animation_watch" class="yt-uix-hovercard-target" title="yt2009_film_animation_title">yt2009_film_animation_title</a></div>
+                                    <div>yt2009_film_animation_views</div>
+                                    <div><nobr><a href="yt2009_film_animation_uploader_url">yt2009_film_animation_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=30">lang_cat_sports</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_sports_watch" rel="nofollow"><img title="yt2009_sports_title" src="/yt2009_sports_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_sports_watch" rel="nofollow">yt2009_sports_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_sports_watch" class="yt-uix-hovercard-target" title="yt2009_sports_title">yt2009_sports_title</a></div>
+                                    <div>yt2009_sports_views</div>
+                                    <div><nobr><a href="yt2009_sports_uploader_url">yt2009_sports_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=26">lang_cat_howto</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_howto_style_watch" rel="nofollow"><img title="yt2009_howto_style_title" src="/yt2009_howto_style_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_howto_style_watch" rel="nofollow">yt2009_howto_style_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_howto_style_watch" class="yt-uix-hovercard-target" title="yt2009_howto_style_title">yt2009_howto_style_title</a></div>
+                                    <div>yt2009_howto_style_views</div>
+                                    <div><nobr><a href="yt2009_howto_style_uploader_url">yt2009_howto_style_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=28">lang_cat_sci</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_science_technology_watch" rel="nofollow"><img title="yt2009_science_technology_title" src="/yt2009_science_technology_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_science_technology_watch" rel="nofollow">yt2009_science_technology_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_science_technology_watch" class="yt-uix-hovercard-target" title="yt2009_science_technology_title">yt2009_science_technology_title</a></div>
+                                    <div>yt2009_science_technology_views</div>
+                                    <div><nobr><a href="yt2009_science_technology_uploader_url">yt2009_science_technology_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?c=33">lang_cat_gaming</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_gaming_watch" rel="nofollow"><img  src="/yt2009_gaming_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_gaming_watch" rel="nofollow">yt2009_gaming_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_gaming_watch" class="yt-uix-hovercard-target" title="yt2009_gaming_title">yt2009_gaming_title</a></div>
+                                    <div>yt2009_gaming_views</div>
+                                    <div><nobr><a href="yt2009_gaming_uploader_url">yt2009_gaming_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <!--<div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="/videos?s=mp">Most Viewed</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_watch" rel="nofollow"><img  src="/yt2009_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_watch" rel="nofollow">yt2009_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_watch" class="yt-uix-hovercard-target" >yt2009_title</a></div>
+                                    <div>yt2009_views</div>
+                                    <div><nobr><a href="yt2009_uploader_url">yt2009_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>-->
+                    <div class="feeditem-compressed">
+                        <div class="feeditem-compressed-category-title">
+                            <div>
+                                <a class="hLink" href="#">lang_cat_fav</a>
+                            </div>
+                        </div>
+
+                        <div class="TOP-data compressed-form-content yt-uix-hovercard">
+                            <div class="clear">
+                                <div class="feedmodule-thumbnail">
+                                    <div class="v120WideEntry">
+                                        <div class="v120WrapperOuter">
+                                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/yt2009_top_favorited_watch" rel="nofollow"><img  src="/yt2009_top_favorited_thumbnail" class="vimg120 yt-uix-hovercard-target"></a>
+                                                <div class="video-time"><a href="/yt2009_top_favorited_watch" rel="nofollow">yt2009_top_favorited_time</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="feedmodule-singleform-info">
+                                    <div class="video-title"><a href="/yt2009_top_favorited_watch" class="yt-uix-hovercard-target" title="yt2009_top_favorited_title">yt2009_top_favorited_title</a></div>
+                                    <div>yt2009_top_favorited_views</div>
+                                    <div><nobr><a href="yt2009_top_favorited_uploader_url">yt2009_top_favorited_uploader_name</a></nobr></div>
+                                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                                </div>
+                                <div class="spacer">&nbsp;</div>
+                            </div>
+                        </div>
+
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                    <div class="spacer">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
+    "homepage_inbox": `
+    <div class="homepage-side-block hid yt2009-login-only-box">
+        <div id="stat-module-wrapper-statmodules_inbox" class="opened">
+            <div id="statmodules_inbox">
+                <div class="statModule-title fm2-title-border-box-gray yt-rounded" id="statmodules_inbox-title">
+                    <span class="statModule-titleText" id="statmodules_inbox-titleText">lang_hp_inbox</span>
+                </div>
+            </div>
+
+            <div class="module-item-wrapper yt-rounded feedmodule-border-gray" id="statmodules_inbox-content">
+                <div class="statModule-item-line">
+                    <div class="statModule-item-text">
+                        <button class="master-sprite img-general-messages yt2009-side-icon"></button>
+                        <a href="/inbox">lang_hp_messages_prefix0 lang_hp_messages</a>
+                    </div>
+                </div>
+                <div class="statModule-item-line">
+                    <div class="statModule-item-text">
+                        <button class="master-sprite img-received-videos yt2009-side-icon"></button>
+                        <a href="/inbox?folder=videos&amp;action_message=1">lang_hp_shared_prefix0 lang_hp_shared</a>
+                    </div>
+                </div>
+                <div class="statModule-item-line">
+                    <div class="statModule-item-text">
+                        <button class="master-sprite img-comments yt2009-side-icon"></button>
+                        <a href="/inbox?folder=comments&amp;action_message=1">lang_hp_comments_prefix0 lang_hp_comments</a>
+                    </div>
+                </div>
+                <div class="statModule-item-line">
+                    <div class="statModule-item-text">
+                        <button class="master-sprite img-viewers yt2009-side-icon" style="margin-right: 14px;"></button>
+                        <a href="/inbox?folder=invites&amp;action_message=1">lang_hp_friend_inv_prefix0 lang_hp_friend_inv</a>
+                    </div>
+                </div>
+                <div class="statModule-item-line">
+                    <div class="statModule-item-text">
+                        <button class="master-sprite img-video-responses yt2009-side-icon"></button>
+                        <a href="/inbox?folder=responses&amp;action_message=1">lang_hp_video_responses_prefix0 lang_hp_video_responses</a>
+                    </div>
+                </div>
+                <div class="statModule-item-line">
+                    <div style="text-align: right; margin-top: 2px;">
+                        <a href="/inbox?action_compose=1">lang_hp_msg_compose</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
+    "homepage_friendtivity": `
+    <div id="feedmodule-FRI" class="feedmodule-anchor">
+        <div class="feedmodule-modheader" id="FRI-titlebar">
+            <div id="feed_activity">
+                <div class="fm2-title-border-box-gray yt-rounded">
+                    <div class="fm2-title">
+                        <img src="/assets/site-assets/pixel-vfl73.gif" class="img_feed_friendtivity master-sprite fm2-icon">
+                        <span class="fm2-titleText" id="feed_friendtivity-titleText">Recent Activity</span>
+                    </div>
+                    <div class="feedmodule-updown">
+                        <span id="mup-FRI" class="up-button" onclick="moveUp('activity')">
+                            <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                        <span id="mdown-FRI" class="down-button" onclick="moveDown('activity')">
+                            <img class="master-sprite img-php-down-arrow" src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                        <span id="mclose-FRI" onclick="removeModule('activity')">
+                            <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear feedmodule-border-gray yt-rounded" id="feed_friendtivity-content">
+            <div id="FRI-data" class="feedmodule-data">
+                <div class="feedmodule-body list-view">
+                    fri-data_fill
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
+    "friendtivity_comment": function(video, comment_author, comment_content, flags) {
+        /*id, title, description, upload, viewcount,
+                                    authorurl, authorname, vidlength,*/
+        let upload = utils.unixToRelative(new Date(video.upload).getTime())
+        if(new Date(video.upload).getFullYear() <= 2010) {
+            upload = utils.unixToRelative(
+                new Date(video.upload).getTime(), new Date("2010-01-01").getTime()
+            )
+        } else if(new Date(video.upload).getFullYear() <= 2013) {
+            upload = utils.unixToRelative(
+                new Date(video.upload).getTime(), new Date("2014-01-01").getTime()
+            )
+        }
+
+        let author = video.author_handle
+        if(!author
+        && flags.includes("remove_username_space")) {
+            comment_author = comment_author.split(" ").join("")
+            video = JSON.parse(JSON.stringify(video))
+            video.author_name = video.author_name.split(" ").join("")
+        } else if(!author
+        && flags.includes("username_asciify")) {
+            comment_author = utils.asciify(comment_author)
+            video = JSON.parse(JSON.stringify(video))
+            video.author_name = utils.asciify(video.author_name)
+        }
+
+        let viewCount = video.viewCount
+        if(flags.includes("realistic_view_count")
+        && viewCount > 100000) {
+            viewCount = Math.floor(viewCount / 90)
+        }
+        viewCount = utils.countBreakup(viewCount) + " views"
+        return `
+        <div class="video-cell" data-id="${video.id}">
+            <div class="feedmodule-smtitle-wrapper" style="margin-bottom: 0px;">
+                <div class="feedmodule-smtitle">
+                    <span style="display: inline-block;" class="feed_icon_img icon-COM master-sprite"></span>
+                    <div class="comment-header" style="display: inline-block;"><a href="/comment_search?username=${comment_author}">${comment_author}</a> commented on a video</div>
+                </div>
+            </div>
+        
+            <div class="feedmodule-cmt">"${comment_content}"</div>
+            <div class="video-entry yt-uix-hovercard feedmodule-cmt-vid">
+                <div class="v90WideEntry">
+                    <div class="v90WrapperOuter">
+                        <div class="v90WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="vititle" src="//i.ytimg.com/vi/${video.id}/default.jpg" class="vimg90 yt-uix-hovercard-target"></a>
+                            <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="Add Video to QuickList" onclick="addToQuicklist('${video.id}', '${video.title.split('"').join("&quot;")}', '${author}')"><button class="master-sprite QLIconImg" title=""></button></a>
+                                <div class="hid quicklist-inlist"><a href="/my_quicklist">Added to <br> QuickList</a></div>
+                            </div>
+                            <div class="video-time"><a id="video-run-time-${video.id}" href="/watch?v=${video.id}" rel="nofollow">${utils.seconds_to_time(video.length)}</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-main-content" id="video-main-content-${video.id}">
+                    <div class="video-long-title">
+                        <a id="video-short-title-${video.id}" href="/watch?v=${video.id}" class="yt-uix-hovercard-target" title="${video.title.split('"').join("&quot;")}" rel="nofollow">${utils.xss(video.title)}</a>
+                    </div>
+                    <div class="video-description">${video.description.length > 100 ? (video.description.substring(0, 100) + "...") : video.description}</div>
+                    <div class="video-facets">
+                        <span id="video-average-rating-${video.id}" class="video-rating-list ">
+                            <div>
+                                <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
+                            </div>
+                        </span>
+                        <span id="video-added-time-${video.id}" class="video-date-added">${upload}</span>
+                        <span id="video-num-views-${video.id}" class="video-view-count">${viewCount}</span>
+                        <span id="video-average-rating-${video.id}" class="video-rating-grid ">
+                            <div>
+                                <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
+                            </div>
+                        </span>
+                        <span class="video-username"><a id="video-from-username-${video.id}" class="hLink" href="${video.author_url}">${author}</a></span>
+                    </div>
+                </div>
+                <div class="video-clear-list-left"></div>
+            </div>
+        </div>`
+    },
+    "homepage_nearyou": `
+    <div id="feedmodule-GEO" class="feedmodule-anchor">
+        <div class="feedmodule-modheader" id="GEO-titlebar">
+            <div id="feed_hometown">
+                <div class="fm2-title-border-box-gray yt-rounded">
+                    <div class="fm2-title">
+                        <img class="homepage-sprite img_feed_hometown" src="/assets/site-assets/pixel-vfl73.gif">
+                        <span class="fm2-titleText" id="feed_hometown-titleText">Videos Near You</span>
+                    </div>
+                    <div class="feedmodule-updown">
+                        <span id="mup-GEO" class="up-button" onclick="moveUp('nearyou')">
+                            <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                        <span id="mdown-GEO" class="down-button" onclick="moveDown('nearyou')">
+                            <img class="master-sprite img-php-down-arrow"  src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                        <span id="mclose-GEO" onclick="removeModule('nearyou')">
+                            <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear feedmodule-border-gray yt-rounded" id="feed_hometown-content">
+            <div id="GEO-data" class="feedmodule-data">
+                <div class="feedmodule-body grid-view">
+                    <div id="hometown-loading-sprite"><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif" style="margin-left: 310px;margin-top: 30px;margin-bottom: 30px;"></div>
+                    <div class="clearL yt2009-cells-container" id="yt2009-hometown-cells-container">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
+    "regions": [
+        ["US", "Worldwide (All)", "en_US"],
+        ["DE", "Germany", "de_DE"],
+        ["NZ", "New Zealand", "en_NZ"],
+        ["CA", "Canada", "en_CA"],
+        ["UK", "UK", "en_GB"],
+        ["IE", "Ireland", "en_IE"],
+        ["AU", "Australia", "en_AU"],
+        ["ES", "Spain", "es_ES"],
+        ["MX", "Mexico", "es_MX"],
+        ["FR", "France", "fr_FR"],
+        ["IT", "Italy", "it_IT"],
+        ["JP", "Japan", "ja_JP"],
+        ["NL", "Netherlands", "nl_NL"],
+        ["PL", "Poland", "pl_PL"],
+        ["BR", "Brazil", "pt_BR"],
+        ["RU", "Russia", "ru_RU"],
+        ["HK", "Hong Kong", "zh_HK"],
+        ["TW", "Taiwan", "zh_TW"],
+        ["KR", "South Korea", "ko_KR"],
+        ["IN", "India", "en_IN"],
+        ["IL", "Israel", "en_IL"],
+        ["CZ", "Czech Republic", "cs_CZ"],
+        ["SE", "Sweden", "sv_SE"]
+    ],
+    "locPickerLoc": function(code, name, flagcode) {
+        return `
+                <div class="flag-div">
+                    <a href="#" onclick="setLoc('${code}'); return false;">
+                        <img id="flag_${flagcode}" src="/assets/site-assets/pixel-vfl73.gif" class="flag_${flagcode}" alt="" width="17" height="11">
+                        ${name}
+                    </a>
+                </div>`
+    },
+    "locPickerBase": `
+    <div id="region-picker">
+        <div class="picker-top" style="">
+            <h2>Choose your content location</h2><br>
+            <p style="clear: left;">Choose which country or region's content (videos and channels) you would like to view. This will not change the language of the site.</p>
+            <div class="box-close-link">
+                <img onclick="closeLangPicker()" src="/assets/site-assets/pixel-vfl73.gif" alt="Close">
+            </div>
+            <div class="clearR"></div>
+        </div>
+        <div class="flag-list">
+            <div class="flag-bucket">
+                <!--yt2009_bucket_1-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_2-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_3-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_4-->
+            </div>
+            <div class="flag-bucket">
+                <!--yt2009_bucket_5-->
+            </div>
+            <div class="spacer">&nbsp;</div>
+        </div>
+    </div>`,
+    "homepage_subs": `
+    <div id="feedmodule-SUB" class="feedmodule-anchor">
+        <div class="feedmodule-modheader" id="SUB-titlebar">
+            <div id="feed_subscriptions">
+                <div class="fm2-title-border-box-gray yt-rounded">
+                    <div class="fm2-title">
+                        <img class="master-sprite img_feed_subscriptions" src="/assets/site-assets/pixel-vfl73.gif">
+                        <span class="fm2-titleText" id="feed_subscriptions-titleText">Subscriptions</span>
+                    </div>
+                    <div class="feedmodule-updown">
+                        <span id="mup-SUB" class="up-button" onclick="moveUp('latest')">
+                            <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                        <span id="mdown-SUB" class="down-button" onclick="moveDown('latest')">
+                            <img class="master-sprite img-php-down-arrow"  src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                        <span id="mclose-SUB" onclick="removeModule('latest')">
+                            <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear feedmodule-border-gray yt-rounded" id="feed_subscriptions-content">
+            <div id="GEO-data" class="feedmodule-data">
+                <div class="feedmodule-body grid-view">
+                    <div id="subscriptions-loading-sprite"><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif" style="margin-left: 310px;margin-top: 30px;margin-bottom: 30px;"></div>
+                    <div class="clearL yt2009-cells-container" id="yt2009-subscriptions-cells-container">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
 }

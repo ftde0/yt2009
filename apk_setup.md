@@ -1,10 +1,10 @@
 # ANDROID APP SETUP - YT2009
 
-if you'd like to have an android app for your instance users, you can get an old youtube apk working (2.x-4.x)
+if you'd like to have an android app for your instance users, you can get an old youtube apk working (2.x-4.1.23)
 by setting it up to connect to your yt2009 server.
 
 NOTES:
-- later APKs (5.x) won't work as they used InnerTube instead of the Data API V2, which yt2009 reimplements.
+- later APKs (5.x) won't work as they used InnerTube instead of the Data API V2.
 - your instance needs to be on port 80. if you're running a standard webserver there, set it up to redirect
 `/feeds/api/*` requests to your instance.
 - earlier APKs require a lot more work to get running, and some (1.6.20 and earlier) don't work on
@@ -96,7 +96,9 @@ you're mainly looking for the entries where gdata.youtube.com is separated. look
 
 <img src="./doc-imgs/gdata-grep-marked.png"/>
 
-open the file and change the strings. **MAKE SURE YOU'RE NOT INCLUDING THE PORT IF NOT ON 80. THE APP WILL CRASH OTHERWISE.** 
+open the file and change the strings. **ONLY INCLUDE THE IP ADDRESS/DOMAIN NAME YOU'RE USING.**
+
+**ANY PREFIXES OR ANYTHING AFTER (HTTP, PORT, ETC) WILL CRASH THE APP ON START.** 
 
 <img src="./doc-imgs/gdata-changed.png"/>
 

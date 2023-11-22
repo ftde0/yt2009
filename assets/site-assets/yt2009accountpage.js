@@ -103,6 +103,66 @@ function openTab(tabName) {
         if(tabs[tab].className
         && tabs[tab].getElementsByTagName("a")[0].href == href) {
             tabs[tab].className += " current"
+            var a = tabs[tab].getElementsByTagName("a")[0]
+            document.getElementById("page-name").innerHTML = a.innerHTML
         }
+    }
+
+    // per-tab functionality
+    switch(tabName) {
+        case "homepage": {
+            pullHomepageSettings()
+            break;
+        }
+    }
+}
+
+// pre-switch on load with hash
+switch(location.hash) {
+    case "#customize/homepage": {
+        openTab("homepage");
+        break;
+    }
+}
+
+// homepage
+function saveHomepage() {
+    var checks = document.querySelector(".page-homepage")
+                .getElementsByTagName("input")
+    var sections = ""
+    for(var c in checks) {
+        c = checks[c]
+        if(c.tagName
+        && c.getAttribute("type") == "checkbox"
+        && c.checked) {
+            sections += c.id + ","
+        }
+    }
+    var cookie = [
+        "homepage_picked=" + sections + "; ",
+        "Path=/; ",
+        "Expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    ]
+    document.cookie = cookie.join("")
+    var msg = $(".page-homepage-message")
+    msg.style.display = "block"
+    setTimeout(function() {
+        msg.style.display = "none"
+    }, 5000)
+}
+
+function pullHomepageSettings() {
+    var cookies = document.cookie.split("; ")
+    var settings = "rec,watched,featured,pop,inbox".split(",")
+    for(var c in cookies) {
+        c = cookies[c]
+        if(c.indexOf("homepage_picked") == 0) {
+            settings = c.split("homepage_picked=")[1].split(",")
+        }
+    }
+    for(var s in settings) {
+        s = settings[s]
+        if(!s) return;
+        document.getElementById(s).checked = true
     }
 }

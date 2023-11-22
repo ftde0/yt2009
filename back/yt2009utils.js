@@ -1224,5 +1224,28 @@ module.exports = {
         })
         displayDates.reverse()
         return displayDates
+    },
+    "latestCustomComments": function(limit) {
+        let comments = {}
+        if(fs.existsSync("./cache_dir/comments.json")) {
+            comments = JSON.parse(
+                fs.readFileSync("./cache_dir/comments.json").toString()
+            )
+        }
+        let commentsA = []
+        for(let i in comments) {
+            comments[i].forEach(comment => {
+                if(!comment.time) return;
+                let commentObject = JSON.parse(JSON.stringify(comment))
+                commentObject.video = i;
+                let commentTime = this.unixToRelative(comment.time)
+                commentObject.relativeTime = commentTime;
+                if(commentObject.text.length == 0 || commentObject.csHide) return;
+                commentsA.push(commentObject)
+            })
+        }
+        commentsA = commentsA.sort((a, b) => b.time - a.time)
+        commentsA = commentsA.slice(0, limit)
+        return commentsA;
     }
 }

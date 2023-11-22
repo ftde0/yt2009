@@ -5044,7 +5044,7 @@ td.spons-vid-thumb .user-thumb-jumbo img {
 }
 
 .homepage-masthead-show-btn {
-  background: transparent url(iyt-vfl105161.png) repeat-x scroll -75px 0;
+  background: transparent url(/assets/site-assets/iyt-vfl105161.png) repeat-x scroll -75px 0;
   border: 0;
   padding: 0;
   cursor: hand;
@@ -5723,7 +5723,7 @@ td.spons-vid-thumb .user-thumb-jumbo img {
 .icon-TOP,
 .icon-GEO,
 .homepage-sprite {
-  background: transparent url(iyt-vfl105161.png) repeat-x scroll 0 0;
+  background: transparent url(/assets/site-assets/iyt-vfl105161.png) repeat-x scroll 0 0;
   border: 0;
   padding: 0;
   cursor: hand;
@@ -6272,7 +6272,97 @@ td.spons-vid-thumb .user-thumb-jumbo img {
   color: #000
 }
 
+.flag_de_DE {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll 0 0
+}
 
+.flag_en_AU {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -17px 0
+}
+
+.flag_en_CA {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -34px 0
+}
+
+.flag_en_GB {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -51px 0
+}
+
+.flag_en_IE {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -68px 0
+}
+
+.flag_en_NZ {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -85px 0
+}
+
+.flag_en_US {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -102px 0
+}
+
+.flag_es_ES {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -119px 0
+}
+
+.flag_es_MX {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -136px 0
+}
+
+.flag_fr_FR {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -153px 0
+}
+
+.flag_it_IT {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -170px 0
+}
+
+.flag_ja_JP {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -187px 0
+}
+
+.flag_nl_NL {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -204px 0
+}
+
+.flag_pl_PL {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -221px 0
+}
+
+.flag_pt_BR {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -238px 0
+}
+
+.flag_ru_RU {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -255px 0
+}
+
+.flag_zh_HK {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -272px 0
+}
+
+.flag_zh_TW {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -289px 0
+}
+
+.flag_ko_KR {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -306px 0
+}
+
+.flag_en_IN {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -323px 0
+}
+
+.flag_en_IL {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -340px 0
+}
+
+.flag_cs_CZ {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -357px 0
+}
+
+.flag_sv_SE {
+  background: transparent url(/assets/site-assets/flags-vfl57703.gif) no-repeat scroll -374px 0
+}
 
 #search-advanced-form {
   clear: both;

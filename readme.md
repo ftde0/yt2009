@@ -39,6 +39,26 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 
 ---
 
+## updating
+
+if you want to update your frontend instance, use
+
+```
+git pull --no-commit
+```
+
+to get you up with updates you may have missed.
+
+if you modified the code yourself and you're getting a merge conflict, use
+
+```
+git checkout -- <file>
+```
+
+to restore the original file. you can make a copy of your modified file and reapply the mod after the pull is done.
+
+---
+
 ## usage
 
 now that you're in, you can just use it as it is, but there is a bit more you can do.

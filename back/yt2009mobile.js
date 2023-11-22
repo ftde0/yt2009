@@ -773,7 +773,7 @@ module.exports = {
             res.set("content-type", "application/atom+xml")
             res.send(templates.gdata_user(
                 id,
-                utils.asciify(data.name),
+                utils.asciify(data.name || "name_not_found?"),
                 `http://${config.ip}:${config.port}/${data.avatar}`,
                 utils.approxSubcount(data.properties.subscribers || "0"),
                 videoCount,

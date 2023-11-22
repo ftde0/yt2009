@@ -34,7 +34,6 @@ var languageData_EN = {
         "channel-username-asciify": "remove special characters from usernames",
 
         "mainpage-disable-fallback": "hides fallback mode warning",
-        "mainpage-homepage-recommended": "show a recommended section on the homepage based on the last 3 videos watched",
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
         "mainpage-remove-username-space": "removes spaces from usernames",
         "mainpage-username-asciify": "remove special characters from usernames",
@@ -107,7 +106,9 @@ var languageData_EN = {
         - poor - removes emojis and hashtags<br>\
         - moderate - everything from poor + known new words<br>\
         - max - removes whole lines of text matching moderate<br>\
-        (leaving this box empty/different value = max.)"
+        (leaving this box empty/different value = max.)",
+
+        "#hpr_notice": "homepage_recommended is located in the Add/Remove Modules section on the homepage."
     },
 
     "placeholders": {

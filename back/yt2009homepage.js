@@ -5,6 +5,7 @@ const yt2009utils = require("./yt2009utils")
 const wayback_watchpage = require("./cache_dir/wayback_watchpage")
 const doodles = require("./yt2009doodles")
 const languages = require("./language_data/language_engine")
+const templates = require("./yt2009templates")
 
 const homepage_code = fs.readFileSync("../index.htm").toString()
 
@@ -88,56 +89,6 @@ module.exports = function(req, res) {
     // replace sekcji randomowymi filmami z sections (constants)
     let code = homepage_code;
 
-    for(let section in sections) {
-        let vid = sections[section][
-            Math.floor(Math.random() * sections[section].length)
-        ]
-        code = section_fill(code, section, vid, flags, req.protocol)
-    }
-
-    // featured
-    let featured_videos = []
-    while(featured_videos.length !== 4) {
-        let video = videos.homepageCache_featured[
-            Math.floor(Math.random() * videos.homepageCache_featured.length)
-        ]
-        if(!featured_videos.includes(video)) {
-            featured_videos.push(video)
-        }
-    }
-
-    let featuredIndex = 0;
-    featured_videos.forEach(video => {
-        code = section_fill(
-            code,
-            `featured${featuredIndex}`,
-            video,
-            flags,
-            req.protocol
-        )
-        featuredIndex++;
-    })
-
-    // videos watched now
-    let watchedNow = yt2009html.featured().slice(0, 4)
-
-    if(watchedNow.length < 4) {
-        // hide the section if less than 4 videos watched
-        code = code.replace(`yt2009_mark_hid_if_needed`, `hid`)
-    }
-
-    let watchedNowIndex = 0;
-    watchedNow.forEach(watched => {
-        code = section_fill(
-            code,
-            `watchednow${watchedNowIndex}`,
-            watched,
-            flags,
-            req.protocol
-        )
-        watchedNowIndex++;
-    })
-
     // shows tab
     if((req.headers.cookie || "").includes("shows_tab")) {
         code = code.replace(
@@ -148,6 +99,129 @@ module.exports = function(req, res) {
     
 
     code = require("./yt2009loginsimulate")(req, code, true)
+
+    // module-based stuff
+    let moduleHTML = ``
+    let modules = "rec,watched,featured,pop,inbox"
+    if((req.headers.cookie || "").includes("homepage_picked=")) {
+        modules = req.headers.cookie.split("homepage_picked=")[1].split(";")[0]
+    }
+    modules.split(",").forEach(m => {
+        switch(m) {
+            case "rec": {
+                moduleHTML += templates.homepage_recommended
+                break;
+            }
+            case "watched": {
+                // videos watched now
+                moduleHTML += templates.homepage_watched
+                let watchedNow = yt2009html.featured().slice(0, 4)
+            
+                if(watchedNow.length < 4) {
+                    // hide the section if less than 4 videos watched
+                    code = code.replace(`yt2009_mark_hid_if_needed`, `hid`)
+                }
+            
+                let watchedNowIndex = 0;
+                watchedNow.forEach(watched => {
+                    moduleHTML = section_fill(
+                        moduleHTML,
+                        `watchednow${watchedNowIndex}`,
+                        watched,
+                        flags,
+                        req.protocol
+                    )
+                    watchedNowIndex++;
+                })
+                break;
+            }
+            case "featured": {
+                // featured
+                moduleHTML += templates.homepage_featured
+                let featured_videos = []
+                while(featured_videos.length !== 4) {
+                    let video = videos.homepageCache_featured[
+                        Math.floor(Math.random() * videos.homepageCache_featured.length)
+                    ]
+                    if(!featured_videos.includes(video)) {
+                        featured_videos.push(video)
+                    }
+                }
+
+                let featuredIndex = 0;
+                featured_videos.forEach(video => {
+                    moduleHTML = section_fill(
+                        moduleHTML,
+                        `featured${featuredIndex}`,
+                        video,
+                        flags,
+                        req.protocol
+                    )
+                    featuredIndex++;
+                })
+                break;
+            }
+            case "pop": {
+                // most popular by category
+                moduleHTML += templates.homepage_mostpopular
+                for(let section in sections) {
+                    let vid = sections[section][
+                        Math.floor(Math.random() * sections[section].length)
+                    ]
+                    moduleHTML = section_fill(
+                        moduleHTML, section, vid, flags, req.protocol
+                    )
+                }
+                break;
+            }
+            case "inbox": {
+                // show inbox
+                code = code.replace(
+                    `<!--yt2009_inbox-->`,
+                    templates.homepage_inbox
+                )
+                break;
+            }
+            case "activity": {
+                // friendtivity
+                let cellsHTML = ""
+                let comments = yt2009utils.latestCustomComments(3)
+                if(comments.length == 0) return;
+                comments.forEach(cmt => {
+                    let video = yt2009html.get_cache_video(cmt.video)
+                    if(!video || !video.title) return;
+                    cellsHTML += templates.friendtivity_comment(
+                        video, cmt.author, cmt.text, flags
+                    )
+                })
+                let fullModule = templates.homepage_friendtivity.replace(
+                    "fri-data_fill", cellsHTML
+                )
+                moduleHTML += fullModule
+                break;
+            }
+            case "nearyou": {
+                moduleHTML += templates.homepage_nearyou
+                break;
+            }
+            case "latest": {
+                moduleHTML += templates.homepage_subs
+                break;
+            }
+        }
+    })
+
+    code = code.replace(
+        `<!--yt2009_modules-->`,
+        moduleHTML
+    )
+
+    if((req.headers.cookie || "").includes("login_simulate")) {
+        code = code.replace(
+            `yt2009-signin-hide`,
+            `yt2009-signin-hide hid`
+        )
+    }
 
     if(code.includes("signout_btn")) {
         // hide login promo when using login_simulate
@@ -161,20 +235,9 @@ module.exports = function(req, res) {
         ).join(
             `yt2009-login-only-box`
         )
-    }
-
-    // recommended section groundwork
-    if((req.headers.cookie || "").includes("homepage_recommended")) {
         code = code.replace(
-            `<!--yt2009_recommended-->`,
-            require("./yt2009templates").homepage_recommended
+            `class="homepage-non-interactive"`, ""
         )
-        if((req.headers.cookie || "").includes("login_simulate")) {
-            code = code.replace(
-                `yt2009-signin-hide`,
-                `yt2009-signin-hide hid`
-            )
-        }
     }
 
     // set <title> based on login_simulate

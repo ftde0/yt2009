@@ -1448,7 +1448,9 @@ app.get("/exp_hd", (req, res) => {
             )
             child_process.exec(cmd, (error, stdout, stderr) => {
                 res.redirect(`/assets/${id}-hd.mp4`)
-                fs.unlinkSync(videoFilename)
+                if(fs.existsSync(videoFilename)) {
+                    fs.unlinkSync(videoFilename)
+                }
             })
         })
         require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
@@ -2136,8 +2138,11 @@ app.get("/retry_video", (req, res) => {
         )
         child_process.exec(cmd, (error, stdout, stderr) => {
             res.redirect(`/assets/${id}.mp4`)
-            fs.unlinkSync(`${__dirname}/../assets/${id}-v.mp4`)
-            fs.unlinkSync(`${__dirname}/../assets/${id}-a.mp3`)
+            if(fs.existsSync(`${__dirname}/../assets/${id}-v.mp4`)
+            && fs.existsSync(`${__dirname}/../assets/${id}-a.mp3`)) {
+                fs.unlinkSync(`${__dirname}/../assets/${id}-v.mp4`)
+                fs.unlinkSync(`${__dirname}/../assets/${id}-a.mp3`)
+            }
         })
     }
 })
@@ -2796,6 +2801,304 @@ app.get("/comment_search", (req, res) => {
 
     res.send(code)
 })
+
+/*
+======
+near you videos
+======
+*/
+
+// yt2009upgrade: download modules on existing installs
+let ipDb = false;
+let regionParamTable = false;
+let maxmind;
+if(!fs.existsSync(__dirname + "/GeoLite2-City.mmdb")) {
+    // download ip database
+    let l = `https://github.com/PaddeK/node-maxmind-db/raw/master/test/data/GeoLite2-City.mmdb`
+    console.log("yt2009upgrade: downloading ip-country db for near you")
+    const fetch = require("node-fetch")
+    fetch(l, {
+        "headers": yt2009_constant.headers
+    }).then(r => {
+        r.buffer().then(buffer => {
+            fs.writeFile(`./GeoLite2-City.mmdb`, buffer, () => {
+                dlModule()
+            })
+        })
+    })
+    // download module
+    function dlModule() {
+        console.log("yt2009upgrade: downloading maxmind-db-reader")
+        child_process.exec("npm install maxmind-db-reader",
+        (error, stdout, stderr) => {
+            console.log("yt2009upgrade: setup done")
+            setTimeout(() => {
+                maxmind = require("maxmind-db-reader")
+                ipDb = maxmind.openSync("./GeoLite2-City.mmdb")
+                regionParamTable = require("./location_params.json")
+            }, 150)
+        })
+    }
+} else {
+    maxmind = require("maxmind-db-reader")
+    ipDb = maxmind.openSync("./GeoLite2-City.mmdb")
+    regionParamTable = require("./location_params.json")
+}
+
+app.get("/nearyou", (req, res) => {
+    // get flags
+
+    let flags = ""
+    if(req.headers.cookie
+    && req.headers.cookie.includes("mainpage_flags")) {
+        flags += req.headers.cookie.split("mainpage_flags=")[1].split(";")[0]
+    }
+    if(req.headers.cookie
+    && req.headers.cookie.includes("global_flags")) {
+        flags += req.headers.cookie.split("global_flags=")[1].split(";")[0]
+    }
+
+    // get user region
+
+    let region = "US"
+    if(!ipDb) {
+        region = "US"
+    }
+    let ip = req.ip.replace("::ffff:", "")
+    try {
+        region = ipDb.getGeoDataSync(ip).country.iso_code
+    }
+    catch(error) {
+        region = "US"
+    }
+
+    // cookie region override
+    if(req.headers.cookie
+    && req.headers.cookie.includes("gl=")) {
+        region = req.headers.cookie.split("gl=")[1].split(";")[0]
+    }
+
+    let regionParam = regionParamTable[region] || regionParamTable["US"]
+
+    // search for vids in that region
+
+    let randomMonth = Math.floor(Math.random() * 6) + 6
+    if(randomMonth < 10) {
+        randomMonth = "0" + randomMonth
+    }
+    let query = "a before:2012"
+    let finishHTML = ""
+    let videos = []
+    function createSearch() {
+        yt2009_search.get_search(query, "", {
+            "location": regionParam,
+            "page": Math.floor(Math.random() * 4) + 1
+        }, (data) => {
+            data.forEach(v => {
+                if(v.type !== "video") return;
+                if(v.upload.split(" ")[1] !== "years") return;
+                if(parseInt(v.upload.split(" ")[0]) < 10) return;
+                // parse with flags
+                v = JSON.parse(JSON.stringify(v))
+    
+                if(flags.includes("fake_dates")) {
+                    v.upload = yt2009_utils.fakeDatesModern(v.upload, "2012-01-01")
+                }
+    
+                if(flags.includes("realistic_view_count")
+                && yt2009_utils.bareCount(v.views) > 100000) {
+                    v.views = yt2009_utils.countBreakup(Math.floor(
+                        yt2009_utils.bareCount(v.views) / 90
+                    )) + " views"
+                }
+    
+                v.length = v.time
+                v.creatorName = v.author_handle || yt2009_utils.asciify(v.author_name)
+                videos.push(v)
+            })
+            if(videos.length < 8) {
+                createSearch()
+            } else {
+                renderVids()
+            }
+        }, yt2009_utils.get_used_token(req), false)
+    }
+    createSearch()
+
+    function renderVids() {
+        let randomVids = []
+        while(randomVids.length !== Math.min(videos.length, 8)) {
+            let v = videos[Math.floor(Math.random() * videos.length)]
+            let l = 0
+            while(randomVids.includes(v) && l < 20) {
+                v = videos[Math.floor(Math.random() * videos.length)]
+            }
+            randomVids.push(v)
+        }
+
+        randomVids.forEach(v => {
+            finishHTML += yt2009_templates.recommended_videoCell(v, req)
+        })
+
+        finishHTML = yt2009_languages.apply_lang_to_code(finishHTML, req)
+        res.send(finishHTML)
+    }
+})
+
+// region picker
+app.get("/region_picker", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.send("")
+        return;
+    }
+    let languageBuckets = [
+        [], [], [], [], []
+    ]
+    let bucketSize = 5;
+    if(req.headers.referer
+    && req.headers.referer.includes("/watch")) {
+        bucketSize = 3;
+        languageBuckets = [[], [], []]
+    }
+
+    // get locations
+    let locations = yt2009_templates.regions
+    let currentBucket = 0
+    locations.forEach(l => {
+        languageBuckets[currentBucket].push(l)
+        currentBucket++
+        if(currentBucket >= bucketSize) {
+            currentBucket = 0;
+        }
+    })
+
+    // put buckets into html
+    let html = yt2009_templates.locPickerBase
+    let bucketHTML = [
+        "", "", "", "", ""
+    ]
+    if(bucketSize == 3) {
+        bucketHTML = ["", "", ""]
+    }
+    let bucketIndex = 0;
+    languageBuckets.forEach(bucket => {
+        bucket.forEach(lang => {
+            bucketHTML[bucketIndex] += yt2009_templates.locPickerLoc(
+                lang[0], lang[1], lang[2]
+            )
+        })
+        html = html.replace(
+            `<!--yt2009_bucket_${bucketIndex + 1}-->`,
+            bucketHTML[bucketIndex]
+        )
+        bucketIndex++
+    })
+
+
+    res.send(html)
+})
+
+/*
+======
+bulk subscriptions to homepage video_cell (Latest from Subscriptions)
+======
+*/
+app.post("/homepage_subscriptions", (req, res) => {
+    // create a full list of channels
+    function sc(c) {
+        return c.split("\n").join("").split("\t").join("")
+    }
+
+    let local = req.body.toString()
+    let cookieSubs = ""
+    let channels = []
+    if(req.headers.cookie
+    && req.headers.cookie.includes("; sublist=")) {
+        cookieSubs = decodeURIComponent(
+            req.headers.cookie.split("; sublist=")[1].split(";")[0]
+        ).split(`	`).join("").split("\n").join("")
+    }
+    cookieSubs.split(":").forEach(s => {
+        if(!s.startsWith("http")
+        || s.startsWith("blzr")
+        || !s.includes("&")) return;
+        channels.push([s.split("&")[0], sc(s.split("&")[1])])
+    })
+    try {
+        local = JSON.parse(local)
+        local.forEach(s => {
+            if(!s.url || s.id || !s.creator
+            || JSON.stringify(channels).includes(sc(s.creator))) return;
+            channels.push([
+                s.url, sc(s.creator)
+            ])
+        })
+    }
+    catch(error) {}
+
+    // request max 5 channels
+
+    let neededChannels = channels.slice(0, 5).length
+
+    if(neededChannels == 0) {
+        res.status(404)
+        res.send("YT2009_NO_DATA")
+        return;
+    }
+
+    let sentChannels = 0;
+    let combinedVideos = []
+    channels.slice(0, 5).forEach(c => {
+        if(c[0].startsWith("http")) {
+            c[0] = "/" + c[0].split("/").slice(3).join("/")
+        }
+        yt2009_subs.fetch_new_videos({
+            "headers": {"url": c[0]},
+            "query": {"flags": ""}
+        }, {"send": function(data) {
+            data.videos.forEach(v => {
+                let tv = JSON.parse(JSON.stringify(v))
+                tv.uploadUnix = Math.floor(new Date(
+                    yt2009_utils.relativeToAbsoluteApprox(
+                        tv.upload || ""
+                    )
+                ).getTime() / 1000)
+                tv.creatorName = c[1]
+                tv.creatorUrl = c[0]
+                tv.o = true
+                tv.length = tv.time
+                combinedVideos.push(tv)
+            })
+            sentChannels++
+            if(sentChannels >= neededChannels) {
+                presentVids()
+            }
+        }}, true)
+    })
+
+    // sort and send
+    function presentVids() {
+        combinedVideos = combinedVideos.sort(
+            (a, b) => b.uploadUnix - a.uploadUnix
+        ).slice(0, 8)
+
+        let finishHTML = ""
+        let i = 0;
+        combinedVideos.forEach(v => {
+            let tv = JSON.parse(JSON.stringify(v))
+            if(req.headers.cookie
+            && req.headers.cookie.includes("fake_dates")) {
+                tv.upload = yt2009_utils.genFakeDate(i)
+            }
+            finishHTML += yt2009_templates.recommended_videoCell(tv, req)
+            i++
+        })
+
+        finishHTML = yt2009_languages.apply_lang_to_code(finishHTML, req)
+        res.send(finishHTML)
+    }
+})
+
 
 /*
 pizdec
