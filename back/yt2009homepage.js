@@ -114,13 +114,9 @@ module.exports = function(req, res) {
             }
             case "watched": {
                 // videos watched now
-                moduleHTML += templates.homepage_watched
                 let watchedNow = yt2009html.featured().slice(0, 4)
-            
-                if(watchedNow.length < 4) {
-                    // hide the section if less than 4 videos watched
-                    code = code.replace(`yt2009_mark_hid_if_needed`, `hid`)
-                }
+                if(watchedNow.length < 4) return;
+                moduleHTML += templates.homepage_watched
             
                 let watchedNowIndex = 0;
                 watchedNow.forEach(watched => {
@@ -271,6 +267,12 @@ module.exports = function(req, res) {
                    + " it may have happened after multiple"
                    + " failed restarts. some features may not"
                    + " work correctly."
+    }
+
+    if(req.query.ytsession
+    && req.query.ytsesion == "1") {
+        addNotice = true;
+        noticeText = "This video is not available."
     }
 
     if(require("./config.json").customHomepageText) {

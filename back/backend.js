@@ -89,6 +89,85 @@ if(config.redirmode
     console.log("/!\\ config.redirmode set incorrectly. ignoring.")
 }
 
+// ws sync with master
+let syncCommentCallbacks = {}
+if(!config.disableWs) {
+    let wsIp = config.overrideMaster || "wss://orzeszek.website:178"
+    function initWs() {
+        if(yt2009_exports.read().masterWs) return;
+        const ws = require("ws")
+        try {
+            yt2009_exports.writeData(
+                "masterWs", new ws(wsIp)
+            )
+            let w = yt2009_exports.read().masterWs
+            w.addEventListener("open", () => {
+                w.send(JSON.stringify({
+                    "type": "hello",
+                    "user": "yt2009server"
+                }))
+            })
+            w.addEventListener("message", (m) => {
+                m = JSON.parse(m.data);
+                switch(m.type) {
+                    case "vids-sync": {
+                        yt2009.masterVidsReceive(m.data)
+                        break;
+                    }
+                    case "comment-feedback": {
+                        if(syncCommentCallbacks[m.id]) {
+                            syncCommentCallbacks[m.id](m)
+                        }
+                        break;
+                    }
+                    case "comment-sync": {
+                        let comments = yt2009.custom_comments()
+                        let commentsAdded = 0
+                        m.data.forEach(comment => {
+                            if(!comment.id
+                            || JSON.stringify(comments).includes(comment.id)) return;
+                            if(!comments[comment.video]) {
+                                comments[comment.video] = []
+                            }
+                            comments[comment.video].unshift(comment)
+                            commentsAdded++
+                        })
+                        yt2009.receive_update_custom_comments(comments)
+                        console.log("added " + commentsAdded + " comments from master")
+                        break;
+                    }
+                }
+            })
+            w.addEventListener("error", () => {
+                yt2009_exports.writeData("masterWs", false)
+                // retry after 120s
+                setTimeout(() => {
+                    initWs()
+                }, 120000)
+            })
+            w.addEventListener("close", () => {
+                yt2009_exports.writeData("masterWs", false)
+                // retry after 60s
+                setTimeout(() => {
+                    initWs()
+                }, 60000)
+            })
+        }
+        catch(error) {}
+    }
+    try {
+        initWs()
+    }
+    catch(error) {
+        child_process.exec("npm install ws",
+        (error, stdout, stderr) => {
+            setTimeout(() => {
+                initWs()
+            }, 150)
+        })
+    }
+}
+
 app.get('/back/*', (req,res) => {
     res.redirect("https://github.com/ftde0/yt2009")
 })
@@ -2289,6 +2368,12 @@ app.post("/comment_post", (req, res) => {
         res.sendStatus(400)
         return;
     }
+    let syncSession = false;
+    if(req.headers.cookie.includes("syncses=")) {
+        syncSession = req.headers.cookie
+                      .split("syncses=")[1].split(";")[0]
+                      .replace(/[^a-zA-Z0-9]/g, "").trim()
+    }
 
     // parse request
     let body = {}
@@ -2320,7 +2405,8 @@ app.post("/comment_post", (req, res) => {
     let author = req.headers.cookie
                  .split("login_simulate")[1]
                  .split(":")[0].split(";")[0]
-    let safeAuthor = yt2009_utils.xss(author)
+    let safeAuthor = yt2009_utils.asciify(decodeURIComponent(author), true, false)
+                     .split(" ").join("").substring(0, 20)
     let safeComment = yt2009_utils.xss(body.comment)
     let commentId = Math.floor(Math.random() * 110372949)
 
@@ -2338,18 +2424,76 @@ app.post("/comment_post", (req, res) => {
         commentObject.csHide = true
     }
 
-    comments[body.video_id].push(commentObject)
+    if(yt2009_exports.read().masterWs) {
+        let ws = yt2009_exports.read().masterWs
+        // send & wait for synced data
+        let syncSent = false;
+        function bringSync(msg) {
+            if(syncSent) return;
+            syncSent = true
+            if(!msg.syncable) {
+                commentObject.author = "possibly_not_" + safeAuthor
+            } else {
+                safeAuthor = yt2009_utils.xss(msg.comment.author)
+                commentObject.author = safeAuthor
+                commentObject.token = yt2009_utils.get_used_token(req)
+            }
+            commentObject.rating = 0
+            commentObject.ratingSources = {}
 
-    res.send(yt2009_languages.apply_lang_to_code(
-        yt2009_templates.videoComment(
-            "#", safeAuthor, "1 second ago",
-            safeComment, "login_simulate" + safeAuthor, true, "0",
-            commentId
-        ), req)
-    )
+            comments[body.video_id].push(commentObject)
 
-    fs.writeFileSync("./cache_dir/comments.json", JSON.stringify(comments))
-    yt2009.receive_update_custom_comments(comments)
+            if(msg.new_session) {
+                let cookieParams = [
+                    `syncses=${msg.new_session}; `,
+                    `Path=/; `,
+                    `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+                ]
+                res.set("set-cookie", cookieParams.join(""))
+            }
+
+            yt2009.receive_update_custom_comments(comments)
+            fs.writeFileSync("./cache_dir/comments.json", JSON.stringify(comments))
+
+            try {
+                res.send(yt2009_languages.apply_lang_to_code(
+                    yt2009_templates.videoComment(
+                        "#", safeAuthor, "1 second ago",
+                        safeComment, "login_simulate" + safeAuthor, true, "0",
+                        commentId
+                    ), req)
+                )
+            }
+            catch(error) {}
+        }
+        syncCommentCallbacks[commentId] = function(msg) {
+            bringSync(msg)
+        }
+        setTimeout(() => {
+            bringSync({"type": "comment-feedback"})
+        }, 5000)
+        ws.send(JSON.stringify({
+            "type": "comment",
+            "session": syncSession,
+            "name": safeAuthor,
+            "content": safeComment,
+            "id": commentId,
+            "video": body.video_id
+        }))
+    } else {
+        commentObject.author = "possibly_not_" + safeAuthor
+        comments[body.video_id].push(commentObject)
+
+        res.send(yt2009_languages.apply_lang_to_code(
+            yt2009_templates.videoComment(
+                "#", "possibly_not_" + safeAuthor, "1 second ago",
+                safeComment, "login_simulate" + safeAuthor, true, "0",
+                commentId
+            ), req)
+        )
+        yt2009.receive_update_custom_comments(comments)
+        fs.writeFileSync("./cache_dir/comments.json", JSON.stringify(comments))
+    }
 })
 
 app.post("/comment_rate", (req, res) => {
@@ -2678,12 +2822,7 @@ app.get("/comment_search", (req, res) => {
     let code = shtml;
 
     // enumerate
-    let comments = {}
-    if(fs.existsSync("./cache_dir/comments.json")) {
-        comments = JSON.parse(
-            fs.readFileSync("./cache_dir/comments.json").toString()
-        )
-    }
+    let comments = yt2009.custom_comments()
     let commentsA = []
     for(let i in comments) {
         comments[i].forEach(comment => {
@@ -3099,6 +3238,13 @@ app.post("/homepage_subscriptions", (req, res) => {
     }
 })
 
+app.get("/ver", (req, res) => {
+    let ver = require("../package.json")
+    let version = ver.version
+    let wsEnabled = config.disableWs || true
+    let wsCon = yt2009_exports.read().masterWs ? true : false
+    res.send(`${version}<br>sync enabled:${wsEnabled}<br>sync connected:${wsCon}`)
+})
 
 /*
 pizdec

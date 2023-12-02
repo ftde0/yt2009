@@ -5,7 +5,10 @@ const config = require("../config.json")
 const yt2009html = require("../yt2009html")
 let cache = {}
 if(!config.fallbackMode) {
-    cache = JSON.parse(fs.readFileSync(`${__dirname}/captions_cache.json`).toString())
+    try {
+        cache = JSON.parse(fs.readFileSync(`${__dirname}/captions_cache.json`).toString())
+    }
+    catch(error) {}
 } 
 
 module.exports = {

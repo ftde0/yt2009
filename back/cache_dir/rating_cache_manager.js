@@ -3,7 +3,10 @@ const utils = require("../yt2009utils")
 const config = require("../config.json")
 let cache = {}
 if(!config.fallbackMode) {
-    cache = JSON.parse(fs.readFileSync(`${__dirname}/rating_cache.json`).toString())
+    try {
+        cache = JSON.parse(fs.readFileSync(`${__dirname}/rating_cache.json`).toString())
+    }
+    catch(error) {}
 } 
 
 module.exports = {

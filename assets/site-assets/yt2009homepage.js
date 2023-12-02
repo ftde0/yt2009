@@ -10,7 +10,8 @@ var modlist = {
     "mostpopular": "TOP",
     "activity": "FRI",
     "pop": "TOP",
-    "nearyou": "GEO"
+    "nearyou": "GEO",
+    "latest": "SUB"
 }
 
 function moveUp(m) {

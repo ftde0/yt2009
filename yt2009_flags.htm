@@ -193,7 +193,7 @@
 			<label for="global-fake-dates">fake_dates</label><br>
 			<input type="checkbox" id="global-login-simulate" title="symuluje zalogowanego użytkownika">
 			<label for="global-login-simulate">login_simulate</label>
-			<input type="text" id="global-login-simulate-input" autocomplete="off" spellcheck="false" placeholder="nazwa"><br>
+			<input type="text" id="global-login-simulate-input" autocomplete="off" spellcheck="false" placeholder="nazwa" maxlength="20" onkeypress=""><br>
 			<input type="checkbox" id="global-no-controls-fade" title="wyłącza zanikanie kontrolek odtwarzacza">
 			<label for="global-no-controls-fade">no_controls_fade</label><br>
 			<input type="checkbox" id="global-shows-tab" title="pokazuje zakładkę Shows pod wyszukiwarką (nic nie robi, pod pokaz)">
@@ -209,6 +209,8 @@
 	<!--yt2009_f-->
 	<script src="/assets/site-assets/yt2009-flags-languages.js"></script>
 	<script>
+		// login_simulate
+
 		function updateDescriptions() {
 			// show flag descriptions on labels BECAUSE PEOPLE CAN'T HOVER
 			// OVER THE CHECKBOX.

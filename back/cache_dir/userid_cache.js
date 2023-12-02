@@ -4,7 +4,10 @@ const constants = require("../yt2009constants.json")
 const config = require("../config.json")
 let cache = {}
 if(!config.fallbackMode) {
-    cache = JSON.parse(fs.readFileSync(`${__dirname}/userid.json`).toString())
+    try {
+        cache = JSON.parse(fs.readFileSync(`${__dirname}/userid.json`).toString())
+    }
+    catch(error) {}
 } 
 
 module.exports = {

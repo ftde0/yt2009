@@ -2,7 +2,12 @@ const fs = require("fs")
 const config = require("../config.json")
 let cache = {}
 if(!config.fallbackMode) {
-    cache = JSON.parse(fs.readFileSync(`${__dirname}/playlist_cache.json`).toString())
+    try {
+        cache = JSON.parse(
+            fs.readFileSync(`${__dirname}/playlist_cache.json`).toString()
+        )
+    }
+    catch(error) {}
 } 
 
 module.exports = {

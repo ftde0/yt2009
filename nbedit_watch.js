@@ -1127,8 +1127,7 @@ if(document.querySelector("#comment_formmain_comment")) {
 
 function commentSend() {
     var r = new XMLHttpRequest();
-    r.open("POST", $("#comment_formmain_comment").getAttribute("action"))
-    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
+    r.open("POST", "/comment_post")
     r.setRequestHeader("source", location.href)
     r.send(JSON.stringify({
         "comment": $("#comment_textarea_main_comment").value

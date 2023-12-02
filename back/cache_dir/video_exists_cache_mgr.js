@@ -8,24 +8,27 @@ if(!config.fallbackMode) {
 } 
 
 module.exports = {
-    "write": function(id, data) {
+    "write": function(id, data, customLink) {
         cache[id] = data;
     },
 
-    "read": function(id, callback) {
+    "read": function(id, callback, customLink) {
         if(cache[id]) {
             console.log(id, "cache")
             callback(cache[id])
         } else {
             console.log(id, "clean")
-            fetch("https://i.ytimg.com/vi/" + id  + "/default.jpg", {
+            let vLink = customLink
+                        ? "https://i.ytimg.com/vi/" + id  + "/default.jpg"
+                        : id
+            fetch(vLink, {
                 "headers": constants.headers
             }).then(r => {
                 let exists = true;
                 if(r.status == 404) {
                     exists = false;
                 }
-                this.write(id, exists)
+                this.write(id, exists, customLink)
                 callback(exists)
             })
         }

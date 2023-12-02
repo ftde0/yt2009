@@ -3,7 +3,12 @@ const default_avatar = require("../detect_default_avatar")
 const config = require("../config.json")
 let cache = {}
 if(!config.fallbackMode) {
-    cache = JSON.parse(fs.readFileSync(`${__dirname}/default_avatar_adapt.json`).toString())
+    try {
+        cache = JSON.parse(
+            fs.readFileSync(`${__dirname}/default_avatar_adapt.json`).toString()
+        )
+    }
+    catch(error) {}
 } 
 
 module.exports = {

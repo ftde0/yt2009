@@ -999,17 +999,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 })
                 fs.writeFileSync("./cache_dir/watched_now.json",
                                 JSON.stringify(featured_videos))
+                if(yt2009exports.read().masterWs) {
+                    yt2009exports.read().masterWs.send(JSON.stringify({
+                        "type": "vid-watched",
+                        "id": data.id
+                    }))
+                }
             }
         }
 
         let uploadDate = data.upload
-        if(flags.includes("fake_upload_dateadapt")
-        && new Date(uploadDate).getTime() > 1272664800000) {
-            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
-        } else if(flags.includes("fake_upload_date")
-        && !flags.includes("fake_upload_dateadapt")) {
-            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
-        }
 
         uploadDate = uploadDate.replace("Streamed live on ", "")
                                 .replace("Premiered ", "")
@@ -1021,6 +1020,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         "Sep", "Oct", "Nov", "Dec"][temp.getMonth()]
                         + " " + temp.getDate()
                         + ", " + temp.getFullYear()
+        }
+
+        if(flags.includes("fake_upload_dateadapt")
+        && new Date(uploadDate).getTime() > 1272664800000) {
+            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
+        } else if(flags.includes("fake_upload_date")
+        && !flags.includes("fake_upload_dateadapt")) {
+            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
         }
 
         // upload date language handle
@@ -2627,6 +2634,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         custom_comments = comments;
     },
 
+    "custom_comments": function() {
+        return JSON.parse(JSON.stringify(custom_comments));
+    },
+
     "get_old_comments": function(data, callback, overrideDate) {
         // GET_OLD_COMMENTS
         // use protobuf to generate a continuation token going
@@ -2720,6 +2731,20 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             return temp[0]
         } else {
             return false;
+        }
+    },
+
+    "masterVidsReceive": function(videos) {
+        videos.forEach(v => {
+            featured_videos.forEach(vid => {
+                if(vid.id == v.id) {
+                    featured_videos = featured_videos.filter(s => s !== vid)
+                }
+            })
+            featured_videos.unshift(v)
+        })
+        if(config.env == "dev") {
+            console.log("received " + videos.length + " videos from master")
         }
     }
 }

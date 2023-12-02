@@ -5,10 +5,15 @@ let cacheList = {
     "playlistCache": {}
 }
 if(!config.fallbackMode) {
-    cacheList = {
-        "mainCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_main_cache.json`).toString()),
-        "playlistCache": JSON.parse(fs.readFileSync(`${__dirname}/channel_playlist_cache.json`).toString())
+    try {
+        cacheList.mainCache = JSON.parse(
+            fs.readFileSync(`${__dirname}/channel_main_cache.json`).toString()
+        )
+        cacheList.playlistCache = JSON.parse(
+            fs.readFileSync(`${__dirname}/channel_playlist_cache.json`).toString()
+        )
     }
+    catch(error) {}
 }
 
 module.exports = {

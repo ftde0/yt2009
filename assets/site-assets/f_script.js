@@ -726,8 +726,7 @@ function commentSend() {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("POST", document.getElementById("comment_formmain_comment")
-                   .getAttribute("action"))
+    r.open("POST", "/comment_post")
     r.setRequestHeader("source", location.href)
     r.send(document.getElementById("comment_textarea_main_comment").value)
     var btn = document.getElementById("comment_add_btn")

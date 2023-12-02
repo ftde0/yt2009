@@ -70,12 +70,16 @@ module.exports = function(req, code, returnNoLang) {
     }
 
     if(loggedInUsername) {
+        loggedInUsername = require("./yt2009utils").asciify(
+            decodeURIComponent(loggedInUsername), true, true
+        ).substring(0, 20)
+        if(loggedInUsername.length == 0) {
+            loggedInUsername = "guest"
+        }
         code = code.replace(
             "<!--yt2009_login_insert-->",
             base_code_logged_in.split("yt2009_username").join(
-                require("./yt2009utils").xss(
-                    decodeURIComponent(loggedInUsername)
-                )
+                loggedInUsername
             ) + embedRelay(req)
         )
     } else {

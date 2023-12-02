@@ -5,7 +5,12 @@ const html = require("node-html-parser")
 const config = require("../config.json")
 let cache = {}
 if(!config.fallbackMode) {
-    cache = JSON.parse(fs.readFileSync(`${__dirname}/wayback_channel_cache.json`).toString())
+    try {
+        cache = JSON.parse(
+            fs.readFileSync(`${__dirname}/wayback_channel_cache.json`).toString()
+        )
+    }
+    catch(error) {}
 } 
 
 module.exports = {

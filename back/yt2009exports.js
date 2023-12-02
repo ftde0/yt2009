@@ -2,7 +2,8 @@ const constants = require("./yt2009constants.json")
 let data = {
     "api_key": "",
     "context": {},
-    "fileDownloadStatus": {}
+    "fileDownloadStatus": {},
+    "masterWs": false
 }
 let fileDownloadListeners = {
 
@@ -10,7 +11,7 @@ let fileDownloadListeners = {
 
 module.exports = {
     "writeData": function(name, value) {
-        data[value] = name;
+        data[name] = value;
     },
 
     "read": function() {
