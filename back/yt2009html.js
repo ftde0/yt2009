@@ -955,8 +955,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }, req.query.resetcache == 1)
             }, 500)
         }
-        if(flags.includes("homepage_contribute") &&
-            uploadJS.getFullYear() <= 2010) {
+        if(flags.includes("homepage_contribute")
+        && uploadJS.getFullYear() <= 2010) {
             // add to "videos being watched now" and /videos
             let go = true;
             featured_videos.slice(0, 23).forEach(vid => {
@@ -964,6 +964,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     go = false;
                 }
             })
+
+            if(yt2009exports.read().masterWs) {
+                try {
+                    yt2009exports.read().masterWs.send(JSON.stringify({
+                        "type": "vid-watched",
+                        "id": data.id
+                    }))
+                }
+                catch(error) {}
+            }
 
             if(go) {
                 featured_videos.forEach(vid => {
@@ -999,12 +1009,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 })
                 fs.writeFileSync("./cache_dir/watched_now.json",
                                 JSON.stringify(featured_videos))
-                if(yt2009exports.read().masterWs) {
-                    yt2009exports.read().masterWs.send(JSON.stringify({
-                        "type": "vid-watched",
-                        "id": data.id
-                    }))
-                }
             }
         }
 

@@ -227,7 +227,7 @@ app.get("/watch", (req, res) => {
     let resetCache = false;
     id = id.substring(0, 11)
     if(id.length !== 11 || id.includes("yt2009")) {
-        res.send(`[yt2009] niepoprawne id? / invalid id?`)
+        res.redirect("/?ytsession=1")
         return;
     }
 
@@ -265,14 +265,7 @@ app.get("/watch", (req, res) => {
 
     yt2009.fetch_video_data(id, (data) => {
         if(!data) {
-            res.send(`[yt2009] zepsuło się<br>
-            możliwe powody:<br>- film nie istnieje/jest prywatny<br>
-            - filmu nie można pobrać (paywall, ograniczenie wiekowe itp.)<br>
-            <br>----<br>
-            something went wrong<br>
-            possible reasons:<br>
-            - the video does not exist<br>
-            - the video cannot be downloaded (paywalled, age restricted etc.)`)
+            res.redirect("/?ytsession=1")
             return;
         }
         yt2009.applyWatchpageHtml(data, req, (code => {
@@ -2394,9 +2387,7 @@ app.post("/comment_post", (req, res) => {
         res.send("long")
         return;
     }
-    let comments = JSON.parse(
-        fs.readFileSync("./cache_dir/comments.json").toString()
-    )
+    let comments = yt2009.custom_comments()
     if(!comments[body.video_id]) {
         comments[body.video_id] = []
     }
@@ -2432,6 +2423,7 @@ app.post("/comment_post", (req, res) => {
             if(syncSent) return;
             syncSent = true
             if(!msg.syncable) {
+                safeAuthor = "possibly_not_" + safeAuthor
                 commentObject.author = "possibly_not_" + safeAuthor
             } else {
                 safeAuthor = yt2009_utils.xss(msg.comment.author)

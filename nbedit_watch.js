@@ -1126,6 +1126,10 @@ if(document.querySelector("#comment_formmain_comment")) {
 }
 
 function commentSend() {
+    var newUser = false
+    if(document.cookie.indexOf("syncses") == -1) {
+        newUser = true
+    }
     var r = new XMLHttpRequest();
     r.open("POST", "/comment_post")
     r.setRequestHeader("source", location.href)
@@ -1148,6 +1152,9 @@ function commentSend() {
         }
         btn.setAttribute("value", "Comment Posted!")
         $(".comments-container").innerHTML += r.responseText;
+        if(document.cookie.indexOf("syncses") !== -1 && newUser) {
+            btn.setAttribute("value", "Comment Posted! (session created)")
+        }
     }, false)
 }
 
@@ -1393,6 +1400,10 @@ function submitReply(id) {
     r.send(JSON.stringify({
         "comment": $("#comment_textarea_comment_form_id_" + id).value
     }))
+    var newUser = false
+    if(document.cookie.indexOf("syncses") == -1) {
+        newUser = true
+    }
     var btn = $("#post-comment-" + id)
     btn.setAttribute("disabled", "")
     btn.setAttribute("value", "Adding comment...")
@@ -1409,6 +1420,9 @@ function submitReply(id) {
         }
         btn.setAttribute("value", "Comment Posted!")
         $(".comments-container").innerHTML += r.responseText;
+        if(document.cookie.indexOf("syncses") !== -1 && newUser) {
+            btn.setAttribute("value", "Comment Posted! (session created)")
+        }
     }, false)
 }
 

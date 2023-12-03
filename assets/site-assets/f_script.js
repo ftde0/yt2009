@@ -726,6 +726,10 @@ function commentSend() {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
+    var newUser = false
+    if(document.cookie.indexOf("syncses") == -1) {
+        newUser = true
+    }
     r.open("POST", "/comment_post")
     r.setRequestHeader("source", location.href)
     r.send(document.getElementById("comment_textarea_main_comment").value)
@@ -746,6 +750,9 @@ function commentSend() {
             }
             btn.setAttribute("value", "Comment Posted!")
             $(".comments-container").innerHTML += r.responseText;
+            if(document.cookie.indexOf("syncses") !== -1 && newUser) {
+                btn.setAttribute("value", "Comment Posted! (session created)")
+            }
         }
     }
 }
@@ -874,6 +881,10 @@ function submitReply(id) {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
+    var newUser = false
+    if(document.cookie.indexOf("syncses") == -1) {
+        newUser = true
+    }
     r.open("POST", "/comment_post")
     r.setRequestHeader("source", location.href)
     r.send('{"comment":"' + document.getElementById(
@@ -896,6 +907,9 @@ function submitReply(id) {
             }
             btn.setAttribute("value", "Comment Posted!")
             $(".comments-container").innerHTML += r.responseText;
+            if(document.cookie.indexOf("syncses") !== -1 && newUser) {
+                btn.setAttribute("value", "Comment Posted! (session created)")
+            }
         }
     }
 }

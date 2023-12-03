@@ -269,10 +269,14 @@ module.exports = function(req, res) {
                    + " work correctly."
     }
 
+    let ytsessions = {
+        "1": "This video is not available.",
+        "2": "This channel is not available."
+    }
     if(req.query.ytsession
-    && req.query.ytsesion == "1") {
+    && ytsessions[req.query.ytsession]) {
         addNotice = true;
-        noticeText = "This video is not available."
+        noticeText = ytsessions[req.query.ytsession]
     }
 
     if(require("./config.json").customHomepageText) {
