@@ -17,12 +17,13 @@ const overrideBgs = require("./channel_backgrounds.json")
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
-let saved_channels = {}
 let saved_channel_comments = {}
-let saved_channel_sections = {}
-let saved_channel_playlists = {}
 
-let featured_channels = require("./cache_dir/public_channel_listing.json")
+let featured_channels = []
+try {
+    featured_channels = require("./cache_dir/public_channel_listing.json")
+}
+catch(error) {}
 
 module.exports = {
     "main": function(req, res, flags, sendRawData) {

@@ -23,14 +23,21 @@ let cache = require("./cache_dir/video_cache_manager")
 let yt2009userratings = require("./cache_dir/rating_cache_manager")
 let innertube_context = {}
 let api_key = ""
-let featured_videos = require("./cache_dir/watched_now.json")
+let featured_videos = []
+try {
+    featured_videos = require("./cache_dir/watched_now.json")
+}
+catch(error) {}
 let videos_page = []
 let continuations_cache = {}
 let comment_page_cache = {}
 let saved_related_videos = {}
 let custom_comments = {}
 if(fs.existsSync("./cache_dir/comments.json")) {
-    custom_comments = require("./cache_dir/comments.json")
+    try {
+        custom_comments = require("./cache_dir/comments.json")
+    }
+    catch(error) {}
 }
 
 let oldCommentsCache = {}
