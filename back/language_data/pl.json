@@ -40,18 +40,18 @@
     "watchpageUploadDate": {
         "dateFormat": "[day] [monthcode] [year]",
         "monthcodes": {
-            "Jan": "sty",
-            "Feb": "lut",
-            "Mar": "mar",
-            "Apr": "kwi",
-            "May": "maj",
-            "Jun": "cze",
-            "Jul": "lip",
-            "Aug": "sie",
-            "Sep": "wrz",
-            "Oct": "paź",
-            "Nov": "lis",
-            "Dec": "gru"
+            "Jan": "I",
+            "Feb": "II",
+            "Mar": "III",
+            "Apr": "IV",
+            "May": "V",
+            "Jun": "VI",
+            "Jul": "VII",
+            "Aug": "VIII",
+            "Sep": "IX",
+            "Oct": "X",
+            "Nov": "XI",
+            "Dec": "XII"
         }
     },
     "subscribe": "Subskrybuj",
