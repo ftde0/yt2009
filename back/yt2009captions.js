@@ -13,6 +13,11 @@ module.exports = {
         if(req.query.json) {
             useJson = true;
         }
+        let resetCache = false;
+        if(req.headers.referer
+        && req.headers.referer.includes("resetcache=1")) {
+            resetCache = true
+        }
 
         // list = language list
         // track = the caption itself
@@ -37,7 +42,7 @@ module.exports = {
                         xml += templates.xmlListEnd
                         res.send(xml)
                     }
-                }, false)
+                }, resetCache)
                 break;
             }
             case "track": {
@@ -61,6 +66,12 @@ module.exports = {
     },
     
     "getCaptionFile": function(id, language, callback) {
+        let defaults = [
+            "<title>Error 404 (Not Found)!!1</title>",
+            `<?xml version="1.0" encoding="utf-8" ?><transcript>
+            <text start="0" dur="0.1"> </text>
+            </transcript>`
+        ]
         id = id.replace("/mp4", "")
         let getLanguages = this.getLanguages;
         let retryCount = 0;
@@ -70,7 +81,7 @@ module.exports = {
                 return;
             }
             let fName = "./cache_dir/subtitles/" + id + "-" + language + ".xml"
-            if(fs.existsSync(fName)) {
+            if(fs.existsSync(fName) && !resetCache) {
                 // file exists, send
                 callback(fs.readFileSync(fName).toString())
             } else {
@@ -86,6 +97,9 @@ module.exports = {
                                     getFile(true)
                                 })
                                 .then(r => {r.text().then(r => {
+                                    if(r.includes(defaults[0])) {
+                                        r = defaults[1]
+                                    }
                                     callback(r)
                                     fs.writeFileSync(fName, r)
                                 })})

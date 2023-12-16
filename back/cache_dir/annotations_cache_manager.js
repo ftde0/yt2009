@@ -1,6 +1,7 @@
 const fs = require("fs")
 const fetch = require("node-fetch")
 const utils = require("../yt2009utils")
+const html = require("node-html-parser")
 
 module.exports = {
     "write": function(id, data) {
@@ -8,7 +9,7 @@ module.exports = {
     },
 
     "read": function(id, fullUrl, callback) {
-        // fetch pliku xml adnotacji z lokalnego pliku lub web archive
+        // get locally saved if exists, otherwise get from web archive
         if(fs.existsSync(`${__dirname}/annotations/${id}.xml`)) {
             callback(fs.readFileSync(`${__dirname}/annotations/${id}.xml`).toString())
         } else {
@@ -26,7 +27,7 @@ module.exports = {
     },
 
     "parse": function(xml) {
-        // flashowy czas na sekundy
+        // time to seconds
         function annotationTimeToSeconds(input) {
             let tempTime = input.split(".")[0]
             let tr = utils.time_to_seconds(tempTime)
@@ -34,8 +35,8 @@ module.exports = {
 
             return tr;
         }
-        // ten dziwny format kolorów na rgb
-        // zmodyfikowane z https://github.com/luizeldorado/youtube-annotations-viewer/blob/master/index.html
+        // flash colors -> rgb
+        // modified from https://github.com/luizeldorado/youtube-annotations-viewer/blob/master/index.html
         function colorToRGB(input) {
             input = parseInt(input)
 
@@ -51,100 +52,130 @@ module.exports = {
         let annotations = []
         let usedAnnotationTimes = []
 
-        xml.split("<annotation ").forEach(annotation => {
-            if(annotation.startsWith("<?xml") || annotation.includes(`type="card"`) || annotation.includes(`type="branding"`) || annotation == "") return;
-            let style = ""
-            if(annotation.split(`style="`).length >= 2) {
-                style = annotation.split(`style="`)[1].split(`"`)[0]
-            } else {
-                style = annotation.split(`type="`)[1].split(`"`)[0]
-            }
+        xml = html.parse(xml).querySelectorAll("annotation")
+
+        xml.forEach(annotation => {
+            let style = annotation.getAttribute("style")
+                      || annotation.getAttribute("type")
             let annotationElement = {
                 "style": style
             }
 
+            // workarounds for node-html-parser
+            let temp = annotation.outerHTML
+                       .split("movingRegion").join("rstart")
+                       .split("rectRegion").join("rect")
+                       .split("anchoredRegion").join("rect")
+                       .split(` type="rect"`).join("")
+                       .split("<TEXT>").join("<h1>")
+                       .split("</TEXT>").join("</h1>")
+                       .split("<condition").join("<h2")
+                       .split("</condition").join("</h2")
+                       .split("<duration").join("<h3")
+                       .split("</duration").join("</h3")
+            annotation = html.parse(temp)
+
+            function commonDataFill() {
+                let rectRegion = annotation.querySelectorAll("rect")
+                let fromTime = annotationTimeToSeconds(
+                    rectRegion[0].getAttribute("t")
+                )
+                while(usedAnnotationTimes.includes(fromTime) || fromTime == 0) {
+                    fromTime += 0.1
+                }
+                annotationElement.fromTime = parseFloat(fromTime.toFixed(1))
+                usedAnnotationTimes.push(parseFloat(fromTime.toFixed(1)))
+                annotationElement.toTime = parseFloat(annotationTimeToSeconds(
+                    rectRegion[1].getAttribute("t")
+                ).toFixed(1))
+                annotationElement.leftPercent = rectRegion[0].getAttribute("x")
+                annotationElement.topPercent = rectRegion[0].getAttribute("y")
+                annotationElement.widthPercent = rectRegion[0].getAttribute("w")
+                annotationElement.heightPercent = rectRegion[0].getAttribute("h")
+                return rectRegion;
+            }
+
             switch(annotationElement.style) {
-                // zwykły tekst
+                // text annotation
                 case "popup":
                 case "speech":
                 case "anchored": {
-                    if(annotation.split("<TEXT>").length <= 1) return;
-                    let rectRegion = annotation.split("<rectRegion");
-                    if(rectRegion.length == 1) {
-                        rectRegion = annotation.split("<anchoredRegion")
-                    }
-                    annotationElement.text = annotation.split("<TEXT>")[1].split("</TEXT>")[0]
-                    let fromTime = annotationTimeToSeconds(rectRegion[1].split(`t="`)[1].split(`"`)[0])
-                    while(usedAnnotationTimes.includes(fromTime) || fromTime == 0) {
-                        fromTime += 0.1
-                    }
-                    annotationElement.fromTime = fromTime
-                    usedAnnotationTimes.push(fromTime)
-                    annotationElement.toTime = annotationTimeToSeconds(rectRegion[2].split(`t="`)[1].split(`"`)[0])
-                    annotationElement.leftPercent = rectRegion[1].split(` x="`)[1].split(`"`)[0]
-                    annotationElement.topPercent = rectRegion[1].split(` y="`)[1].split(`"`)[0]
-                    annotationElement.widthPercent = rectRegion[1].split(`w="`)[1].split(`"`)[0]
-                    annotationElement.heightPercent = rectRegion[1].split(`h="`)[1].split(`"`)[0]
+                    if(!annotation.querySelector("h1")) return;
+                    let rectRegion = commonDataFill()
+
+                    annotationElement.text = annotation.querySelector("h1").innerHTML
 
                     if(annotationElement.style == "speech") {
-                        annotationElement.speechPointX = rectRegion[1].split(`sx="`)[1].split(`"`)[0]
-                        annotationElement.speechPointY = rectRegion[1].split(`sy="`)[1].split(`"`)[0]
+                        annotationElement.speechPointX = rectRegion[1].getAttribute("sx")
+                        annotationElement.speechPointY = rectRegion[1].getAttribute("sy")
                     }
 
-                    if(annotation.includes("<appearance")) {
-                        let appearance = annotation.split("<appearance ")[1]
-                        let bgColor = colorToRGB(appearance.split(`bgColor="`)[1].split(`"`)[0])
-                        annotationElement.bgOpacity = appearance.split(`bgAlpha="`)[1].split(`"`)[0]
+                    if(annotation.querySelector("appearance")) {
+                        let appearance = annotation.querySelector("appearance")
+                        let bgColor = colorToRGB(appearance.getAttribute("bgColor"))
+                        annotationElement.bgOpacity = appearance.getAttribute("bgAlpha")
                         let legacyRGBA = `rgba(${bgColor[0]}, ${bgColor[1]}, ${bgColor[2]}, ${annotationElement.bgOpacity})`
-                        annotationElement.bgColor = {
-                            "modern": "linear-gradient(180deg, rgba(255,255,255," + annotationElement.bgOpacity + ") 0%, " + legacyRGBA + " 20%)",
-                            "legacy": legacyRGBA
+                        let dominatingColor = Math.max(bgColor[0], bgColor[1], bgColor[2])
+                        let colorId = bgColor.indexOf(dominatingColor)
+                        bgColor[colorId] -= 50
+                        let gradient = `${bgColor[0] + 110}, ${bgColor[1] + 110}, ${bgColor[2] + 110}`
+                        if(annotationElement.style == "speech") {
+                            annotationElement.bgColor = {
+                                "modern": "linear-gradient(180deg, rgba(" + gradient + "," + annotationElement.bgOpacity + ") 0%, " + legacyRGBA + " 30%)",
+                                "legacy": legacyRGBA
+                            }
+                        } else {
+                            annotationElement.bgColor = {
+                                "modern": legacyRGBA,
+                                "legacy": legacyRGBA
+                            }
                         }
-                        let fgColor = colorToRGB(appearance.split(`fgColor="`)[1].split(`"`)[0])
+                        let fgColor = colorToRGB(appearance.getAttribute("fgColor"))
                         annotationElement.textColor = `rgb(${fgColor[0]}, ${fgColor[1]}, ${fgColor[2]})`
                         try {
-                            annotationElement.textSize = appearance.split(`textSize="`)[1].split(`"`)[0]
+                            annotationElement.textSize = appearance.getAttribute("textSize")
                         }
                         catch(error) {}
                     }
 
-                    if(annotation.includes("<url")) {
-                        let url = annotation.split("<url")[1].split(`value="`)[1].split(`"`)[0]
+                    if(annotation.querySelector("url")) {
+                        let url = annotation.querySelector("url").getAttribute("value")
                         annotationElement.targetUrl = url;
+                        if(annotationElement.bgOpacity) {
+                            let h = (
+                                parseFloat(annotationElement.bgOpacity) + 0.1
+                            ).toFixed(1)
+                            annotationElement.hoverOpacity = h
+                        }
                     }
                     break;
                 }
 
-                // highlighty (puste klikalne)
+                // highlights (empty clickables)
                 case "highlight": {
-                    let rectRegion = annotation.split("<rectRegion");
-                    if(rectRegion.length == 1) {
-                        rectRegion = annotation.split("<anchoredRegion")
-                    }
-                    let fromTime = annotationTimeToSeconds(rectRegion[1].split(`t="`)[1].split(`"`)[0])
-                    while(usedAnnotationTimes.includes(fromTime) || fromTime == 0) {
-                        fromTime += 0.1
-                    }
-                    annotationElement.fromTime = fromTime
-                    usedAnnotationTimes.push(fromTime)
-                    annotationElement.toTime = annotationTimeToSeconds(rectRegion[2].split(`t="`)[1].split(`"`)[0])
-                    annotationElement.leftPercent = rectRegion[1].split(`x="`)[1].split(`"`)[0]
-                    annotationElement.topPercent = rectRegion[1].split(`y="`)[1].split(`"`)[0]
-                    annotationElement.widthPercent = rectRegion[1].split(`w="`)[1].split(`"`)[0]
-                    annotationElement.heightPercent = rectRegion[1].split(`h="`)[1].split(`"`)[0]
-                    annotationElement.id = annotation.split(`id="`)[1].split(`"`)[0]
+                    commonDataFill()
+                    annotationElement.id = annotation.outerHTML
+                                           .split(`id="`)[1].split(`"`)[0]
 
-                    if(annotation.includes("<appearance")) {
-                        let appearance = annotation.split("<appearance ")[1]
-                        let bgColor = colorToRGB(appearance.split(`bgColor="`)[1].split(`"`)[0])
-                        let legacyRGB = `rgb(${bgColor[0]}, ${bgColor[1]}, ${bgColor[2]})`
-                        annotationElement.bgColor = {
-                            "modern": "linear-gradient(180deg, rgb(255,255,255) 0%, " + legacyRGB + ")",
-                            "legacy": legacyRGB
+                    if(annotation.querySelector("appearance")) {
+                        let appearance = annotation.querySelector("appearance")
+                        let bgColor = colorToRGB(appearance.getAttribute("bgColor"))
+                        let rgb = `rgba(${bgColor[0]}, ${bgColor[1]}, ${bgColor[2]})`
+                        annotationElement.border = rgb;
+                        if(appearance.getAttribute("highlightWidth")) {
+                            let hw = appearance.getAttribute("highlightWidth")
+                            annotationElement.borderWidth = hw;
+                        }
+                        if(appearance.getAttribute("borderAlpha")) {
+                            let a = appearance.getAttribute("borderAlpha")
+                            let hoverBorder = rgb.replace(")", ", 1)")
+                            rgb = rgb.replace(")", ", " + a + ")")
+                            annotationElement.border = rgb;
+                            annotationElement.borderHover = hoverBorder
                         }
                     }
-                    if(annotation.includes("<url")) {
-                        let url = annotation.split("<url")[1].split(`value="`)[1].split(`"`)[0]
+                    if(annotation.querySelector("url")) {
+                        let url = annotation.querySelector("url").getAttribute("value")
                         annotationElement.targetUrl = url;
                     }
                     break;
@@ -152,24 +183,52 @@ module.exports = {
 
                 // highlighttext - hookujemy pod znaleziony highlight
                 case "highlightText": {
-                    if(!annotation.includes(`<condition ref="`)) return;
+                    if(!annotation.querySelector("h2")) return;
 
-                    let hookId = annotation.split(`<condition ref="`)[1].split(`"`)[0]
+                    let hookId = annotation
+                                .querySelector("h2")
+                                .getAttribute("ref")
                     annotations.forEach(a => {
-                        if(a.style == "highlight" && a.id == hookId && annotation.includes("</TEXT>")) {
+                        if(a.style == "highlight"
+                        && a.id == hookId
+                        && annotation.querySelector("h1")) {
                             // append data to that highlight
-                            a.text = annotation.split(`<TEXT>`)[1].split(`</TEXT>`)[0]
-                            try {
-                                a.textSize = annotation.split(`textSize="`)[1].split(`"`)[0]
-                            }
-                            catch(error) {}
+                            a.text = annotation.querySelector("h1").innerHTML
+                            if(annotation.querySelector("appearance")) {
+                                let ap = annotation.querySelector("appearance")
 
-                            if(annotation.includes(`highlightFontColor="`)) {
-                                let color = colorToRGB(annotation.split(`highlightFontColor="`)[1].split(`"`))
-                                a.textColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`
+                                ap.getAttribute("textSize") ?
+                                a.textSize = ap.getAttribute("textSize") : ""
+
+                                if(ap.getAttribute(`highlightFontColor`)) {
+                                    let color = colorToRGB(
+                                        ap.getAttribute(`highlightFontColor`)
+                                    )
+                                    a.textColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`
+                                }
                             }
+
+                            
                         }
                     })
+                    break;
+                }
+
+                // pause - pauses the video for x time
+                case "pause": {
+                    let fromTime = annotationTimeToSeconds(
+                        annotation.querySelector("rect").getAttribute("t")
+                    )
+                    while(usedAnnotationTimes.includes(fromTime) || fromTime == 0) {
+                        fromTime += 0.1
+                    }
+                    annotationElement.fromTime = fromTime
+                    usedAnnotationTimes.push(parseFloat(fromTime.toFixed(1)))
+                    let duration = annotationTimeToSeconds(
+                        annotation.querySelector("h3").getAttribute("value")
+                    )
+                    annotationElement.toTime = fromTime + duration
+                    annotationElement.pauseTime = duration
                     break;
                 }
             }

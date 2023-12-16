@@ -10,6 +10,7 @@ const config = require("./config.json")
 const constants = require("./yt2009constants.json")
 const yt2009playlists = require("./yt2009playlists")
 const mobileflags = require("./yt2009mobileflags")
+const yt2009_exports = require("./yt2009exports")
 const env = config.env
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 const ffmpeg_process_144 = [
@@ -74,6 +75,8 @@ const search_html = fs.readFileSync("../mobile/search.htm").toString();
 const comments_html = fs.readFileSync("../mobile/view-comment.htm").toString();
 const homepage_html = fs.readFileSync("../mobile/mainpage.htm").toString()
 const channelpage_html = fs.readFileSync("../mobile/channel.htm").toString()
+
+let syncCommentCallbacks = {}
 
 module.exports = {
     // create the watch page
@@ -704,6 +707,18 @@ module.exports = {
                                 .split("/comments")[0]
         yt2009html.fetch_video_data(id, (data) => {
             let response = templates.gdata_feedStart
+            let customComments = yt2009html.custom_comments()
+            if(customComments[id]) {
+                customComments[id].forEach(c => {
+                    if(!c.author) return;
+                    response += templates.gdata_feedComment(
+                        id,
+                        utils.asciify(c.author),
+                        c.text.replace(/\p{Other_Symbol}/gui, ""),
+                        c.time
+                    )
+                })
+            }
             if(data.comments) {
                 data.comments.forEach(comment => {
                     // check if comment has content and fits
@@ -745,6 +760,15 @@ module.exports = {
         let id = req.originalUrl.split("/users/")[1]
                                 .split("/")[0]
                                 .split("?")[0];
+        // login_simulate
+        if(req.headers.authorization) {
+            let auth = req.headers.authorization
+            if(auth.includes(`eAhx`)
+            && mobileflags.get_flags(req).login_simulate
+            && mobileflags.get_flags(req).login_simulate.includes("/")) {
+                id = mobileflags.get_flags(req).login_simulate.split("/")[1]
+            }
+        }
         let flags = mobileflags.get_flags(req).channel
         channels.main({"path": "/@" + id, 
         "headers": {"cookie": ""},
@@ -769,13 +793,16 @@ module.exports = {
                 }
             }
 
+            let subcount = data.properties ? data.properties.subscribers : "0"
+            subcount = utils.approxSubcount(subcount)
+
             let channelViewCount = Math.floor(videoViewCount / 90)
             res.set("content-type", "application/atom+xml")
             res.send(templates.gdata_user(
                 id,
-                utils.asciify(data.name || "name_not_found?"),
+                utils.asciify(data.name || id),
                 `http://${config.ip}:${config.port}/${data.avatar}`,
-                utils.approxSubcount(data.properties.subscribers || "0"),
+                subcount,
                 videoCount,
                 channelViewCount,
                 videoViewCount,
@@ -1033,5 +1060,123 @@ module.exports = {
         response += templates.gdata_feedEnd
         res.set("content-type", "application/atom+xml")
         res.send(response)
+    },
+
+    // post video comments
+    "videoCommentPost": function(req, res) {
+        let id = req.originalUrl.split("/videos/")[1]
+                                .split("/comments")[0]
+        // login simulate name
+        let flags = mobileflags.get_flags(req)
+        if(!flags.login_simulate
+        || !flags.login_simulate.includes("/")) {
+            res.sendStatus(401)
+            return;
+        }
+        let name = utils.asciify(
+            flags.login_simulate.split("/")[1], true, false
+        ).substring(0, 20)
+        let session = flags.login_simulate.split("/")[0]
+        let body = require("node-html-parser").parse(req.body.toString())
+        if(!body.querySelector("content")) {
+            res.sendStatus(400);
+            return;
+        }
+
+        let comments = yt2009html.custom_comments()
+        if(!comments[id]) {
+            comments[id] = []
+        }
+        let comment = utils.xss(body.querySelector("content").innerHTML)
+        let commentId = Math.floor(Math.random() * 110372949)
+
+        if(!comment || comment.length == 0 || comment.length > 500) {
+            res.sendStatus(400)
+            return;
+        }
+
+        let commentObject = {
+            "author": name,
+            "text": comment,
+            "time": Date.now(),
+            "token": session,
+            "id": commentId,
+            "rating": 0,
+            "ratingSources": {}
+        }
+
+        if(yt2009_exports.read().masterWs) {
+            let ws = yt2009_exports.read().masterWs
+            // send & wait for synced data
+            let syncSent = false;
+            function bringSync(msg) {
+                if(syncSent) return;
+                syncSent = true
+                if(!msg.syncable) {
+                    name = "possibly_not_" + name
+                    commentObject.author = "possibly_not_" + name
+                } else {
+                    name = utils.xss(msg.comment.author)
+                    commentObject.author = name
+                    commentObject.token = utils.get_used_token(req)
+                }
+                commentObject.rating = 0
+                commentObject.ratingSources = {}
+
+                if(commentObject.author.includes("possibly_not_possibly_not_")) {
+                    commentObject.author = commentObject.author.replace(
+                        "possibly_not_", ""
+                    )
+                }
+    
+                comments[id].push(commentObject)
+    
+                yt2009html.receive_update_custom_comments(comments)
+    
+                try {
+                    res.set("content-type", "application/atom+xml")
+                    res.send(templates.gdata_feedComment(
+                        id,
+                        commentObject.author,
+                        comment,
+                        new Date().toISOString()
+                    ))
+                }
+                catch(error) {}
+            }
+            syncCommentCallbacks[commentId] = function(msg) {
+                bringSync(msg)
+            }
+            setTimeout(() => {
+                bringSync({"type": "comment-feedback"})
+            }, 5000)
+            ws.send(JSON.stringify({
+                "type": "comment",
+                "session": session,
+                "name": name,
+                "content": comment,
+                "id": commentId,
+                "video": id,
+                "source": "m"
+            }))
+        } else {
+            commentObject.author = name
+            comments[id].push(commentObject)
+    
+            res.set("content-type", "application/atom+xml")
+            res.send(templates.gdata_feedComment(
+                id,
+                commentObject.author,
+                comment,
+                new Date().toISOString()
+            ))
+            yt2009html.receive_update_custom_comments(comments)
+        }
+    },
+
+    "commentCallback": function(msg) {
+        if(syncCommentCallbacks[msg.id]) {
+            syncCommentCallbacks[msg.id](msg)
+        }
     }
 }

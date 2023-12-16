@@ -95,16 +95,57 @@ function saveFlags() {
         }
     })
 
+    // session login_simulate
+    var loginSimulate = ""
+    var ls = document.getElementById("login-simulate")
+    var name = document.getElementById("login-simulate-token").value
+    if(ls.checked) {
+        // get login_simulate session and name
+        function getNameBySession(session) {
+            var r = new XMLHttpRequest();
+            r.open("GET", "/get_name_by_session")
+            r.setRequestHeader("session", session)
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                name = session + "/" + r.responseText
+                loginSimulate = name
+                sendSave()
+            }, false)
+        }
+
+        if(name.length == 5) {
+            var r = new XMLHttpRequest();
+            r.open("GET", "/get_shortened_session")
+            r.setRequestHeader("session", name)
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                if(r.status !== 404) {
+                    getNameBySession(r.responseText)
+                } else {
+                    alert("error saving login_simulate - invalid session.")
+                }
+            }, false)
+        } else {
+            getNameBySession(name)
+        }
+        
+        return;
+    }
+
     // send
-    var r = new XMLHttpRequest();
-    r.open("POST", "/mobile/save_flags")
-    r.setRequestHeader("device", localStorage.deviceId)
-    r.send(JSON.stringify({
-        "watch": watchFlags,
-        "search": searchFlags,
-        "channel": channelFlags
-    }))
-    r.addEventListener("load", function(e) {
-        alert("ok - make sure to restart the app for all flags to apply!!")
-    }, false)
+    function sendSave() {
+        var r = new XMLHttpRequest();
+        r.open("POST", "/mobile/save_flags")
+        r.setRequestHeader("device", localStorage.deviceId)
+        r.send(JSON.stringify({
+            "watch": watchFlags,
+            "search": searchFlags,
+            "channel": channelFlags,
+            "login_simulate": loginSimulate ? loginSimulate : null
+        }))
+        r.addEventListener("load", function(e) {
+            alert("ok - make sure to restart the app for all flags to apply!!")
+        }, false)
+    }
+    sendSave()
 }

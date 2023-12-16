@@ -5362,14 +5362,9 @@ td.spons-vid-thumb .user-thumb-jumbo img {
   white-space: nowrap
 }
 
-.feedmodule-cmt-vid {
-  float: left
-}
-
 .feedmodule-cmt {
   margin-left: 10px;
   font-style: italic;
-  float: left;
   width: 456px
 }
 

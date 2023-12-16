@@ -6,7 +6,7 @@
     border: 1px solid rgb(153, 153, 153);
     background-color: white;
     position: absolute;
-    z-index: 2;
+    z-index: 5;
     width: 330px;
     max-width: 330px;
 }

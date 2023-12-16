@@ -70,6 +70,10 @@ module.exports = {
                     flags += cookie.trimStart().replace("mainpage_flags=", "")
                                                 .split(":").join(";")
                 }
+                if(cookie.trimStart().startsWith("global_flags")) {
+                    flags += cookie.trimStart().replace("global_flags=", "")
+                                                .split(":").join(";")
+                }
             })
         }
         catch(error) {}

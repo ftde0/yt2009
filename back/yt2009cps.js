@@ -26,6 +26,8 @@ module.exports = {
             req.query.q = req.query.q.replace("+only_old", "")
             flags += "only_old"
         }
+
+        let page = ((req.query["start-index"] || 0) / 20)
         /*
         =======
         create the search XML
@@ -37,7 +39,7 @@ module.exports = {
         search.get_search(
             encodeURIComponent(req.query.q) || "",
             flags,
-            "",
+            {"page": page},
             (data => {
                 let first3Videos = []
                 data.forEach(video => {
@@ -59,7 +61,11 @@ module.exports = {
         function addVideosToResponse(data) {
             let videos = ``
             let videosCount = 0;
+            let resultCount = 0;
             data.forEach(video => {
+                if(video.type == "metadata") {
+                    resultCount = video.resultCount
+                }
                 if(video.type !== "video") return;
                 videosCount++;
                 let author_name = video.author_name;
@@ -97,7 +103,8 @@ module.exports = {
             })
 
             response =
-            templates.cpsSearchBegin(videosCount)
+            templates.cpsSearchBegin(resultCount)
+            .replace(`x>1<`, `x>${page * 20 + 1}<`)
             + "\n" + videos
             + templates.cpsSearchEnd;
 

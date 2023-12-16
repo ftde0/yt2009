@@ -388,12 +388,16 @@ function switchWidescreen() {
         $("#watch-vid-title").className = "title longform widescreen"
         $("#player-toggle-switch").className = "reverse-tooltip-wrapper watch-wide-mode"
         localStorage.widescreenEnabled = true
+        fourthreechecked = false
+        annotation43()
     } else {
         player_overlay.className = "yt-rounded"
         player_element.className = "flash-player"
         $("#watch-vid-title").className = "title longform"
         $("#player-toggle-switch").className = "reverse-tooltip-wrapper"
         localStorage.removeItem("widescreenEnabled")
+        fourthreechecked = false
+        annotation43()
     }
 
     adjustSeekbarWidth();

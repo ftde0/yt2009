@@ -481,6 +481,11 @@ module.exports = {
                     && (!video.verified && !video.artist)) {
                         cancelled = true;
                     }
+
+                    // autogen_thumbnails
+                    if(flags.includes("autogen_thumbnails")) {
+                        browser += "+autogen"
+                    }
     
                     // apply html
                     if(!cancelled) {
@@ -694,7 +699,7 @@ module.exports = {
                     htmlViewCount = "lang_views_prefix"
                                   + yt2009utils.countBreakup(htmlViewCount)
                                   + "lang_views_suffix"
-    
+
                     related_html += yt2009templates.relatedVideo(
                         result.id,
                         result.title,
