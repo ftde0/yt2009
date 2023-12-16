@@ -710,6 +710,7 @@ module.exports = {
             let customComments = yt2009html.custom_comments()
             if(customComments[id]) {
                 customComments[id].forEach(c => {
+                    if(!c.author) return;
                     response += templates.gdata_feedComment(
                         id,
                         utils.asciify(c.author),
