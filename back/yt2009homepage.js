@@ -49,11 +49,16 @@ function section_fill(code, section_name, section_content, flags, protocol) {
 
     views = "lang_views_prefix" + views.replace(" views", "lang_views_suffix")
 
+    let thumbUrl = "hqdefault.jpg"
+    if(flags.includes("autogen_thumbnails")) {
+        thumbUrl = "1.jpg"
+    }
+
     let temp_code = code;
     temp_code = temp_code.split(`/yt2009_${section_name}_watch`)
                          .join(`/watch?v=${section_content.id}`)
     temp_code = temp_code.split(`/yt2009_${section_name}_thumbnail`)
-                         .join(`${protocol}://i.ytimg.com/vi/${section_content.id}/hqdefault.jpg`)
+                         .join(`${protocol}://i.ytimg.com/vi/${section_content.id}/${thumbUrl}`)
     temp_code = temp_code.split(`yt2009_${section_name}_title`)
                          .join(title.trim())
     temp_code = temp_code.split(`yt2009_${section_name}_time`)
@@ -75,6 +80,10 @@ module.exports = function(req, res) {
         req.headers.cookie.split(";").forEach(cookie => {
             if(cookie.trimStart().startsWith("mainpage_flags")) {
                 flags += cookie.trimStart().replace("mainpage_flags=", "")
+                                           .split(":").join(";")
+            }
+            if(cookie.trimStart().startsWith("global_flags=")) {
+                flags += cookie.trimStart().replace("global_flags=", "")
                                            .split(":").join(";")
             }
         })

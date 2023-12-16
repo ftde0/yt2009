@@ -338,6 +338,7 @@ function video_show_play_btn() {
 
 function video_play() {
     video.play();
+    videoPauseOverride = true
 }
 
 function video_show_pause_btn() {
@@ -472,8 +473,50 @@ function timeUpdate() {
         $("video").className = "html5_video"
         $(".endscreen").className = "endscreen hid"
     }
+
+    annotation43()
+
 }
 video.addEventListener("timeupdate", timeUpdate, false)
+
+// annotations container sizing
+function sizeAnnotationsContainer() {
+    if(!fadeControlsEnable
+    && browserModernFeatures
+    && document.querySelector(".annotations_container")) {
+        $(".annotations_container").style.height = "calc(100% - 25px)"
+        annotation43()
+    } else if(browserModernFeatures
+    && document.querySelector(".annotations_container")) {
+        var vHeight = video.getBoundingClientRect().height
+        $(".annotations_container").style.height = vHeight + "px"
+        annotation43()
+    }
+}
+
+// annotation fix for 4:3 videos
+var fourthreechecked = false;
+var fourthree = false;
+function annotation43() {
+    if(fourthreechecked) return;
+    if(!video.paused && !fourthreechecked) {
+        if(video.videoWidth / video.videoHeight == 4 / 3) {
+            fourthree = true;
+            annotation43force()
+        }
+        fourthreechecked = true;
+    }
+}
+
+function annotation43force() {
+    if(!document.querySelector(".annotations_container")) return;
+    fourthree = true
+    var vWidth = video.getBoundingClientRect().width
+    var width = vWidth / (4 / 3)
+    $(".annotations_container").style.width = width + "px"
+    var left = (vWidth - width) / 2
+    $(".annotations_container").style.left = left + "px"
+}
 
 // fix video height if old browser
 function setVidHeight() {
@@ -530,6 +573,7 @@ function adjustSeekbarWidth() {
                                         + embedPlayX + "px;top: " 
                                         + embedPlayY + "px;}"
 
+    sizeAnnotationsContainer()
     setVidHeight()
 }
 
@@ -716,6 +760,7 @@ volume_panel.addEventListener("mousemove", function(e) {
     // volume icon width based on volume
     $(".volume_button").style.width = (16 + (16 * video.volume)) + "px"
     autofixVolumeBtn()
+
 }, false)
 
 // auto-set last saved volume
@@ -736,6 +781,14 @@ document.cookie.split(";").forEach(function(cookie) {
 function autofixVolumeBtn() {
     if(parseInt($(".volume_button").style.width) > 28) {
         $(".volume_button").style.width = "28px"
+    }
+
+    if(video.volume == 0) {
+        $(".volume_button").className = "volume_button muted"
+        $(".volume_button").style.width = "29px"
+    } else if(video.volume !== 0
+    && $(".volume_button").className.indexOf("muted") !== -1) {
+        $(".volume_button").className = "volume_button"
     }
 }
 
@@ -772,11 +825,31 @@ if(video.readyState >= 3) {
     timeUpdate();
 }
 
+// animated seeker
+function animSeek(point, callback) {
+    var current = parseInt(
+        $(".progress_container .elapsed").style.width || "0%"
+    )
+    var x = setInterval(function() {
+        current -= 20
+        if(current - point <= 20) {
+            current += 10
+        }
+        if(current <= point) {
+            current = point;
+            clearInterval(x)
+            callback()
+        }
+        $(".progress_container .elapsed").style.width = current + "%"
+    }, 20)
+}
+
 
 // endscreen
 var videoEnded = false;
 var openSectionIndex = 0;
 function showEndscreen() {
+    var sections = document.querySelectorAll(".endscreen-section")
     videoEnded = true;
     video.className += " showing-endscreen"
     $(".endscreen").className = "endscreen"
@@ -787,16 +860,36 @@ function showEndscreen() {
     }
 
     setTimeout(function() {
-        if(!document.querySelectorAll(".endscreen-section")
-            [endscreen_section_index]) return;
-        var c = document.querySelectorAll(".endscreen-section")
-                [endscreen_section_index]
-                .querySelectorAll(".endscreen-video-title")
+        if(!sections[endscreen_section_index]) return;
+        var c = sections[endscreen_section_index].querySelectorAll(
+            ".endscreen-title-container, .video-from, .video-views"
+        )
         for(var sel in c) {
-            try {c[sel].style.maxWidth = "300px"}
+            try {
+                if(c[sel].className.indexOf("title") !== -1) {
+                    c[sel].style.width = "300px"
+                } else {
+                    c[sel].style.width = "255px"
+                }
+                
+            }
             catch(error) {}
         }
     }, 100);
+    setTimeout(function() {
+        var stars = sections[endscreen_section_index].querySelectorAll(
+            ".endscreen-video-star"
+        )
+        for(var s in stars) {
+            try {
+                s = stars[s]
+                s.style.backgroundPosition = "-75px 0px"
+                var rating = s.className.split("rating-")[1]
+                animatedStars(s, parseInt(rating))
+            }
+            catch(error) {}
+        }
+    }, 90)
 
     var timeout_switch = setTimeout(function() {
         if(timeouts.indexOf(timeout_switch) !== -1) {
@@ -814,10 +907,11 @@ function videoReplay() {
     videoEnded = false;
     video.className = video.className.replace(" showing-endscreen", "")
     $(".endscreen").className = "endscreen hid"
-    video.currentTime = 0;
-    video.play()
+    animSeek(0, function() {
+        video.currentTime = 0;
+        video.play()
+    })
 
-    //non_css_anim_add($(".video_controls"), "bottom", -23, 0);
     setTimeout(function() {
         mousein = true;
     }, 400)
@@ -826,27 +920,62 @@ function videoReplay() {
 var endscreen_section_index = 0;
 var timeouts = []
 
+function animatedStars(e, rating) {
+    var targetX = {
+        0: -75,
+        1: -60,
+        2: -45,
+        3: -30,
+        4: -15,
+        5: 0
+    }
+    targetX = targetX[Math.floor(rating) || 5]
+    var currentX = -75
+    var x = setInterval(function() {
+        currentX += 15
+        if(currentX >= targetX) {
+            currentX = targetX;
+            clearInterval(x)
+        }
+        e.style.backgroundPosition = currentX + "px 0px"
+    }, 66)
+}
+
 function endscreen_section_change(value) {
+    var sections = document.querySelectorAll(".endscreen-section")
     clearEndscreenTimeouts();
     // initial
-    if(!document.querySelectorAll(".endscreen-section")
-        [endscreen_section_index]) return;
-    var currentSection = document.querySelectorAll(".endscreen-section")
-                        [endscreen_section_index]
+    if(!sections[endscreen_section_index]) return;
+    var currentSection = sections[endscreen_section_index]
     endscreen_section_index += value;
-    if(!document.querySelectorAll(".endscreen-section")
-        [endscreen_section_index]) {
+    if(!sections[endscreen_section_index]) {
         endscreen_section_index = 0;
     }
-    var newSection = document.querySelectorAll(".endscreen-section")
-                    [endscreen_section_index]
+    var newSection = sections[endscreen_section_index]
 
     // w tle zwiń tytuły z newSection aby rozwinąć je przy użytkowniku
     // wrap back the newSection titles
     // to unwrap them in front of the user later
-    var s = newSection.querySelectorAll(".endscreen-video-title")
+    var s = newSection.querySelectorAll(
+        ".endscreen-title-container, .video-from, .video-views"
+    )
     for(var sel in s) {
-        try {s[sel].style.maxWidth = "0px"}
+        try {
+            switch(s[sel].className) {
+                case "gr video-from": {
+                    s[sel].style.width = "40px"
+                    break;
+                }
+                case "gr video-views": {
+                    s[sel].style.width = "45px"
+                    break;
+                }
+                default: {
+                    s[sel].style.width = "0px"
+                    break;
+                }
+            }
+        }
         catch(error) {}
     }
 
@@ -855,17 +984,42 @@ function endscreen_section_change(value) {
     currentSection.style.opacity = "0";
     setTimeout(function() {
         currentSection.className = "endscreen-section hid"
-        newSection.className = "endscreen-section"
+        newSection.className = "endscreen-section fi"
     }, 1000)
     setTimeout(function() {
         newSection.style.opacity = "1"
     }, 1100)
     setTimeout(function() {
         for(var sel in s) {
-            try {s[sel].style.maxWidth = "300px"}
+            try {
+                switch(s[sel].className) {
+                    case "gr video-from":
+                    case "gr video-views": {
+                        s[sel].style.width = "255px"
+                        break;
+                    }
+                    default: {
+                        s[sel].style.width = "300px"
+                        break;
+                    }
+                }
+            }
             catch(error) {}
         }
-    }, 1750)
+        newSection.className = "endscreen-section"
+    }, 1200)
+    setTimeout(function() {
+        var stars = newSection.querySelectorAll(".endscreen-video-star")
+        for(var s in stars) {
+            try {
+                s = stars[s]
+                s.style.backgroundPosition = "-75px 0px"
+                var rating = s.className.split("rating-")[1]
+                animatedStars(s, parseInt(rating))
+            }
+            catch(error) {}
+        }
+    }, 1100)
 
     // go 1 section next after 7500ms
     var timeout_switch = setTimeout(function() {
@@ -970,16 +1124,23 @@ for(var s in seekbarElements) {
 
 // adnotacje/annotations
 function annotationRender(annotation) {
+    if(annotation.style == "pause"
+    && !pauseAnnotationOngoing
+    && video.currentTime.toFixed(1) == annotation.fromTime.toFixed(1)) {
+        pauseAnnotationHandle(annotation)
+        return;
+    } else if(annotation.style == "pause") return;
     if(document.querySelector(
         "[from=\"" + annotation.fromTime.toFixed(1) + "\"]"
     )) return;
+    var ac = document.querySelector(".annotations_container") || mainElement
     var element = document.createElement("div")
     var container = mainElement;
     if(mainElement == document) {
         $(".embed-container").appendChild(element)
         container = $(".embed-container")
     } else {
-        mainElement.appendChild(element)
+        ac.appendChild(element)
     }
     
 
@@ -994,16 +1155,32 @@ function annotationRender(annotation) {
             bgColor = annotation.bgColor.modern;
         }
     }
-    element.style.background = bgColor
+    if(annotation.style !== "highlight") {
+        element.style.background = bgColor
+    }
     element.style.color = annotation.textColor || "rgb(0, 0, 0)"
     element.style.fontSize = (Math.floor(annotation.textSize * 5) || 14) + "px"
     element.style.left = annotation.leftPercent + "%"
     element.style.top = annotation.topPercent + "%"
+    if(annotation.border) {
+        var borderWidth = annotation.borderWidth + "px"
+        element.style.borderColor = annotation.border;
+        element.style.borderStyle = "solid"
+        element.style.borderWidth = borderWidth;
+        element.addEventListener("mouseover", function() {
+            element.style.borderColor = annotation.borderHover;
+            element.className += " hover"
+        }, false)
+        element.addEventListener("mouseout", function() {
+            element.style.borderColor = annotation.border;
+            element.className = element.className.replace(" hover", "")
+        }, false)
+    }
     if(browserModernFeatures) {
         element.style.width = "calc(" + annotation.widthPercent + "% - 14px)"
     } else {
         element.style.width = (
-            video.getBoundingClientRect().width / 100
+            ac.getBoundingClientRect().width / 100
             * annotation.widthPercent - 14
         ) + "px"
     }
@@ -1023,6 +1200,19 @@ function annotationRender(annotation) {
             }
             window.open(url);
         }, false)
+        if(annotation.hoverOpacity) {
+            var ogOpacity = annotation.bgColor.legacy
+                            .split(", ")[3].split(")")[0]
+            annotation.hoverBg = annotation.bgColor.legacy.replace(
+                ogOpacity, annotation.hoverOpacity
+            )
+            element.addEventListener("mouseover", function() {
+                element.style.background = annotation.hoverBg
+            }, false)
+            element.addEventListener("mouseout", function() {
+                element.style.background = annotation.bgColor.legacy
+            }, false)
+        }
     }
 
     // annotation content
@@ -1035,12 +1225,8 @@ function annotationRender(annotation) {
                             + annotation.text.split("\n").join("<br>")
                             + "</span>"
             element.style.height = ""
-            var bounds = video.getBoundingClientRect()
-            var mainBounds = {}
-            try {
-                mainBounds = mainElement.getBoundingClientRect()
-            }
-            catch(error) {mainBounds = document.body.getBoundingClientRect();}
+            annotation43()
+            var bounds = ac.getBoundingClientRect()
 
             // calculate text size
             // rewritten based on the original swf
@@ -1101,20 +1287,27 @@ function annotationRender(annotation) {
                     Math.min(start[0], end[0], endPoint[0]),
                     Math.min(start[1], end[1], endPoint[1])
                 ];
+
+                if(speechPoints.direction == "left"
+                || speechPoints.direction == "right") {
+                    relativeStart[1] = Math.max(start[1], end[1], endPoint[1])
+                }
+
                 var svgViewbox = [
                     bounds.width / 100 * Math.abs(end[0] - relativeStart[0]),
                     Math.abs(endPoint[1] - relativeStart[1])
                 ]
+
                 var relativePoints = [
                     Math.floor(bounds.width / 100
                             * Math.floor(start[0] - relativeStart[0]))
-                            + "," + Math.floor(start[1] - relativeStart[1]),
+                            + "," + Math.abs(Math.floor(start[1] - relativeStart[1])),
                     Math.floor(bounds.width / 100
                             * Math.floor(end[0] - relativeStart[0]))
-                            + "," + Math.floor(end[1] - relativeStart[1]),
+                            + "," + Math.abs(Math.floor(end[1] - relativeStart[1])),
                     Math.floor(endPoint[0] - relativeStart[0])
                                 + ","
-                                + Math.floor(endPoint[1] - relativeStart[1])
+                                + Math.abs(Math.floor(endPoint[1] - relativeStart[1]))
                 ]
                 
                 // tip svg element
@@ -1123,22 +1316,24 @@ function annotationRender(annotation) {
                     "svg"
                 )
                 tip.setAttribute("from", annotation.fromTime.toFixed(1))
-                tip.setAttribute("to", parseFloat(
-                    annotation.toTime.toFixed(1) - 0.1).toFixed(1)
-                )
+                tip.setAttribute("to", annotation.toTime.toFixed(1))
                 tip.className = "speech-point"
                 tip.style.position = "absolute"
                 tip.style.left = relativeStart[0] + "%"
+                if(speechPoints.direction == "left"
+                || speechPoints.direction == "right") {
+                    tip.style.left = (parseInt(relativeStart[0]) + 1) + "%"
+                }
                 tip.style.top = relativeStart[1] + "px"
                 tip.style.width = (svgViewbox[0] / bounds.width) * 100 + "%"
                 tip.style.height = Math.floor(
                     parseFloat(relativePoints[2].split(",")[1])
-                                / mainBounds.height * 100
+                                / bounds.height * 100
                 ) + "%"
                 tip.setAttribute("viewBox", "0 0 "
                                             + Math.floor(svgViewbox[0])
                                             + " " + Math.floor(svgViewbox[1]))
-                mainElement.appendChild(tip)
+                ac.appendChild(tip)
                 
                 var path = document.createElementNS(
                     "http://www.w3.org/2000/svg",
@@ -1164,13 +1359,13 @@ function annotationRender(annotation) {
                             case "bottom": {
                                 tip.style.top = annotationBounds.top
                                             + annotationBounds.height
-                                            - 1 - mainBounds.top + "px"
+                                            - 1 - bounds.top + "px"
                                 break;
                             }
                             case "top": {
                                 tip.style.top = annotationBounds.top
                                             - annotationBounds.height
-                                            - 1 - mainBounds.top + "px"
+                                            - 1 - bounds.top + "px"
                                 break;
                             }
                         }
@@ -1212,30 +1407,16 @@ function annotationRender(annotation) {
             && browserModernFeatures
             && annotation.topPercent >= 5) {
         // use calc
-        element.style.top = "calc(" + annotation.topPercent + "% - 25px)"
-    }
-
-    // fix overflowing into controls with no_controls_fade
-    var elementTop = element.getBoundingClientRect().top
-                    + element.getBoundingClientRect().height
-    var controlsTop = $(".video_controls").getBoundingClientRect().top
-    if(!fadeControlsEnable && elementTop >= controlsTop) {
-        var overflow = elementTop - controlsTop;
-        var top = element.getBoundingClientRect().top
-                - container.getBoundingClientRect().top;
-        top -= overflow
-        if(top <= 0) {
-            top = 0
-        }
-        element.style.top = top + "px"
+        element.style.top = "calc(" + annotation.topPercent + "%)"
     }
 
     // remove later mark
     annotationsRemoveTime[annotation.toTime.toFixed(1)] = element
 
-
     // gradient for older browsers
-    if(!browserModernFeatures) {
+    if((!browserModernFeatures
+    && annotation.style == "speech")
+    || document.cookie.indexOf("legacy_annotations") !== -1) {
         var gradient = document.createElement("span")
         gradient.className = "annotation-gradient"
         element.appendChild(gradient)
@@ -1337,7 +1518,7 @@ function bubbleSpecs(x, y, width, height, sx, sy, radii, gap) {
     }
 
     if(direction == "left" || direction == "right") {
-        var TARGET_H = 2.5;
+        var TARGET_H = 5;
         var av = (startY + endY) / 2;
         startY = av - (TARGET_H / 2);
         endY = av + (TARGET_H / 2)
@@ -1350,12 +1531,93 @@ function bubbleSpecs(x, y, width, height, sx, sy, radii, gap) {
             endY: endY};
 }
 
+// pause annotation
+var pauseAnnotationOngoing = false;
+var videoPauseOverride = false;
+var pauseDebug = false;
+function pauseAnnotationHandle(annotation) {
+    // cleanup - remove when needed
+    function annotationCleanup() {
+        try {
+            pause.style.display = "none"
+            pause.parentNode.removeChild(pause)
+            video.currentTime += 0.2
+        }
+        catch(error) {}
+        setTimeout(function() {
+            pauseAnnotationOngoing = false;
+        }, 300)
+    }
+
+    if(pauseAnnotationOngoing) return;
+    // make sure vid's paused
+    videoPauseOverride = false
+    pauseAnnotationOngoing = true;
+    video_pause()
+    while(!video.paused && pauseAnnotationOngoing && !videoPauseOverride) {
+        video_pause()
+    }
+
+    // add the pause ticker
+    var ac = document.querySelector(".annotations_container") || mainElement
+    var pause = document.createElement("span")
+    pause.setAttribute("from", annotation.fromTime.toFixed(1))
+    pause.className = "pause-annotation"
+    var pauseBg = -35
+    ac.appendChild(pause)
+
+    // scroll the pause ticker
+
+    var interval = (annotation.pauseTime * 1000) / 59
+
+    pause.style.backgroundPosition = "0px 0px"
+
+    if(pauseDebug) return;
+
+    var x = setInterval(function() {
+        pauseBg -= 35
+        pause.style.backgroundPosition = "0px " + pauseBg + "px"
+
+        if(videoPauseOverride) {
+            annotationCleanup()
+        }
+    }, interval)
+
+    setTimeout(annotationCleanup, (annotation.pauseTime * 1000) + 100)
+}
+
+function dbg_stepFrame() {
+    var pause = document.querySelector(".pause-annotation")
+    var bg = parseInt(
+        pause.style.backgroundPosition.split("px ")[1].replace("px", "")
+    )
+    bg -= 35
+    pause.style.backgroundPosition = "0px " + bg + "px"
+}
+
 // annotation functions end
 
 var annotationsSwitch = $(".player_additions_popout .annotations")
 
 function annotationsMain() {
     annotationsEnabled = !annotationsEnabled;
+
+    if(!document.querySelector(".annotations_container")) {
+        var ac = document.createElement("div")
+        ac.className = "annotations_container"
+        mainElement.appendChild(ac)
+        ac.addEventListener("click", function() {
+            if(!video.paused) {
+                video_pause();
+                flash_middle_btn("pause")
+            } else {
+                video_play();
+                flash_middle_btn("play")
+            }
+        }, false)
+        sizeAnnotationsContainer()
+        annotation43()
+    }
 
     if(annotationsEnabled) {
         // request
@@ -1479,26 +1741,74 @@ function placeCaptions() {
     } else if(location.href.indexOf("embed/") !== -1) {
         videoId = location.href.split("embed/")[1].split("?")[0].split("#")[0]
     }
-    var s = $(".captions_selection")
-    var index = 0;
+    var langArray = []
     for(var lang in captionsLangIndex) {
-        if(document.querySelector("li[lang=\"" + lang + "\"]")) return;
-        var li = document.createElement("li")
-        li.setAttribute("lang", lang)
-        var name = captionsLangIndex[lang].name;
-        if(name.length > 17) {
-            name = name.substring(0, 16) + "..."
-        }
-        li.innerHTML = "<span class=\"circle\"></span>"
-                     + "<p>" + name + "</p>";
-        li.setAttribute("onclick", "loadCaptions(\"" + videoId
-                                    + "\", \"" + lang + "\")")
-        if(lang == "en" || index == 0) {
-            li.querySelector(".circle").className += " selected"
-        }
-        s.appendChild(li)
-        index++;
+        captionsLangIndex[lang].code = lang
+        langArray.push(captionsLangIndex[lang])
     }
+    var langPages = []
+    var index = 0;
+    var pagesCount = Math.floor(langArray.length / 8) + 1
+    var c = 0
+    while(c !== pagesCount) {
+        var e = document.createElement("div")
+        e.className = "captions-page page-" + c
+        if(c !== 0) {
+            e.className += " hid"
+        }
+        langPages.push(e)
+        $(".captions_selection").appendChild(e)
+        var langs = langArray.slice(c * 8, (c * 8) + 8)
+        langs.forEach(function(lang) {
+            var li = document.createElement("li")
+            li.setAttribute("lang", lang.code)
+            var name = lang.name;
+            if(name.length > 17) {
+                name = name.substring(0, 16) + "..."
+            }
+            li.innerHTML = "<span class=\"circle\"></span>"
+                        + "<p>" + name + "</p>";
+            li.setAttribute("onclick", "loadCaptions(\"" + videoId
+                                        + "\", \"" + lang.code + "\")")
+            if(index == 0) {
+                li.querySelector(".circle").className += " selected"
+            }
+            e.appendChild(li)
+            index++
+        })
+        if(langs.length >= 8 || pagesCount !== 1) {
+            var li = document.createElement("li")
+            li.innerHTML = "<p>(more)</p>";
+            li.addEventListener("click", function() {
+                scrollCaptionPage(1)
+            }, false)
+            e.appendChild(li)
+        }
+        lastCaptionsPage++
+        c++
+    }
+}
+
+// scroll between captions pages
+var captionsPage = 0
+var lastCaptionsPage = 0;
+function scrollCaptionPage(diff) {
+    captionsPage += diff
+    if(captionsPage >= lastCaptionsPage
+    || captionsPage < 0) {
+        captionsPage = 0
+    }
+    var pages = document.querySelectorAll(".captions-page")
+    for(var p in pages) {
+        p = pages[p]
+        if(p.className
+        && p.className.indexOf("hid") == -1) {
+            p.className += " hid"
+        }
+    }
+
+    var targetPage = $(".captions-page.page-" + captionsPage)
+    targetPage.className = targetPage.className.replace(" hid", "")
 }
 
 // fetch captions and place them with interval

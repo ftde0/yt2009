@@ -8,6 +8,25 @@
 	</title>
 
 	<link id="www-core-css" rel="stylesheet" href="www-core-vfl122413.css">
+
+	<style>
+		#export-menu {
+			border: 1px black solid;
+			padding: 10px 10px;
+		}
+		#export-menu textarea {
+			resize: none;
+			width: 600px;
+			height: 170px;
+			outline: none;
+		}
+		#i_export, #i_import,
+		#imported-flags-container, #exported-flags-container,
+		#exported-session-container {
+			margin-top: 10px;
+			overflow: hidden;
+		}
+	</style>
 </head>
 
 <body class="date-20091111 en_US is-english">
@@ -44,6 +63,32 @@
 		</div>
 
 		<h4 id="i_header">flagi do yt2009<br>każda z tych flag zmienia w pewien sposób funkcjonalność. najedź na checkbox aby zobaczyć co.<br>ta funkcja wymaga włączonych cookies. jak nie działa to najpierw to sprawdź.<br><br>jeśli chcesz użyć flagi tylko raz, dodaj parametr flags w url'u.</h4>
+
+		<a href="javascript:toggleExportMenu();">EXPORT MENU &raquo;</a>
+		<div class="hid" id="export-menu">
+			<p>YT2009 EXPORT SETTINGS<br>
+			use this window to move stuff across instances and/or preparing login_simulate for mobile.</p>
+			<p>move desktop settings across instances:</p>
+			<a class="yt-button yt-button-primary" href="#" onclick="flags_export();"><span id="i_export">export flags</span></a><br>
+			<div id="exported-flags-container" class="hid" style="height: 0px;">
+				<p>copy the code below. and use it in the "import" section below when needed.</p>
+				<textarea readonly id="exported-flags" spellcheck="false"></textarea>
+			</div><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="flags_import_open();"><span id="i_import">import flags</span></a><br>
+			<div id="imported-flags-container" class="hid" style="height: 0px;">
+				<p>paste exported flags code below and click "import" to apply. <b>will overwrite your current flags settings.</b></p>
+				<textarea id="imported-flags" spellcheck="false"></textarea><br>
+				<a class="yt-button yt-button-primary" href="#" onclick="add_flags();"><span id="i_import">import</span></a>
+			</div>
+			<hr>
+			<p>bring login_simulate to the mobile app:</p>
+			<a class="yt-button yt-button-primary" href="#" onclick="session_export();"><span id="i_export">export session</span></a><br>
+			<div id="exported-session-container" class="hid" style="height: 0px;">
+				<p>copy the full session token or the 5-character shortened version of it.<br>
+				the shortened version will be valid for 15 minutes or until claimed.</p>
+				<textarea id="session-text" readonly spellcheck="false" style="height: 40px"></textarea><br>
+			</div>
+		</div>
 
 		<div class="group1">
 			<h2>/watch</h2>
@@ -189,6 +234,8 @@
 			<label for="global-annotation-redirect">annotation_redirect</label><br>
 			<input type="checkbox" id="global-author-old-avatar" title="używa starych awatarów jak są na serwerach yt.">
 			<label for="global-author-old-avatar">author_old_avatar</label><br>
+			<input type="checkbox" id="global-autogen-thumbnails" title="używanie automatycznie generowanych miniaturek">
+			<label for="global-autogen-thumbnails">autogen_thumbnails</label><br>
 			<input type="checkbox" id="global-fake-dates" title="podstawione daty komentarzy i opublikowania">
 			<label for="global-fake-dates">fake_dates</label><br>
 			<input type="checkbox" id="global-login-simulate" title="symuluje zalogowanego użytkownika">
@@ -317,6 +364,117 @@
 				element.className = ""
 			} else {
 				element.className = "hid"
+			}
+		}
+	</script>
+	<script>
+		// export menu
+		var exportMenu = document.getElementById("export-menu")
+		function toggleExportMenu() {
+			if(exportMenu.className == "hid") {
+				exportMenu.className = ""
+			} else {
+				exportMenu.className = "hid"
+			}
+		}
+
+		// expand textbox
+		function funExpand(element, targetHeight) {
+			var height = 0;
+			var x = setInterval(function() {
+				height += 30
+				if(height > targetHeight / 2) {
+					height -= 10
+				}
+				if(height > targetHeight - 50) {
+					height -= 12
+				}
+				element.style.height = height + "px"
+				if(height >= targetHeight) {
+					clearInterval(x)
+				}
+			}, 33)
+		}
+
+		// export flags
+		function flags_export() {
+			var flags = ""
+			var cookies = document.cookie.split("; ")
+			for(var c in cookies) {
+				if(!cookies[c]) return;
+				c = cookies[c]
+				if(c.indexOf("watch_flags") == 0
+				|| c.indexOf("results_flags") == 0
+				|| c.indexOf("channel_flags") == 0
+				|| c.indexOf("mainpage_flags") == 0
+				|| c.indexOf("global_flags") == 0) {
+					flags += c += "; "
+				}
+			}
+
+			var f = document.getElementById("exported-flags-container")
+			document.getElementById("exported-flags").value = flags;
+			f.className = ""
+			funExpand(f, 195)
+		}
+
+		// import flags
+		function flags_import_open() {
+			var f = document.getElementById("imported-flags-container")
+			f.className = ""
+			funExpand(f, 225)
+		}
+
+		function add_flags() {
+			var f = document.getElementById("imported-flags").value
+			var fs = f.split("; ")
+			for(var c in fs) {
+				c = fs[c]
+				if(c.indexOf("=") !== -1) {
+					var cName = c.split("=")[0]
+					var cValue = c.split("=")[1]
+					document.cookie = cName + "=" + cValue + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+				}
+			}
+
+			alert("flags imported.")
+			location.reload()
+		}
+
+		// export session token
+		function session_export() {
+			var sessionTextarea = document.getElementById("session-text")
+			var session = ""
+			var cookies = document.cookie.split("; ")
+			for(var c in cookies) {
+				c = cookies[c]
+				if(c.indexOf("syncses=") == 0) {
+					session = c.split("syncses=")[1]
+				}
+			}
+			if(!session) {
+				alert("no session! comment on a video to get your session token and try again.")
+				return;
+			}
+
+			sessionTextarea.value = session
+
+			var r;
+			if (window.XMLHttpRequest) {
+				r = new XMLHttpRequest()
+			} else {
+				r = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			r.open("GET", "/shorten_session")
+			r.setRequestHeader("session", session)
+			r.send(null)
+			r.onreadystatechange = function(e) {
+				if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+					sessionTextarea.value += "\n" + r.responseText
+					var f = document.getElementById("exported-session-container")
+					f.className = ""
+					funExpand(f, 90)
+				}
 			}
 		}
 	</script>

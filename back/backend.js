@@ -91,6 +91,7 @@ if(config.redirmode
 
 // ws sync with master
 let syncCommentCallbacks = {}
+let syncCheckCallbacks = {}
 if(!config.disableWs) {
     let wsIp = config.overrideMaster || "wss://orzeszek.website:178"
     function initWs() {
@@ -118,6 +119,9 @@ if(!config.disableWs) {
                         if(syncCommentCallbacks[m.id]) {
                             syncCommentCallbacks[m.id](m)
                         }
+                        if(m.source == "m") {
+                            yt2009_mobile.commentCallback(m)
+                        }
                         break;
                     }
                     case "comment-sync": {
@@ -134,6 +138,12 @@ if(!config.disableWs) {
                         })
                         yt2009.receive_update_custom_comments(comments)
                         console.log("added " + commentsAdded + " comments from master")
+                        break;
+                    }
+                    case "pull_name-result": {
+                        if(syncCheckCallbacks[m.id]) {
+                            syncCheckCallbacks[m.id](m)
+                        }
                         break;
                     }
                 }
@@ -201,6 +211,19 @@ app.get('/', (req,res) => {
             "path": "/",
             "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
         })
+    }
+
+    if(req.headers.cookie
+    && req.headers.cookie.includes("activity")) {
+        let comments = yt2009_utils.latestCustomComments(3)
+        let vList = []
+        comments.forEach(c => {
+            vList.push(c.video)
+        })
+        yt2009.bulk_get_videos(vList, () => {
+            yt2009_home(req, res)
+        })
+        return;
     }
     yt2009_home(req, res)
 })
@@ -1634,6 +1657,19 @@ app.get("/feeds/api/standardfeeds/*", (req, res) => {
 app.get("/feeds/api/videos/*/comments", (req, res) => {
     yt2009_mobile.apkVideoComments(req, res)
 })
+app.post("/feeds/api/videos/*/comments", (req, res) => {
+    yt2009_mobile.videoCommentPost(req, res)
+})
+let twoHundredEndpoints = [
+    "/feeds/api/videos/*/related",
+    "/feeds/api/users/*/favorites",
+    "/feeds/api/users/*/subscriptions"
+]
+twoHundredEndpoints.forEach(e => {
+    app.post(e, (req, res) => {
+        res.status(200).send()
+    })
+})
 app.get("/feeds/api/videos/*/related", (req, res) => {
     yt2009_mobile.apkVideoRelated(req, res)
 })
@@ -1642,6 +1678,9 @@ app.get("/feeds/api/videos/*", (req, res) => {
         yt2009_mobile.videoData(req, res)
         return;
     }
+})
+app.post("/feeds/api/videos/*/ratings", (req, res) => {
+    res.status(200).send()
 })
 app.get("/feeds/api/users/*/recommendations", (req, res) => {
     res.redirect("/feeds/api/standardfeeds/recently_featured")
@@ -1652,7 +1691,9 @@ app.get("/feeds/api/users/default/*", (req, res) => {
                 + yt2009_templates.gdata_feedEnd)
     }
 })
-
+app.get("/feeds/api/users/*/newsubscriptionvideos", (req, res) => {
+    res.redirect("/feeds/api/standardfeeds/recently_featured")
+})
 app.get("/feeds/api/users/*/uploads", (req, res) => {
     yt2009_mobile.userVideos(req, res)
 })
@@ -1686,6 +1727,70 @@ app.post("/mobile/save_flags", (req, res) => {
 })
 app.get("/mobile/get_flags", (req, res) => {
     res.send(yt2009_mobileflags.get_flags(req));
+})
+let shorter_sessions = {}
+app.get("/shorten_session", (req, res) => {
+    if(!req.headers.session) {
+        res.sendStatus(400)
+        return;
+    }
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let s = req.headers.session
+    let randomChars = ""
+    while(randomChars.length <= 4) {
+        randomChars += s.split("")[Math.floor(Math.random() * (s.length - 3))]
+    }
+    shorter_sessions[randomChars] = s
+    res.send(randomChars)
+    setTimeout(() => {
+        try {
+            delete shorter_sessions[req.headers.session]
+        }
+        catch(error) {}
+    }, 1000 * 60 * 15)
+})
+app.get("/get_shortened_session", (req, res) => {
+    if(!req.headers.session) {
+        res.sendStatus(400)
+        return;
+    }
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(shorter_sessions[req.headers.session]) {
+        res.send(shorter_sessions[req.headers.session])
+        delete shorter_sessions[req.headers.session]
+    } else {
+        res.sendStatus(404)
+    }
+})
+app.get("/get_name_by_session", (req, res) => {
+    if(!req.headers.session) {
+        res.sendStatus(400)
+        return;
+    }
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let id = Math.floor(Math.random() * 5949534534)
+    syncCheckCallbacks[id] = function(msg) {
+        if(msg.result.length >= 1) {
+            res.send(msg.result)
+        }
+    }
+    try {
+        yt2009_exports.read().masterWs.send(JSON.stringify({
+            "type": "pull_name",
+            "session": req.headers.session,
+            "id": id
+        }))
+    }
+    catch(error) {}
 })
 
 /*
@@ -2433,6 +2538,12 @@ app.post("/comment_post", (req, res) => {
             commentObject.rating = 0
             commentObject.ratingSources = {}
 
+            if(commentObject.author.includes("possibly_not_possibly_not_")) {
+                commentObject.author = commentObject.author.replace(
+                    "possibly_not_", ""
+                )
+            }
+
             comments[body.video_id].push(commentObject)
 
             if(msg.new_session) {
@@ -2504,7 +2615,7 @@ app.post("/comment_rate", (req, res) => {
 
     let displayRating = 0
     if(req.headers.initial
-    && !isNaN(parseInt(req.headers.initial))) {
+    && !isNaN(req.headers.initial)) {
         displayRating = parseInt(req.headers.initial)
     }
 
@@ -2513,9 +2624,7 @@ app.post("/comment_rate", (req, res) => {
 
     // find the comment
     let commentObject = undefined;
-    let comments = JSON.parse(
-        fs.readFileSync("./cache_dir/comments.json").toString()
-    )
+    let comments = yt2009.custom_comments()
     if(!comments[videoId]) {
         comments[videoId] = []
     }
@@ -2539,6 +2648,7 @@ app.post("/comment_rate", (req, res) => {
     if(token == "") {
         token = "dev"
     }
+    
     if(commentObject.ratingSources[token]) {
         let r = commentObject.ratingSources[token]
         if(r == 1) {
@@ -2551,16 +2661,16 @@ app.post("/comment_rate", (req, res) => {
     if(req.headers.rating == "like") {
         commentObject.rating += 1
         commentObject.ratingSources[token] = 1
-        displayRating++
+        displayRating += 1
     } else {
         commentObject.rating -= 1
         commentObject.ratingSources[token] = -1
-        displayRating--
+        displayRating -= 1
     }
-    res.send("rating:" + commentObject.rating)
+
+    res.send("rating:" + displayRating)
 
     // save comments with new rating
-    fs.writeFileSync("./cache_dir/comments.json", JSON.stringify(comments))
     yt2009.receive_update_custom_comments(comments)
 })
 
@@ -2996,12 +3106,22 @@ app.get("/nearyou", (req, res) => {
         region = "US"
     }
     let ip = req.ip.replace("::ffff:", "")
+    let ipData;
     try {
-        region = ipDb.getGeoDataSync(ip).country.iso_code
+        ipData = ipDb.getGeoDataSync(ip)
+        region = ipData.country.iso_code
     }
     catch(error) {
         region = "US"
     }
+    let initialRegion = JSON.parse(JSON.stringify(region))
+    /*if(ipData && ipData.city) {
+        try {
+            region = ipData.city.names.en
+        }
+        catch(error) {}
+    }
+    region = "PL"*/
 
     // cookie region override
     if(req.headers.cookie
@@ -3009,7 +3129,58 @@ app.get("/nearyou", (req, res) => {
         region = req.headers.cookie.split("gl=")[1].split(";")[0]
     }
 
-    let regionParam = regionParamTable[region] || regionParamTable["US"]
+    let regionParam = ""
+    if(region.length == 2) {
+        regionParam = regionParamTable[region] || regionParamTable["US"]
+        setTimeout(createSearch, 50)
+    } else {
+        /*const fetch = require("node-fetch")
+        let r = encodeURIComponent(region)
+        fetch(`https://www.google.com/earth/rpc/search?q=${r}&ie=utf-8&hl=en`, {
+            "headers": yt2009_constant.headers
+        }).then(r => {r.text().then(r => {
+            r = require("node-html-parser").parse(r)
+            let feature = r.querySelector("feature_id")
+            if(feature) {
+                let location = feature.innerHTML.split(":")[0].replace("0x", "")
+                let featureId = feature.innerHTML.split(":")[1].replace("0x", "")
+                while(location.endsWith("0")) {
+                    location = parseInt(location, 16).toString().slice(0, -1)
+                }
+                location = parseInt(location)
+                while(featureId.endsWith("0")) {
+                    featureId = parseInt(featureId, 16).toString().slice(0, -1)
+                }
+                featureId = parseInt(featureId)
+                // create protobuf location param
+                const locationParam = require("./proto/locationParam_pb")
+
+                let locationMsg = new locationParam.root()
+                let locationContainer = new locationParam.root.container()
+                locationContainer.setLocation(location)
+                locationContainer.setFeature(featureId)
+                locationMsg.addC(locationContainer)
+
+                try {
+                    regionParam = Buffer.from(
+                        locationMsg.serializeBinary()
+                    ).toString("base64").split("=").join("")
+                    createSearch()
+                }
+                catch(error) {
+                    console.log(error)
+                    region = initialRegion
+                    regionParam = regionParamTable[region] || regionParamTable["US"]
+                    createSearch()
+                }
+            } else {
+                // fallback to country search
+                region = initialRegion
+                regionParam = regionParamTable[region] || regionParamTable["US"]
+                createSearch()
+            }
+        })})*/
+    }
 
     // search for vids in that region
 
@@ -3047,14 +3218,17 @@ app.get("/nearyou", (req, res) => {
                 v.creatorName = v.author_handle || yt2009_utils.asciify(v.author_name)
                 videos.push(v)
             })
-            if(videos.length < 8) {
+            if(videos.length < 8 && region.length !== 2) {
+                region = initialRegion
+                regionParam = regionParamTable[region] || regionParamTable["US"]
+                createSearch()
+            } else if(videos.length < 8) {
                 createSearch()
             } else {
                 renderVids()
             }
         }, yt2009_utils.get_used_token(req), false)
     }
-    createSearch()
 
     function renderVids() {
         let randomVids = []

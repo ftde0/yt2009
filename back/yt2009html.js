@@ -930,7 +930,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             )) {
                                 views = ""
                             }
-                                        
+
                             // apply
                             relatedHTML += yt2009templates.relatedVideo(
                                 video.id,
@@ -940,7 +940,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 views,
                                 video.uploaderUrl ? video.uploaderUrl : "#",
                                 video.uploaderName.replace(authorPrefix, ""),
-                                flags
+                                flags + "/wayback"
                             )
                         })
 
@@ -1552,7 +1552,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         "",
                         video.uploaderUrl,
                         video.uploaderName,
-                        "",
+                        flags,
                         playlistId
                     )
                     if(data.id == video.id) {
@@ -1656,12 +1656,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             endscreen_queue.forEach(video => {
                 if(related_index <= 7
                 && encodeURIComponent(rv_url).length < 1700) {
+                    let thumbUrl = "hqdefault.jpg"
+                    if(flags.includes("autogen_thumbnails")) {
+                        thumbUrl = "hq1.jpg"
+                    }
                     rv_url += `&rv.${related_index}.title=${
                         encodeURIComponent(video.title)
                     }`
                     rv_url += `&rv.${related_index}.thumbnailUrl=${
                         encodeURIComponent(
-                            `http://i.ytimg.com/vi/${video.id}/hqdefault.jpg`
+                            `http://i.ytimg.com/vi/${video.id}/${thumbUrl}`
                         )
                     }`
                     rv_url += `&rv.${related_index}.length_seconds=${
@@ -1966,6 +1970,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
 
                 flash_url += "&enablejsapi=1"
+
+                if(req.query.resetcache) {
+                    flash_url += "&resetcache=1"
+                }
                 
                 code = code.replace(
                     `<!--yt2009_f-->`,

@@ -38,7 +38,9 @@ module.exports = {
             res.sendStatus(400)
             return;
         }
-        let filteredUserFlags = {"watch": [], "search": [], "channel": []}
+        let filteredUserFlags = {
+            "watch": [], "search": [], "channel": [], "login_simulate": ""
+        }
         body.watch.forEach(flag => {
             if(knownFlagNames.watch.includes(flag)) {
                 filteredUserFlags.watch.push(flag)
@@ -54,6 +56,9 @@ module.exports = {
                 filteredUserFlags.channel.push(flag)
             }
         })
+        if(body.login_simulate && body.login_simulate.includes("/")) {
+            filteredUserFlags.login_simulate = body.login_simulate
+        }
 
         // push
         mflags[req.headers.device] = filteredUserFlags
