@@ -59,7 +59,8 @@ module.exports = {
             let cached = n_impl_yt2009channelcache.read("main")[id]
                       || n_impl_yt2009channelcache.read("main")[url]
             // read from cache
-            if(cached && req.query.resetcache !== "1") {
+            if(cached && req.query.resetcache !== "1"
+            && (flags || "").includes("+resetcache")) {
                 writeTimingData("cache retrieve")
                 sendResponse(cached)
             } else {

@@ -13,6 +13,7 @@ function searchSuggest() {
         sTbody.innerHTML = r.responseText
         sTable.className = "google-ac-m"
         addEventsToSuggestions();
+        shownResults = true
     }, false)
 }
 
@@ -49,6 +50,7 @@ document.body.addEventListener("click", function(e) {
     && mouseY <= inputBounds.top + inputBounds.height) return;
     sTbody.innerHTML = ""
     sTable.className = "google-ac-m empty"
+    shownResults = false;
 }, false)
 
 // add hover and click events for suggestions
@@ -83,3 +85,52 @@ function addEventsToSuggestions() {
         }, false)
     })
 }
+
+// up-down arrow
+var highlighted = -1
+var shownResults = false;
+document.body.addEventListener("keydown", function(e) {
+    if(!shownResults) return;
+    var results = nlToArray(
+        document.querySelectorAll(".google-ac-a, .google-ac-b")
+    )
+    var code = e.key || e.code || e.keyCode
+    switch(code) {
+        case "ArrowDown":
+        case 40: {
+            results.forEach(function(r) {
+                r.className = "google-ac-a"
+            })
+            highlighted++
+            if(!results[highlighted]) {
+                highlighted = 0
+            }
+            results[highlighted].className = "google-ac-b"
+            e.preventDefault()
+            break;
+        }
+        case "ArrowUp":
+        case 38: {
+            results.forEach(function(r) {
+                r.className = "google-ac-a"
+            })
+            highlighted--
+            if(!results[highlighted]) {
+                highlighted = 0
+            }
+            results[highlighted].className = "google-ac-b"
+            e.preventDefault()
+            break;
+        }
+        case "Enter":
+        case 13: {
+            var r = results[highlighted]
+            searchInput.value = r.querySelector(".google-ac-c").innerHTML
+            location.href = "/results?search_query="
+                          + searchInput.value.split(" ").join("+")
+            e.preventDefault()
+            break;
+        }
+        
+    }
+}, false)

@@ -1390,7 +1390,11 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 <td colspan="2">
         `
     }, `</td></tr></tbody>`],
-    "listview_video": function(v, index) {
+    "listview_video": function(v, index, flags) {
+        let thumbUrl = "hqdefault.jpg"
+        if(flags.includes("autogen_thumbnail")) {
+            thumbUrl = "1.jpg"
+        }
         return `
     <tr id="video-${v.id}" class="video ${index % 2 == 0 ? "even" : "odd"}">
         <td class="column-check first"><input type="checkbox" value="${v.id}"></td>
@@ -1398,7 +1402,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <div class="video-panel">
                 <div class="video-details" style="margin: 0 0 10px 130px;">
                     <div class="video-image" style="position: absolute; margin-left: -130px;overflow: hidden;height: 78px;">
-                        <a class="video-thumb-120 no-quicklist" href="/watch?v=${v.id}"><img title="${v.title.split("\"").join("&quot;")}" src="//i.ytimg.com/vi/${v.id}/hqdefault.jpg" class="vimg120 yt-uix-hovercard-target" style="margin-top: -6px" alt="${v.title.split("\"").join("&quot;")}"></a>
+                        <a class="video-thumb-120 no-quicklist" href="/watch?v=${v.id}"><img title="${v.title.split("\"").join("&quot;")}" src="//i.ytimg.com/vi/${v.id}/${thumbUrl}" class="vimg120 yt-uix-hovercard-target" style="margin-top: -6px" alt="${v.title.split("\"").join("&quot;")}"></a>
                     </div>
                     <div class="video-title">
                         <div class="clipper">
@@ -1513,6 +1517,11 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 </div>`
     },
     "historyVideo": function(video, req) {
+        let thumbUrl = "hqdefault.jpg"
+        if(req.headers.cookie
+        && req.headers.cookie.includes("autogen_thumbnail")) {
+            thumbUrl = "1.jpg"
+        }
         return `
                 <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">
                     <div style="float: left;">
@@ -1521,7 +1530,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                         </div>
                     </div>
                     <div style="float: left; width: 120px;">
-                        <a href="/watch?v=${video.id}" class="video-thumb"><img src="${req.protocol}://i.ytimg.com/vi/${video.id}/hqdefault.jpg"/></a>
+                        <a href="/watch?v=${video.id}" class="video-thumb"><img src="${req.protocol}://i.ytimg.com/vi/${video.id}/${thumbUrl}"/></a>
                         <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
                         <div class="video-stats">
                             <div class="video-stat"><span class="stat-views">Views: ${video.views}</span></div>
@@ -1586,7 +1595,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         </form><br class="clear">
     </div>`
     },
-    "commentSearchResult": function(comment) {
+    "commentSearchResult": function(comment, flags) {
         function atReply(name) {
             return `<a class="watch-comment-atlink" href="/comment_search?username=${name}">@${name}</a>`
         }
@@ -1597,6 +1606,10 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             let username = at.replace("@", "")
             commentContent = atReply(username) + commentContent.replace(at, "")
         }
+        let thumbUrl = "hqdefault.jpg"
+        if(flags.includes("autogen_thumbnails")) {
+            thumbUrl = "1.jpg"
+        }
         return `
     <div class="comment-result">
         <div class="comment-result-video">
@@ -1604,7 +1617,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 <div class="v90WrapperOuter">
                     <div class="v90WrapperInner">
                         <a href="/watch?v=${comment.video}" class="video-thumb-link" rel="nofollow">
-                            <img title="${comment.videoTitle || ""}" thumb="http://i.ytimg.com/vi/${comment.video}/hqdefault.jpg" src="http://i.ytimg.com/vi/${comment.video}/hqdefault.jpg" class="vimg90" alt="${comment.videoTitle || ""}">
+                            <img title="${comment.videoTitle || ""}" thumb="http://i.ytimg.com/vi/${comment.video}/${thumbUrl}" src="http://i.ytimg.com/vi/${comment.video}/${thumbUrl}" class="vimg90" alt="${comment.videoTitle || ""}">
                         </a>
                     </div>
                 </div>

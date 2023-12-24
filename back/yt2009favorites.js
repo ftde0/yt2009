@@ -19,6 +19,11 @@ module.exports = {
             return;
         }
         req = utils.addFakeCookie(req)
+        let autogen = false;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("autogen_thumbnail")) {
+            autogen = true
+        }
         
         let code = page;
 
@@ -89,7 +94,12 @@ module.exports = {
         splitEvery(readable, 20).forEach(videosPage => {
             videosHTML += templates.favoritepage_videocell_part[0](pageNum)
             videosPage.forEach(video => {
-                video.thumbnail = `//i.ytimg.com/vi/${video.id}/hqdefault.jpg`
+                video.thumbnail = `//i.ytimg.com/vi/${video.id}/`
+                if(autogen) {
+                    video.thumbnail += "1.jpg"
+                } else {
+                    video.thumbnail += "hqdefault.jpg"
+                }
                 videosHTML += templates.subscriptionVideo(
                     video,
                     "",

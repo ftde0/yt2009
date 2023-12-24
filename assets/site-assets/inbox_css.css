@@ -103,3 +103,42 @@ but an attempt was made.
 .subject.expanded #button-delete {
     margin-bottom: 7px;
 }
+.composeform {
+    padding: 1em
+}
+.reply_header {
+    text-align: left;
+    color: #333;
+    width: 100px;
+    vertical-align: top;
+    padding-top: 0.75em
+}
+.reply_body {
+    padding-top: 0.75em;
+    color: #666
+}
+.compose_header {
+    text-align: right;
+    color: #333;
+    width: 100px;
+    padding-right: 1em;
+    vertical-align: top;
+    padding-top: 1.25em
+}
+.compose_body {
+    text-align: left;
+    padding: 0;
+    padding-top: 1em;
+    color: #666
+}
+.compose_body div {
+    padding-top: 0.25em
+}
+.compose_input {
+    width: 90%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10pt
+}
+#message_composing.not_allowed, #message_composing.not_allowed * {
+    cursor: not-allowed;
+}

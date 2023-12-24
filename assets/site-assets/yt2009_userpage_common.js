@@ -125,6 +125,11 @@ if(window.localStorage) {
     }
     var current_page_items_max = 20 - current_page_item_count
 
+    var thumbUrl = "hqdefault.jpg"
+    if(document.cookie.indexOf("autogen_thumbnail") !== -1) {
+        thumbUrl = "1.jpg"
+    }
+
     var path = location.pathname.split("?")[0].split("&")[0]
     switch(path) {
         case "/my_favorites": {
@@ -163,7 +168,7 @@ if(window.localStorage) {
             </div>\
         </div>\
         <div style="float: left; width: 120px;">\
-            <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + location.protocol + '//i.ytimg.com/vi/' + video.id + '/hqdefault.jpg"/></a>\
+            <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + location.protocol + '//i.ytimg.com/vi/' + video.id + '/' + thumbUrl + '"/></a>\
             <a href="/watch?v=' + video.id + '" class="title" style="display: block; color: #03c;">' + video.title + '</a>\
             <div class="video-stats">\
                 <div class="video-stat' + (path == "/watch_queue" ? " hid" : "") + '"><span class="stat-views">Views: ' + video.views + '</span></div>\
@@ -338,6 +343,11 @@ function show_playlist_localstorage(playlist) {
     var playlistVideosHTML = ""
     var playlistVideoIndex = 0;
 
+    var thumbUrl = "hqdefault.jpg"
+    if(document.cookie.indexOf("autogen_thumbnail") !== -1) {
+        thumbUrl = "1.jpg"
+    }
+
     playlistVideos.forEach(function(video) {
         playlistVideosHTML += '\
         <tr class="video ' + (playlistVideoIndex % 2 == 0 ? "even" : "odd") + '" data-videoid="' + video.id + '">\
@@ -349,7 +359,7 @@ function show_playlist_localstorage(playlist) {
             </td>\
             <td id="heading-title" class="heading">\
                 <button title="" class="master-sprite"></button>\
-                <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="//i.ytimg.com/vi/' + video.id + '/hqdefault.jpg"></a>\
+                <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="//i.ytimg.com/vi/' + video.id + '/' + thumbUrl + '"></a>\
                 <a href="/watch?v=' + video.id + '" class="video-title">' + video.title + '</a>\
             </td>\
             <td id="heading-time" class="heading">\

@@ -185,6 +185,11 @@ module.exports = {
         }
         catch(error) {}
 
+        let thumbUrl = "/hqdefault.jpg"
+        if(flags.includes("autogen_thumbnail")) {
+            thumbUrl = "/1.jpg"
+        }
+
         if(saved_subscription_data[url]
         && Math.floor(Date.now() / 1000) - saved_subscription_data[url].time <= 86400) {
             if(sendRawData) {
@@ -219,7 +224,7 @@ module.exports = {
                             "upload": video.publishedTimeText.simpleText,
                             "thumbnail": "//i.ytimg.com/vi/"
                                         + video.videoId
-                                        + "/hqdefault.jpg",
+                                        + thumbUrl,
                             "time": video.lengthText ?
                                     video.lengthText.simpleText : "3:52"
                         })

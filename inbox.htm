@@ -105,7 +105,7 @@
 			<div id="nav-pane">
 				<div class="header">
 					<div class="action-button" id="button-new">
-						<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick=""><span>Compose</span></a>
+						<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="openCompose()"><span>Compose</span></a>
 						</span>
 					</div>
 				</div>
@@ -119,7 +119,15 @@
 							<span class="count">(0)</span>
 						</div>
 					</div>
-					<div class="folder subfolder" onclick="openEmpty(this)"><span class="name" href="#">Personal Messages</span></div>
+					<div class="folder subfolder messages" onclick="openMsgs(this)">
+						<div class="no-msgs">
+							<span class="name" href="#">Personal Messages</span>
+						</div>
+						<div class="msgs hid">
+							<a class="name" href="#">Personal Messages</a>
+							<span class="count">(0)</span>
+						</div>
+					</div>
 					<div class="folder subfolder shared" onclick="openShared(this)">
 						<div class="no-msgs">
 							<span class="name" href="#">Shared with You</span>
@@ -140,7 +148,7 @@
 					</div>
 					<div class="folder subfolder" onclick="openEmpty(this)"><span class="name" href="#">Friend Invites</span></div>
 					<div class="folder subfolder" onclick="openEmpty(this)"><span class="name" href="#">Video Responses</span></div>
-					<div class="folder"><span class="name" href="#">Sent</span></div>
+					<div class="folder" onclick="openSent(this)"><span class="name" href="#">Sent</span></div>
 					<br>
 					<div class="folder"><a class="name" href="#">Address Book</a></div>
 				</div>
@@ -153,6 +161,10 @@
 					<div class="view">
 						<div class="actions" style="height: 26px;">
 							<img class="img-action-arrow" src="/assets/site-assets/pixel-vfl73.gif" style="float: left; vertical-align: middle; margin-right: 5px; margin-top: 5px;" />
+							<div class="action-button" id="button-reply" style="float: left;display: none;">
+								<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');" onclick="replyTo(this.parentNode);"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="return false;"><span>Reply</span></a></a>
+								</span>
+							</div>
 							<div class="action-button" id="button-delete" style="float: left">
 								<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');" onclick="deleteSelected();"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="return false;"><span>Delete</span></a></a>
 								</span>
@@ -183,6 +195,11 @@
 								</thead>
 								<tbody>
 									<td id="compose-cell" colspan="2" valign="top" height="100%">
+										<div style="display: none;" id="inbox_error_container">
+											<div id="error-box" class="errorBox">
+												No session token set.
+											</div>
+										</div>
 										<div id="message_reading">
 											<div id="message-pane">
 												<table width="100%">
@@ -193,6 +210,64 @@
 													</tbody>
 												</table>
 											</div>
+										</div>
+										<div id="message_composing" class="composeform hid" style="">
+										<table width="100%" cellspacing="0" cellpadding="0" border="0">
+										<tbody>
+											<tr>
+												<td>
+													<form id="composeform" action="/inbox_send" method="post">
+														<table class="clear" width="100%" cellspacing="0" cellpadding="0" border="0">
+															<tbody>
+																<tr>
+																	<td class="compose_header">From:</td>
+																	<td class="compose_body">
+																		<div id="compose_from"></div>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="compose_header">To:</td>
+																	<td class="compose_body">
+																		<input type="hidden" id="compose_to_all_subscribers" value="false">
+																		<input type="text" class="compose_input" name="compose_to" id="compose_to">
+																	</td>
+																</tr>
+																<tr>
+																	<td class="compose_header">Subject:</td>
+																	<td class="compose_body">
+																		<input type="text" class="compose_input" name="compose_subject" id="compose_subject">
+																	</td>
+																</tr>
+																<tr>
+																	<td class="compose_header">Message:</td>
+																	<td class="compose_body">
+																		<textarea rows="16" class="compose_input" name="compose_message" id="compose_message"></textarea>
+																	</td>
+																</tr>
+																<tr>
+																	<td class="compose_header">Attach Video:</td>
+																	<td class="compose_body">
+																		<select id="field_reference_video" name="field_reference_video">
+																			<option value="">- Your Videos -</option>
+																			<option value="">- Your Favorite Videos -</option>
+																		</select>
+																	</td>
+																</tr>
+																<tr>
+																	<td></td>
+																	<td align="left">
+																		<br>
+																		<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="sendMsg()"><span>Send Message</span></a></span>
+																		<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="openCompose()"><span>Cancel</span></a></span>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</form>
+												</td>
+											</tr>
+										</tbody>
+										</table>
 										</div>
 									</td>
 								</tbody>
@@ -292,5 +367,6 @@
 	<a name="pageBottom"></a>
 	<script src="/assets/site-assets/yt2009langpicker.js"></script>
 	<script src="/assets/site-assets/search-suggestions.js"></script>
+	<script src="/assets/site-assets/yt2009inbox.js"></script>
 </body>
 </html>

@@ -528,7 +528,7 @@ module.exports = {
         if(custom_comments[data.id]) {
             let commentsHTML = ""
             custom_comments[data.id].forEach(comment => {
-                if(!comment.time) return;
+                if(!comment.time || !comment.text) return;
                 let commentTime = yt2009utils.unixToRelative(comment.time)
                 commentTime = yt2009utils.relativeTimeCreate(
                     commentTime, yt2009languages.get_language(req)
@@ -1369,6 +1369,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     }
                 }
 
+                if(!commentContent) return;
+
                 let commentHTML = yt2009templates.videoComment(
                     comment.authorUrl,
                     commentPoster,
@@ -1404,7 +1406,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             this.get_old_comments(data, (comments) => {
                 let index = 0;
                 comments.forEach(comment => {
-                    if(comment.continuation || comment.pinned) return;
+                    if(comment.continuation
+                    || comment.pinned
+                    || comment.content.trim().length == 0
+                    || comment.content == "<br>") return;
                     // flags
                     totalCommentCount++
                     let commentTime = comment.time;
@@ -2176,94 +2181,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
-        // channel banners
-        const yt2009channels = require("./yt2009channels")
-        function defaultBanner() {
-            let channelUrl = data.author_id
-                           ? "/channel/" + data.author_id
-                           : data.author_url
-            yt2009channels.main({"path": channelUrl, 
-            "headers": {"cookie": ""},
-            "query": {"f": 0}}, 
-            {"send": function(data) {
-                if(data.newBanner) {
-                    code = code.replace(
-                        `<!--yt2009_bannercard-->`,
-                        yt2009templates.watchBanner(
-                            channelUrl, "/assets/" + (data.newBanner || data.banner)
-                        )
-                    )
-                }
-                callbacksMade++;
-                if(requiredCallbacks <= callbacksMade) {
-                    render_endscreen()
-                    fillFlashIfNeeded();
-                    genRelay();
-                    callback(code)
-                }
-            }}, "source:watch", true)
-        }
-        if(flags.includes("old_banners")
-        && data.author_url.includes("channel/UC")) {
-            let id = data.author_url.split("channel/UC")[1]
-            let header = `https://i3.ytimg.com/u/${id}/watch_header.jpg`
-            let fname = __dirname + "/../assets/" + id + "_header.jpg"
-            if(!fs.existsSync(fname)) {
-                requiredCallbacks++
-                fetch(header, {
-                    "headers": constants.headers
-                }).then(r => {
-                    function onSaveDone(b) {
-                        code = code.replace(
-                            `<!--yt2009_bannercard-->`,
-                            yt2009templates.watchBanner(
-                                data.author_url, b
-                            )
-                        )
-                        callbacksMade++;
-                        if(requiredCallbacks <= callbacksMade) {
-                            render_endscreen()
-                            fillFlashIfNeeded();
-                            genRelay();
-                            callback(code)
-                        }
-                    }
-                    if(r.status !== 404) {
-                        r.buffer().then(buffer => {
-                            fs.writeFileSync(fname, buffer)
-                            requiredCallbacks -= 1
-                            onSaveDone("/assets/" + id + "_header.jpg")
-                        })
-                    } else {
-                        requiredCallbacks -= 1;
-                        defaultBanner()
-                        fs.writeFileSync(fname, "")
-                        return;
-                    }
-
-                    
-                })
-            } else if(fs.statSync(fname).size < 5) {
-                defaultBanner()
-            } else {
-                code = code.replace(
-                    `<!--yt2009_bannercard-->`,
-                    yt2009templates.watchBanner(
-                        data.author_url, "/assets/" + id + "_header.jpg"
-                    )
-                )
-                callbacksMade++;
-                if(requiredCallbacks <= callbacksMade) {
-                    render_endscreen()
-                    fillFlashIfNeeded();
-                    genRelay();
-                    callback(code)
-                }
-            }
-        } else {
-            defaultBanner()
-        }
-
         // old_author_avatar
         if(flags.includes("author_old_avatar")
         && data.author_url.includes("channel/UC")) {
@@ -2359,6 +2276,31 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `<script src="/assets/site-assets/fe.js"></script>`
             )
         }
+
+        // channel banners
+        this.getBanner(data, flags, (banner) => {
+            let channelUrl = data.author_id
+                           ? "/channel/" + data.author_id
+                           : data.author_url
+            if(banner) {
+                code = code.replace(
+                    `<!--yt2009_bannercard-->`,
+                    yt2009templates.watchBanner(
+                        channelUrl, banner
+                    )
+                )
+            }
+            callbacksMade++;
+            if(requiredCallbacks <= callbacksMade) {
+                render_endscreen()
+                fillFlashIfNeeded();
+                genRelay();
+                try {
+                    callback(code)
+                }
+                catch(error) {}
+            }
+        })
         
 
         if(requiredCallbacks == 0) {
@@ -2764,6 +2706,72 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         })
         if(config.env == "dev") {
             console.log("received " + videos.length + " videos from master")
+        }
+    },
+
+    "getBanner": function(data, flags, callback) {
+        let dataSent = false;
+        const yt2009channels = require("./yt2009channels")
+        let bannerUrl = ""
+        function defaultBanner() {
+            let channelUrl = data.author_id
+                           ? "/channel/" + data.author_id
+                           : data.author_url
+            let identif = "source:watch"
+            let id = data.author_url.split("channel/UC")[1]
+            let resetcache = fs.existsSync(
+                __dirname + "/../assets/" + id + "_uniq_banner.jpg"
+            )
+            if(resetcache) {
+                identif += "+resetcache"
+            }
+            yt2009channels.main({"path": channelUrl, 
+            "headers": {"cookie": ""},
+            "query": {"f": 0}}, 
+            {"send": function(data) {
+                if(data.newBanner) {
+                    bannerUrl = "/assets/" + (data.newBanner || data.banner)
+                    dataSent = true
+                    callback(bannerUrl)
+                }
+            }}, identif, true)
+            setTimeout(() => {
+                if(!dataSent) {
+                    callback(null)
+                }
+            }, 5000)
+        }
+        if(flags.includes("old_banners")
+        && data.author_url.includes("channel/UC")) {
+            let id = data.author_url.split("channel/UC")[1]
+            let header = `https://i3.ytimg.com/u/${id}/watch_header.jpg`
+            let fname = __dirname + "/../assets/" + id + "_header.jpg"
+            if(!fs.existsSync(fname)) {
+                fetch(header, {
+                    "headers": constants.headers
+                }).then(r => {
+                    if(r.status !== 404) {
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(fname, buffer)
+                            bannerUrl = "/assets/" + id + "_header.jpg";
+                            dataSent = true
+                            callback(bannerUrl)
+                        })
+                    } else {
+                        defaultBanner()
+                        fs.writeFileSync(fname, "")
+                        return;
+                    }  
+                })
+            } else if(fs.statSync(fname).size < 5) {
+                defaultBanner()
+            } else {
+                bannerUrl = "/assets/" + id + "_header.jpg"
+                dataSent = true
+                callback(bannerUrl);
+            }
+        } else {
+            defaultBanner()
         }
     }
 }
