@@ -12,14 +12,15 @@ const yt2009exports = require("./yt2009exports")
 let ip_request_count = {}
 
 function flash_handler(req, res) {
-    let videoId = req.originalUrl.split("embedF/")[1].split("?")[0].substring(0, 11)
+    let videoId = req.originalUrl.split("embedF/")[1].split("?")[0]
     let restArguments = req.originalUrl.split("?")
     restArguments.shift();
     restArguments = restArguments.join("&")
+    let h264 = videoId.includes("/mp4");
+    videoId = videoId.substring(0, 11)
     let createdUrl = req.originalUrl.split("embedF")[0]
-                  + "watch.swf?video_id=" + videoId
+                  + "watch.swf?video_id=" + videoId + (h264 ? "/mp4" : "")
                   + "&" + restArguments;
-
     // related videos
     if(req.query.server_fill_related == 1
     && !req.headers["user-agent"].includes("MSIE")) {
@@ -51,12 +52,21 @@ function flash_handler(req, res) {
                 }
                 
             })
+
+            if(h264) {
+                res.redirect(createdUrl)
+                return;
+            }
             require("./yt2009warpSWF").vid_flv(videoId, () => {
                 res.redirect(createdUrl)
             })
         })
     } else {
         // albo nie
+        if(h264) {
+            res.redirect(createdUrl)
+            return;
+        }
         require("./yt2009warpSWF").vid_flv(videoId, () => {
             res.redirect(createdUrl)
         })
@@ -208,10 +218,14 @@ module.exports = function(req, res) {
     catch(error) {}
 
     // flag autoplay
-    code = code.replace(
-        `<!--autoplay_hook-->`,
-        templates.embedAutoplayCode
-    )
+    if(!req.query.autoplay
+    || req.query.autoplay !== "0") {
+        code = code.replace(
+            `<!--autoplay_hook-->`,
+            templates.embedAutoplayCode
+        )
+    }
+    
 
     // flag annotation_redirect
     if((req.headers.cookie || "").includes("annotation_redirect")) {
@@ -221,7 +235,7 @@ module.exports = function(req, res) {
         )
     }
 
-    if(id.length == 0) {
+    if(id.length !== 11) {
         res.send("[yt2009] niepoprawne id")
         return;
     }

@@ -146,6 +146,12 @@ if(!config.disableWs) {
                         }
                         break;
                     }
+                    case "inbox_feedback": {
+                        if(syncInboxCallbacks[m.id]) {
+                            syncInboxCallbacks[m.id](m)
+                        }
+                        break;
+                    }
                 }
             })
             w.addEventListener("error", () => {
@@ -213,7 +219,7 @@ app.get('/', (req,res) => {
         })
     }
 
-    if(req.headers.cookie
+    /*if(req.headers.cookie
     && req.headers.cookie.includes("activity")) {
         let comments = yt2009_utils.latestCustomComments(3)
         let vList = []
@@ -224,7 +230,7 @@ app.get('/', (req,res) => {
             yt2009_home(req, res)
         })
         return;
-    }
+    }*/
     yt2009_home(req, res)
 })
 
@@ -2157,6 +2163,12 @@ app.get("/userpage_expand_view", (req, res) => {
         res.sendStatus(400)
         return;
     }
+    let flags = ""
+    if(req.headers.cookie
+    && req.headers.cookie.includes("global_flags=")) {
+        flags = req.headers.cookie.split("global_flags=")[1].split(";")[0]
+    }
+
     // get all video data
     let videos = req.headers.videos.split(",")
     if(videos[videos.length - 1] == "") {
@@ -2168,7 +2180,7 @@ app.get("/userpage_expand_view", (req, res) => {
             let videoIndex = 0;
             videos.forEach(v => {
                 v = yt2009.get_cache_video(v)
-                response += yt2009_templates.listview_video(v, videoIndex)
+                response += yt2009_templates.listview_video(v, videoIndex, flags)
                 videoIndex++
             })
 
@@ -2922,6 +2934,11 @@ app.get("/comment_search", (req, res) => {
         return;
     }
     let code = shtml;
+    let flags = ""
+    if(req.headers.cookie
+    && req.headers.cookie.includes("global_flags=")) {
+        flags = req.headers.cookie.split("global_flags=")[1].split(";")[0]
+    }
 
     // enumerate
     let comments = yt2009.custom_comments()
@@ -2999,7 +3016,7 @@ app.get("/comment_search", (req, res) => {
     // render
     let commentsHTML = ""
     commentsA.forEach(comment => {
-        commentsHTML += yt2009_templates.commentSearchResult(comment)
+        commentsHTML += yt2009_templates.commentSearchResult(comment, flags)
     })
 
     // pager render
@@ -3410,6 +3427,139 @@ app.get("/ver", (req, res) => {
     let wsEnabled = config.disableWs || true
     let wsCon = yt2009_exports.read().masterWs ? true : false
     res.send(`${version}<br>sync enabled:${wsEnabled}<br>sync connected:${wsCon}`)
+})
+
+/*
+======
+sync inbox
+======
+*/
+let syncInboxCallbacks = {}
+app.get("/get_notifications", (req, res) => {
+    let session = false
+    if(req.headers.cookie
+    && req.headers.cookie.includes("syncses=")) {
+        session = req.headers.cookie.split("syncses=")[1].split(";")[0]
+    }
+    if(!session) {res.sendStatus(401);return;}
+
+
+    let id = Math.floor(Math.random() * 5949534534)
+    syncInboxCallbacks[id] = function(msg) {
+        res.send(msg.data)
+    }
+    try {
+        yt2009_exports.read().masterWs.send(JSON.stringify({
+            "type": "inbox_msg_get",
+            "session": session,
+            "id": id
+        }))
+        setTimeout(() => {
+            try {res.send([]);}catch(error){}
+        }, 5000)
+    }
+    catch(error) {
+        res.send([])
+    }
+})
+
+app.post("/inbox_send", (req, res) => {
+    // check for valid body
+    if(!yt2009_utils.isAuthorized(req)) {res.sendStatus(401);return;}
+    let b = (req.body || "").toString().split("&")
+    let dataJSON = {}
+    b.forEach(d => {
+        dataJSON[d.split("=")[0]] = decodeURIComponent(d.split("=")[1])
+    })
+    if(!dataJSON.compose_to
+    || !dataJSON.compose_message) {res.sendStatus(400);return;}
+
+    // check for valid session
+    let session = false
+    if(req.headers.cookie
+    && req.headers.cookie.includes("syncses=")) {
+        session = req.headers.cookie.split("syncses=")[1].split(";")[0]
+    }
+    if(!session) {res.sendStatus(401);return;}
+    let id = Math.floor(Math.random() * 5949534534)
+    syncCheckCallbacks[id] = function(msg) {
+        if(msg.result
+        && msg.result.length > 1) {
+            onCheckPass()
+        } else {
+            res.redirect("/inbox?msg=2")
+        }
+    }
+    try {
+        yt2009_exports.read().masterWs.send(JSON.stringify({
+            "type": "pull_name",
+            "session": session,
+            "id": id
+        }))
+        setTimeout(() => {
+            try {res.redirect("/inbox?msg=1")}catch(error) {}
+            return;
+        }, 5000)
+    }
+    catch(error) {
+        res.redirect("/inbox?msg=1")
+    }
+
+    // send msg
+    function onCheckPass() {
+        id = Math.floor(Math.random() * 5949534534)
+        syncInboxCallbacks[id] = function(m) {
+            if(m.error) {
+                res.redirect("/inbox?msg=" + m.msg)
+            } else {
+                res.redirect("/inbox?msg=5")
+            }
+        }
+        yt2009_exports.read().masterWs.send(JSON.stringify({
+            "type": "inbox_msg_post",
+            "session": session,
+            "id": id,
+            "msg_type": "text_msg",
+            "to": dataJSON.compose_to,
+            "subject": dataJSON.compose_subject,
+            "content": dataJSON.compose_message
+        }))
+    }
+})
+
+app.post("/mark_spam", (req, res) => {
+    try {
+        let session = false;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("syncses=")) {
+            session = req.headers.cookie.split("syncses=")[1].split(";")[0]
+        }
+        if(!session) {
+            res.sendStatus(401)
+            return;
+        }
+        let body = JSON.parse(req.body.toString())
+        if(!body.from
+        || !body.subject
+        || !body.content) {
+            res.sendStatus(400)
+            return;
+        }
+        yt2009_exports.read().masterWs.send(JSON.stringify({
+            "type": "inbox_spam_mark",
+            "session": session,
+            "from": body.from,
+            "subject": body.subject,
+            "content": body.content,
+            "source": require("crypto").createHash("sha1")
+                      .update(req.ip).digest("hex")
+        }))
+        res.sendStatus(200)
+    }
+    catch(error) {
+        res.sendStatus(503)
+        console.log(error)
+    }
 })
 
 /*

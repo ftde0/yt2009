@@ -32,6 +32,7 @@ var languageData_EN = {
         "channel-realistic-view-count": "more realistic for 2009 view counts",
         "channel-remove-username-space": "removes spaces from usernames",
         "channel-username-asciify": "remove special characters from usernames",
+        "channel-wayback-features": "use Wayback Machine data for yt2009",
 
         "mainpage-disable-fallback": "hides fallback mode warning",
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
