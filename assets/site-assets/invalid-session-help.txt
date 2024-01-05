@@ -1,0 +1,28 @@
+// Invalid session token. // while posting a comment;
+
+to verify identities of yt2009 users a session system
+is used. if you've got an "Invalid session token" error,
+this most likely means your identity couldn't be
+verified.
+
+possible causes:
+1. you moved to a different pc/browser without your settings
+   and tried to comment with your previous name
+2. you tried to comment as someone else
+3. comment sync server is down
+
+////////////////////////////////////////////////////////////
+
+if you have access to your previous setup (with your flags
+and everything), use /yt2009_flags.htm, open EXPORT MENU
+and click "export session". copy the full session (first
+line), open /yt2009_flags.htm on your second setup, open
+EXPORT MENU, click "import session" and paste in the code
+copied from "export session".
+
+////////////////////////////////////////////////////////////
+
+if you don't have access to your setup with your session
+anymore but can verify it is in fact you from the comments,
+contact me at /u/Aromatic-Audience to regain access to
+your username.

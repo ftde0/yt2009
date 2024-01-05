@@ -21,6 +21,10 @@ module.exports = {
             let vLink = customLink
                         ? "https://i.ytimg.com/vi/" + id  + "/default.jpg"
                         : id
+            if(!vLink || !vLink.startsWith("http")) {
+                callback(false)
+                return;
+            }
             fetch(vLink, {
                 "headers": constants.headers
             }).then(r => {

@@ -25,7 +25,6 @@ module.exports = function(file_path) {
         command.join(" ")
         + ` | sort ${process.platform == "linux" ? "-n" : ""}`
     ).toString()
-    //let stdout = child_process.execSync(`convert "${file_path}" +dither -colors 2 -define histogram:unique-colors=true -format "%c" histogram:info: | sort ${process.platform == "linux" ? "-n" : ""}`).toString()
     let split_output = stdout.split("\n")[0];
     try {
         let rgb = split_output.split("(")[1].split(")")[0].split(",")

@@ -2556,4 +2556,124 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         </div>
         <div class="clear"></div>
     </div>`,
+
+    // stats and data data
+    "leadin_stats": function(views) {
+        return `
+        <div id="watch-actions-stats" class="watch-actions-stats">
+            <div class="stats-header">
+                <b>Total Views: ${views}</b>
+            </div>`
+    },
+
+    "table_stats_start": `
+    <b class="sep">Links</b>
+    <table id="watch-tab-stats-links-table">
+        <tr id="watch-tab-stats-entry">
+            <th class="letter"> </th>
+            <th class="date">Date</th>
+            <th class="link">Link</th>
+            <th class="views">Views</th>
+        </tr>
+    `,
+
+    "table_stats_entry": function(i, letter, dateScale) {
+        let displayHTML = ""
+        switch(i.type) {
+            case "ref-found-search": {
+                displayHTML = i.display_header + `<a href="/results?search_query=${encodeURIComponent(i.query)}">${i.query}</a>`
+                break;
+            }
+            case "first-ref-search": {
+                displayHTML = i.display_header + `<a href="/watch?v=${i.video.id}">${i.video.title}</a>`
+                break;
+            }
+            case "ref-video-response": {
+                displayHTML = i.display_header + `<a href="/watch?v=${i.video.id}">${i.video.title}</a>`
+                break;
+            }
+            case "viral": {
+                displayHTML = "Other/Viral"
+                break;
+            }
+        }
+        if(dateScale) {
+            let dateRange = [
+                new Date(dateScale[0]).getTime(),
+                new Date(dateScale[1]).getTime()
+            ]
+            let diff = (dateRange[1] - dateRange[0]) * dateScale[2]
+            i.date = dateRange[0] + diff
+        }
+        return `
+        <tr>
+            <td><span class="leg">${letter}</span></td>
+            <td>${utils.dateFormat(i.date)}</td>
+            <td>${displayHTML}</td>
+            <td class="views">${utils.countBreakup(i.approx_view)}</td>
+        </tr>`
+    },
+
+    "table_stats_charts": function(rating) {
+        let chartImgs = [
+            ["//chart.apis.google.com/chart",
+            "?cht=lc:nda&chs=70x15&chco=647b5c",
+            "&chm=B,b6cfadaa,0,0,0&chd=t:0.0,60.0,75.0,90.0"].join(""),
+            ["//chart.apis.google.com/chart",
+            "?cht=lc:nda&chs=70x15&chco=647b5c",
+            "&chm=B,b6cfadaa,0,0,0&chd=t:0.0,60.0,70.0,100.0"].join(""),
+            ["//chart.apis.google.com/chart",
+            "?cht=lc:nda&chs=70x15&chco=647b5c",
+            "&chm=B,b6cfadaa,0,0,0&chd=t:" + ((rating * 20) - 10) + ".0," + (rating * 20) + ".0"].join("")
+        ]
+
+        return `
+        <table id="watch-tab-stats-smaller-table">
+            <tr>
+                <th>Comments</th>
+                <th>Favorites</th>
+                <th>Ratings</th>
+                <th>Average Rating</th>
+            </tr>
+            <tr>
+                <td><img src="${chartImgs[0]}"/></td>
+                <td><img src="${chartImgs[1]}"/></td>
+                <td><img src="${chartImgs[1]}"/></td>
+                <td><img src="${chartImgs[2]}"/></td>
+            </tr>
+        </table>`
+    },
+
+    "table_audiences_leadin": `
+    <b class="sep">Audiences</b>
+    <div id="watch-tab-stats-audiences-container">
+        <div id="watch-tab-stats-audiences-age">
+            <p>This video is most popular with:</p>
+            <table id="watch-tab-stats-audiences-table">
+                <tr id="watch-tab-stats-entry">
+                    <th class="gender">Gender</th>
+                    <th class="age">Age</th>
+                </tr>`,
+
+    "table_audiences_element": function(list) {
+        let r = ""
+        list.value.forEach(a => {
+            r += 
+                `<tr id="watch-tab-stats-entry">
+                    <td>${a[0]}</td>
+                    <td>${a[1]}</td>
+                </tr>`
+        })
+        return r;
+    },
+    "table_audiences_end": `
+            </table>
+        </div>
+        <div id="watch-tab-stats-audiences-countries">
+            <p>This video is most popular in:</p>`,
+    "map_audiences_end": `
+        </div>
+    </div>`,
+
+    "map_audiences_empty": `<img width="350" height="170" id="stats-big-map-expanded" src="http://chart.googleapis.com/chart?cht=t&chs=350x170&chtm=world&chd=t:&chf=bg,s,eff8fe&chco=f6f6f6,32501a&chld="/>`
 }

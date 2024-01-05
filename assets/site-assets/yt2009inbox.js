@@ -555,7 +555,6 @@ function blockUser(user) {
 }
 
 function markSpam(msg) {
-    console.log(msg)
     var from = msg.querySelector(".from.collapsed").innerHTML
     var sub = msg.querySelector(".subject.collapsed").innerHTML
     var content = msg.querySelector(".subject.expanded").innerText

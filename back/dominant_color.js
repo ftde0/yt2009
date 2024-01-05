@@ -2,7 +2,7 @@
 ======
 dominant_color - komponent na yt2009 używający convert z imagemagicka
 
-torl/nb, 2022-2023
+torl/nb, 2022-2024
 ======
 */
 
@@ -27,6 +27,18 @@ module.exports = function(file_path, callback, colors, cropSide) {
             }
         })
 
+        if(!output.split("(")[1]) {
+            console.log(`
+===========
+
+WARN: failed to find the channel's dominant color!
+this is most likely an issue with \`convert\` not
+set up properly.
+
+===========`)
+            callback([180, 180, 180])
+            return;
+        }
         output = output.split("(")[1].split(")")[0].split(",")
         let finalOutput = []
 

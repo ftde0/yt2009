@@ -79,6 +79,11 @@
 				<p>paste exported flags code below and click "import" to apply. <b>will overwrite your current flags settings.</b></p>
 				<textarea id="imported-flags" spellcheck="false"></textarea><br>
 				<a class="yt-button yt-button-primary" href="#" onclick="add_flags();"><span id="i_import">import</span></a>
+			</div><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="session_import();"><span id="i_import">import session</span></a><br>
+			<div id="imported-session-container" class="hid" style="height: 0px;">
+				<textarea id="import-session-text" spellcheck="false" style="height: 40px"></textarea><br>
+				<a class="yt-button yt-button-primary" href="#" onclick="import_session_do();"><span id="i_import">import</span></a>
 			</div>
 			<hr>
 			<p>bring login_simulate to the mobile app:</p>
@@ -92,6 +97,9 @@
 
 		<div class="group1">
 			<h2>/watch</h2>
+			<input type="checkbox" id="watch-annotation-gradients" title="dodaje wcześniej widoczne gradienty na adnotacjach w html5.">
+			<label for="watch-annotation-gradients">annotation_gradients</label><br>
+			<i id="leg_annot_notice">annotation_gradients nie jest celnym odwzorowaniem adnotacji z flash.<br>zostało dodane ze względu na poprzednią implementację adnotacji w html5.</i><br>
 			<input type="checkbox" id="watch-comments-remove-future" title="pokazuje stare komentarze na filmach">
 			<label for="watch-comments-remove-future">comments_remove_future</label><br>
 			<input type="checkbox" id="watch-default-avatar" title="domyślny awatar z 2009 zamiast awatara twórcy">
@@ -111,6 +119,10 @@
 			- moderate - wszystko co poor + niektóre słowa<br>
 			- max - usuwa całe linijki tekstu których zawartość pasuje do moderate<br>
 			(zostawienie pola pustego/inna wartość oznacza max)</p>
+			<input type="checkbox" id="watch-distill-tags" title="&quot;destyluje&quot; tagi filmów aby były bardziej celne">
+			<label for="watch-distill-tags">distill_tags</label><br>
+			<input type="checkbox" id="watch-enable-stats-countback" title="cofa liczniki dat w zakładce Statistics & Data dla starych filmów.">
+			<label for="watch-enable-stats-countback">enable_stats_countback</label><br>
 			<input type="checkbox" id="watch-exclude-cs" title="ukrywa twoje komentarze w /comment_search">
 			<label for="watch-exclude-cs">exclude_cs</label><br>
 			<input type="checkbox" id="watch-exp-related" title="pokazuje podobne filmy bazując na tagach oglądanego filmu">
@@ -125,8 +137,6 @@
 			(wszystko inne/zostawienie pola pustego oznaczy always)</p>
 			<input type="checkbox" id="watch-homepage-contribute" title="filmy obejrzane przez ciebie, wrzucone przed 2011 będą pokazywane na stronie głównej i na /videos">
 			<label for="watch-homepage-contribute">homepage_contribute</label><br>
-			<!--<input type="checkbox" id="watch-old-avatars" title="używa starych awatarów kiedy możliwe bez używania wayback_features.">
-			<label for="watch-old-avatars">old_avatars</label><br> soon-->
 			<input type="checkbox" id="watch-old-banners" title="używa starych banerów kiedy możliwe bez używania wayback_features.">
 			<label for="watch-old-banners">old_banners</label><br>
 			<input type="checkbox" id="watch-realistic-view-count" title="bardziej realistyczna na 2009 liczba wyświetleń i ratingów">
@@ -476,6 +486,20 @@
 					funExpand(f, 90)
 				}
 			}
+		}
+
+		// import session token
+		function session_import() {
+			var f = document.getElementById("imported-session-container")
+			f.className = ""
+			funExpand(f, 60)
+		}
+
+		function import_session_do() {
+			var f = document.getElementById("import-session-text").value
+			document.cookie = "syncses=" + f + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			alert("session imported.")
+			location.reload()
 		}
 	</script>
 </body>

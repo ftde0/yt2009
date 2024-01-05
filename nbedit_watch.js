@@ -1028,6 +1028,54 @@ function responseNavigateRight() {
     }, 20)
 }
 
+/*
+======
+stats & data
+======
+*/
+// expander button
+var statsExpander = $(".yt2009-stats-data-expander")
+var statsLoaded = false;
+function statsDataExpand() {
+    if(statsExpander.parentNode.className
+       .indexOf("yt-uix-expander-collapsed") !== -1) {
+        statsExpander.parentNode.className = responseExpander.parentNode.className
+        .replace(
+            "collapsed",
+            "expanded"
+        )
+
+        if(!statsLoaded) {
+            loadStats();
+        }
+    } else {
+        statsExpander.parentNode.className = responseExpander.parentNode.className
+        .replace(
+            "expanded",
+            "collapsed"
+        )
+    }
+}
+statsExpander.addEventListener("click", statsDataExpand, false)
+
+// fetch our stats
+function loadStats() {
+    var id = window.location.href.split("v=")[1].split("&")[0]
+    var v = document.getElementById("watch-view-count").innerHTML
+    var s = document.getElementById("ratingStars")
+            .getElementsByTagName("button")[0]
+            .getAttribute("title")
+    var r = new XMLHttpRequest();
+    r.open("GET", "/insight_ajax?action_get_statistics_and_data=1&v=" + id)
+    r.setRequestHeader("displayed_views", v)
+    r.setRequestHeader("displayed_rating", s)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        statsLoaded = true;
+        $("#watch-tab-stats-body").innerHTML = r.responseText
+    }, false)
+    
+}
 
 /*
 ======
@@ -1158,6 +1206,19 @@ function commentSend() {
         $(".comments-container").innerHTML += r.responseText;
         if(document.cookie.indexOf("syncses") !== -1 && newUser) {
             btn.setAttribute("value", "Comment Posted! (session created)")
+        }
+        if(r.getResponseHeader("fail-msg")
+        && r.getResponseHeader("fail-msg") == "invalid-session") {
+            var mc = $("#div_main_comment")
+            var eBox = document.createElement("div")
+            eBox.className = "errorBox"
+            eBox.innerHTML = "invalid session token. "
+            var a = document.createElement("a")
+            a.href = "/assets/site-assets/invalid-session-help.txt"
+            a.setAttribute("target", "_blank")
+            a.innerHTML = "(help)"
+            eBox.appendChild(a)
+            mc.appendChild(eBox)
         }
     }, false)
 }

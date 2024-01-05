@@ -23,6 +23,11 @@ module.exports = {
 
     "read": function(cacheType) {
         return JSON.parse(JSON.stringify(cacheList[cacheType + "Cache"]))
+    },
+
+    "clean": function() {
+        cacheList.mainCache = {}
+        cacheList.playlistCache = {}
     }
 }
 

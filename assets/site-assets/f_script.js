@@ -753,6 +753,19 @@ function commentSend() {
             if(document.cookie.indexOf("syncses") !== -1 && newUser) {
                 btn.setAttribute("value", "Comment Posted! (session created)")
             }
+            if(r.getResponseHeader("fail-msg")
+            && r.getResponseHeader("fail-msg") == "invalid-session") {
+                var mc = $("#div_main_comment")
+                var eBox = document.createElement("div")
+                eBox.className = "errorBox"
+                eBox.innerHTML = "invalid session token. "
+                var a = document.createElement("a")
+                a.href = "/assets/site-assets/invalid-session-help.txt"
+                a.setAttribute("target", "_blank")
+                a.innerHTML = "(help)"
+                eBox.appendChild(a)
+                mc.appendChild(eBox)
+            }
         }
     }
 }
@@ -1693,6 +1706,59 @@ function new_layout_leave() {
         document.cookie = "unflip=1; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
     }
     location.href = location.href.replace("&flip=1", "")
+}
+
+/*
+======
+stats & data
+======
+*/
+// expander button
+var statsExpander = $(".yt2009-stats-data-expander")
+var statsLoaded = false;
+statsExpander.onclick = function() {
+    var statsParent = statsExpander.parentNode
+    if(statsParent.className.indexOf("yt-uix-expander-collapsed") !== -1) {
+        statsParent.className = statsParent.className.replace(
+            "collapsed", "expanded"
+        )
+        if(!statsLoaded) {
+            loadStats();
+        }
+    } else {
+        statsParent.className = statsParent.className.replace(
+            "expanded", "collapsed"
+        )
+    }
+}
+
+// fetch stats
+function loadStats() {
+    var id = window.location.href.split("v=")[1].split("&")[0]
+    var v = document.getElementById("watch-view-count").innerHTML
+    var s = document.getElementById("ratingStars")
+            .getElementsByTagName("button")[0]
+            .getAttribute("title")
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/insight_ajax?action_get_statistics_and_data=1&v=" + id)
+    r.setRequestHeader("displayed_views", v)
+    r.setRequestHeader("displayed_rating", s)
+    r.send(null)
+    try {
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                statsLoaded = true;
+                $("#watch-tab-stats-body").innerHTML = r.responseText
+            }
+        }
+    }
+    catch(error) {}
+    
 }
 
 

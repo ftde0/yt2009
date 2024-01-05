@@ -1247,5 +1247,40 @@ module.exports = {
         commentsA = commentsA.sort((a, b) => b.time - a.time)
         commentsA = commentsA.slice(0, limit)
         return commentsA;
+    },
+
+    "dateFormat": function(date) {
+        let temp = new Date(date)
+        date = ["Jan", "Feb", "Mar", "Apr",
+                    "May", "Jun", "Jul", "Aug",
+                    "Sep", "Oct", "Nov", "Dec"][temp.getMonth()]
+                    + " " + temp.getDate()
+                    + ", " + temp.getFullYear()
+        return date;
+    },
+
+    "distillTags": function(tags, req) {
+        let distill = false
+        if(req.headers.cookie
+        && req.headers.cookie.includes("distill_tags")) {
+            distill = true
+        }
+        if(!distill) return tags;
+        tags = tags.join()
+        let unduplicateKeywordList = []
+        let oldKeywords = (tags || "").replace(/[^a-zA-Z0-9\,]/g, "").trim()
+        oldKeywords.split(",").forEach(keyword => {
+            if(keyword.length > 0
+            && keyword.length < 11
+            && unduplicateKeywordList.length < 8
+            && !unduplicateKeywordList.includes(keyword.toLowerCase())) {
+                unduplicateKeywordList.push(keyword.toLowerCase())
+            }
+        })
+        if(unduplicateKeywordList.length == 0) {
+            unduplicateKeywordList.push("-")
+        }
+
+        return unduplicateKeywordList;
     }
 }

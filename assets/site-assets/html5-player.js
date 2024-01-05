@@ -1416,7 +1416,7 @@ function annotationRender(annotation) {
     // gradient for older browsers
     if((!browserModernFeatures
     && annotation.style == "speech")
-    || document.cookie.indexOf("legacy_annotations") !== -1) {
+    || document.cookie.indexOf("annotation_gradients") !== -1) {
         var gradient = document.createElement("span")
         gradient.className = "annotation-gradient"
         element.appendChild(gradient)

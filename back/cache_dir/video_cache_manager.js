@@ -17,6 +17,10 @@ module.exports = {
 
     "read": function() {
         return cache;
+    },
+
+    "clean": function() {
+        cache = {}
     }
 }
 

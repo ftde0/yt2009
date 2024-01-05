@@ -606,12 +606,18 @@ module.exports = {
                                 .split("?")[0]
                                 .split("#")[0]
         yt2009html.fetch_video_data(id, (data) => {
+            if(!data.title) {
+                res.sendStatus(404)
+                return;
+            }
             let response = "<?xml version='1.0' encoding='UTF-8'?>"
             response += templates.gdata_feedVideo(
                 data.id,
                 data.title,
-                data.author_handle || utils.asciify(data.author_name),
-                utils.bareCount(data.viewCount),
+                data.author_handle || utils.asciify(
+                    data.author_name || ""
+                ),
+                utils.bareCount(data.viewCount || "0"),
                 utils.time_to_seconds(data.length || 0),
                 data.description,
                 data.upload,

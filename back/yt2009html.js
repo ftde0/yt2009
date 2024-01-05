@@ -1696,7 +1696,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         // tags
         let tags_html = ""
-        data.tags.forEach(tag => {
+        let tags = yt2009utils.distillTags(data.tags, req)
+        tags.forEach(tag => {
             tags_html += `<a href="#" class="hLink" style="margin-right: 5px;">${
                 tag.toLowerCase()
             }</a>\n                                   `
@@ -2227,6 +2228,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     } else {
                         // no old icon, use current
                         fs.writeFileSync(fname, "")
+                        if(!fs.existsSync(`../${channelIcon}`)) {
+                            channelIcon = "/assets/site-assets/default.png"
+                        }
                         setChannelIcon()
                         markAsDone()
                     }

@@ -48,6 +48,15 @@ module.exports = {
             code = code.split(`lang_${name}`).join(lang[name])
         }
 
+        // english fallbacks
+        if(code.includes("lang_")) {
+            lang = langs.en
+            for(let name in lang) {
+                code = code.split(`lang_${name}`).join(lang[name])
+            }
+    
+        }
+
         return code;
     },
 

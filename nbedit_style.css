@@ -155,3 +155,72 @@ a[href="/my_videos_upload"] span {
 .watch-lights-off #watch-longform-lights-off.not-pos-exclude {
     top: 0px;
 }
+
+#watch-tab-stats-links-table {
+    text-align: left;
+}
+
+#watch-tab-stats-links-table th {
+    background-color: #EAEAEA;
+}
+
+#watch-tab-stats-body table th,
+#watch-tab-stats-body #watch-tab-stats-links-table td {
+    padding: 2px 0px;
+}
+
+#watch-tab-stats-body table th.letter {
+    width: 25px;
+}
+
+#watch-tab-stats-body table th.date {
+    width: 100px;
+}
+
+#watch-tab-stats-body table th.link {
+    width: 430px;
+}
+
+#watch-tab-stats-body table th.views,
+#watch-tab-stats-body table td.views {
+    text-align: right;
+}
+
+#watch-tab-stats-body .leg {
+    float: left;
+    width: 15px;
+    text-align: center;
+    border: 2px #999 solid;
+    border-radius: 5px;
+}
+
+#watch-tab-stats-smaller-table th {
+    width: 148px;
+    text-align: left;
+}
+
+#watch-tab-stats-body .sep {
+    margin-top: 30px;
+    display: block;
+}
+
+#watch-tab-stats-audiences-table {
+    text-align: left;
+}
+
+#watch-tab-stats-audiences-table th {
+    width: 90px;
+    background-color: #EAEAEA;
+}
+
+#stats-big-map-expanded {
+    border: 2px black solid;
+}
+
+#watch-tab-stats-audiences-age {
+    float: left;
+}
+
+#watch-tab-stats-audiences-countries {
+    margin-left: 250px;
+}

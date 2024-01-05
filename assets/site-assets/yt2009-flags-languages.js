@@ -1,8 +1,11 @@
 var languageData_EN = {
     "tooltips": {
+        "watch-annotation-gradients": "shows previously seen gradients on annotations in html5.",
         "watch-comments-remove-future": "show old comments on a video",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
+        "watch-distill-tags": "&quot;distills&quot; the video's tags for more accuracy",
+        "watch-enable-stats-countback": "dials back counters on the Statistics & Data tab for old videos.",
         "watch-exclude-cs": "hides comments you post from /comment_search",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
         "watch-fake-upload-date": "fake 2009 upload year",
@@ -110,7 +113,8 @@ var languageData_EN = {
         - max - removes whole lines of text matching moderate<br>\
         (leaving this box empty/different value = max.)",
 
-        "#hpr_notice": "homepage_recommended is located in the Add/Remove Modules section on the homepage."
+        "#hpr_notice": "homepage_recommended is located in the Add/Remove Modules section on the homepage.",
+        "#leg_annot_notice": "annotation_gradients is not accurate to its flash counterpart.<br>it was added as the previous html5 annotations' implementation had them."
     },
 
     "placeholders": {

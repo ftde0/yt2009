@@ -30,6 +30,7 @@ const yt2009_blazer = require("./yt2009mobileblazer")
 //const yt2009_leanback = require("./yt2009leanback")
 const yt2009_doodles = require("./yt2009doodles")
 const yt2009_exports = require("./yt2009exports")
+const yt2009_stats = require("./yt2009statsdata")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -219,18 +220,23 @@ app.get('/', (req,res) => {
         })
     }
 
-    /*if(req.headers.cookie
+    if(req.headers.cookie
     && req.headers.cookie.includes("activity")) {
         let comments = yt2009_utils.latestCustomComments(3)
         let vList = []
         comments.forEach(c => {
             vList.push(c.video)
         })
+        if(vList[0]
+        && yt2009.get_cache_video(vList[0]).id) {
+            yt2009_home(req, res)
+            return;
+        }
         yt2009.bulk_get_videos(vList, () => {
             yt2009_home(req, res)
         })
         return;
-    }*/
+    }
     yt2009_home(req, res)
 })
 
@@ -332,10 +338,7 @@ app.post("/videoresponse_load", (req, res) => {
         return;
     }
     let query = req.body.toString().trimStart().split("\n").join("").trimEnd()
-    // remove some common music suffixes in case of a wayback_features fail
-    query = query
-    .replace("(Official Music Video)", "")
-    .replace("(Official Video)", "")
+    query = query.replace(/\(.*\)/g, "").trim()
     
     let responsesHTML = yt2009_templates.videoResponsesBeginning
 
@@ -1091,6 +1094,10 @@ function ffmpegEncodeBaseline(req, res) {
         let filePath = __dirname.replace("\\back", "\\assets")
                                 .replace("/back", "/assets")
                        + "/" + vId + "-baseline.mp4"
+        if(!fs.existsSync(filePath)) {
+            res.sendStatus(404)
+            return;
+        }
         res.sendFile(filePath)
     }
 
@@ -2542,6 +2549,8 @@ app.post("/comment_post", (req, res) => {
             if(!msg.syncable) {
                 safeAuthor = "possibly_not_" + safeAuthor
                 commentObject.author = "possibly_not_" + safeAuthor
+                res.status(401)
+                res.setHeader("fail-msg", "invalid-session")
             } else {
                 safeAuthor = yt2009_utils.xss(msg.comment.author)
                 commentObject.author = safeAuthor
@@ -2599,6 +2608,7 @@ app.post("/comment_post", (req, res) => {
         commentObject.author = "possibly_not_" + safeAuthor
         comments[body.video_id].push(commentObject)
 
+        res.setHeader("fail-msg", "invalid-session")
         res.send(yt2009_languages.apply_lang_to_code(
             yt2009_templates.videoComment(
                 "#", "possibly_not_" + safeAuthor, "1 second ago",
@@ -3561,6 +3571,281 @@ app.post("/mark_spam", (req, res) => {
         console.log(error)
     }
 })
+
+/*
+======
+stats/data
+======
+*/
+function amDate(date) {
+    let dString = ""
+    date = new Date(date)
+    let month = date.getMonth() + 1
+    let day = date.getDate()
+    let year = parseInt(date.getFullYear().toString().substring(2, 4))
+    dString += (month < 10 ? "0" + month : month) + "/"
+    dString += (day < 10 ? "0" + day : day) + "/"
+    dString += (year < 10 ? "0" + year : year)
+    return dString;
+}
+
+const continents = require("./geo/continent-data.json")
+let reverseContinents = {}
+for(var country in continents) {
+    if(!reverseContinents[continents[country]]) {
+        reverseContinents[continents[country]] = []
+    }
+    reverseContinents[continents[country]].push(country)
+}
+
+app.get("/insight_ajax", (req, res) => {
+    let insightHTML;
+    if(req.query.v
+    && req.query.action_get_statistics_and_data == "1") {
+        yt2009.fetch_video_data(req.query.v.substring(0, 11), (data => {
+            insightHTML = yt2009_templates.leadin_stats(
+                req.headers.displayed_views
+                || yt2009_utils.countBreakup(data.viewCount)
+            )
+            let bareViews = parseInt(yt2009_utils.bareCount(
+                req.headers.displayed_views || data.viewCount.toString()
+            ))
+            let rating = parseInt(yt2009_utils.bareCount(
+                req.headers.displayed_rating || "5"
+            ))
+            // pull insights from yt2009_stats
+            yt2009_stats.mainPull(data, req, (insights => {
+                if(req.query.format == "json") {
+                    res.send(insights)
+                    return;
+                }
+
+                let actualInsights = []
+                let audienceAges;
+                let audienceCountries;
+
+                let alph = ["A", "B", "C", "D"]
+                insights.forEach(i => {
+                    if(i.type == "audience-ages") {
+                        audienceAges = i
+                    } else if(i.type == "audience-countries") {
+                        audienceCountries = i;
+                    } else {
+                        actualInsights.push(i)
+                    }
+                })
+                actualInsights = actualInsights.sort(
+                    (a, b) => b.approx_view - a.approx_view
+                )
+                alph = alph.slice(0, actualInsights.length).reverse()
+                let index = 0;
+
+                // calculate middle date for chart
+                let date1 = amDate(data.upload)
+                let dateDiff;
+                let date3 = amDate(Date.now())
+                let datesScaled = false;
+                dateDiff = (new Date(Date.now()) - new Date(data.upload)) / 2
+                if(new Date(data.upload) < new Date("2010-04-01")
+                && (req.headers.cookie
+                && req.headers.cookie.includes("enable_stats_countback"))) {
+                    date3 = amDate("2010-04-01")
+                    dateDiff = (new Date("2010-04-01") - new Date(date1)) / 2
+                    datesScaled = true
+                }
+                let date2 = amDate(new Date(date1).getTime() + dateDiff)
+                
+                // render by type
+                let linksHTML = yt2009_templates.table_stats_start
+                let chartPercentages = {}
+                actualInsights.forEach(i => {
+                    chartPercentages[alph[index]] = (
+                        (i.approx_view / bareViews)
+                    ).toFixed(2)
+
+                    linksHTML += yt2009_templates.table_stats_entry(
+                        i, alph[index],
+                        datesScaled
+                        ? [date1, date3, (i.approx_view / bareViews)] : null
+                    )
+
+                    index++
+                })
+                linksHTML += "</table>"
+
+                // render view chart
+                let chartLink = [
+                    "//chart.apis.google.com/chart?cht=lc:nda&chs=593x110",
+                    "&chco=647b5c",
+                    "&chg=0,-1,1,1&chxt=y,x",
+                    "&chxs=0N*s*%20,333333,10|1,333333,10",
+                    "&chxl=1:|" + date1 + "|" + date2 + "|" + date3,
+                    "&chxp=1,5,50,95&chxr=0,0," + (Math.floor(bareViews / 1000) * 1000) + "|1,0,100&chd=t:0.0,100.0",
+                    "&chm=B,b6cfadaa,0,0,0"
+                ].join("")
+                for(let l in chartPercentages) {
+                    chartLink += "|A" + l + ",333333,0," + chartPercentages[l] + ",10"
+                }
+
+                insightHTML += `<img id="stats-big-chart-expanded" src="${chartLink}"/>`
+                insightHTML += yt2009_templates.table_stats_charts(rating)
+                insightHTML += linksHTML
+
+                // render audience parts
+                // gender/age table
+                insightHTML += yt2009_templates.table_audiences_leadin
+                insightHTML += yt2009_templates.table_audiences_element(audienceAges)
+
+                // map
+                insightHTML += yt2009_templates.table_audiences_end
+                let percentagesParam = []
+                let countriesParam = []
+                if(!audienceCountries) {
+                    insightHTML += yt2009_templates.map_audiences_empty
+                    insightHTML += yt2009_templates.map_audiences_end
+                    res.send(insightHTML)
+                    return;
+                }
+                audienceCountries.code_names.forEach(c => {
+                    let continent = continents[c] || "North America"
+                    reverseContinents[continent].forEach(d => {
+                        if(d !== c
+                        && (!countriesParam.includes(d)
+                        && !audienceCountries.code_names.includes(d))) {
+                            percentagesParam.push(Math.floor(Math.random() * 10) + 5)
+                            countriesParam.push(d)
+                        }
+                    })
+                    if(!countriesParam.includes(c)) {
+                        percentagesParam.push(Math.floor(Math.random() * 20) + 70)
+                        countriesParam.push(c)
+                    }
+                })
+
+                // slight tints on common countries (na/random parts of asia)
+                let rCountries = []
+                reverseContinents["North America"].forEach(c => {
+                    rCountries.push(c)
+                })
+                reverseContinents["Asia"].forEach(c => {
+                    rCountries.push(c)
+                })
+                rCountries.forEach(c => {
+                    if(!countriesParam.includes(c)) {
+                        percentagesParam.push(Math.floor(Math.random() * 2) + 2)
+                        countriesParam.push(c)
+                    }
+                })
+                
+                while(percentagesParam.join().split(",").length > countriesParam.join("").length / 2) {
+                    percentagesParam.shift()
+                }
+
+                // render map
+                let mapUrl = [
+                    "//chart.googleapis.com/chart?cht=t&chs=350x170",
+                    "&chtm=world&chd=t:" + percentagesParam.join(),
+                    "&chf=bg,s,eff8fe",
+                    "&chco=f6f6f6,e5e9c9,ced9ab,a7ba7b,86a058,8ba65b,547136,32501a",
+                    "&chld=" + countriesParam.join("")
+                ].join("")
+                insightHTML += `<img width="350" height="170" id="stats-big-map-expanded" src="${mapUrl}"/>`
+                insightHTML += yt2009_templates.map_audiences_end
+
+                // send
+                res.send(insightHTML)
+            }))
+        }),
+        "", "", false, false, true)
+        return;
+    }
+    res.sendStatus(400)
+})
+
+/*
+======
+auto_maintain config opt
+======
+*/
+let maxSizeGB = 10;
+if(config.auto_maintain) {
+    // auto-remove 
+    if(config.maintain_max_size
+    && typeof(config.maintain_max_size) == "number") {
+        maxSizeGB = config.maintain_max_size
+    }
+    
+
+    function checkSize() {
+        let totalSize = 0;
+        let filesChecked = 0;
+        let fileSizes = []
+        fs.readdir(__dirname + "/../assets/", (err, data) => {
+            data.forEach(f => {
+                fs.stat(__dirname + "/../assets/" + f, (err, stats) => {
+                    fileSizes.push([
+                        __dirname + "/../assets/" + f,
+                        stats.size
+                    ])
+                    totalSize += stats.size
+                    filesChecked++
+                    if(filesChecked >= data.length) {
+                        fileGrabComplete()
+                    }
+                })
+            })
+        })
+
+        function fileGrabComplete() {
+            let maxSizeBytes = ((maxSizeGB) * 1024 * 1024 * 1024)
+            fileSizes = fileSizes.sort((a, b) => b[1] - a[1])
+            if(totalSize >= maxSizeBytes) {
+                // cleanup files
+                let targetSize = totalSize - (maxSizeBytes / 4)
+                let foundSize = 0;
+                let i = 0;
+                let foundFiles = []
+                while(foundSize <= targetSize) {
+                    foundFiles.push(fileSizes[i])
+                    foundSize += fileSizes[i][1]
+                    i++
+                }
+
+                let aNotice = `auto_maintain: cleanup ${foundFiles.length} files`
+                aNotice += `\nfree up ${((targetSize) / 1024 / 1024 / 1024).toFixed(1)}GB`
+                console.log(aNotice)
+                foundFiles.forEach(f => {
+                    fs.unlink(f[0], (e) => {})
+                })
+            }
+        }
+        
+
+        // check out caches
+        let maxCacheSizeMB = 15
+        let maxCacheSizeB = maxCacheSizeMB * 1024 * 1024
+        let vCache = require("./cache_dir/video_cache_manager")
+        let cCache = require("./cache_dir/channel_cache")
+        let sCache = require("./cache_dir/search_cache_manager")
+        if(JSON.stringify(vCache.read()).length > maxCacheSizeB) {
+            vCache.clean()
+            console.log(`auto_maintain: clean video_cache`)
+            fs.writeFileSync("./cache_dir/video_cache.json", "{}")
+        }
+        if(JSON.stringify(cCache.read("main")).length > maxCacheSizeB) {
+            cCache.clean()
+            console.log(`auto_maintain: clean channel_cache`)
+            fs.writeFileSync("./cache_dir/channel_main_cache.json", "{}")
+        }
+        if(JSON.stringify(sCache.read()).length > maxCacheSizeB) {
+            sCache.clean()
+            console.log(`auto_maintain: clean search_cache`)
+            fs.writeFileSync("./cache_dir/search_cache.json", "{}")
+        }
+    }
+    let autoCheckSize = setInterval(checkSize, 1000 * 60 * 60 * 4)
+    checkSize()
+}
 
 /*
 pizdec
