@@ -5,7 +5,8 @@ const langs = {
     "sr-RS": require("./sr-RS.json"),
     "sr-Latn-RS": require("./sr-Latn-RS.json"),
     "ru": require("./ru.json"),
-    "de": require("./de.json")
+    "de": require("./de.json"),
+    "tr": require("./tr.json")
 }
 const displayNames = {
     "US": "Worldwide",
