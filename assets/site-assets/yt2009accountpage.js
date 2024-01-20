@@ -166,3 +166,24 @@ function pullHomepageSettings() {
         document.getElementById(s).checked = true
     }
 }
+
+// fill overview data
+var login = "username"
+if(document.cookie
+&& document.cookie.indexOf("login_simulate") !== -1) {
+    login = document.cookie.split("login_simulate")[1].split(":")[0].split(";")[0]
+    document.getElementById("overview-username").innerHTML = login
+}
+
+// count up favorites
+var favoritesCount = 0;
+if(localStorage
+&& localStorage.favorites) {
+    favoritesCount += JSON.parse(localStorage.favorites).length
+}
+if(document.cookie
+&& document.cookie.indexOf("favorites=") !== -1) {
+    var f = document.cookie.split("favorites=")[1].split(";")[0]
+    favoritesCount += f.split(":").length
+}
+document.getElementById("videos-favd").innerHTML = favoritesCount

@@ -11,6 +11,7 @@ const fs = require("fs")
 const templates = require("./yt2009templates")
 const page = fs.readFileSync("../favorites.htm").toString()
 const doodles = require("./yt2009doodles")
+const languages = require("./language_data/language_engine")
 
 module.exports = {
     "apply": function(req, res) {
@@ -30,8 +31,8 @@ module.exports = {
         // shows tab
         if(req.headers.cookie.includes("shows_tab")) {
             code = code.replace(
-                `<a href="/channels">Channels</a>`,
-                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a>`,
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
 
@@ -110,10 +111,11 @@ module.exports = {
             pageNum++;
         })
 
-        code = require("./yt2009loginsimulate")(req, code);
+        code = require("./yt2009loginsimulate")(req, code, true);
         code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
         code = code.split(`yt2009_page_count`).join(pageNum)
         code = doodles.applyDoodle(code)
+        code = languages.apply_lang_to_code(code, req)
 
         res.send(code);
     }

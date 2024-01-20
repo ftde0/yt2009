@@ -15,6 +15,7 @@ const fs = require("fs")
 const page = fs.readFileSync("../subscriptions.htm").toString()
 const config = require("./config.json")
 const doodles = require("./yt2009doodles")
+const languages = require("./language_data/language_engine")
 
 let saved_subscription_data = {}
 
@@ -36,8 +37,8 @@ module.exports = {
         // shows tab
         if(req.headers.cookie.includes("shows_tab")) {
             code = code.replace(
-                `<a href="/channels">Channels</a>`,
-                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a>`,
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
 
@@ -66,6 +67,7 @@ module.exports = {
         }
 
         code = doodles.applyDoodle(code)
+        code = languages.apply_lang_to_code(code, req)
 
         res.send(code);
     },

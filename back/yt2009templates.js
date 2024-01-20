@@ -255,8 +255,8 @@ module.exports = {
                             <a id="video-title-results" href="/watch?v=${id}" rel="nofollow">
                                 <img title="${title.split('"').join("&quot;")}" src="${protocol}://i.ytimg.com/vi/${id}/${thumbUrl}" class="vimg120">
                             </a>
-                            <div id="quicklist-icon-${id}" class="addtoQL90"><a id="add-to-quicklist-${id}" href="#" ql="${id}" title="Add Video to QuickList"><button class="master-sprite QLIconImg ${browser == "firefox" ? "firefox" : ""} title="" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(authorName)}')"></button></a>
-                                <div class="hid quicklist-inlist"><a href="#">Added</a></div>
+                            <div id="quicklist-icon-${id}" class="addtoQL90"><a id="add-to-quicklist-${id}" href="#" ql="${id}" title="lang_add_to_ql"><button class="master-sprite QLIconImg ${browser == "firefox" ? "firefox" : ""} title="" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(authorName)}')"></button></a>
+                                <div class="hid quicklist-inlist"><a href="#">lang_ql_added</a></div>
                             </div>
                             <div class="video-time ${browser == "chrome" ? "chrome" : ""}"><span id="video-run-time">${time}</span></div>
                         </div>
@@ -549,7 +549,7 @@ module.exports = {
                     <div class="channel-title">
                         <div class="channel-long-title"><a href="${url}" title="${name}" rel="nofollow">${name}</a></div>
                     </div>
-                    <div class="channel-facets"><span>${subscribers}</span></div>
+                    <div class="channel-facets"><span>${subscribers.replace(/ subscriber.*/g, "lang_results_channel_sub_suffix")}</span></div>
                 </div>
             </div>
         </div>`
@@ -572,7 +572,7 @@ module.exports = {
                     <div class="playlist-title playlist-title-results">
                         <div class="playlist-long-title">
                             <a href="/playlist?list=${id}" class="yt-uix-hovercard-target" rel="nofollow">${name}</a>
-                            <span class="playlist-video-count">${videoCount} videos</span>
+                            <span class="playlist-video-count">${videoCount}lang_results_playlist_video_suffix</span>
                         </div>
                     </div>
                     <div class="playlist-videos">
@@ -594,7 +594,7 @@ module.exports = {
                     </div>
                     <div class="playlist-facets">
                         <span class="result-type">Playlist</span>
-                        <span class="playlist-video-count">(${playlist.videoCount} videos)</span>
+                        <span class="playlist-video-count">(${playlist.videoCount}lang_results_playlist_video_suffix)</span>
                     </div>	
                 </div>
                 <div class="playlist-clear-list-left"></div>
@@ -1416,7 +1416,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                     }</span></p>
                     <div class="video-stats">
                         <div class="video-stat">
-                            Added: <span class="stat-date-added">${v.upload}</span>
+                            Added: <span class="stat-date-added">${utils.dateFormat(v.upload)}</span>
                         </div>
                         <div class="video-stat">
                             Time: <span class="stat-duration">${utils.seconds_to_time(v.length)}</span>
@@ -1533,7 +1533,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                         <a href="/watch?v=${video.id}" class="video-thumb"><img src="${req.protocol}://i.ytimg.com/vi/${video.id}/${thumbUrl}"/></a>
                         <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
                         <div class="video-stats">
-                            <div class="video-stat"><span class="stat-views">Views: ${video.views}</span></div>
+                            <div class="video-stat"><span class="stat-views">lang_userpage_views_prefix${video.views}</span></div>
                             <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>
                         </div>
                     </div>

@@ -84,7 +84,7 @@
 			<div id="masthead-search">
 				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
 					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" maxlength="128" autocomplete="off" value="yt2009_search_query">
-					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="this.parentNode.submit()"><span>Search</span></a>
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="this.parentNode.submit()"><span>lang_search</span></a>
 				</form>
 
 			</div>
@@ -92,15 +92,15 @@
 				<!--yt2009_login_insert-->
 			</div>
 			<div id="masthead-nav-user">
-				<a href="/watch_queue" id="quicklist-nav" style="background-color: rgb(255, 255, 255);" class="hid">QuickList (<span id="quicklist-nav-count">?</span>)</a>
-				<a href="/my_subscriptions?masthead=1">Subscriptions</a>
-				<a href="/my_history">History</a>
-				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload"><span>Upload</span></a>
+				<a href="/watch_queue" id="quicklist-nav" style="background-color: rgb(255, 255, 255);" class="hid">lang_quicklist (<span id="quicklist-nav-count">?</span>)</a>
+				<a href="/my_subscriptions?masthead=1">lang_subs_btn</a>
+				<a href="/my_history">lang_history_btn</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload"><span>lang_upload_btn</span></a>
 			</div>
 			<div id="masthead-nav-main">
-				<a href="/">Home</a>
-				<a href="/videos">Videos</a>
-				<a href="/channels">Channels</a>
+				<a href="/">lang_home</a>
+				<a href="/videos">lang_videos</a>
+				<a href="/channels">lang_channels</a>
 			</div>
 			<div id="masthead-end"></div>
 
@@ -112,7 +112,7 @@
 
 		<div id="search-section-header">
 			<div class="name">
-				<span class="search-query">“yt2009_search_query”</span> results
+				<span class="search-query">“yt2009_search_query”</span> lang_results
 			</div>
 			<div class="clear"></div>
 		</div>
@@ -121,14 +121,14 @@
 				<tr>
 					<td class="search-main-tabs">
 						<!--search-type-not-selected search-type-selected -->
-						<span class="yt2009-hook-all-selected search-type-not-selected"><a href="yt2009_search_all_link">All</a></span>
-						<span class="yt2009-hook-channel-selected search-type-not-selected"><a href="yt2009_search_channel_link">Channels</a></span>
-						<span class="yt2009-hook-playlist-selected search-type-not-selected"><a href="yt2009_search_playlist_link">Playlists</a></span>
+						<span class="yt2009-hook-all-selected search-type-not-selected"><a href="yt2009_search_all_link">lang_results_all</a></span>
+						<span class="yt2009-hook-channel-selected search-type-not-selected"><a href="yt2009_search_channel_link">lang_results_channels</a></span>
+						<span class="yt2009-hook-playlist-selected search-type-not-selected"><a href="yt2009_search_playlist_link">lang_results_playlists</a></span>
 					</td>
 
 					<td>
 						<span class="sort-by">
-							<span class="sort-by-title">Sort by:</span>
+							<span class="sort-by-title">lang_results_sortby</span>
 							<span class="yt-menulink" id="" style=""
 								onmouseenter="this.className += ' yt-menulink-hover';"
 								onmouseleave="this.className = this.className.replace(' yt-menulink-hover', '');"><a
@@ -136,16 +136,16 @@
 									onclick="return false;">chosen_sort</a><a class="yt-menulink-arr" href="#"
 									onclick="return false;"></a>
 								<ul class="yt-menulink-menu">
-									<li><a href="url_plus_newest">Newest</a></li>
-									<li><a href="url_plus_views">View Count</a></li>
-									<li><a href="url_plus_rating">Rating</a></li>
-									<li><a href="url_plus_relevance">Relevance</a></li>
+									<li><a href="url_plus_newest">lang_sort_newest</a></li>
+									<li><a href="url_plus_views">lang_sort_views</a></li>
+									<li><a href="url_plus_rating">lang_sort_rating</a></li>
+									<li><a href="url_plus_relevance">lang_sort_relevance</a></li>
 								</ul>
 							</span>
 						</span>
 
 						<span class="sort-by">
-							<span class="sort-by-title">Uploaded:</span>
+							<span class="sort-by-title">lang_results_uploaded</span>
 							<span class="yt-menulink" id="" style=""
 								onmouseenter="this.className += ' yt-menulink-hover';"
 								onmouseleave="this.className = this.className.replace(' yt-menulink-hover', '');"><a
@@ -153,16 +153,16 @@
 									onclick="return false;">chosen_upload</a><a class="yt-menulink-arr" href="#"
 									onclick="return false;"></a>
 								<ul class="yt-menulink-menu">
-									<li><a href="url_plus_today">Today</a></li>
-									<li><a href="url_plus_week">This week</a></li>
-									<li><a href="url_plus_month">This month</a></li>
-									<li><a href="url_plus_anytime">Anytime</a></li>
+									<li><a href="url_plus_today">lang_up_today</a></li>
+									<li><a href="url_plus_week">lang_up_week</a></li>
+									<li><a href="url_plus_month">lang_up_week</a></li>
+									<li><a href="url_plus_anytime">lang_up_any</a></li>
 								</ul>
 							</span>
 						</span>
 
 						<span class="sort-by">
-							<span class="sort-by-title">Type:</span>
+							<span class="sort-by-title">lang_results_type</span>
 							<span class="yt-menulink" id="" style=""
 								onmouseenter="this.className += ' yt-menulink-hover';"
 								onmouseleave="this.className = this.className.replace(' yt-menulink-hover', '');"><a
@@ -170,9 +170,9 @@
 									onclick="return false;">chosen_type</a><a class="yt-menulink-arr" href="#"
 									onclick="return false;"></a>
 								<ul class="yt-menulink-menu">
-									<li><a href="url_plus_cc">Closed Captions</a></li>
-									<li><a href="url_plus_hd">HD</a></li>
-									<li><a href="url_plus_type_all">All</a></li>
+									<li><a href="url_plus_cc">lang_results_cc</a></li>
+									<li><a href="url_plus_hd">lang_results_hd</a></li>
+									<li><a href="url_plus_type_all">lang_results_all</a></li>
 								</ul>
 							</span>
 						</span>
@@ -180,7 +180,7 @@
 
 					<td id="search-advanced">
 						<a href="#" class="hLink" onclick="toggleAdvSearch();return false;">
-							Advanced Options
+							lang_results_advoptions
 						</a>
 					</td>
 				</tr>
@@ -190,67 +190,67 @@
 		<div id="search-advanced-form" class="hid">
 			<div class="search-setting-inner">
 				<div class="search-section-header-toolbelt">
-					<h1 class="name">Advanced Search</h1>
+					<h1 class="name">lang_advoptions_header</h1>
 				</div>
 				<div class="panel" id="panel1">
 					<div id="search-section-header">
-						<span><b>Find results that have:</b></span>
+						<span><b>lang_advoptions_have</b></span>
 					</div>
-					<span>All these words</span><br>
+					<span>lang_advoptions_allwords</span><br>
 					<input type="text" autocomplete="off" spellcheck="false" id="input-all-words"><br><br>
-					<span>This exact phrase</span><br>
+					<span>lang_advoptions_exact</span><br>
 					<input type="text" autocomplete="off" spellcheck="false" id="input-exact"><br><br>
-					<span>One or more of these words</span><br>
+					<span>lang_advoptions_oneormore</span><br>
 					<input type="text" autocomplete="off" spellcheck="false" id="input-one-or-more"><br><br>
-					<span>None of these words</span><br>
+					<span>lang_advoptions_noneof</span><br>
 					<input type="text" autocomplete="off" spellcheck="false" id="input-none"><br><br>
-					<a class="yt-button yt-button-primary" onclick="sendAdvSearch()" id="" style="" href="#"><span>Search</span></a>
+					<a class="yt-button yt-button-primary" onclick="sendAdvSearch()" id="" style="" href="#"><span>lang_search</span></a>
 					or
-					<a href="#" onclick="toggleAdvSearch();return false;">cancel</a>
+					<a href="#" onclick="toggleAdvSearch();return false;">lang_advoptions_cancel</a>
 				</div>
 				<div class="panel" id="panel2">
 					<div id="search-section-header">
-						<span><b>Show these types of results:</b></span><br>
+						<span><b>lang_advoptions_types</b></span><br>
 					</div>
 					<input type="radio" id="radio-all" value="All" name="result-type" checked>
-					<label for="radio-all">All</label><br>
+					<label for="radio-all">lang_advoptions_type_all</label><br>
 					<input type="radio" id="radio-videos" value="Videos" name="result-type">
-					<label for="radio-videos">Videos</label><br>
+					<label for="radio-videos">lang_advoptions_type_vids</label><br>
 					<input type="radio" id="radio-users" value="Channels" name="result-type">
-					<label for="radio-channels">Channels</label><br>
+					<label for="radio-channels">lang_advoptions_type_channels</label><br>
 					<input type="radio" id="radio-playlists" value="Playlists" name="result-type">
-					<label for="radio-playlists">Playlists</label><br>
+					<label for="radio-playlists">lang_advoptions_type_playlists</label><br>
 					<input type="radio" id="radio-movies" value="Movies" name="result-type">
-					<label for="radio-movies">Movies</label><br>
+					<label for="radio-movies">lang_advoptions_type_movies</label><br>
 					<div id="search-section-header">
-						<span><b>Show only videos with these features:</b></span><br>
+						<span><b>lang_advoptions_features</b></span><br>
 					</div>
 					<input type="checkbox" id="check-hd" name="high_definition">
-					<label for="check-hd">HD (High Definition)</label><br>
+					<label for="check-hd">lang_results_hd</label><br>
 					<input type="checkbox" id="check-cc" name="closed_captions">
-					<label for="check-cc">Closed Captions</label><br>
+					<label for="check-cc">lang_results_cc</label><br>
 					<input type="checkbox" id="check-pv" name="partner">
-					<label for="check-v">Partner Videos</label>
+					<label for="check-v">lang_advoptions_pv</label>
 				</div>
 				<div class="panel" id="panel3">
 					<div id="search-section-header">
-						<span><b>Refine your search by:</b></span><br>
+						<span><b>lang_advoptions_refine</b></span><br>
 					</div>
 					<div class="floatL">
-						<span>Duration</span><br>
+						<span>lang_advoptions_duration</span><br>
 						<select id="select-duration">
-							<option name="anytime">Anytime</option>
-							<option name="short">Short</option>
-							<option name="long">Long</option>
+							<option name="anytime">lang_advoptions_dur_any</option>
+							<option name="short">lang_advoptions_dur_short</option>
+							<option name="long">lang_advoptions_dur_long</option>
 						</select>
 					</div>
 					<div class="floatL">
-						<span>Uploaded</span><br>
+						<span>lang_advoptions_update</span><br>
 						<select id="select-uploaded">
-							<option name="anytime">Anytime</option>
-							<option name="m">This month</option>
-							<option name="w">This week</option>
-							<option name="d">Today</option>
+							<option name="anytime">lang_up_any</option>
+							<option name="m">lang_up_month</option>
+							<option name="w">lang_up_week</option>
+							<option name="d">lang_up_today</option>
 						</select>
 					</div>
 				</div>
@@ -284,85 +284,79 @@
 		<div id="footer">
 			<div class="search">
 				<form autocomplete="off" class="search-form" action="/results" method="get" name="footer-search-form">
-					<input id="footer-search-term" class="search-term" name="search_query" type="text" maxlength="128">
+					<input id="footer-search-term" class="search-term" name="search_query" type="text" value="" maxlength="128">
 					<input id="search-type-footer" name="search_type" type="hidden" value="">
-					<a class="yt-button yt-button-primary" onclick="this.parentNode.submit()" id="" style="" href="#"><span>Search</span></a>
+					<a class="yt-button yt-button-primary" id="" class href="#"><span>lang_search</span></a>
 				</form>
-
 			</div>
 			<div class="links">
-				<table cellspacing="0" cellpadding="0">
-					<tbody>
-						<tr>
-							<th>YouTube</th>
-							<th>Programs</th>
-							<th>Help</th>
-							<th>Policy</th>
-							<th>Discover</th>
-						</tr>
-						<tr>
-							<td><a href="/t/contact_us">Contact Us</a>
-							</td>
-							<td><a href="/t/advertising">Advertising</a>
-							</td>
-							<td><strong><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US" target="_blank">Get Help</a></strong></td>
-							<td><a href="/t/privacy">Privacy Policy</a></td>
-							<td><a href="/mobile">YouTube on Your Phone</a></td>
-						</tr>
-						<tr>
-							<td><a href="http://www.googlestore.com/youtube">YouTube Store</a></td>
-							<td><a href="http://code.google.com/apis/youtube/overview.html">Developers</a></td>
-							<td><a href="/t/yt_handbook_home">YouTube Handbook</a></td>
-							<td><a href="/t/terms">Termsof Service</a></td>
-							<td><a href="/youtubeonyoursite">YouTube on Your Site</a></td>
-						</tr>
-						<tr>
-							<td><a href="/press_room">Press Room</a></td>
-							<td><a href="/partners">Partnerships</a>
-							</td>
-							<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">Community Help Forums</a></td>
-							<td><a href="/t/dmca_policy">Copyright Notices</a></td>
-							<td><a href="/youtubeonyourtv">YouTube on Your TV</a></td>
-						</tr>
-						<tr>
-							<td><a href="http://ytbizblog.blogspot.com/">Business Blog</a></td>
-							<td><a href="/t/content_management">Content Management</a></td>
-							<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">Safety Center</a></td>
-							<td><a href="/t/community_guidelines">Community Guidelines</a></td>
-							<td><a href="/t/rss_feeds">YouTube RSS Feeds</a></td>
-						</tr>
-						<tr>
-							<td><a href="/blog">YouTube Blog</a></td>
-							<td></td>
-							<td><a href="/t/creators_corner">Creator's Corner</a></td>
-							<td></td>
-							<td><a href="/testtube">TestTube</a></td>
-						</tr>
-					</tbody>
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<th>lang_footer_yt</th>
+						<th>lang_footer_programs</th>
+						<th>lang_footer_help</th>
+						<th>lang_footer_policy</th>
+						<th>lang_footer_discover</th>
+					</tr>
+					<tr>
+						<td><a href="/t/contact_us">lang_footer_contact</a></td>
+						<td><a href="/t/advertising">lang_footer_advertising</a></td>
+						<td><b><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US" target="_blank">lang_footer_ghelp</a></b></td>
+						<td><a href="/t/privacy">lang_footer_privacy</a></td>
+						<td><a href="/mobile">lang_footer_mobile</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://www.googlestore.com/youtube">lang_footer_store</a></td>
+						<td><a href="http://code.google.com/apis/youtube/overview.html">lang_footer_dev</a>
+						</td>
+						<td><a href="/t/yt_handbook_home">lang_footer_handbook</a>
+						</td>
+						<td><a href="/t/terms">lang_footer_tos</a></td>
+						<td><a href="/youtubeonyoursite">lang_footer_site</a></td>
+					</tr>
+					<tr>
+						<td><a href="/press_room">lang_footer_press</a></td>
+						<td><a href="/partners">lang_footer_partner</a></td>
+						<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">lang_footer_community</a></td>
+						<td><a href="/t/dmca_policy">lang_footer_dmca</a></td>
+						<td><a href="/youtubeonyourtv">lang_footer_tv</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://ytbizblog.blogspot.com/">lang_footer_business</a></td>
+						<td><a href="/t/content_management">lang_footer_cm</a></td>
+						<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">lang_footer_safety</a></td>
+						<td><a href="/t/community_guidelines">lang_footer_guidelines</a></td>
+						<td><a href="/t/rss_feeds">lang_footer_rss</a></td>
+					</tr>
+					<tr>
+						<td><a href="/blog">lang_footer_blog</a></td>
+						<td></td>
+						<td><a href="/t/creators_corner">lang_footer_corner</a></td>
+						<td></td>
+						<td><a href="/testtube">lang_footer_test</a></td>
+					</tr>
 				</table>
 			</div>
 			<div class="region-and-language-pickers">
 				<div class="google-home">
-					<a href="http://www.google.com/webmasters/igoogle/youtube.html">Add YouTube to your Google homepage</a>
+					<a href="http://www.google.com/webmasters/igoogle/youtube.html">lang_footer_igoogle</a>
 				</div>
 				<div class="region-picker-box">
-					<span class="region-label">Current Location:</span>
-					<strong class="region-title">Worldwide</strong>
-					<a href="#" onclick="yt.www.masthead.loadPicker('region-picker'); return false;">Show locations</a>
+					<span class="region-label">lang_footer_location</span>
+					<strong class="region-title">lang_footer_worldwide</strong>
+					<a href="#" onclick="loadPicker('region-picker'); return false;">lang_footer_showloc</a>
 					<div id="region-picker-container">
 						<div id="region-picker-loading" style="display: none">Loading...</div>
 					</div>
 				</div>
-
 				<div class="language-picker-box">
-					<span class="language-label">Current Language:</span>
-					<strong class="language-title">English</strong>
-					<a href="#" onclick="yt.www.masthead.loadPicker('language-picker'); return false;">Show languages</a>
+					<span class="language-label">lang_footer_language</span>
+					<strong class="language-title">lang_footer_langname</strong>
+					<a href="#" onclick="loadPicker('language-picker'); return false;">lang_footer_showlang</a>
 					<div id="language-picker-container">
 						<div id="language-picker-loading" style="display: none">Loading...</div>
 					</div>
 				</div>
-
 			</div>
 
 		</div>

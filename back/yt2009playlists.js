@@ -5,6 +5,8 @@ const config = require("./config.json")
 const fs = require("fs")
 const playlist_html = fs.readFileSync("../playlist.htm").toString();
 const doodles = require("./yt2009doodles")
+const language = require("./language_data/language_engine")
+const utils = require("./yt2009utils")
 
 let cache = require("./cache_dir/playlist_cache_manager")
 
@@ -29,11 +31,13 @@ module.exports = {
     "applyPlaylistHTML": function(data, req) {
         let code = playlist_html;
 
-        code = require("./yt2009loginsimulate")(req, code)
+        code = require("./yt2009loginsimulate")(req, code, true)
+
+        let vids = utils.bareCount(data.videoCount) + "lang_results_playlist_video_suffix"
 
         code = code.replace("yt2009_playlist_name", data.name)
         code = code.replace("yt2009_playlist_description", data.description)
-        code = code.split("yt2009_videos_count").join(data.videoCount)
+        code = code.split("yt2009_videos_count").join(vids)
         code = code.replace("yt2009_last_update", data.lastUpdate)
         code = code.replace("yt2009_playlist_views", data.views)
         code = code.replace("yt2009_creator_link", data.creatorUrl)
@@ -61,8 +65,8 @@ module.exports = {
         if((req.headers.cookie || "").includes("shows_tab")) {
             // shows tab
             code = code.replace(
-                `<a href="/channels">Channels</a>`,
-                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a>`,
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
 
@@ -85,8 +89,8 @@ module.exports = {
         }
 
         code = code.replace(`<!--yt2009_video_entries-->`, videos_html)
-
         code = doodles.applyDoodle(code)
+        code = language.apply_lang_to_code(code, req)
 
         return code;
     },

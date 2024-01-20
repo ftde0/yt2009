@@ -86,6 +86,60 @@ do you want to use SSL on a second port?`)
             cfg.tokens = ["*"]
         }
     }
+
+    // public
+    let public = ""
+    console.log(`
+
+set your instance as a public instance? enter its publicly-reachable IP
+address or the domain name if so. leave empty/reply with "N" otherwise.
+
+setting your instance as a public one will allow it to show up on
+the public instances list, available at either of those sites:
+http://orzeszek.website:203/
+https://orzeszek.website:204/`)
+    public = readline.question("\npublic IP address. leave empty if none: ")
+    if(public.length > 5) {
+        cfg.public = public;
+    }
+}
+
+cfg.auto_mtaintain = false;
+console.log(`
+
+enable auto_maintain?
+auto_maintain will automatically clear your instance
+to prevent it from becoming unusably slow over time.`)
+let rawAMResponse = ""
+while(rawAMResponse !== "n"
+&& rawAMResponse !== "y") {
+    rawAMResponse = readline.question("use auto_maintain? (y/n): ")
+}
+if(rawAMResponse.toLowerCase() == "y") {
+    cfg.auto_mtaintain = true;
+    // auto_maintain sizes
+    let maxSize = readline.question(
+        "\nspecify the max size the instance should use in GB. leave empty for default (10): "
+    )
+    if(maxSize.length > 0) {
+        while(isNaN(parseInt(maxSize))) {
+            maxSize = readline.question(
+                "\nspecify the max size the instance should use in GB. leave empty for default (10): "
+            )
+        }
+        cfg.maintain_max_size = parseInt(maxSize)
+    }
+    let maxCSize = readline.question(
+        "\nspecify the max size per cache file in MB. leave empty for default (15): "
+    )
+    if(maxCSize.length > 0) {
+        while(isNaN(parseInt(maxCSize))) {
+            maxCSize = readline.question(
+                "\nspecify the max size per cache file in MB. leave empty for default (15): "
+            )
+        }
+        cfg.maintain_max_cache_size = parseInt(maxCSize)
+    }
 }
 
 // confirmation

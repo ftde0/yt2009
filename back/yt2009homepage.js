@@ -278,19 +278,20 @@ module.exports = function(req, res) {
                    + " work correctly."
     }
 
+    if(require("./config.json").customHomepageText) {
+        addNotice = true;
+        noticeText = require("./config.json").customHomepageText
+    }
+
     let ytsessions = {
         "1": "This video is not available.",
-        "2": "This channel is not available."
+        "2": "This channel is not available.",
+        "3": "This video is unavailable with Safety Mode enabled. To view this video, you will need to disable Safety Mode."
     }
     if(req.query.ytsession
     && ytsessions[req.query.ytsession]) {
         addNotice = true;
         noticeText = ytsessions[req.query.ytsession]
-    }
-
-    if(require("./config.json").customHomepageText) {
-        addNotice = true;
-        noticeText = require("./config.json").customHomepageText
     }
 
     if(addNotice) {

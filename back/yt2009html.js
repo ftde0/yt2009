@@ -246,6 +246,11 @@ module.exports = {
                                        .lengthSeconds)
                 data.category = videoData.microformat
                                 .playerMicroformatRenderer.category
+                
+                if(videoData.playabilityStatus
+                && videoData.playabilityStatus.status == "LOGIN_REQUIRED") {
+                    data.restricted = true
+                }
 
                 // "related" videos
 
@@ -354,6 +359,9 @@ module.exports = {
 
                 // qualities
                 data.qualities = []
+                if(!videoData.streamingData) {
+                    videoData.streamingData = {}
+                }
                 if(!videoData.streamingData.adaptiveFormats) {
                     videoData.streamingData.adaptiveFormats = [{"qualityLabel": "360p"}]
                 }
@@ -445,6 +453,13 @@ module.exports = {
                                                 .split(";")[0]
         }
         catch(error) {}
+
+        // safety mode
+        if(req.headers.cookie
+        && req.headers.cookie.includes("safety_mode=true")) {
+            callback("safetymode")
+            return;
+        }
 
         // modern qualitylist
         if(data.qualities) {
@@ -1431,6 +1446,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             customRating = customData.ratingSources[token]
                         }
                     }
+
+                    commentTime = yt2009utils.relativeTimeCreate(
+                        commentTime, yt2009languages.get_language(req)
+                    )
 
                     // add html
                     let commentHTML = yt2009templates.videoComment(

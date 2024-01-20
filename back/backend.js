@@ -184,6 +184,22 @@ if(!config.disableWs) {
         })
     }
 }
+let public = false
+if(config.public
+&& typeof(config.public) == "string"
+&& config.public.length > 2) {
+    public = config.public
+    let ver = require("../package.json")
+    let version = ver.version
+    const fetch = require("node-fetch")
+    fetch("https://orzeszek.website:204/api/hello", {
+        "headers": {
+            "pdata": public,
+            "yt2009": version
+        },
+        "method": "POST"
+    })
+}
 
 app.get('/back/*', (req,res) => {
     res.redirect("https://github.com/ftde0/yt2009")
@@ -304,6 +320,9 @@ app.get("/watch", (req, res) => {
             return;
         }
         yt2009.applyWatchpageHtml(data, req, (code => {
+            if(code == "safetymode") {
+                res.redirect("/?ytsession=3")
+            }
             code = yt2009_languages.apply_lang_to_code(code, req)
             code = yt2009_doodles.applyDoodle(code)
             res.send(code)
@@ -616,10 +635,7 @@ app.get("/results", (req, res) => {
             return;
         }
         res.send(yt2009_search.apply_search_html(
-            data, query, flags,
-            req.originalUrl,
-            req.protocol,
-            req.headers["user-agent"]
+            data, query, flags, req
         ))
     }, yt2009_utils.get_used_token(req), resetCache)
 
@@ -1055,6 +1071,8 @@ function checkBaseline(req, res) {
 
 app.get("/channel_fh264_getvideo", (req, res) => {
     if(checkBaseline(req, res)) return;
+
+    req.query.v = req.query.v.replace(/[^a-zA-Z0-9+-+_]/g, "").substring(0, 11)
 
     if(yt2009_exports.getStatus(req.query.v)) {
         // wait for mp4 while it's downloading
@@ -3336,6 +3354,11 @@ bulk subscriptions to homepage video_cell (Latest from Subscriptions)
 ======
 */
 app.post("/homepage_subscriptions", (req, res) => {
+    let subpage = false;
+    if(req.headers.format && req.headers.format == "subpage") {
+        subpage = true;
+    }
+    
     // create a full list of channels
     function sc(c) {
         return c.split("\n").join("").split("\t").join("")
@@ -3410,9 +3433,15 @@ app.post("/homepage_subscriptions", (req, res) => {
 
     // sort and send
     function presentVids() {
-        combinedVideos = combinedVideos.sort(
-            (a, b) => b.uploadUnix - a.uploadUnix
-        ).slice(0, 8)
+        if(!subpage) {
+            combinedVideos = combinedVideos.sort(
+                (a, b) => b.uploadUnix - a.uploadUnix
+            ).slice(0, 8)
+        } else {
+            combinedVideos = combinedVideos.sort(
+                (a, b) => b.uploadUnix - a.uploadUnix
+            ).slice(0, 25)
+        }
 
         let finishHTML = ""
         let i = 0;
@@ -3422,7 +3451,12 @@ app.post("/homepage_subscriptions", (req, res) => {
             && req.headers.cookie.includes("fake_dates")) {
                 tv.upload = yt2009_utils.genFakeDate(i)
             }
-            finishHTML += yt2009_templates.recommended_videoCell(tv, req)
+            if(!subpage) {
+                finishHTML += yt2009_templates.recommended_videoCell(tv, req)
+            } else {
+                tv.thumbnail = "//i.ytimg.com/vi/" + tv.id + "/1.jpg"
+                finishHTML += yt2009_templates.subscriptionVideo(tv, "", req)
+            }
             i++
         })
 
@@ -3768,11 +3802,16 @@ auto_maintain config opt
 ======
 */
 let maxSizeGB = 10;
+let maxJSONMB = 15;
 if(config.auto_maintain) {
     // auto-remove 
     if(config.maintain_max_size
     && typeof(config.maintain_max_size) == "number") {
         maxSizeGB = config.maintain_max_size
+    }
+    if(config.maintain_max_cache_size
+    && typeof(config.maintain_max_cache_size) == "number") {
+        maxJSONMB = config.maintain_max_cache_size
     }
     
 
@@ -3822,11 +3861,12 @@ if(config.auto_maintain) {
         
 
         // check out caches
-        let maxCacheSizeMB = 15
+        let maxCacheSizeMB = maxJSONMB
         let maxCacheSizeB = maxCacheSizeMB * 1024 * 1024
         let vCache = require("./cache_dir/video_cache_manager")
         let cCache = require("./cache_dir/channel_cache")
         let sCache = require("./cache_dir/search_cache_manager")
+        let pCache = require("./cache_dir/old_comments.json")
         if(JSON.stringify(vCache.read()).length > maxCacheSizeB) {
             vCache.clean()
             console.log(`auto_maintain: clean video_cache`)
@@ -3841,6 +3881,10 @@ if(config.auto_maintain) {
             sCache.clean()
             console.log(`auto_maintain: clean search_cache`)
             fs.writeFileSync("./cache_dir/search_cache.json", "{}")
+        }
+        if(JSON.stringify(pCache).length > maxCacheSizeB) {
+            console.log(`auto_maintain: clean old_comments`)
+            fs.writeFileSync("./cache_dir/old_comments.json", "{}")
         }
     }
     let autoCheckSize = setInterval(checkSize, 1000 * 60 * 60 * 4)

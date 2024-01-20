@@ -16,6 +16,38 @@ try {
     throw new Error('invalid YT2009_PORT');
 }
 
+// set auto maintain
+switch (process.env.YT2009_AUTO_MAINTAIN) {
+    case 'true':
+        cfg.auto_maintain = true;
+        break;
+    case 'false':
+        cfg.auto_maintain = false;
+        break;
+    default:
+        throw new Error('invalid YT2009_AUTO_MAINTAIN')
+}
+
+// set maintain max size
+try {
+    cfg.maintain_max_size = parseInt(process.env.YT2009_MAINTAIN_MAX_SIZE);
+} catch {
+    throw new Error('invalid YT2009_MAINTAIN_MAX_SIZE');
+}
+
+// set maintain max cache size
+try {
+    cfg.maintain_max_cache_size = parseInt(process.env.YT2009_MAINTAIN_MAX_CACHE_SIZE);
+} catch {
+    throw new Error('invalid YT2009_MAINTAIN_MAX_CACHE_SIZE');
+}
+
+// set public
+if(process.env.YT2009_PUBLIC) {
+    cfg.public = process.env.YT2009_PUBLIC;
+}
+
+
 // set env
 if(process.env.YT2009_ENV === 'dev' || process.env.YT2009_ENV === 'prod') {
     cfg.env = process.env.YT2009_ENV;
@@ -71,7 +103,7 @@ if (oldtokens) {
             tokens.push(token)
         }
         cfg.tokens = tokens
-    }   
+    }
 };
 
 fs.writeFileSync(`${__dirname}/back/config.json`, JSON.stringify(cfg))

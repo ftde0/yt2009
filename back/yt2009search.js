@@ -5,6 +5,7 @@ const yt2009exports = require("./yt2009exports");
 const yt2009templates = require("./yt2009templates");
 const yt2009waybackwatch = require("./cache_dir/wayback_watchpage")
 const yt2009doodles = require("./yt2009doodles")
+const yt2009languages = require("./language_data/language_engine")
 const config = require("./config.json")
 const fs = require("fs")
 const search_code = fs.readFileSync("../search-generic-page.htm").toString();
@@ -206,21 +207,24 @@ module.exports = {
         }
     },
 
-    "apply_search_html": function(results, query, flags, url, protocol, userAgent) {
+    "apply_search_html": function(results, query, flags, req) {
         // apply get_search results to html
         let code = search_code;
         let results_html = ``
         let search_type = "all"
+        let userAgent = req.headers["user-agent"]
         let browser = userAgent.includes("Firefox/") ? "firefox" : "chrome"
-
+        let url = req.originalUrl
+        let protocol = req.protocol
+        
         let params = url.split("&")
         if(params[0].includes("?")) {
             params[0] = params[0].split("?")[1]
         }
         // properly show chosen filters
-        let sort = "Relevance"
-        let uploaded = "Anytime"
-        let type = "All"
+        let sort = "relevance"
+        let uploaded = "any"
+        let type = "lang_results_all"
         let typesList = []
         let url_without_sort = url;
         let url_without_upload = url;
@@ -230,28 +234,28 @@ module.exports = {
             switch(param.split("=")[1]) {
                 // sort
                 case "video_date_uploaded": {
-                    sort = "Newest"
+                    sort = "newest"
                     url_without_sort = url_without_sort.replace(
                         /[?|&]search_sort=video_date_uploaded/, ""
                     )
                     break;
                 }
                 case "video_date_uploaded_reverse": {
-                    sort = "Oldest"
+                    sort = "oldest"
                     url_without_sort = url_without_sort.replace(
                         /[?|&]search_sort=video_date_uploaded_reverse/, ""
                     )
                     break;
                 }
                 case "video_view_count": {
-                    sort = "View Count"
+                    sort = "views"
                     url_without_sort = url_without_sort.replace(
                         /[?|&]search_sort=video_view_count/, ""
                     )
                     break;
                 }
                 case "video_avg_rating": {
-                    sort = "Rating"
+                    sort = "rating"
                     url_without_sort = url_without_sort.replace(
                         /[?|&]search_sort=video_avg_rating/, ""
                     )
@@ -259,21 +263,21 @@ module.exports = {
                 }
                 // upload date
                 case "d": {
-                    uploaded = "Today"
+                    uploaded = "today"
                     url_without_upload = url_without_upload.replace(
                         /[?|&]uploaded=d/, ""
                     )
                     break;
                 }
                 case "w": {
-                    uploaded = "This week"
+                    uploaded = "week"
                     url_without_upload = url_without_upload.replace(
                         /[?|&]uploaded=w/, ""
                     )
                     break;
                 }
                 case "m": {
-                    uploaded = "This month"
+                    uploaded = "month"
                     url_without_upload = url_without_upload.replace(
                         /[?|&]uploaded=m/, ""
                     )
@@ -293,7 +297,7 @@ module.exports = {
             switch(param.split("=")[0]) {
                 case "partner": {
                     type = "Partner Videos"
-                    typesList.push("Partner Videos")
+                    typesList.push("lang_results_pv")
                     url_without_type = url_without_type.replace(
                         /[?|&]partner=1/, ""
                     )
@@ -301,7 +305,7 @@ module.exports = {
                 }
                 case "annotations": {
                     type = "Annotations"
-                    typesList.push("Annotations")
+                    typesList.push("lang_results_annotations")
                     url_without_type = url_without_type.replace(
                         /[?|&]annotations=1/, ""
                     )
@@ -309,7 +313,7 @@ module.exports = {
                 }
                 case "closed_captions": {
                     type = "Closed Captions"
-                    typesList.push("Closed Captions")
+                    typesList.push("lang_results_cc")
                     url_without_type = url_without_type.replace(
                         /[?|&]closed_captions=1/, ""
                     )
@@ -317,7 +321,7 @@ module.exports = {
                 }
                 case "high_definition": {
                     type = "HD"
-                    typesList.push("HD")
+                    typesList.push("lang_results_hd")
                     url_without_type = url_without_type.replace(
                         /[?|&]high_definition=1/, ""
                     )
@@ -328,8 +332,8 @@ module.exports = {
         if(typesList.length == 0) {
             typesList.push(type)
         }
-        code = code.replace("chosen_sort", sort)
-        code = code.replace("chosen_upload", uploaded)
+        code = code.replace("chosen_sort", "lang_sort_" + sort)
+        code = code.replace("chosen_upload", "lang_up_" + uploaded)
         code = code.replace("chosen_type", typesList.join(", "))
         // sort
         code = code.replace(
@@ -360,7 +364,7 @@ module.exports = {
             "url_plus_type_all", url_without_type
         )
 
-        code = require("./yt2009loginsimulate")(flags, code)
+        code = require("./yt2009loginsimulate")(flags, code, true)
         
         if(flags.includes("shows_tab")) {
             // shows tab
@@ -486,6 +490,13 @@ module.exports = {
                     if(flags.includes("autogen_thumbnails")) {
                         browser += "+autogen"
                     }
+
+                    uploadDate = yt2009utils.relativeTimeCreate(
+                        uploadDate, yt2009languages.get_language(req)
+                    )
+                    viewCount = "lang_views_prefix" + yt2009utils.countBreakup(
+                        parseInt(yt2009utils.bareCount(viewCount))
+                    ) + "lang_views_suffix"
     
                     // apply html
                     if(!cancelled) {
@@ -655,6 +666,8 @@ module.exports = {
             `var YT2009_BASE_SEARCH_URL = "";`,
             `var YT2009_BASE_SEARCH_URL = "${baseUrl}";`
         )
+
+        code = yt2009languages.apply_lang_to_code(code, req)
 
         return code;
     },

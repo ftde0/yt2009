@@ -3,7 +3,7 @@
 /my_playlists handler
 =======
 
-yt2009, 2022-2033
+yt2009, 2022-2034
 */
 
 const utils = require("./yt2009utils")
@@ -11,7 +11,7 @@ const template = require("./yt2009templates")
 const fs = require("fs")
 const page = fs.readFileSync("../playlists.htm").toString()
 const doodles = require("./yt2009doodles")
-let client_playlists = {}
+const languages = require("./language_data/language_engine")
 
 module.exports = {
     "apply": function(req, res) {
@@ -26,8 +26,8 @@ module.exports = {
         // shows tab
         if(req.headers.cookie.includes("shows_tab")) {
             code = code.replace(
-                `<a href="/channels">Channels</a>`,
-                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a>`,
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
 
@@ -55,8 +55,9 @@ module.exports = {
             )
         }
 
-        code = require("./yt2009loginsimulate")(req, code);
+        code = require("./yt2009loginsimulate")(req, code, true);
         code = doodles.applyDoodle(code)
+        code = languages.apply_lang_to_code(code, req)
         res.send(code);
     }
 }

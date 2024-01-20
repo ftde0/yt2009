@@ -127,7 +127,7 @@ module.exports = {
                 "tags": tags,
                 "full_description": data.description,
                 "short_description": shortDesc,
-                "time_created_text": data.upload,
+                "time_created_text": utils.dateFormat(data.upload),
                 "view_count": utils.countBreakup(
                     utils.bareCount(data.viewCount)
                 ),

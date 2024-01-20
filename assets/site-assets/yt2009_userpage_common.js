@@ -143,6 +143,14 @@ if(window.localStorage) {
         case "/watch_queue":
         case "/my_quicklist": {
             storageObject = JSON.parse(localStorage.quicklistVids)
+            if(!storageObject || storageObject.length == 0) {
+                setTimeout(function() {
+                    qlNoVidsShow()
+                }, 100)
+            } else {
+                var nv = document.getElementById("novids-template")
+                nv.parentNode.removeChild(nv)
+            }
             break;
         }
     }
@@ -150,6 +158,11 @@ if(window.localStorage) {
     // add html
     if(!document.querySelector(".videos-page-0")) {
         prepNewPage();
+    }
+
+    var viewPrefix = "Views: "
+    if(window["lsViewStringPrefix"]) {
+        viewPrefix = lsViewStringPrefix
     }
 
     storageObject.reverse().forEach(function(video) {
@@ -171,7 +184,7 @@ if(window.localStorage) {
             <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + location.protocol + '//i.ytimg.com/vi/' + video.id + '/' + thumbUrl + '"/></a>\
             <a href="/watch?v=' + video.id + '" class="title" style="display: block; color: #03c;">' + video.title + '</a>\
             <div class="video-stats">\
-                <div class="video-stat' + (path == "/watch_queue" ? " hid" : "") + '"><span class="stat-views">Views: ' + video.views + '</span></div>\
+                <div class="video-stat' + (path == "/watch_queue" ? " hid" : "") + '"><span class="stat-views">' + viewPrefix + video.views + '</span></div>\
                 <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>\
             </div>\
         </div>\
@@ -349,6 +362,22 @@ function show_playlist_localstorage(playlist) {
     }
 
     playlistVideos.forEach(function(video) {
+        if(yt2009_used_lang !== "English") {
+            try {
+                var temp = new Date(video.date)
+                var y = temp.getFullYear()
+                var m = temp.getMonth() + 1
+                if(m < 10) {
+                    m = "0" + m
+                }
+                var d = temp.getDate()
+                if(d < 10) {
+                    d = "0" + d
+                }
+                video.date = y + "-" + m + "-" + d
+            }
+            catch(error) {}
+        }
         playlistVideosHTML += '\
         <tr class="video ' + (playlistVideoIndex % 2 == 0 ? "even" : "odd") + '" data-videoid="' + video.id + '">\
             <td id="heading-check" class="first heading">\
@@ -621,4 +650,10 @@ if(document.querySelector("#view-toggle .grid-selected")) {
         }
 
     }, false)
+}
+
+// ql: no videos notice
+function qlNoVidsShow() {
+    document.getElementById("novids-template").id = "videos"
+    document.getElementById("videos").className = ""
 }

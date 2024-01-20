@@ -1190,7 +1190,7 @@ module.exports = {
         ]
         let indexTime = predefined[index || 0]
         if(!indexTime) {
-            indexTime = Math.floor(Math.random() * 23) + " hours ago"
+            indexTime = (Math.floor(Math.random() * 22) + 1) + " hours ago"
         }
 
         let numberVariation = parseInt(
