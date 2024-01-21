@@ -79,11 +79,11 @@ if(config.env == "dev") {
 if(config.redirmode
 && typeof(config.redirmode) == "string") {
     app.get("*", (req, res) => {
-        res.redirect(config.redirmode + req.path)
+        res.redirect(config.redirmode + req.url)
         return;
     })
     app.post("*", (req, res) => {
-        res.redirect(config.redirmode + req.path)
+        res.redirect(config.redirmode + req.url)
         return;
     })
 } else if(config.redirmode && typeof(config.redirmode) !== "string") {

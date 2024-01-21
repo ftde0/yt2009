@@ -491,9 +491,12 @@ module.exports = {
                         browser += "+autogen"
                     }
 
-                    uploadDate = yt2009utils.relativeTimeCreate(
-                        uploadDate, yt2009languages.get_language(req)
-                    )
+                    try {
+                        uploadDate = yt2009utils.relativeTimeCreate(
+                            uploadDate, yt2009languages.get_language(req)
+                        )
+                    }
+                    catch(error) {uploadDate = ""}
                     viewCount = "lang_views_prefix" + yt2009utils.countBreakup(
                         parseInt(yt2009utils.bareCount(viewCount))
                     ) + "lang_views_suffix"
