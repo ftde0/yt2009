@@ -1029,8 +1029,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     "qualities": data.qualities || false,
                     "upload": data.upload
                 })
-                fs.writeFileSync("./cache_dir/watched_now.json",
-                                JSON.stringify(featured_videos))
+                fs.writeFile("./cache_dir/watched_now.json",
+                            JSON.stringify(featured_videos),
+                            (e) => {})
             }
         }
 
@@ -2756,6 +2757,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     bannerUrl = "/assets/" + (data.newBanner || data.banner)
                     dataSent = true
                     callback(bannerUrl)
+                } else {
+                    dataSent = true
+                    callback(null)
                 }
             }}, identif, true)
             setTimeout(() => {

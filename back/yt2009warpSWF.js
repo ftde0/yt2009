@@ -132,7 +132,10 @@ module.exports = {
             }
         }
         this.vid_flv(req.query.video_id, () => {
-            res.redirect(`../assets/${req.query.video_id}.flv`)
+            try {
+                res.redirect(`../assets/${req.query.video_id}.flv`)
+            }
+            catch(error) {}
         })
     },
 

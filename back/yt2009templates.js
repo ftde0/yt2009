@@ -2616,14 +2616,14 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 
     "table_stats_charts": function(rating) {
         let chartImgs = [
-            ["//chart.apis.google.com/chart",
+            ["/chart",
             "?cht=lc:nda&chs=70x15&chco=647b5c",
             "&chm=B,b6cfadaa,0,0,0&chd=t:0.0,60.0,75.0,90.0"].join(""),
-            ["//chart.apis.google.com/chart",
+            ["/chart",
             "?cht=lc:nda&chs=70x15&chco=647b5c",
             "&chm=B,b6cfadaa,0,0,0&chd=t:0.0,60.0,70.0,100.0"].join(""),
-            ["//chart.apis.google.com/chart",
-            "?cht=lc:nda&chs=70x15&chco=647b5c",
+            ["/chart",
+            "?cht=lc:nda&chs=70x15&chco=647b5c&chds=1000",
             "&chm=B,b6cfadaa,0,0,0&chd=t:" + ((rating * 20) - 10) + ".0," + (rating * 20) + ".0"].join("")
         ]
 
@@ -2675,5 +2675,5 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         </div>
     </div>`,
 
-    "map_audiences_empty": `<img width="350" height="170" id="stats-big-map-expanded" src="http://chart.googleapis.com/chart?cht=t&chs=350x170&chtm=world&chd=t:&chf=bg,s,eff8fe&chco=f6f6f6,32501a&chld="/>`
+    "map_audiences_empty": `<img width="350" height="170" id="stats-big-map-expanded" src="/chart?cht=t&chs=350x170&chtm=world&chd=t:&chf=bg,s,eff8fe&chco=f6f6f6,32501a&chld="/>`
 }

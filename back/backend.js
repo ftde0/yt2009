@@ -35,6 +35,7 @@ const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
 const child_process = require("child_process")
+const yt2009charts = require("./yt2009charts")
 
 const https = require("https")
 const fs = require("fs")
@@ -544,7 +545,9 @@ app.post("/video_rate", (req, res) => {
         res.sendStatus(401)
         return;
     }
-    if(!req.headers.source) {
+    if(!req.headers.source
+    || !req.headers.rating
+    || !req.headers.source.includes("v=")) {
         res.sendStatus(400)
         return;
     }
@@ -564,6 +567,11 @@ return youtube dislike
 app.get("/ryd_request", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
         res.redirect("/unauth.htm")
+        return;
+    }
+    if(!req.headers.source
+    || !req.headers.source.includes("v=")) {
+        res.sendStatus(400)
         return;
     }
 
@@ -1083,6 +1091,10 @@ app.get("/channel_fh264_getvideo", (req, res) => {
     }
     if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
         yt2009_utils.saveMp4(req.query.v, (vid) => {
+            if(!vid) {
+                res.sendStatus(404)
+                return;
+            }
             let vidLink = vid.replace("../", "/")
             if(vidLink.includes("assets/")) {
                 vidLink += ".mp4"
@@ -1116,7 +1128,10 @@ function ffmpegEncodeBaseline(req, res) {
             res.sendStatus(404)
             return;
         }
-        res.sendFile(filePath)
+        try {
+            res.sendFile(filePath)
+        }
+        catch(error) {}
     }
 
     // reencode from standard mp4 to baseline mp4
@@ -3709,7 +3724,7 @@ app.get("/insight_ajax", (req, res) => {
 
                 // render view chart
                 let chartLink = [
-                    "//chart.apis.google.com/chart?cht=lc:nda&chs=593x110",
+                    "/chart?cht=lc:nda&chs=593x110",
                     "&chco=647b5c",
                     "&chg=0,-1,1,1&chxt=y,x",
                     "&chxs=0N*s*%20,333333,10|1,333333,10",
@@ -3746,7 +3761,7 @@ app.get("/insight_ajax", (req, res) => {
                         if(d !== c
                         && (!countriesParam.includes(d)
                         && !audienceCountries.code_names.includes(d))) {
-                            percentagesParam.push(Math.floor(Math.random() * 10) + 5)
+                            percentagesParam.push(Math.floor(Math.random() * 10) + 13)
                             countriesParam.push(d)
                         }
                     })
@@ -3766,7 +3781,7 @@ app.get("/insight_ajax", (req, res) => {
                 })
                 rCountries.forEach(c => {
                     if(!countriesParam.includes(c)) {
-                        percentagesParam.push(Math.floor(Math.random() * 2) + 2)
+                        percentagesParam.push(Math.floor(Math.random() * 10) + 10)
                         countriesParam.push(c)
                     }
                 })
@@ -3777,7 +3792,7 @@ app.get("/insight_ajax", (req, res) => {
 
                 // render map
                 let mapUrl = [
-                    "//chart.googleapis.com/chart?cht=t&chs=350x170",
+                    "/chart?cht=t&chs=350x170",
                     "&chtm=world&chd=t:" + percentagesParam.join(),
                     "&chf=bg,s,eff8fe",
                     "&chco=f6f6f6,e5e9c9,ced9ab,a7ba7b,86a058,8ba65b,547136,32501a",
@@ -3794,6 +3809,14 @@ app.get("/insight_ajax", (req, res) => {
         return;
     }
     res.sendStatus(400)
+})
+
+app.get("/chart", (req, res) => {
+    if(req.query.chtm == "world") {
+        yt2009charts.genWorld(req, res)
+        return;
+    }
+    yt2009charts.gen(req, res)
 })
 
 /*

@@ -355,9 +355,12 @@ module.exports = {
                 markCompleteStep()
             } else {
                 yt2009html.get_video_comments(video.id, (comments) => {
-                    saved_channel_comments[video.id] = JSON.parse(
-                        JSON.stringify(comments)
-                    );
+                    try {
+                        saved_channel_comments[video.id] = JSON.parse(
+                            JSON.stringify(comments)
+                        );
+                    }
+                    catch(error) {saved_channel_comments[video.id] = []}
                     markCompleteStep()
                 })
             }
