@@ -476,9 +476,9 @@ module.exports = {
         command.push(`-draw "image over 0,0 0,0 '${__dirname.split("\\").join("/")}/../assets/site-assets/world-chart-base.png'"`)
         command.push(`"${fullF}"`)
         if(config.env == "dev") {
-            console.log(command.join(" "))
+            console.log(command.join(" ").split(";").join(""))
         }
-        child_process.exec(command.join(" "), (e, so, se) => {
+        child_process.exec(command.join(" ").split(";").join(""), (e, so, se) => {
             if(!e && !se) {
                 fs.chmodSync(fullF, 0o755)
                 res.setHeader("Content-Type", "image/png")
