@@ -139,6 +139,9 @@ module.exports = {
         let yStart = 0.1 * size[1]
         if(div > 0) {
             yTextPos.forEach(d => {
+                if(d.t) {
+                    d.t = d.t.split(`;`).join("")
+                }
                 command.push(
                     `-draw "text 2,${yStart + ((ySize / 100) * d.p)} '${d.t}'"`
                 )
@@ -155,7 +158,7 @@ module.exports = {
         let xYPlacement = 0.97 * size[1]
         xText.forEach(d => {
             command.push(
-                `-draw "text ${xStart + ((xSize / 100) * d.p)},${xYPlacement} '${d.t}'"`
+                `-draw "text ${xStart + ((xSize / 100) * d.p)},${xYPlacement} '${d.t.split(`;`).join("")}'"`
             )
         })
 
@@ -195,7 +198,7 @@ module.exports = {
         let chartColor = ""
         if(req.query.chm) {
             let tempTextP = []
-            req.query.chm.split("|").forEach(c => {
+            req.query.chm.split(`;`).join("").split("|").forEach(c => {
                 if(c.includes(",0,0,0")) {
                     // main chart color
                     chartColor = `#${c.split(",0,0,0")[0].split(",")[1]}`
@@ -390,7 +393,12 @@ module.exports = {
         }
         command.push(`"${fullF}"`)
 
-        child_process.exec(command.join(" "), (e, so, se) => {
+        command = command.join(" ").split(";").join("")
+        if(process.platform == "linux") {
+            command = command.split("#").join("\\#")
+        }
+
+        child_process.exec(command, (e, so, se) => {
             if(!e && !se) {
                 fs.chmodSync(fullF, 0o755)
                 res.setHeader("Content-Type", "image/png")
