@@ -4,6 +4,20 @@ const world = require("./geo/world-chart-data.json")
 const config = require("./config.json")
 
 module.exports = {
+    "s": function(i) {
+        let s = i || "";
+        let d = ["&", ";", "`", "'",
+                 "|", "*", "?", "~",
+                 "\\", "<", ">", "^",
+                 "(", ")", "[", "]",
+                 "{", "}", "$", "\n",
+                 "\r", "~", "#"]
+        d.forEach(b => {
+            s = s.split(b).join("")
+        })
+        return s;
+    },
+
     "countBreakup": function(count) {
         count = count.toString();
         count = count.split("")
@@ -58,7 +72,7 @@ module.exports = {
         let yText = []
         let xText = []
         if(req.query.chxr) {
-            yText = [req.query.chxr.split("0,0,")[1].split("|")[0]]
+            yText = [this.s(req.query.chxr.split("0,0,")[1].split("|")[0])]
         }
         if(req.query.chxr
         && req.query.chxr.includes("|1,0,100")) {
@@ -89,6 +103,11 @@ module.exports = {
                         positions = positions.replace("1,", "")
                     }
                     positions = positions.split(",")
+                    let s = []
+                    positions.forEach(p => {
+                        s.push(this.s(p))
+                    })
+                    positions = s;
                 } else {
                     positions = [1, 45, 95]
                 }
@@ -140,7 +159,7 @@ module.exports = {
         if(div > 0) {
             yTextPos.forEach(d => {
                 if(d.t) {
-                    d.t = d.t.split(`;`).join("")
+                    d.t = this.s(d.t)
                 }
                 command.push(
                     `-draw "text 2,${yStart + ((ySize / 100) * d.p)} '${d.t}'"`
@@ -157,8 +176,11 @@ module.exports = {
         let xSize = (1 - (sizes[0] / 100) - 0.15) * size[0]
         let xYPlacement = 0.97 * size[1]
         xText.forEach(d => {
+            if(d.t) {
+                d.t = this.s(d.t)
+            }
             command.push(
-                `-draw "text ${xStart + ((xSize / 100) * d.p)},${xYPlacement} '${d.t.split(`;`).join("")}'"`
+                `-draw "text ${xStart + ((xSize / 100) * d.p)},${xYPlacement} '${d.t}'"`
             )
         })
 
@@ -201,14 +223,14 @@ module.exports = {
             req.query.chm.split(`;`).join("").split("|").forEach(c => {
                 if(c.includes(",0,0,0")) {
                     // main chart color
-                    chartColor = `#${c.split(",0,0,0")[0].split(",")[1]}`
-                    command.push(`-fill #${c.split(",0,0,0")[0].split(",")[1]}`)
+                    chartColor = `#${this.s(c.split(",0,0,0")[0].split(",")[1])}`
+                    command.push(`-fill #${this.s(c.split(",0,0,0")[0].split(",")[1])}`)
                 }
                 if(c.includes(",0")
                 && c.includes(":")) {
                     // fill between places
                     let places = c.split(",0,")[1].split(",0")[0].split(":")
-                    let color = c.split(",0,")[0].split(",")[1]
+                    let color = this.s(c.split(",0,")[0].split(",")[1])
                     fillBetween.push({
                         "s": places,
                         "c": "#" + color
@@ -217,12 +239,12 @@ module.exports = {
                 if(c.startsWith("A")
                 && c.includes(",0,")) {
                     // caption lines
-                    let text = decodeURIComponent(
+                    let text = this.s(decodeURIComponent(
                         c.replace("A", "").split(",")[0].split("+").join(" ")
-                    )
-                    let textColor = "#" + c.split(",")[1]
-                    let percentage = c.split(",")[3]
-                    let textSize = c.split(",")[4]
+                    ))
+                    let textColor = "#" + this.s(c.split(",")[1])
+                    let percentage = this.s(c.split(",")[3])
+                    let textSize = this.s(c.split(",")[4])
                     captionTexts.push({
                         "t": text,
                         "c": textColor,
@@ -423,7 +445,11 @@ module.exports = {
         let chco = []
         if(req.query.chco) {
             req.query.chco.split(",").forEach(c => {
-                chco.push("#" + c)
+                chco.push("#"
+                    + c.substring(0, 6)
+                      .replace(/[^a-zA-Z0-9]/g, "")
+                      .trim()
+                )
             })
         }
 
@@ -452,7 +478,7 @@ module.exports = {
         let countries = {};
         (req.query.chd || "").replace("t:", "").split(",").forEach(chd => {
             let c = (req.query.chld || "").substring(i, i + 2)
-            countries[c] = parseInt(chd)
+            countries[this.s(c)] = parseInt(chd)
             i += 2
         })
         
