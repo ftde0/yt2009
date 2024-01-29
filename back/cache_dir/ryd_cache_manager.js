@@ -23,6 +23,12 @@ module.exports = {
                 }
             }).then(r => {
                 r.json().catch(error => {callback(5)}).then(response => {
+                    if(!response
+                    || !response.rating) {
+                        callback(5)
+                        cache[id] = 5
+                        return;
+                    }
                     callback(utils.custom_rating_round(response.rating))
                     cache[id] = utils.custom_rating_round(response.rating)
                 })
