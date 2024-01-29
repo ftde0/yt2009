@@ -581,7 +581,7 @@ app.get("/ryd_request", (req, res) => {
         if(!toSend.includes(".5")) {
             toSend += ".0"
         } 
-        res.send(toSend)
+        try {res.send(toSend)}catch(error) {}
     })
 })
 
