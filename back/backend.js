@@ -1085,7 +1085,7 @@ app.get("/channel_fh264_getvideo", (req, res) => {
     if(yt2009_exports.getStatus(req.query.v)) {
         // wait for mp4 while it's downloading
         yt2009_exports.waitForStatusChange(req.query.v, () => {
-            res.redirect("/assets/" + req.query.v + ".mp4")
+            try {res.redirect("/assets/" + req.query.v + ".mp4")}catch(error) {}
         })
         return;
     }
@@ -1099,10 +1099,10 @@ app.get("/channel_fh264_getvideo", (req, res) => {
             if(vidLink.includes("assets/")) {
                 vidLink += ".mp4"
             }
-            res.redirect(vidLink)
+            try {res.redirect(vidLink)}catch(error) {}
         })
     } else {
-        res.redirect("/assets/" + req.query.v + ".mp4")
+        try {res.redirect("/assets/" + req.query.v + ".mp4")}catch(error){}
     }
     
 })
