@@ -62,8 +62,57 @@ module.exports = {
         return minutes + ":" + seconds;
     },
 
+
+    "comments_viewmodel_parser": function(response, comment_flags) {
+        if(config.env == "dev") {
+            console.log("[dev] using comments_viewmodel_parser instead")
+        }
+        let comments = []
+        try {
+            response.frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
+                if(m.payload
+                && m.payload.commentEntityPayload) {
+                    m = m.payload.commentEntityPayload
+                    let content = m.properties.content.content.replace(
+                        /\p{Other_Symbol}/gui, ""
+                    )
+                    comments.push({
+                        "authorAvatar": m.author.avatarThumbnailUrl,
+                        "authorName": m.author.displayName.replace("@", ""),
+                        "authorUrl": "/channel/" + m.author.channelId,
+                        "content": content,
+                        "time": comment_flags.includes("fake_comment_dates")
+                                ? gen_fake_date()
+                                : m.properties.publishedTime,
+                        "likes": parseInt(m.toolbar.likeCountA11y.replace(
+                            /[^0-9]/g, ""
+                        )),
+                        "pinned": false
+                    })
+                }
+            })
+
+            return comments;
+        }
+        catch(error) {
+            console.log(`
+    COMMENTVIEWMODEL PARSER FAIL: ${error}
+    REPRO DATA: ${constants.headers.cookie}
+    ${constants.cached_innertube_context.client.deviceExperimentId}
+    ${constants.cached_innertube_context.client.visitorData}
+    PLEASE REPORT AN ISSUE AT: https://github.com/ftde0/yt2009/
+`)
+            return []
+        }
+    },
+
     
     "comments_parser": function(response, comment_flags) {
+        if(response.frameworkUpdates) {
+            // parse new viewmodel comments, don't remove old code yet as old
+            // commentRenderers are still common.
+            return this.comments_viewmodel_parser(response, comment_flags)
+        }
         // parse comments from json response
         comment_flags = comment_flags.replace("#", "").split(";")
         let gen_fake_date = this.genFakeDate
@@ -134,6 +183,7 @@ module.exports = {
                 && authorUrl.includes("/user/")) {
                     authorName = authorUrl.split("/user/")[1]
                 }
+                if(!authorName) {authorName = "author"}
                 if(authorName.startsWith("@")) {
                     authorName = authorName.replace("@", "")
                 }
