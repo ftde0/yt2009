@@ -1,0 +1,15 @@
+syntax = "proto3";
+package watchNextRelatedFeed;
+
+message root {
+    int64 constant40 = 1;
+    message container {
+        string video = 2;
+        int64 zeroInt = 25;
+        int64 threeInt = 28;
+    }
+    repeated container c = 2;
+    int64 zeroInt = 3;
+    string continuation = 5;
+    string watchNextFeed = 13;
+}

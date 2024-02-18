@@ -24,6 +24,7 @@ try {
     featured_channels = require("./cache_dir/public_channel_listing.json")
 }
 catch(error) {}
+let tCache = {}
 
 module.exports = {
     "main": function(req, res, flags, sendRawData) {
@@ -1810,5 +1811,77 @@ module.exports = {
                 }
             })
         })})
+    },
+
+    "mini_channel_images": function(id, callback) {
+        let cached = tCache[id]
+        // read from cache
+        if(cached) {
+            callback(cached)
+        } else {
+            // clean fetch the channel
+            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
+                yt2009html.get_api_key()
+            }`, {
+                "headers": yt2009constants.headers,
+                "referrer": "https://www.youtube.com/",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": JSON.stringify({
+                    "context": yt2009constants.cached_innertube_context,
+                    "browseId": id
+                }),
+                "method": "POST",
+                "mode": "cors"
+            }).then(r => {r.json().then(r => {
+                let c = {}
+                if(!r.header
+                || !r.header.c4TabbedHeaderRenderer) {
+                    c.avatar = "default"
+                    let bFname = id.replace("UC", "") + "_uniq_banner.jpg"
+                    fs.writeFileSync(`../assets/${bFname}`, "")
+                    callback(c)
+                    c.banner = false
+                    tCache[id] = c;
+                }
+
+                // avatar
+                try {
+                    console.log(r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url)
+                }catch(error) {
+                    c.avatar = "default"
+                    c.banner = false;
+                    tCache[id] = c;
+                    callback(c)
+                    return;
+                }
+                let avatar = r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url
+                let fname = avatar.split("/")[avatar.split("/").length - 1]
+                if(!fs.existsSync(`../assets/${fname}.png`)) {
+                    yt2009utils.saveAvatar(avatar)
+                }
+                c.avatar = `/assets/${fname}.png`
+
+                // banner
+                let bFname = id.replace("UC", "") + "_uniq_banner.jpg"
+                try {
+                    let banner = r.header.c4TabbedHeaderRenderer.banner.thumbnails[0].url
+                    fetch(banner, {
+                        "headers": yt2009constants.headers
+                    }).then(r => {
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(`../assets/${bFname}`, buffer)
+                        })
+                    })
+                    c.banner = `/assets/${bFname}`
+                }
+                catch(error) {
+                    fs.writeFileSync(`../assets/${bFname}`, "")
+                }
+
+                // send
+                tCache[id] = c;
+                callback(c)
+            })})
+        }
     }
 }

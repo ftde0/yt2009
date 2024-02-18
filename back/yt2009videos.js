@@ -105,6 +105,7 @@ module.exports = {
         // add video bare html
         let videosHTML = ``
         function addVideo(video) {
+            if(!video.id) return;
             let views = video.views;
             if(flags.includes("realistic_view_count")
             && parseInt(views.replace(/[^0-9]/g, "")) >= 100000) {

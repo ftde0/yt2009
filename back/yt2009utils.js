@@ -493,7 +493,7 @@ module.exports = {
         }
         let fname = link.split("/")[link.split("/").length - 1]
         if(banner) {
-            fname = link.split("/")[link.split("/").length - 2] + "_banner.jpg"
+            fname = banner + "_banner"
         }
         fname = fname.replace(".png", "")
         if(!fs.existsSync(`../assets/${fname}.png`)) {
@@ -857,8 +857,7 @@ module.exports = {
 
     /*
     ========
-    flag handling for simpler things, move to this in the future
-    actually don't move to this in the future this is horrible
+    flag handling for simpler things
     ========
     */
     "textFlags": function(input, flags, additionalInput) {
@@ -888,7 +887,7 @@ module.exports = {
                 }
             }
         })
-        return tr;
+        return this.xss(tr);
     },
 
     "viewFlags": function(input, flags, additionalInput) {

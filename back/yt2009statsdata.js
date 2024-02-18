@@ -305,6 +305,10 @@ module.exports = {
 
         // audience countries
         let idList = []
+        if(!v.comments) {
+            markDone()
+            return;
+        }
         v.comments.slice(0, 10).forEach(c => {
             if(c.authorUrl.includes("channel/")) {
                 idList.push(c.authorUrl.split("channel/")[1].split("?")[0])

@@ -3,11 +3,13 @@ let data = {
     "api_key": "",
     "context": {},
     "fileDownloadStatus": {},
-    "masterWs": false
+    "masterWs": false,
+    "dataFetches": {}
 }
 let fileDownloadListeners = {
 
 }
+let dataFetchListeners = {}
 
 module.exports = {
     "writeData": function(name, value) {
@@ -47,6 +49,37 @@ module.exports = {
             return;
         }
         fileDownloadListeners[id].push(callback)
+    },
+
+    "updateDataFetch": function(id, vData) {
+        data.dataFetches[id] = vData
+        if(vData && dataFetchListeners[id]) {
+            dataFetchListeners[id].forEach(l => {
+                l()
+            })
+            delete dataFetchListeners[id]
+            delete data.dataFetches[id]
+        } 
+    },
+
+    "getDataFetchStatus": function(id) {
+        return data.dataFetches[id]
+    },
+
+    "waitForDataStatusChange": function(id, callback) {
+        if(!dataFetchListeners[id]) {
+            dataFetchListeners[id] = []
+        }
+        if(data.dataFetches[id]) {
+            callback()
+            try {
+                delete dataFetchListeners[id]
+                delete data.dataFetchListeners[id]
+            }
+            catch(error) {}
+            return;
+        }
+        dataFetchListeners[id].push(callback)
     }
 }
 

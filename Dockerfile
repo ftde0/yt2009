@@ -1,5 +1,7 @@
-FROM node:lts-alpine3.18
+FROM node:lts-alpine3.19
 RUN apk add --no-cache imagemagick ffmpeg msttcorefonts-installer && \
+    update-ms-fonts && \
+    fc-cache -f && \
     mkdir /data && \
     chown node /data
 
