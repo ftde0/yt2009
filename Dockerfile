@@ -1,6 +1,10 @@
 FROM node:lts-alpine3.19
-RUN apk add --no-cache imagemagick ffmpeg msttcorefonts-installer && \
-    update-ms-fonts && \
+RUN apk add --no-cache imagemagick ffmpeg cabextract && \
+    wget -P /tmp/ https://www.freedesktop.org/software/fontconfig/webfonts/webfonts.tar.gz && \
+    tar -xzf /tmp/webfonts.tar.gz -C /tmp && \
+    cabextract /tmp/msfonts/arial32.exe -d /tmp && \
+    install -D -t /usr/share/fonts /tmp/Arial.TTF && \
+    rm -rf /tmp/* && \
     fc-cache -f && \
     mkdir /data && \
     chown node /data
@@ -19,10 +23,14 @@ ENV YT2009_PORT=80 \
     YT2009_SSLKEY=/yt2009/cert.key \
     YT2009_AUTO_MAINTAIN=false \
     YT2009_MAINTAIN_MAX_SIZE=10 \
-    YT2009_MAINTAIN_MAX_CACHE_SIZE=15
-
+    YT2009_MAINTAIN_MAX_CACHE_SIZE=15 \
+	YT2009_FALLBACK=false \
+	YT2009_DISABLEMASTER=false \
+	YT2009_FASTLOAD=false 
+    
 RUN ln -s /data/config.json back/config.json && \
     ln -s /data/comments.json back/cache_dir/comments.json && \
+    ln -s /data/accessdata back/accessdata && \
     echo "{\"env\": \"dev\"}" > back/config.json && \
     node post_config_setup.js
 

@@ -26,4 +26,4 @@ other params you can set:
 - `redirmode` - an **absolute** http path of a different yt2009 instance you wish to redirect to
 - `public` - an IP to your instance. set if you want your instance to pop up in the instance list.
 - `fastload` - experimental fast loading of slow pages by using various performance tricks. `true/false`
-- `logged_tokens` - an array of access tokens that will have their usage logged in `access_data`.
+- `logged_tokens` - an array of access tokens that will have their usage logged in `accessdata`.
