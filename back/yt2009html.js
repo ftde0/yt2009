@@ -55,7 +55,6 @@ let oldCommentsWrite = setInterval(function() {
         JSON.stringify(oldCommentsCache)
     )
 }, 1000 * 60 * 60)
-let tCache = {}
 
 module.exports = {
     "innertube_get_data": function(id, callback) {
@@ -117,15 +116,6 @@ module.exports = {
     },
 
     "fetch_video_data": function(id, callback, userAgent, userToken, useFlash, resetCache, disableDownload) {
-        if(config.fastload) {
-            this.mini_fetch_video(id, (d) => {
-                callback(d)
-            }, false, true)
-            if(!disableDownload) {
-                fetch("http://127.0.0.1:" + config.port + "/fastload_exp_mp4?id=" + id + "&internal=1")
-            }
-            return;
-        }
         let waitForOgv = false;
 
         // if firefox<=25 wait for ogg, otherwise callback mp4
@@ -440,7 +430,7 @@ module.exports = {
 
 
 
-    "applyWatchpageHtml": function(data, req, callback, id) {
+    "applyWatchpageHtml": function(data, req, callback, qualityList) {
         // apply data from fetch_video_data to html
         let code = watchpage_code;
         let requiredCallbacks = 1;
@@ -448,24 +438,6 @@ module.exports = {
         let endscreen_queue = []
         let commentId = this.commentId
         let hasComment = this.hasComment
-        let showWatchpageTimings = false;
-        let getBanner = this.getBanner;
-        let get_old_comments = this.get_old_comments;
-        let time = 0
-        let x;
-        if(showWatchpageTimings) {
-            x = setInterval(function() {
-                time += 0.1
-                if(time >= 5) {
-                    clearInterval(x)
-                }
-            }, 100)
-        }
-        function markTiming(text) {
-            if(showWatchpageTimings) {
-                console.log(text, time)
-            }
-        }
 
         // basic data
         // flags
@@ -489,291 +461,12 @@ module.exports = {
             return;
         }
 
-        // add related videos
-        let related_html = ""
-        function addRelated() {
-            data.related.forEach(video => {
-                if(yt2009utils.time_to_seconds(video.length) >= 1800) return;
-    
-                // flagi
-                let uploader = video.creatorName
-                if(flags.includes("remove_username_space")) {
-                    uploader = uploader.split(" ").join("")
-                }
-    
-                if(flags.includes("username_asciify")) {
-                    uploader = yt2009utils.asciify(uploader)
-                }
-    
-                let relatedViewCount = parseInt(video.views.replace(/[^0-9]/g, ""))
-                relatedViewCount = "lang_views_prefix"
-                                + yt2009utils.countBreakup(relatedViewCount)
-                                + "lang_views_suffix"
-                if(flags.includes("realistic_view_count")
-                && parseInt(relatedViewCount.replace(/[^0-9]/g, "")) >= 1000) {
-                    relatedViewCount = "lang_views_prefix" + 
-                    yt2009utils.countBreakup(
-                        Math.floor(
-                            parseInt(relatedViewCount.replace(/[^0-9]/g, "")) / 90
-                        )
-                    ) + "lang_views_suffix"
-                }
-    
-                // sam html
-                if(!flags.includes("exp_related")) {
-                    related_html += yt2009templates.relatedVideo(
-                        video.id,
-                        video.title,
-                        req.protocol,
-                        video.length,
-                        relatedViewCount,
-                        video.creatorUrl,
-                        uploader,
-                        flags
-                    )
-    
-                    endscreen_queue.push({
-                        "title": video.title,
-                        "id": video.id,
-                        "length": yt2009utils.time_to_seconds(video.length),
-                        "url": encodeURIComponent(
-                            `http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`
-                        ),
-                        "views": relatedViewCount,
-                        "creatorUrl": video.creatorUrl,
-                        "creatorName": uploader
-                    })
-                }
-    
-                
-            })
-    
-    
-            code = code.replace(`<!--yt2009_add_marking_related-->`, related_html)
+        // modern qualitylist
+        if(data.qualities) {
+            qualityList = data.qualities;
+        } else {
+            qualityList = []
         }
-
-        if(!config.fastload) {addRelated();}
-
-        // flash
-        let useFlash = false;
-        if(req.originalUrl.includes("&f=1")
-        || req.headers.cookie.includes("f_mode")) {
-            useFlash = true;
-        }
-
-        // fastload
-        let fastloadCommand = ""
-        if(config.fastload && !data.comments) {
-            fastloadCommand += `commandComments();`
-            if(!req.headers.cookie.includes("exp_related")
-            && !req.headers.cookie.includes("wayback_features")) {
-                // get default related
-                if(tCache[data.id]
-                && tCache[data.id].related
-                && tCache[data.id].related.length > 0) {
-                    data = JSON.parse(JSON.stringify(data))
-                    data.related = tCache[data.id].related
-                    addRelated()
-                    markTiming("related videos")
-                    code = code.replace(
-                        `//yt2009-fastload`,
-                        fastloadCommand
-                    )
-                    setTimeout(function() {
-                        callbacksMade++
-                        if(callbacksMade >= requiredCallbacks) {
-                            render_endscreen();
-                            fillFlashIfNeeded();
-                            genRelay();
-                            callback(code)
-                        }
-                    }, 100)
-                } else {
-                    requiredCallbacks++
-                    const watchNext = require("./proto/watchNextFeed_pb")
-                    let watchNextMsg = new watchNext.root()
-                    let watchNextContainer = new watchNext.root.container()
-                    watchNextContainer.setVideo(id)
-                    watchNextContainer.setZeroint(3)
-                    watchNextContainer.setThreeint(2)
-                    watchNextMsg.addC(watchNextContainer)
-
-                    watchNextMsg.setConstant40(100)
-                    watchNextMsg.setZeroint(40)
-                    watchNextMsg.setWatchnextfeed("watch-next-feed")
-                    let token = encodeURIComponent(Buffer.from(
-                        watchNextMsg.serializeBinary()
-                    ).toString("base64"))
-
-                    fetch("https://www.youtube.com/youtubei/v1/next?key=" + api_key, {
-                        "headers": {
-                            "accept": "*/*",
-                            "accept-language": "en-US,en;q=0.9",
-                            "content-type": "application/json",
-                            "sec-fetch-dest": "empty",
-                            "sec-fetch-mode": "same-origin",
-                            "sec-fetch-site": "same-origin",
-                            "sec-gpc": "1",
-                            "x-goog-eom-visitor-id": innertube_context.visitorData,
-                            "x-youtube-bootstrap-logged-in": "false",
-                            "x-youtube-client-name": "1",
-                            "x-youtube-client-version": innertube_context.clientVersion,
-                            "User-Agent": constants.headers["user-agent"]
-                        },
-                        "referrer": "https://www.youtube.com/watch?v=" + data.id,
-                        "referrerPolicy": "origin-when-cross-origin",
-                        "body": JSON.stringify({
-                            "context": innertube_context,
-                            "continuation": token
-                        }),
-                        "method": "POST",
-                        "mode": "cors"
-                    }).then(r => {r.json().then(r => {
-                        let related = []
-                        try {
-                            r.onResponseReceivedEndpoints[0]
-                            .appendContinuationItemsAction
-                            .continuationItems.forEach(i => {
-                                if(i.compactVideoRenderer
-                                && i.compactVideoRenderer.lengthText) {
-                                    i = i.compactVideoRenderer
-                                    related.push({
-                                        "title": i.title.simpleText,
-                                        "id": i.videoId,
-                                        "views": i.viewCountText.simpleText,
-                                        "length": i.lengthText.simpleText,
-                                        "creatorName": yt2009utils.asciify(
-                                            i.shortBylineText.runs[0].text,
-                                            false, false
-                                        ),
-                                        "creatorUrl": "/channel/"
-                                        + i.shortBylineText.runs[0].navigationEndpoint
-                                        .browseEndpoint.browseId,
-                                        "uploaded": i.publishedTimeText.simpleText
-                                    })
-                                }
-                            })
-                            data = JSON.parse(JSON.stringify(data))
-                            tCache[data.id].related = related;
-                            data.related = related;
-                            addRelated()
-                            code = code.replace(
-                                `//yt2009-fastload`,
-                                fastloadCommand
-                            )
-                            callbacksMade++
-                            if(callbacksMade >= requiredCallbacks) {
-                                render_endscreen();
-                                fillFlashIfNeeded();
-                                genRelay();
-                                callback(code)
-                            }
-                        } catch(error) {
-                            code = code.replace(
-                                `<!--yt2009_add_marking_related-->`,
-                                `<div id="refetch-related-yt2009"></div>`
-                            )
-                            fastloadCommand += `
-                            commandRefetchRelated();`
-                            code = code.replace(
-                                `//yt2009-fastload`,
-                                fastloadCommand
-                            )
-                            callbacksMade++
-                            if(callbacksMade >= requiredCallbacks) {
-                                render_endscreen();
-                                fillFlashIfNeeded();
-                                genRelay();
-                                callback(code)
-                            }
-                        }
-                        markTiming("related videos")
-                    })})
-                }
-            } else {
-                code = code.replace(
-                    `//yt2009-fastload`,
-                    fastloadCommand
-                )
-            }
-        } else if(config.fastload && data.comments) {
-            addRelated()
-            markTiming("related videos")
-            setTimeout(function() {
-                callbacksMade++
-                if(callbacksMade >= requiredCallbacks) {
-                    render_endscreen();
-                    fillFlashIfNeeded();
-                    genRelay();
-                    callback(code)
-                }
-            }, 100)
-        }
-
-        // exp_ryd / use_ryd / merged
-        let useRydRating = "4.5"
-        requiredCallbacks++;
-        yt2009ryd.fetch(id, (rating) => {
-            if(!rating.toString().includes(".5")) {
-                rating = rating.toString() + ".0"
-            }
-            useRydRating = rating;
-
-            let userRating = yt2009userratings.read(id, true)
-            let avgRating = yt2009utils.custom_rating_round(
-                (userRating + parseFloat(useRydRating)) / 2
-            )
-            if(userRating == 0) {
-                avgRating = useRydRating;
-            }
-            endRating = avgRating
-            if(!avgRating.toString().endsWith(".5")
-            && !avgRating.toString().endsWith(".0")) {
-                avgRating = avgRating.toString() + ".0"
-            }
-            code = code.replace(
-                yt2009templates.oneLineRating("4.5"),
-                yt2009templates.oneLineRating(avgRating)
-            )
-            
-            if(rating == "0.0") {
-                // if no actual ratings, change onsite rating number to 0
-                let ratingCount = 
-                code.split(
-                    `id="defaultRatingMessage"><span class="smallText">`
-                    )[1]
-                    .split(` lang_ratings_suffix`)[0]
-                code = code.replace(
-                    `id="defaultRatingMessage"><span class="smallText">${ratingCount}`,
-                    `id="defaultRatingMessage"><span class="smallText">0`
-                )
-
-            }
-
-            useRydRating = parseFloat(rating)
-
-            // fmode rating, more accurate to an actual page (when logged in)
-            if(useFlash) {
-                code = code.replace(
-                    yt2009templates.oneLineRating(avgRating),
-                    yt2009templates.separatedRating(avgRating)
-                )
-                code = code.replace(
-                    `//yt2009-rating`,
-                    `var fullRating = ${avgRating};`
-                )
-            }
-
-            markTiming("ryd")
-
-            callbacksMade++;
-            if(requiredCallbacks == callbacksMade) {
-                render_endscreen();
-                fillFlashIfNeeded();
-                genRelay();
-                callback(code)
-            }
-        })
 
         // playlist
         let playlistId = req.query.list
@@ -787,13 +480,662 @@ module.exports = {
         // subscribe list
         let subscribeList = yt2009utils.get_subscriptions(req);
 
+        // protocol
+        let protocol = req.protocol
+
+        // flash
+        let useFlash = false;
+        if(req.originalUrl.includes("&f=1") ||
+            req.headers.cookie.includes("f_mode")) {
+            useFlash = true;
+        }
+
         // useragent
         let userAgent = req.headers["user-agent"]
 
+        // quality list
+        let showHQ = false;
+
+        if(isFeather && !useFlash) {
+            code = watchpage_feather;
+            code = code.replace("/embed/video_id", `/embed/${data.id}`)
+        } else if(isFeather && useFlash) {
+            code = watchpage_feather;
+            code = code.replace(
+                `<iframe class="html5_video" src="/embed/video_id"></iframe>`,
+                ``)
+        }
+
         code = require("./yt2009loginsimulate")(flags, code, true)
+
+        // handling flag
+        
+        let author_name = data.author_name;
+        if(flags.includes("remove_username_space")) {
+            author_name = author_name.split(" ").join("")
+        }
+
+        if(flags.includes("username_asciify")) {
+            author_name = yt2009utils.asciify(author_name, true, true)
+            if(author_name == "") {
+                author_name = data.author_handle
+                              || yt2009utils.asciify(author_name)
+            }
+        }
+
+        if(data.author_url.includes("/user/")) {
+            author_name = data.author_url.split("/user/")[1]
+        }
+
+        let uploadJS = new Date(data.upload)
+
+        
+        // login_simulate comments
+        if(req.headers.cookie.includes("login_simulate")
+        && !req.headers.cookie.includes("relay_key")) {
+            code = code.replace(
+                `<!--yt2009_relay_comment_form-->`,
+                yt2009templates.videoCommentPost(false, null, data.id)
+            )
+        }
+
+        let totalCommentCount = 0;
+        if(custom_comments[data.id]) {
+            let commentsHTML = ""
+            custom_comments[data.id].forEach(comment => {
+                if(!comment.time || !comment.text) return;
+                let commentTime = yt2009utils.unixToRelative(comment.time)
+                commentTime = yt2009utils.relativeTimeCreate(
+                    commentTime, yt2009languages.get_language(req)
+                )
+                let commentHTML = yt2009templates.videoComment(
+                    "#", comment.author, commentTime,
+                    comment.text, flags, true, comment.rating,
+                    comment.id
+                )
+
+                // get liked/disliked status by user
+                let token = yt2009utils.get_used_token(req)
+                if(token == "") {
+                    token = "dev"
+                }
+                if(comment.ratingSources[token] == 1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-up-hover",
+                        "watch-comment-up-on"
+                    )
+                } else if(comment.ratingSources[token] == -1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-down-hover",
+                        "watch-comment-down-on"
+                    )
+                }
+
+                totalCommentCount++
+                commentsHTML += commentHTML
+            })
+
+            code = code.replace(
+                `<!--yt2009_custom_comments-->`, commentsHTML
+            )
+        }
+
+        // wayback_features
+        if(flags.includes("wayback_features") &&
+            uploadJS.getFullYear() <= 2013) {
+
+            let waybackProtocol = `=== wayback_features ===`
+            // get features to be applied
+            let requiredFeatures = []
+            decodeURIComponent(flags.split("wayback_features")[1].split(":")[0])
+            .split("+").forEach(feature => {
+                requiredFeatures.push(feature)
+            })
+            waybackProtocol += `\nrequested features: ${requiredFeatures.join()}`
+
+            if(requiredFeatures.join() == "all") {
+                requiredFeatures = ["metadata", "comments", "related", "author"]
+            }
+            
+            requiredCallbacks++;
+            setTimeout(function() {
+                yt2009waybackwatch.read(data.id, (waybackData) => {
+                    // data
+                    waybackProtocol += `\narchive year: ${waybackData.archiveYear}
+                    (archives 2014 and later are not used)`
+
+                    if(!waybackData.title && waybackData.archiveYear < 2014) {
+                        waybackProtocol += `
+                        
+possibly an empty/failed archive!
+wayback save url:
+https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
+                    }
+                    // video metadata
+                    if(requiredFeatures.includes("metadata")) {
+                        // html prep
+
+                        // tags
+                        if(waybackData.tags) {
+                            code = code.replace(
+                            `<div id="watch-video-tags" class="floatL">`,
+                            `<div id="watch-video-tags" class="floatL wayback">
+                                <!--yt2009_wayback_tags-->
+                             </div>
+                             <div id="original-watch-video-tags"
+                                    class="floatL hid">`)
+                        }
+                        let tagsHTML = ""
+                        waybackData.tags.forEach(tag => {
+                            tagsHTML += `<a href="#" class="hLink" style="margin-right: 5px;">${tag}</a>`
+                        })
+
+                        code = code.replace(`<!--yt2009_wayback_tags-->`,
+                                            tagsHTML)
+
+                        // title
+                        if(waybackData.title) {
+                            code = code.replace(
+                                `<h1 class="watch-vid-ab-title">`,
+                                `<h1 class="watch-vid-ab-title">
+                                    <!--yt2009_wayback_title-->
+                                 </h1>
+                                 <h1 class="original-watch-vid-ab-title hid">`
+                            )
+                        }
+                        code = code.replace(`<!--yt2009_wayback_title-->`,
+                                            waybackData.title)
+                        
+                        // description
+                        if(waybackData.description) {
+                            code = code.replace(
+                                `<!--yt2009_wayback_short_desc--><span class="description">`,
+                                `<!--yt2009_wayback_short_desc--><span class="original-short-description hid">`
+                            )
+                            code = code.replace(
+                                `<!--yt2009_wayback_full_desc--><span>`,
+                                `<!--yt2009_wayback_full_desc--><span class="original-full-desc hid">`
+                            )
+                        }
+                        let shortDescription = waybackData.description
+                                                .split("<br>")
+                                                .slice(0, 3)
+                        let fullDescription = waybackData.description
+                        let shortDescriptionParsed = ``
+                        let fullDescriptionParsed = ``
+
+                        shortDescription.forEach(part => {
+                            part.split(" ").forEach(word => {
+                                if(word.startsWith("http://")
+                                    || word.startsWith("https://")) {
+                                    shortDescriptionParsed += `
+                                    <a href="${word}" target="_blank">
+                                        ${word.length > 40 ?
+                                            word.substring(0, 40) + "..."
+                                            : word}
+                                    </a> `
+                                } else {
+                                    shortDescriptionParsed += `${word} `
+                                }
+                            })
+                            shortDescriptionParsed += "<br>"
+                        })
+                        
+                        fullDescription.split("<br>").forEach(part => {
+                            part.split(" ").forEach(word => {
+                                if(word.startsWith("http://")
+                                || word.startsWith("https://")) {
+                                    fullDescriptionParsed += `
+                                    <a href="${word}" target="_blank">
+                                        ${word.length > 40 ?
+                                            word.substring(0, 40) + "..."
+                                            : word}
+                                    </a> `
+                                } else {
+                                    fullDescriptionParsed += `${word} `
+                                }
+                            })
+                            fullDescriptionParsed += "<br>"
+                        })
+                        
+                        if(shortDescriptionParsed.trimStart()
+                                                .startsWith("<br>")) {
+                            shortDescriptionParsed = shortDescriptionParsed
+                                                        .replace("<br>", "")
+                            fullDescriptionParsed = fullDescriptionParsed
+                                                        .replace("<br>", "")
+                        }
+
+                        code = code.replace(`<!--yt2009_wayback_short_desc-->`,
+                                            shortDescriptionParsed)
+                        code = code.replace(`<!--yt2009_wayback_full_desc-->`,
+                                            fullDescriptionParsed)
+                    }
+
+                    // video author data
+                    if(requiredFeatures.includes("author")) {
+                        // avatar
+                        if(waybackData.authorAvatar) {
+                            code = code.replace("yt2009-channel-avatar",
+                                                "yt2009-channel-avatar hid")
+                            code = code.replace(
+                                "<!--yt2009_authorpic-wayback-->",
+                                `<a class="url yt2009-channel-avatar"
+                                    href="
+                                        ${data.author_url}">
+                                        <img src="${waybackData.authorAvatar
+                                                    .replace("http://",
+                                                    req.protocol + "://")}"
+                                            loading="lazy"
+                                            onerror="this.parentNode.removeChild(this)"
+                                        class="photo"/>
+                                </a>`)
+                        }
+
+                        // name
+                        if(waybackData.authorName
+                        && !waybackData.authorName
+                            .toLowerCase().includes("subscribe")
+                        && waybackData.authorName
+                           .replace(/[^a-zA-Z0-9]/g, "").trim()) {
+                            code = code.replace(`yt2009-channel-link`,
+                                            `original-yt2009-channel-link hid`)
+                            code = code.replace(`<!--yt2009_author_wayback-->`, `
+                            <a href="${data.author_url}"
+                                class="hLink fn n contributor yt2009-channel-link">
+                                ${waybackData.authorName}
+                            </a>`)
+
+                            // more from
+                            if(code.split("lang_morefrom").length >= 2) {
+                                let currentUsername = code.
+                                                    split("lang_morefrom")[1].
+                                                    split("\n")[0]
+                                code = code.replace(
+                                    `lang_morefrom${currentUsername}`,
+                                    `lang_morefrom${waybackData.authorName}`
+                                )
+                            }
+                        }
+
+                        // banner
+                        if(waybackData.authorBanner) {
+                            code = code.replace(`<div id="watch-channel-brand-cap">`, `
+                            <div id="watch-channel-brand-cap">
+                                <a href="${data.author_url}"><img src="${waybackData.authorBanner}" width="300" height="50" border="0"></a>
+                            </div>
+                            <div id="original-watch-channel-brand-cap" class="hid">`)
+                            code = code.replace(`<!--yt2009_bannercard-->`, `
+                            <div id="watch-channel-brand-cap">
+                                <a href="${data.author_url}"><img src="${waybackData.authorBanner}" width="300" height="50" border="0"></a>
+                            </div>`)
+                        } else {
+                            code = code.replace(`<div id="watch-channel-brand-cap">`,
+                            `<div id="watch-channel-brand-cap" class="wayback_not_found">`)
+                        }
+                    }
+
+                    // video comments
+                    if(requiredFeatures.includes("comments")
+                        && waybackData.comments.length > 0) {
+                        let commentsLength = waybackData.comments.length
+                        let commentsHTML = `<!--wayback_features comments-->`
+                        waybackData.comments.forEach(comment => {
+                            if(!comment.authorName ||
+                                !comment.content ||
+                                code.includes(comment.authorName)) return;
+                            let commentTime = comment.time.split("\n").join("")
+                                                        .split("  ").join("")
+                                                        .replace(" (", "")
+                                                        .replace(") ", "")
+                            // time in a different language
+                            let englishTimeWords = [
+                                "year",
+                                "month",
+                                "day",
+                                "hour",
+                                "minute",
+                                "second"
+                            ]
+                            let englishLanguageComment = false;
+                            englishTimeWords.forEach(word => {
+                                if(commentTime.toLowerCase().includes(word)) {
+                                    englishLanguageComment = true
+                                }
+                            })
+                            if(!englishLanguageComment) {
+                                commentTime = commentTime.replace(/[^0-9]/g, "") + " months ago"
+                            }
+                            commentTime = yt2009utils.relativeTimeCreate(
+                                commentTime, yt2009languages.get_language(req)
+                            )
+
+                            let id = commentId(comment.authorUrl, comment.content)
+
+                            let likes = comment.likes || Math.floor(Math.random() * 2)
+                            let customRating = 0;
+                            let customData = hasComment(data.id, id)
+                            if(customData) {
+                                likes += customData.rating
+                                let token = yt2009utils.get_used_token(req)
+                                token == "" ? token = "dev" : ""
+                                if(customData.ratingSources[token]) {
+                                    customRating = customData.ratingSources[token]
+                                }
+                            }
+
+                            // add comment
+                            let commentHTML = yt2009templates.videoComment(
+                                comment.authorUrl,
+                                comment.authorName,
+                                commentTime,
+                                comment.content,
+                                flags,
+                                true,
+                                likes,
+                                id
+                            )
+                            if(customRating == 1) {
+                                commentHTML = commentHTML.replace(
+                                    "watch-comment-up-hover",
+                                    "watch-comment-up-on"
+                                )
+                            } else if(customRating == -1) {
+                                commentHTML = commentHTML.replace(
+                                    "watch-comment-down-hover",
+                                    "watch-comment-down-on"
+                                )
+                            }
+                            commentsHTML += commentHTML
+                        })
+                        commentsHTML += `<!--Default YT comments below.-->`
+                        code = code.replace(`<!--yt2009_wayback_comments-->`,
+                                            commentsHTML)
+
+                        let defaultCommentCount = parseInt(
+                            code
+                            .split(`id="watch-comment-count">`)[1]
+                            .split("</span>")[0]
+                        )
+
+                        let newCommentCount = 
+                        defaultCommentCount + commentsLength;
+
+                        code = code
+                        .replace(
+                            `id="watch-comment-count">${defaultCommentCount}`,
+                            `id="watch-comment-count">${newCommentCount}`
+                        )
+                    }
+
+                    // related
+                    if(requiredFeatures.includes("related")
+                        && waybackData.related.length > 0) {
+                        let relatedHTML = `<!--See a hidden video (.hid)?
+                                            It was most likely hidden because
+                                            it's a dead link.-->`;
+                        // try to get author prefix for related ("by ...") to rm
+                        let authorPrefix = ""
+                        // add shortened author names as "prefixes"
+                        let prefixes = []
+                        waybackData.related.forEach(video => {
+                            if(video.uploaderName.includes(" views")) {
+                                let viewCount = video.uploaderName
+                                let uploaderName = video.viewCount
+                                video.uploaderName = uploaderName;
+                                video.viewCount = viewCount;
+                            }
+                            prefixes.push(video.uploaderName.substring(0, 7))
+                        })
+                        let i = 0;
+                        // filter out EXACT same author names
+                        // (prevents author names being considered prefixes)
+                        prefixes.forEach(p => {
+                            i++;
+                            if(prefixes[i] == prefixes[i - 1]) {
+                                prefixes = prefixes.filter(s => s !== prefixes[i])
+                            }
+                        })
+                        // foreach and compare previous "prefix"
+                        // to narrow down the prefix's length and the actual value
+                        i = 0;
+                        prefixes.forEach(p => {
+                            i++;
+                            if(!prefixes[i]) return;
+                            let prefixLength = 7;
+                            while(prefixLength >= 2) {
+                                let u0Prefix = prefixes[i].substring(
+                                    0, prefixLength
+                                )
+                                let u1Prefix = prefixes[i - 1].substring(
+                                    0, prefixLength
+                                )
+                                if(u0Prefix == u1Prefix) {
+                                    authorPrefix = u0Prefix;
+                                    break;
+                                } else {
+                                    authorPrefix = ""
+                                }
+                                prefixLength--
+                            }
+                        })
+                        // continue as normal
+                        waybackData.related.forEach(video => {
+                            // check if uploadername and viewcount
+                            // aren't swapped for whatever reason
+                            if(video.uploaderName.includes(" views")) {
+                                let viewCount = video.uploaderName
+                                let uploaderName = video.viewCount
+                                video.uploaderName = uploaderName;
+                                video.viewCount = viewCount;
+                            }
+                            // don't show mixes/filter out already added videos
+                            if(code.includes(`data-id="${video.id}"`) ||
+                                video.viewCount
+                                .toLowerCase()
+                                .includes("playlist") ||
+                                video.uploaderName
+                                .toLowerCase()
+                                .includes("playlist")) return;
+                            let views = "lang_views_prefix" + yt2009utils.countBreakup(
+                                parseInt(yt2009utils.bareCount(video.viewCount))
+                            ) + "lang_views_suffix"
+                            if(isNaN(
+                                parseInt(yt2009utils.bareCount(video.viewCount))
+                            )) {
+                                views = ""
+                            }
+
+                            // apply
+                            relatedHTML += yt2009templates.relatedVideo(
+                                video.id,
+                                video.title,
+                                req.protocol,
+                                video.time,
+                                views,
+                                video.uploaderUrl ? video.uploaderUrl : "#",
+                                video.uploaderName.replace(authorPrefix, ""),
+                                flags + "/wayback"
+                            )
+                        })
+
+                        code = code.replace(
+                            `<!--yt2009_wayback_related_features_marking-->`,
+                            relatedHTML)
+                    }
+
+
+                    code = code.replace(`<!--yt2009_wayback_protocol-->`,
+                    `<div class="yt2009-wayback-protocol hid">${waybackProtocol}</div>`)
+                    callbacksMade++;
+                    if(requiredCallbacks == callbacksMade) {
+                        render_endscreen();
+                        fillFlashIfNeeded();
+                        genRelay();
+                        callback(code)
+                    }
+                }, req.query.resetcache == 1)
+            }, 500)
+        }
+        if(flags.includes("homepage_contribute")
+        && uploadJS.getFullYear() <= 2010) {
+            // add to "videos being watched now" and /videos
+            let go = true;
+            featured_videos.slice(0, 23).forEach(vid => {
+                if(vid.id == data.id) {
+                    go = false;
+                }
+            })
+
+            if(yt2009exports.read().masterWs) {
+                try {
+                    yt2009exports.read().masterWs.send(JSON.stringify({
+                        "type": "vid-watched",
+                        "id": data.id
+                    }))
+                }
+                catch(error) {}
+            }
+
+            if(go) {
+                featured_videos.forEach(vid => {
+                    if(vid.id == data.id) {
+                        // remove the previous entry for that video
+                        featured_videos = featured_videos
+                                            .filter(s => s !== vid)
+                    }
+                })
+                featured_videos.unshift({
+                    "id": data.id,
+                    "title": data.title,
+                    "views": yt2009utils.countBreakup(data.viewCount) + " views",
+                    "uploaderHandle": data.author_handle || false,
+                    "uploaderName": data.author_name,
+                    "uploaderUrl": data.author_url,
+                    "time": data.length,
+                    "category": data.category,
+                    "qualities": data.qualities || false,
+                    "upload": data.upload
+                })
+                videos_page.unshift({
+                    "id": data.id,
+                    "title": data.title,
+                    "views": yt2009utils.countBreakup(data.viewCount) + " views",
+                    "uploaderHandle": data.author_handle || false,
+                    "uploaderName": data.author_name,
+                    "uploaderUrl": data.author_url,
+                    "time": data.length,
+                    "category": data.category,
+                    "qualities": data.qualities || false,
+                    "upload": data.upload
+                })
+                fs.writeFile("./cache_dir/watched_now.json",
+                            JSON.stringify(featured_videos),
+                            (e) => {})
+            }
+        }
+
+        let uploadDate = data.upload
+
+        uploadDate = uploadDate.replace("Streamed live on ", "")
+                                .replace("Premiered ", "")
+        if(uploadDate.includes("-")) {
+            // fallback format
+            let temp = new Date(uploadDate)
+            uploadDate = ["Jan", "Feb", "Mar", "Apr",
+                        "May", "Jun", "Jul", "Aug",
+                        "Sep", "Oct", "Nov", "Dec"][temp.getMonth()]
+                        + " " + temp.getDate()
+                        + ", " + temp.getFullYear()
+        }
+
+        if(flags.includes("fake_upload_dateadapt")
+        && new Date(uploadDate).getTime() > 1272664800000) {
+            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
+        } else if(flags.includes("fake_upload_date")
+        && !flags.includes("fake_upload_dateadapt")) {
+            uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
+        }
+
+        // upload date language handle
+        let userLang = yt2009languages.get_language(req)
+        let upDateDay = uploadDate.split(" ")[1].replace(",", "")
+        let upDateMonth = uploadDate.split(" ")[0]
+        let upDateYear = uploadDate.split(" ")[2]
+        let languageUpDateRule = yt2009languages.raw_language_data(userLang)
+                                                .watchpageUploadDate
+
+        if(!languageUpDateRule) {
+            languageUpDateRule = yt2009languages.raw_language_data("en")
+                                                .watchpageUploadDate
+        }
+        uploadDate = languageUpDateRule.dateFormat.replace(
+            "[day]", upDateDay
+        ).replace(
+            "[monthcode]", languageUpDateRule.monthcodes[upDateMonth]
+        ).replace(
+            "[year]", upDateYear
+        )
+
+
+        let channelIcon = data.author_img;
+        if(flags.includes("default_avataradapt")) {
+            if(yt2009defaultavatarcache.use(`../${channelIcon}`)) {
+                channelIcon = "/assets/site-assets/default.png"
+            }
+        } else if(flags.includes("default_avatar")
+            && !flags.includes("default_avataradapt")) {
+            channelIcon = "/assets/site-assets/default.png"
+        }
+        if(channelIcon == "default"
+        || channelIcon == "/assets/default.png") {
+            channelIcon = "/assets/site-assets/default.png"
+        }
+
+        function setChannelIcon() {
+            code = code.replace("channel_icon", channelIcon)
+        }
+
+
+        let views = yt2009utils.countBreakup(data.viewCount)
+        if(flags.includes("realistic_view_count")) {
+            if(parseInt(data.viewCount) > 100000) {
+                views = yt2009utils.countBreakup(
+                    Math.floor(parseInt(data.viewCount) / 90)
+                )
+            }
+        }
+
+        let ratings_estimate_power = 15
+        let ratings = "";
+        if(parseInt(views.replace(/[^0-9]/g, "")) >= 100000) {
+            ratings_estimate_power = 150
+        }
+        ratings = yt2009utils.countBreakup(
+            Math.floor(
+                parseInt(views.replace(/[^0-9]/g, ""))
+                / ratings_estimate_power
+            )
+        )
+        
+
+        // "more from" section
+        let authorUrl = data.author_url
+        if(authorUrl.startsWith("/")) {
+            authorUrl = authorUrl.replace("/", "")
+        }
+        let moreFromCode = yt2009templates.morefromEntry(author_name)
+        moreFromCode += `
+                    <div class="yt2009-mark-morefrom-fetch">Loading...</div>
+			        <div class="clearL"></div>
+		        </div>
+            </div>
+        </div>`
+        code = code.replace(`<!--yt2009_more_from_panel-->`, moreFromCode)
 
         // if flash player is used
         // hide the html5 js, fix the layout, put a flash player
+        let env = config.env
         let swfFilePath = "/watch.swf"
         let swfArgPath = "video_id"
         if(req.headers.cookie.includes("alt_swf_path")) {
@@ -807,6 +1149,50 @@ module.exports = {
                 req.headers.cookie.split("alt_swf_arg=")[1].split(";")[0]
             )
         }
+        let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}`
+        if((req.headers["cookie"] || "").includes("f_h264")) {
+            flash_url += "%2Fmp4"
+        }
+        flash_url += `&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module.swf`
+        if(useFlash) {
+            code = code.replace(
+                `<!DOCTYPE HTML>`,
+                yt2009templates.html4
+            )
+            code = code.replace(
+                `<!DOCTYPE html>`,
+                yt2009templates.html4
+            )
+            if(userAgent.includes("Firefox/") || userAgent.includes("MSIE")) {
+                code = code.replace(
+                    `><span style="display: block;">lang_search`,
+                    ` style="width: 40px;"><span>lang_search`
+                )
+            }
+            code = code.replace(
+                `<script src="/assets/site-assets/html5-player.js"></script>`,
+                ``
+            )
+            code = code.replace(`initPlayer(`, `//initPlayer(`)
+            let removePart = code.split(`<!--yt2009_html5_rm_1-->`)[1]
+                                 .split(`<!--yt2009_html5_rm_2-->`)[0]
+            code = code.replace(removePart, "")
+            code = code.replace(
+                `class="flash-player"`,
+                `class="flash-player hid"`
+            )
+            code = code.replace(
+                `<!--hook /assets/site-assets/f_script.js -->`,
+                `<script src="/assets/site-assets/f_script.js"></script>`
+            )
+            code = code.replace(
+                `<script src="nbedit_watch.js"></script>`,
+                `<!--<script src="nbedit_watch.js"></script>-->`
+            )
+        }
+
+        code = code.replace(`<!--yt2009_html5_rm_1-->`, "")
+                   .replace(`<!--yt2009_html5_rm_2-->`, "")
 
         if(!userAgent.includes("MSIE") && !userAgent.includes("Chrome/")
         && !useFlash) {
@@ -823,9 +1209,398 @@ module.exports = {
             code = code.replace("yt2009_ch5", "yt2009_html5")
         }
 
+        // podkładanie pod html podstawowych danych
+        code = code.split("video_title").join(yt2009utils.xss(data.title).trim())
+        code = code.replace("video_view_count", views)
+        if(!flags.includes("author_old_avatar")) {
+            setChannelIcon()
+        } else {
+            requiredCallbacks++
+        }
+        code = code.replace("channel_name", yt2009utils.xss(author_name))
+        code = code.split("channel_url").join(data.author_url)
+        code = code.replace("upload_date", uploadDate)
+        code = code.replace("yt2009_ratings_count", ratings)
+        if(!useFlash) {
+            code = code.replace(
+                "mp4_files", 
+                `<source src="${data.pMp4 || (data.mp4 + ".mp4")}" type="video/mp4"></source>
+                <source src="${data.mp4}.ogg" type="video/ogg"></source>`
+            )
+            if(data.pMp4) {
+                code = code.replace(
+                    "//yt2009-pmp4",
+                    "showLoadingSprite()"
+                )
+                code = code.replace(
+                    `0:00 / 0:00`,
+                    `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
+                )
+            }
+        }
+        code = code.replace(
+            "video_url",
+            `http://youtube.com/watch?v=${data.id}`
+        )
+        code = code.replace(
+            "video_embed_link",
+            `<object width=&quot;425&quot; height=&quot;344&quot;><param name=&quot;movie&quot; value=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot;></param><param name=&quot;allowFullScreen&quot; value=&quot;true&quot;></param><param name=&quot;allowscriptaccess&quot; value=&quot;always&quot;></param><embed src=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot; type=&quot;application/x-shockwave-flash&quot; allowscriptaccess=&quot;always&quot; allowfullscreen=&quot;true&quot; width=&quot;425&quot; height=&quot;344&quot;></embed></object>`
+        )
+
+        let description = yt2009utils.descriptionDistill(data.description, req);
+
+        // markup descriptions - treat http and https as links
+        let shortDescription = description.split("\n").slice(0, 3).join("<br>")
+        let fullDescription = description.split("\n").join("<br>")
+
+        // descriptions
+        code = code.replace(
+            "video_short_description",
+            yt2009utils.markupDescription(shortDescription)
+        )
+        code = code.replace(
+            "video_full_description",
+            yt2009utils.markupDescription(fullDescription)
+        )
+
         // hide signin buttons if logged in
         if(code.includes("Sign Out") || code.includes("lang_signout")) {
             code = code.split("yt2009-signin-hide").join("hid")
+        }
+
+        // comments
+        let comments_html = ""
+        let unfilteredCommentCount = 0;
+        let topLike = 0;
+        if(data.comments
+        && !flags.includes("comments_remove_future")) {
+
+            // hide show more comments if less than 21
+            // (20 standard + continuation token)
+            if(data.comments.length !== 21) {
+                code = code.replace("yt2009_hook_more_comments", "hid")
+            }
+
+            // top like count
+            let likeCounts = []
+            data.comments.forEach(c => {
+                if(c.likes) {
+                    likeCounts.push(c.likes)
+                }
+            })
+            likeCounts = likeCounts.sort((a, b) => b - a)
+            topLike = likeCounts[0]
+
+
+            // add html
+            let commentTimes = []
+            data.comments.forEach(comment => {
+                if(comment.continuation || !comment.time) return;
+                commentTimes.push(new Date(
+                    yt2009utils.relativeToAbsoluteApprox(comment.time)
+                ).getTime())
+            })
+            commentTimes = commentTimes.sort((a, b) => b - a)
+            // find the difference between oldest and newest comment
+            // and scale it down to a smaller difference
+            let i = 0;
+            let displayDates = yt2009utils.fakeDatesScale(commentTimes)
+
+            data.comments.forEach(comment => {
+                if(comment.continuation) {
+                    continuationFound = true;
+                    code = code.replace(
+                        "yt2009_comments_continuation_token",
+                        comment.continuation
+                    )
+                    return;
+                }
+                // flags
+                let commentTime = comment.time;
+                if(flags.includes("fake_dates")) {
+                    commentTime = displayDates[i]
+                    i++
+                }
+                let commentPoster = comment.authorName || "";
+                if(flags.includes("remove_username_space")) {
+                    try {
+                        commentPoster = commentPoster.split(" ").join("")
+                    }
+                    catch(error) {
+                        commentPoster = "deleted"
+                    }
+                }
+
+                if(flags.includes("username_asciify")) {
+                    commentPoster = yt2009utils.asciify(commentPoster)
+                }
+    
+                if(comment.authorUrl.includes("/user/")) {
+                    commentPoster = comment.authorUrl.split("/user/")[1]
+                }
+
+                let commentContent = comment.content
+    
+                let future = constants.comments_remove_future_phrases
+                let futurePass = true;
+                if(flags.includes("comments_remove_future")) {
+                    commentContent = commentContent.replace(/\p{Other_Symbol}/gui, "") 
+                    // whatever THIS character is, displays sometimes on ff
+                    commentContent = commentContent.split("🏻").join("")
+                    future.forEach(futureWord => {
+                        if(commentContent.toLowerCase().includes(futureWord)) {
+                            futurePass = false;
+                        }
+                    })
+                    if(commentContent.trim().length == 0
+                    || commentContent.trim().length > 500) {
+                        futurePass = false;
+                    }
+                }
+    
+                if(!futurePass) return;
+                // sam html
+                commentTime = yt2009utils.relativeTimeCreate(
+                    commentTime, yt2009languages.get_language(req)
+                )
+                // like count clarif
+                let presentedLikeCount = Math.floor((comment.likes / topLike) * 10)
+                if(topLike < 10) {
+                    presentedLikeCount = comment.likes
+                }
+
+                if(isNaN(presentedLikeCount)) {presentedLikeCount = 0;}
+
+                // comment id
+                let id = commentId(comment.authorUrl, comment.content)
+
+                let customRating = 0;
+                let customData = hasComment(data.id, id)
+                if(customData) {
+                    presentedLikeCount += customData.rating
+                    let token = yt2009utils.get_used_token(req)
+                    token == "" ? token = "dev" : ""
+                    if(customData.ratingSources[token]) {
+                        customRating = customData.ratingSources[token]
+                    }
+                }
+
+                if(!commentContent) return;
+
+                let commentHTML = yt2009templates.videoComment(
+                    comment.authorUrl,
+                    commentPoster,
+                    commentTime,
+                    commentContent,
+                    flags,
+                    true,
+                    presentedLikeCount,
+                    id
+                )
+
+                if(customRating == 1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-up-hover",
+                        "watch-comment-up-on"
+                    )
+                } else if(customRating == -1) {
+                    commentHTML = commentHTML.replace(
+                        "watch-comment-down-hover",
+                        "watch-comment-down-on"
+                    )
+                }
+
+                comments_html += commentHTML
+    
+                totalCommentCount++
+                
+            })
+            code = code.replace(`yt2009_comment_count`, totalCommentCount)
+            code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
+        } else if(flags.includes("comments_remove_future")) {
+            requiredCallbacks++
+            this.get_old_comments(data, (comments) => {
+                let index = 0;
+                comments.forEach(comment => {
+                    if(comment.continuation
+                    || comment.pinned
+                    || comment.content.trim().length == 0
+                    || comment.content == "<br>") return;
+                    // flags
+                    totalCommentCount++
+                    let commentTime = comment.time;
+                    if(flags.includes("fake_dates")) {
+                        commentTime = yt2009utils.fakeDateSmall(index)
+                    }
+
+                    let id = commentId(comment.authorUrl, comment.content)
+
+                    let likes = comment.likes > 10
+                              ? Math.floor(Math.random() * 15) : comment.likes
+                    let customRating = 0;
+                    let customData = hasComment(data.id, id)
+                    if(customData) {
+                        likes += customData.rating
+                        let token = yt2009utils.get_used_token(req)
+                        token == "" ? token = "dev" : ""
+                        if(customData.ratingSources[token]) {
+                            customRating = customData.ratingSources[token]
+                        }
+                    }
+
+                    commentTime = yt2009utils.relativeTimeCreate(
+                        commentTime, yt2009languages.get_language(req)
+                    )
+
+                    // add html
+                    let commentHTML = yt2009templates.videoComment(
+                        comment.authorUrl,
+                        yt2009utils.asciify(comment.authorName),
+                        commentTime,
+                        comment.content,
+                        flags,
+                        true,
+                        likes,
+                        id
+                    )
+
+                    if(customRating == 1) {
+                        commentHTML = commentHTML.replace(
+                            "watch-comment-up-hover",
+                            "watch-comment-up-on"
+                        )
+                    } else if(customRating == -1) {
+                        commentHTML = commentHTML.replace(
+                            "watch-comment-down-hover",
+                            "watch-comment-down-on"
+                        )
+                    }
+
+                    comments_html += commentHTML
+                    index++
+                })
+                if(data.comments.length !== 21) {
+                    code = code.replace("yt2009_hook_more_comments", "hid")
+                }
+                code = code.replace(`yt2009_comment_count`, totalCommentCount)
+                code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
+                callbacksMade++
+                if(requiredCallbacks == callbacksMade) {
+                    render_endscreen();
+                    fillFlashIfNeeded();
+                    genRelay();
+                    callback(code)
+                }
+            })
+        } else {
+            code = code.replace("yt2009_hook_more_comments", "hid")
+            code = code.replace(`yt2009_comment_count`, totalCommentCount)
+            code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
+        }
+        
+        // add related videos
+        let related_html = ""
+        let related_index = 0;
+        data.related.forEach(video => {
+            if(yt2009utils.time_to_seconds(video.length) >= 1800) return;
+
+            // flagi
+            let uploader = video.creatorName
+            if(flags.includes("remove_username_space")) {
+                uploader = uploader.split(" ").join("")
+            }
+
+            if(flags.includes("username_asciify")) {
+                uploader = yt2009utils.asciify(uploader)
+            }
+
+            let relatedViewCount = parseInt(video.views.replace(/[^0-9]/g, ""))
+            relatedViewCount = "lang_views_prefix"
+                             + yt2009utils.countBreakup(relatedViewCount)
+                             + "lang_views_suffix"
+            if(flags.includes("realistic_view_count")
+            && parseInt(relatedViewCount.replace(/[^0-9]/g, "")) >= 1000) {
+                relatedViewCount = "lang_views_prefix" + 
+                yt2009utils.countBreakup(
+                    Math.floor(
+                        parseInt(relatedViewCount.replace(/[^0-9]/g, "")) / 90
+                    )
+                ) + "lang_views_suffix"
+            }
+
+            // sam html
+            if(!flags.includes("exp_related")) {
+                related_html += yt2009templates.relatedVideo(
+                    video.id,
+                    video.title,
+                    protocol,
+                    video.length,
+                    relatedViewCount,
+                    video.creatorUrl,
+                    uploader,
+                    flags
+                )
+
+                endscreen_queue.push({
+                    "title": video.title,
+                    "id": video.id,
+                    "length": yt2009utils.time_to_seconds(video.length),
+                    "url": encodeURIComponent(
+                        `http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`
+                    ),
+                    "views": relatedViewCount,
+                    "creatorUrl": video.creatorUrl,
+                    "creatorName": uploader
+                })
+            }
+
+            
+        })
+
+
+        code = code.replace(`<!--yt2009_add_marking_related-->`, related_html)
+
+        // playlist if used
+        if(playlistId) {
+            let index = 0;
+            let playlistsHTML = yt2009templates.watchpagePlaylistPanelEntry
+            
+            try {
+                yt2009playlists.parsePlaylist(
+                    playlistId, () => {}
+                ).videos.forEach(video => {
+                    let playlistVideoHTML = yt2009templates.relatedVideo(
+                        video.id,
+                        video.title,
+                        protocol,
+                        "",
+                        "",
+                        video.uploaderUrl,
+                        video.uploaderName,
+                        flags,
+                        playlistId
+                    )
+                    if(data.id == video.id) {
+                        playlistVideoHTML = playlistVideoHTML.replace(
+                            `"video-entry"`,
+                            `"video-entry watch-ppv-vid"`
+                        )
+                    }
+                    playlistsHTML += playlistVideoHTML
+                    index++;
+                })
+            }
+            catch(error) {
+                playlistsHTML += `<div class="hid yt2009_marking_fetch_playlist_client"></div>`
+            }
+
+            playlistsHTML += `
+                    </div>
+                </div>
+                <div class="clearL"></div>
+            </div>`
+
+            code = code.replace(`<!--yt2009_playlist_panel-->`, playlistsHTML)
         }
 
         // endscreen w <video>
@@ -842,7 +1617,7 @@ module.exports = {
                 if(video.length >= 1800) return;
                 endscreen_section_html += yt2009templates.endscreenVideo(
                     video.id,
-                    req.protocol,
+                    protocol,
                     video.length,
                     video.title,
                     endscreen_version,
@@ -936,6 +1711,72 @@ module.exports = {
 
             return rv_url;
         }
+        
+
+
+        // tags
+        let tags_html = ""
+        let tags = yt2009utils.distillTags(data.tags, req)
+        tags.forEach(tag => {
+            tags_html += `<a href="#" class="hLink" style="margin-right: 5px;">${
+                tag.toLowerCase()
+            }</a>\n                                   `
+        })
+        code = code.replace("video_tags_html", tags_html)
+        
+        // category
+        const category_numbers = {
+            "Autos & Vehicles": 2,
+            "Comedy": "35",
+            "Education": "34",
+            "Entertainment": "24",
+            "Film & Animation": "1",
+            "Gaming": "33",
+            "Howto & Style": "26",
+            "Music": "31",
+            "News & Politics": "32",
+            "Nonprofits & Activism": "29",
+            "People & Blogs": "22",
+            "Pets & Animals": "15",
+            "Science & Technology": "28",
+            "Sports": "30",
+            "Travel & Events": "19"
+        }
+        code = code.replace(`category_name`, data.category)
+        code = code.replace(
+            `category_link`,
+            "/videos?c=" + (category_numbers[data.category] || 0)
+        )
+
+        // sub button
+        let subscribed = false;
+        subscribeList.forEach(sub => {
+            if(data.author_url == sub.url) {
+                subscribed = true;
+            }
+        })
+
+        if(subscribed) {
+            // show unsubscribe
+            code = code.replace(
+                `data-yt2009-unsubscribe-button`,
+                ""
+            )
+            code = code.replace(
+                `data-yt2009-subscribe-button`,
+                `class="hid"`
+            )
+        } else {
+            // show subscribe
+            code = code.replace(
+                `data-yt2009-unsubscribe-button`,
+                `class="hid"`
+            )
+            code = code.replace(
+                `data-yt2009-subscribe-button`,
+                ``
+            )
+        }
 
         // autoplay
         if(!useFlash) {
@@ -954,6 +1795,222 @@ module.exports = {
                 }
             </script>`)
         }
+
+        // exp_ryd / use_ryd / merged
+        let useRydRating = "4.5"
+        let endRating = "4.5"
+        requiredCallbacks++;
+        yt2009ryd.fetch(data.id, (rating) => {
+            if(!rating.toString().includes(".5")) {
+                rating = rating.toString() + ".0"
+            }
+            useRydRating = rating;
+
+            let userRating = yt2009userratings.read(data.id, true)
+            let avgRating = yt2009utils.custom_rating_round(
+                (userRating + parseFloat(useRydRating)) / 2
+            )
+            if(userRating == 0) {
+                avgRating = useRydRating;
+            }
+            endRating = avgRating
+            if(!avgRating.toString().endsWith(".5")
+            && !avgRating.toString().endsWith(".0")) {
+                avgRating = avgRating.toString() + ".0"
+            }
+            code = code.replace(
+                yt2009templates.oneLineRating("4.5"),
+                yt2009templates.oneLineRating(avgRating)
+            )
+            
+            if(rating == "0.0") {
+                // if no actual ratings, change onsite rating number to 0
+                let ratingCount = 
+                code.split(
+                    `id="defaultRatingMessage"><span class="smallText">`
+                    )[1]
+                    .split(` lang_ratings_suffix`)[0]
+                code = code.replace(
+                    `id="defaultRatingMessage"><span class="smallText">${ratingCount}`,
+                    `id="defaultRatingMessage"><span class="smallText">0`
+                )
+
+            }
+
+            useRydRating = parseFloat(rating)
+
+            // fmode rating, more accurate to an actual page (when logged in)
+            if(useFlash) {
+                code = code.replace(
+                    yt2009templates.oneLineRating(avgRating),
+                    yt2009templates.separatedRating(avgRating)
+                )
+                code = code.replace(
+                    `//yt2009-rating`,
+                    `var fullRating = ${avgRating};`
+                )
+            }
+
+            callbacksMade++;
+            if(requiredCallbacks == callbacksMade) {
+                render_endscreen();
+                fillFlashIfNeeded();
+                genRelay();
+                callback(code)
+            }
+        })
+
+        // sharing
+        let shareBehaviorServices = constants.shareBehaviorServices
+        
+        function createShareHTML(sites) {
+            let shareHTML = `
+            <div id="watch-sharetab-options">
+                <div id="more-options"><a href="#" class="hLink" rel="nofollow">(more share options)</a></div>
+                <div style="display: none;" id="fewer-options"><a href="#" class="hLink" rel="nofollow">fewer share options</a></div>
+            </div>
+            <div id="watch-share-services-collapsed">
+            `
+            // 3 first
+            let collapsed_index = 0;
+            for(let site in sites) {
+                if(collapsed_index <= 3) {
+                    let link = sites[site].replace(
+                        `%title%`,
+                        encodeURIComponent(data.title)
+                    ).split(`%id%`).join(data.id)
+                    .replace(
+                        `%url%`,
+                        `http://www.youtube.com/watch?v=${data.id}`
+                    )
+                    shareHTML += `
+                    <div class="watch-recent-shares-div">
+                        <div class="watch-recent-share">
+                            <a href="${link}" target="_blank"><span>${site}</span></a>
+                        </div>
+                    </div>`
+
+                    collapsed_index++;
+                }
+                
+            }
+            shareHTML += `
+                <div class="clear"></div>
+			</div>
+            <div id="watch-share-services-expanded" style="display: none;">
+            `
+
+            // rest
+            for(let site in sites) {
+                let link = sites[site].replace(
+                    `%title%`, 
+                    encodeURIComponent(data.title)
+                ).replace(`%id%`, data.id)
+                .replace(`%url%`, `http://www.youtube.com/watch?v=${data.id}`)
+                shareHTML += `
+                <div class="watch-recent-shares-div">
+					<div class="watch-recent-share">
+						<a href="${link}" target="_blank"><span>${site}</span></a>
+					</div>
+				</div>`
+            }
+
+            shareHTML += `
+                <div class="clear"></div>
+			</div>
+            `
+
+            return shareHTML;
+        }
+        if(flags.includes("share_behavior")) {
+            if(shareBehaviorServices[
+                flags.split("share_behavior")[1].split(":")[0]
+            ]) {
+                code = code.replace(
+                    `<!--yt2009_share_insert-->`,
+                    createShareHTML(shareBehaviorServices[
+                        flags.split("share_behavior")[1].split(":")[0]
+                    ])
+                )
+            } else {
+                code = code.replace(
+                    `<!--yt2009_share_insert-->`,
+                    `[yt2009] value for share_behavior not recognized`
+                )
+            }
+            
+        } else {
+            code = code.replace(
+                `<!--yt2009_share_insert-->`,
+                createShareHTML(shareBehaviorServices.default)
+            )
+        }
+
+        function fillFlashIfNeeded() {
+            // flash
+            if(useFlash) {
+                flash_url += render_endscreen_f()
+                if(new Date().getMonth() == 3
+                && new Date().getDate() == 1
+                && !req.headers.cookie.includes("unflip=1")) {
+                    if(req.headers["user-agent"].includes("MSIE")) {
+                        code = code.replace(
+                            `<!--yt2009_f_apr1-->`,
+                            `<link rel="stylesheet" href="/assets/site-assets/apr1.css">`
+                        )
+                        flash_url += "&flip=1"
+                    }
+                }
+                if((req.headers["cookie"] || "").includes("f_h264")
+                && flash_url.includes("/watch.swf")) {
+                    // create format maps and urls for the 2009 player
+                    // 22 - hd720
+                    // 35 - "large" - hq - 480p
+                    // 5 - standard quality, other numbers may have worked too
+                    let fmtMap = ""
+                    let fmtUrls = ""
+                    if(qualityList.includes("720p")) {
+                        fmtMap += "22/2000000/9/0/115"
+                        fmtUrls += `22|http://${config.ip}:${config.port}/exp_hd?video_id=${data.id}`
+                    } else if(qualityList.includes("480p")) {
+                        fmtMap += `35/0/9/0/115`
+                        fmtUrls += `35|http://${config.ip}:${config.port}/get_480?video_id=${data.id}`
+                    }
+                    if(fmtMap.length > 0) {
+                        fmtMap += ","
+                        fmtUrls += ","
+                    }
+                    fmtMap += "5/0/7/0/0"
+                    fmtUrls += `5|http://${config.ip}:${config.port}/assets/${data.id}.mp4`
+                    flash_url += "&fmt_map=" + encodeURIComponent(fmtMap)
+                    flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+                }
+                
+                flash_url += `&cc_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fsubtitle-module.swf`
+
+                // always_captions flash
+                if(flags.includes("always_captions")) {
+                    flash_url += "&cc_load_policy=1"
+                } else {
+                    flash_url += "&cc_load_policy=2"
+                }
+
+                flash_url += "&enablejsapi=1"
+
+                if(req.query.resetcache) {
+                    flash_url += "&resetcache=1"
+                }
+                
+                code = code.replace(
+                    `<!--yt2009_f-->`,
+                    yt2009templates.flashObject(flash_url)
+                )
+                code = code.replace(
+                    `<!--yt2009_style_fixes_f-->`,
+                    `<link rel="stylesheet" href="/assets/site-assets/f.css">`
+                )
+            }
+        }
         
         // no_controls_fade
         if(flags.includes("no_controls_fade") && !useFlash) {
@@ -969,6 +2026,29 @@ module.exports = {
             }"
             document.body.appendChild(s)`
             )
+        }
+
+        // exp_hq
+        if(!useFlash
+        && (qualityList.includes("720p")
+        || qualityList.includes("480p"))) {
+            let use720p = qualityList.includes("720p")
+            code = code.replace(
+                `<!--yt2009_style_hq_button-->`,
+                yt2009templates.playerCssHDBtn   
+            )
+            code = code.replace(
+                `//yt2009-exp-hq-btn`,
+                yt2009templates.playerHDBtnJS(data.id, use720p)
+            )
+
+            // 720p
+            if(use720p) {
+                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq hd"></span>`)
+            } else {
+                // 480p
+                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
+            }
         }
 
         // annotation_redirect
@@ -1017,6 +2097,177 @@ module.exports = {
 
         }
 
+        // exp_related
+        if(flags.includes("exp_related")) {
+            requiredCallbacks++;
+            let exp_related_html = ""
+            let lookup_keyword = ""
+            // tags
+            data.tags.forEach(tag => {
+                if(lookup_keyword.length < 9) {
+                    lookup_keyword += `${tag.toLowerCase()} `
+                }
+            })
+            // or the first word from the title
+            if(lookup_keyword.length < 9) {
+                lookup_keyword = data.title.split(" ")[0]
+            }
+            
+            // get
+            yt2009search.related_from_keywords(
+                lookup_keyword, data.id, flags, (html, rawData) => {
+                    rawData.forEach(video => {
+                        endscreen_queue.push({
+                            "title": video.title,
+                            "id": video.id,
+                            "length": yt2009utils.time_to_seconds(video.length),
+                            "url": encodeURIComponent(
+                                `http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`
+                            ),
+                            "views": video.views,
+                            "creatorUrl": video.creatorUrl,
+                            "creatorName": video.creatorName
+                        })
+                    })
+                    exp_related_html += html;
+
+                    // add old defualt "related" videos at the end
+                    data.related.forEach(video => {
+                        if(parseInt(video.uploaded.split(" ")[0]) >= 12
+                        && video.uploaded.includes("years")
+                        && !html.includes(`data-id="${video.id}"`)) {
+                            // only 12 years or older & no repeats
+
+                            // handle flag
+                            // author name flags
+                            let authorName = video.creatorName;
+                            if(flags.includes("remove_username_space")) {
+                                authorName = authorName.split(" ").join("")
+                            }
+                            if(flags.includes("username_asciify")) {
+                                authorName = yt2009utils.asciify(authorName)
+                            }
+                            if(video.creatorUrl.includes("/user/")) {
+                                authorName = video.creatorUrl.split("/user/")[1]
+                                                            .split("?")[0]
+                            }
+            
+                            // view count flags
+                            let viewCount = video.views;
+                            viewCount = parseInt(viewCount.replace(/[^0-9]/g, ""))
+                            if(flags.includes("realistic_view_count")
+                            && viewCount >= 100000) {
+                                viewCount = Math.floor(viewCount / 90)
+                            }
+                            viewCount = "lang_views_prefix"
+                                        + yt2009utils.countBreakup(viewCount)
+                                        + "lang_views_suffix"
+
+                            endscreen_queue.push({
+                                "title": video.title,
+                                "id": video.id,
+                                "length": yt2009utils.time_to_seconds(video.length),
+                                "url": encodeURIComponent(`http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`),
+                                "views": viewCount,
+                                "creatorUrl": video.creatorUrl,
+                                "creatorName": authorName
+                            })
+
+                            exp_related_html += yt2009templates.relatedVideo(
+                                video.id,
+                                video.title,
+                                req.protocol,
+                                video.length,
+                                viewCount,
+                                video.creatorUrl,
+                                authorName,
+                                flags
+                            )
+                        }
+                    })
+
+                    code = code.replace(
+                        `<!--yt2009_exp_related_marking-->`,
+                        exp_related_html
+                    )
+                    callbacksMade++;
+                    if(requiredCallbacks == callbacksMade) {
+                        render_endscreen();
+                        fillFlashIfNeeded();
+                        genRelay();
+                        callback(code)
+                    }
+                },
+                req.protocol
+            )
+        }
+
+        // old_author_avatar
+        if(flags.includes("author_old_avatar")
+        && data.author_url.includes("channel/UC")) {
+            let id = data.author_url.split("channel/UC")[1]
+            let avatarUrl = `https://i3.ytimg.com/u/${id}/channel_icon.jpg`
+            let fname = __dirname + "/../assets/" + id + "_old_avatar.jpg"
+            let oldChannelIconPath = "/assets/" + id + "_old_avatar.jpg"
+
+            // callback at the top
+            function markAsDone() {
+                callbacksMade++;
+                if(requiredCallbacks <= callbacksMade) {
+                    render_endscreen()
+                    fillFlashIfNeeded();
+                    genRelay();
+                    callback(code)
+                }
+            }
+            // exists and not there = set default
+            if(fs.existsSync(fname)
+            && fs.statSync(fname).size < 10) {
+                setChannelIcon()
+                markAsDone()
+            }
+            // exists and there
+            else if(fs.existsSync(fname)
+            && fs.statSync(fname).size > 10) {
+                channelIcon = oldChannelIconPath
+                setChannelIcon()
+                markAsDone()
+            }
+            // doesn't exist
+            else {
+                fetch(avatarUrl, {
+                    "headers": constants.headers
+                }).then(r => {
+                    if(r.status !== 404) {
+                        r.buffer().then(buffer => {
+                            fs.writeFileSync(fname, buffer)
+                            channelIcon = oldChannelIconPath
+                            setChannelIcon()
+                            markAsDone()
+                        })
+                    } else {
+                        // no old icon, use current
+                        fs.writeFileSync(fname, "")
+                        if(!fs.existsSync(`../${channelIcon}`)) {
+                            channelIcon = "/assets/site-assets/default.png"
+                        }
+                        setChannelIcon()
+                        markAsDone()
+                    }
+                })
+            }
+        } else if(flags.includes("author_old_avatar")
+        && !data.author_url.includes("channel/UC")) {
+            setChannelIcon()
+            callbacksMade++;
+            if(requiredCallbacks <= callbacksMade) {
+                render_endscreen()
+                fillFlashIfNeeded();
+                genRelay();
+                callback(code)
+            }
+        }
+
         // relay
         function genRelay() {
             if(req.headers.cookie.includes("relay_key")) {
@@ -1035,7 +2286,7 @@ module.exports = {
                     yt2009templates.videoCommentPost(
                         true,
                         "http://127.0.0.1:" + relayPort,
-                        id,
+                        data.id,
                         relayKey
                     )
                 )
@@ -1050,1504 +2301,40 @@ module.exports = {
             )
         }
 
-        let flash_url = `${swfFilePath}?${swfArgPath}=${id}`
-        function fillFlashIfNeeded() {
-            let qualityList = data.qualities
-            // flash
-            if(useFlash) {
-                flash_url += render_endscreen_f()
-                if(new Date().getMonth() == 3
-                && new Date().getDate() == 1
-                && !req.headers.cookie.includes("unflip=1")) {
-                    if(req.headers["user-agent"].includes("MSIE")) {
-                        code = code.replace(
-                            `<!--yt2009_f_apr1-->`,
-                            `<link rel="stylesheet" href="/assets/site-assets/apr1.css">`
-                        )
-                        flash_url += "&flip=1"
-                    }
-                }
-                if((req.headers["cookie"] || "").includes("f_h264")
-                && flash_url.includes("/watch.swf")) {
-                    // create format maps and urls for the 2009 player
-                    // 22 - hd720
-                    // 35 - "large" - hq - 480p
-                    // 5 - standard quality, other numbers may have worked too
-                    let fmtMap = ""
-                    let fmtUrls = ""
-                    if(qualityList.includes("720p")) {
-                        fmtMap += "22/2000000/9/0/115"
-                        fmtUrls += `22|http://${config.ip}:${config.port}/exp_hd?video_id=${id}`
-                    } else if(qualityList.includes("480p")) {
-                        fmtMap += `35/0/9/0/115`
-                        fmtUrls += `35|http://${config.ip}:${config.port}/get_480?video_id=${id}`
-                    }
-                    if(fmtMap.length > 0) {
-                        fmtMap += ","
-                        fmtUrls += ","
-                    }
-                    fmtMap += "5/0/7/0/0"
-                    fmtUrls += `5|http://${config.ip}:${config.port}/assets/${id}.mp4`
-                    flash_url += "&fmt_map=" + encodeURIComponent(fmtMap)
-                    flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
-                }
-                
-                flash_url += `&cc_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fsubtitle-module.swf`
-
-                // always_captions flash
-                if(flags.includes("always_captions")) {
-                    flash_url += "&cc_load_policy=1"
-                } else {
-                    flash_url += "&cc_load_policy=2"
-                }
-
-                flash_url += "&enablejsapi=1"
-
-                if(req.query.resetcache) {
-                    flash_url += "&resetcache=1"
-                }
-                
+        // channel banners
+        this.getBanner(data, flags, (banner) => {
+            let channelUrl = data.author_id
+                           ? "/channel/" + data.author_id
+                           : data.author_url
+            if(banner) {
                 code = code.replace(
-                    `<!--yt2009_f-->`,
-                    yt2009templates.flashObject(flash_url)
-                )
-                code = code.replace(
-                    `<!--yt2009_style_fixes_f-->`,
-                    `<link rel="stylesheet" href="/assets/site-assets/f.css">`
-                )
-            }
-        }
-
-        // all things only doable once "data" is available
-        // with fastload, everything is async so "data" isn't immediately
-        // available.
-        function onData() {
-            markTiming("video data received")
-            // quality list
-            if(isFeather && !useFlash) {
-                code = watchpage_feather;
-                code = code.replace("/embed/video_id", `/embed/${data.id}`)
-            } else if(isFeather && useFlash) {
-                code = watchpage_feather;
-                code = code.replace(
-                    `<iframe class="html5_video" src="/embed/video_id"></iframe>`,
-                    ``
-                )
-            }
-
-            // handling flag
-            let author_name = data.author_name;
-            if(flags.includes("remove_username_space")) {
-                author_name = author_name.split(" ").join("")
-            }
-
-            if(flags.includes("username_asciify")) {
-                author_name = yt2009utils.asciify(author_name, true, true)
-                if(author_name == "") {
-                    author_name = data.author_handle
-                                || yt2009utils.asciify(author_name)
-                }
-            }
-
-            if(data.author_url.includes("/user/")) {
-                author_name = data.author_url.split("/user/")[1]
-            }
-
-            let uploadJS = new Date(data.upload)
-            
-            // login_simulate comments
-            if(req.headers.cookie.includes("login_simulate")
-            && !req.headers.cookie.includes("relay_key")) {
-                code = code.replace(
-                    `<!--yt2009_relay_comment_form-->`,
-                    yt2009templates.videoCommentPost(false, null, data.id)
-                )
-            }
-
-            let totalCommentCount = 0;
-            if(custom_comments[data.id]) {
-                let commentsHTML = ""
-                custom_comments[data.id].forEach(comment => {
-                    if(!comment.time || !comment.text) return;
-                    let commentTime = yt2009utils.unixToRelative(comment.time)
-                    commentTime = yt2009utils.relativeTimeCreate(
-                        commentTime, yt2009languages.get_language(req)
+                    `<!--yt2009_bannercard-->`,
+                    yt2009templates.watchBanner(
+                        channelUrl, banner
                     )
-                    let commentHTML = yt2009templates.videoComment(
-                        "#", comment.author, commentTime,
-                        comment.text, flags, true, comment.rating,
-                        comment.id
-                    )
-
-                    // get liked/disliked status by user
-                    let token = yt2009utils.get_used_token(req)
-                    if(token == "") {
-                        token = "dev"
-                    }
-                    if(comment.ratingSources[token] == 1) {
-                        commentHTML = commentHTML.replace(
-                            "watch-comment-up-hover",
-                            "watch-comment-up-on"
-                        )
-                    } else if(comment.ratingSources[token] == -1) {
-                        commentHTML = commentHTML.replace(
-                            "watch-comment-down-hover",
-                            "watch-comment-down-on"
-                        )
-                    }
-
-                    totalCommentCount++
-                    commentsHTML += commentHTML
-                })
-
-                code = code.replace(
-                    `<!--yt2009_custom_comments-->`, commentsHTML
                 )
             }
-
-            // wayback_features
-            if(flags.includes("wayback_features")
-            && uploadJS.getFullYear() <= 2013) {
-
-                let waybackProtocol = `=== wayback_features ===`
-                // get features to be applied
-                let requiredFeatures = []
-                decodeURIComponent(flags.split("wayback_features")[1].split(":")[0])
-                .split("+").forEach(feature => {
-                    requiredFeatures.push(feature)
-                })
-                waybackProtocol += `\nrequested features: ${requiredFeatures.join()}`
-
-                if(requiredFeatures.join() == "all") {
-                    requiredFeatures = ["metadata", "comments", "related", "author"]
-                }
-                
-                requiredCallbacks++;
-                setTimeout(function() {
-                    yt2009waybackwatch.read(data.id, (waybackData) => {
-                        markTiming("wayback")
-                        // data
-                        waybackProtocol += `\narchive year: ${waybackData.archiveYear}
-                        (archives 2014 and later are not used)`
-
-                        if(!waybackData.title && waybackData.archiveYear < 2014) {
-                            waybackProtocol += `
-                            
-    possibly an empty/failed archive!
-    wayback save url:
-    https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
-                        }
-                        // video metadata
-                        if(requiredFeatures.includes("metadata")) {
-                            // html prep
-
-                            // tags
-                            if(waybackData.tags) {
-                                code = code.replace(
-                                `<div id="watch-video-tags" class="floatL">`,
-                                `<div id="watch-video-tags" class="floatL wayback">
-                                    <!--yt2009_wayback_tags-->
-                                </div>
-                                <div id="original-watch-video-tags"
-                                        class="floatL hid">`)
-                            }
-                            let tagsHTML = ""
-                            waybackData.tags.forEach(tag => {
-                                tagsHTML += `<a href="#" class="hLink" style="margin-right: 5px;">${tag}</a>`
-                            })
-
-                            code = code.replace(`<!--yt2009_wayback_tags-->`,
-                                                tagsHTML)
-
-                            // title
-                            if(waybackData.title) {
-                                code = code.replace(
-                                    `<h1 class="watch-vid-ab-title">`,
-                                    `<h1 class="watch-vid-ab-title">
-                                        <!--yt2009_wayback_title-->
-                                    </h1>
-                                    <h1 class="original-watch-vid-ab-title hid">`
-                                )
-                            }
-                            code = code.replace(`<!--yt2009_wayback_title-->`,
-                                                waybackData.title)
-                            
-                            // description
-                            if(waybackData.description) {
-                                code = code.replace(
-                                    `<!--yt2009_wayback_short_desc--><span class="description">`,
-                                    `<!--yt2009_wayback_short_desc--><span class="original-short-description hid">`
-                                )
-                                code = code.replace(
-                                    `<!--yt2009_wayback_full_desc--><span>`,
-                                    `<!--yt2009_wayback_full_desc--><span class="original-full-desc hid">`
-                                )
-                            }
-                            let shortDescription = waybackData.description
-                                                    .split("<br>")
-                                                    .slice(0, 3)
-                            let fullDescription = waybackData.description
-                            let shortDescriptionParsed = ``
-                            let fullDescriptionParsed = ``
-
-                            shortDescription.forEach(part => {
-                                part.split(" ").forEach(word => {
-                                    if(word.startsWith("http://")
-                                        || word.startsWith("https://")) {
-                                        shortDescriptionParsed += `
-                                        <a href="${word}" target="_blank">
-                                            ${word.length > 40 ?
-                                                word.substring(0, 40) + "..."
-                                                : word}
-                                        </a> `
-                                    } else {
-                                        shortDescriptionParsed += `${word} `
-                                    }
-                                })
-                                shortDescriptionParsed += "<br>"
-                            })
-                            
-                            fullDescription.split("<br>").forEach(part => {
-                                part.split(" ").forEach(word => {
-                                    if(word.startsWith("http://")
-                                    || word.startsWith("https://")) {
-                                        fullDescriptionParsed += `
-                                        <a href="${word}" target="_blank">
-                                            ${word.length > 40 ?
-                                                word.substring(0, 40) + "..."
-                                                : word}
-                                        </a> `
-                                    } else {
-                                        fullDescriptionParsed += `${word} `
-                                    }
-                                })
-                                fullDescriptionParsed += "<br>"
-                            })
-                            
-                            if(shortDescriptionParsed.trimStart()
-                                                    .startsWith("<br>")) {
-                                shortDescriptionParsed = shortDescriptionParsed
-                                                            .replace("<br>", "")
-                                fullDescriptionParsed = fullDescriptionParsed
-                                                            .replace("<br>", "")
-                            }
-
-                            code = code.replace(`<!--yt2009_wayback_short_desc-->`,
-                                                shortDescriptionParsed)
-                            code = code.replace(`<!--yt2009_wayback_full_desc-->`,
-                                                fullDescriptionParsed)
-                        }
-
-                        // video author data
-                        if(requiredFeatures.includes("author")) {
-                            // avatar
-                            if(waybackData.authorAvatar) {
-                                code = code.replace("yt2009-channel-avatar",
-                                                    "yt2009-channel-avatar hid")
-                                code = code.replace(
-                                    "<!--yt2009_authorpic-wayback-->",
-                                    `<a class="url yt2009-channel-avatar"
-                                        href="
-                                            ${data.author_url}">
-                                            <img src="${waybackData.authorAvatar
-                                                        .replace("http://",
-                                                        req.protocol + "://")}"
-                                                loading="lazy"
-                                                onerror="this.parentNode.removeChild(this)"
-                                            class="photo"/>
-                                    </a>`)
-                            }
-
-                            // name
-                            if(waybackData.authorName
-                            && !waybackData.authorName
-                                .toLowerCase().includes("subscribe")
-                            && waybackData.authorName
-                            .replace(/[^a-zA-Z0-9]/g, "").trim()) {
-                                code = code.replace(`yt2009-channel-link`,
-                                                `original-yt2009-channel-link hid`)
-                                code = code.replace(`<!--yt2009_author_wayback-->`, `
-                                <a href="${data.author_url}"
-                                    class="hLink fn n contributor yt2009-channel-link">
-                                    ${waybackData.authorName}
-                                </a>`)
-
-                                // more from
-                                if(code.split("lang_morefrom").length >= 2) {
-                                    let currentUsername = code.
-                                                        split("lang_morefrom")[1].
-                                                        split("\n")[0]
-                                    code = code.replace(
-                                        `lang_morefrom${currentUsername}`,
-                                        `lang_morefrom${waybackData.authorName}`
-                                    )
-                                }
-                            }
-
-                            // banner
-                            if(waybackData.authorBanner) {
-                                code = code.replace(`<div id="watch-channel-brand-cap">`, `
-                                <div id="watch-channel-brand-cap">
-                                    <a href="${data.author_url}"><img src="${waybackData.authorBanner}" width="300" height="50" border="0"></a>
-                                </div>
-                                <div id="original-watch-channel-brand-cap" class="hid">`)
-                                code = code.replace(`<!--yt2009_bannercard-->`, `
-                                <div id="watch-channel-brand-cap">
-                                    <a href="${data.author_url}"><img src="${waybackData.authorBanner}" width="300" height="50" border="0"></a>
-                                </div>`)
-                            } else {
-                                code = code.replace(`<div id="watch-channel-brand-cap">`,
-                                `<div id="watch-channel-brand-cap" class="wayback_not_found">`)
-                            }
-                        }
-
-                        // video comments
-                        if(requiredFeatures.includes("comments")
-                            && waybackData.comments.length > 0) {
-                            let commentsLength = waybackData.comments.length
-                            let commentsHTML = `<!--wayback_features comments-->`
-                            waybackData.comments.forEach(comment => {
-                                if(!comment.authorName ||
-                                    !comment.content ||
-                                    code.includes(comment.authorName)) return;
-                                let commentTime = comment.time.split("\n").join("")
-                                                            .split("  ").join("")
-                                                            .replace(" (", "")
-                                                            .replace(") ", "")
-                                // time in a different language
-                                let englishTimeWords = [
-                                    "year",
-                                    "month",
-                                    "day",
-                                    "hour",
-                                    "minute",
-                                    "second"
-                                ]
-                                let englishLanguageComment = false;
-                                englishTimeWords.forEach(word => {
-                                    if(commentTime.toLowerCase().includes(word)) {
-                                        englishLanguageComment = true
-                                    }
-                                })
-                                if(!englishLanguageComment) {
-                                    commentTime = commentTime.replace(/[^0-9]/g, "") + " months ago"
-                                }
-                                commentTime = yt2009utils.relativeTimeCreate(
-                                    commentTime, yt2009languages.get_language(req)
-                                )
-
-                                let id = commentId(comment.authorUrl, comment.content)
-
-                                let likes = comment.likes || Math.floor(Math.random() * 2)
-                                let customRating = 0;
-                                let customData = hasComment(data.id, id)
-                                if(customData) {
-                                    likes += customData.rating
-                                    let token = yt2009utils.get_used_token(req)
-                                    token == "" ? token = "dev" : ""
-                                    if(customData.ratingSources[token]) {
-                                        customRating = customData.ratingSources[token]
-                                    }
-                                }
-
-                                // add comment
-                                let commentHTML = yt2009templates.videoComment(
-                                    comment.authorUrl,
-                                    comment.authorName,
-                                    commentTime,
-                                    comment.content,
-                                    flags,
-                                    true,
-                                    likes,
-                                    id
-                                )
-                                if(customRating == 1) {
-                                    commentHTML = commentHTML.replace(
-                                        "watch-comment-up-hover",
-                                        "watch-comment-up-on"
-                                    )
-                                } else if(customRating == -1) {
-                                    commentHTML = commentHTML.replace(
-                                        "watch-comment-down-hover",
-                                        "watch-comment-down-on"
-                                    )
-                                }
-                                commentsHTML += commentHTML
-                            })
-                            commentsHTML += `<!--Default YT comments below.-->`
-                            code = code.replace(`<!--yt2009_wayback_comments-->`,
-                                                commentsHTML)
-
-                            let defaultCommentCount = parseInt(
-                                code
-                                .split(`id="watch-comment-count">`)[1]
-                                .split("</span>")[0]
-                            )
-
-                            let newCommentCount = 
-                            defaultCommentCount + commentsLength;
-
-                            code = code
-                            .replace(
-                                `id="watch-comment-count">${defaultCommentCount}`,
-                                `id="watch-comment-count">${newCommentCount}`
-                            )
-                        }
-
-                        // related
-                        if(requiredFeatures.includes("related")
-                            && waybackData.related.length > 0) {
-                            let relatedHTML = `<!--See a hidden video (.hid)?
-                                                It was most likely hidden because
-                                                it's a dead link.-->`;
-                            // try to get author prefix for related ("by ...") to rm
-                            let authorPrefix = ""
-                            // add shortened author names as "prefixes"
-                            let prefixes = []
-                            waybackData.related.forEach(video => {
-                                if(video.uploaderName.includes(" views")) {
-                                    let viewCount = video.uploaderName
-                                    let uploaderName = video.viewCount
-                                    video.uploaderName = uploaderName;
-                                    video.viewCount = viewCount;
-                                }
-                                prefixes.push(video.uploaderName.substring(0, 7))
-                            })
-                            let i = 0;
-                            // filter out EXACT same author names
-                            // (prevents author names being considered prefixes)
-                            prefixes.forEach(p => {
-                                i++;
-                                if(prefixes[i] == prefixes[i - 1]) {
-                                    prefixes = prefixes.filter(s => s !== prefixes[i])
-                                }
-                            })
-                            // foreach and compare previous "prefix"
-                            // to narrow down the prefix's length and the actual value
-                            i = 0;
-                            prefixes.forEach(p => {
-                                i++;
-                                if(!prefixes[i]) return;
-                                let prefixLength = 7;
-                                while(prefixLength >= 2) {
-                                    let u0Prefix = prefixes[i].substring(
-                                        0, prefixLength
-                                    )
-                                    let u1Prefix = prefixes[i - 1].substring(
-                                        0, prefixLength
-                                    )
-                                    if(u0Prefix == u1Prefix) {
-                                        authorPrefix = u0Prefix;
-                                        break;
-                                    } else {
-                                        authorPrefix = ""
-                                    }
-                                    prefixLength--
-                                }
-                            })
-                            // continue as normal
-                            waybackData.related.forEach(video => {
-                                // check if uploadername and viewcount
-                                // aren't swapped for whatever reason
-                                if(video.uploaderName.includes(" views")) {
-                                    let viewCount = video.uploaderName
-                                    let uploaderName = video.viewCount
-                                    video.uploaderName = uploaderName;
-                                    video.viewCount = viewCount;
-                                }
-                                // don't show mixes/filter out already added videos
-                                if(code.includes(`data-id="${video.id}"`) ||
-                                    video.viewCount
-                                    .toLowerCase()
-                                    .includes("playlist") ||
-                                    video.uploaderName
-                                    .toLowerCase()
-                                    .includes("playlist")) return;
-                                let views = "lang_views_prefix" + yt2009utils.countBreakup(
-                                    parseInt(yt2009utils.bareCount(video.viewCount))
-                                ) + "lang_views_suffix"
-                                if(isNaN(
-                                    parseInt(yt2009utils.bareCount(video.viewCount))
-                                )) {
-                                    views = ""
-                                }
-
-                                // apply
-                                relatedHTML += yt2009templates.relatedVideo(
-                                    video.id,
-                                    video.title,
-                                    req.protocol,
-                                    video.time,
-                                    views,
-                                    video.uploaderUrl ? video.uploaderUrl : "#",
-                                    video.uploaderName.replace(authorPrefix, ""),
-                                    flags + "/wayback"
-                                )
-                            })
-
-                            code = code.replace(
-                                `<!--yt2009_wayback_related_features_marking-->`,
-                                relatedHTML)
-                        }
-
-
-                        code = code.replace(`<!--yt2009_wayback_protocol-->`,
-                        `<div class="yt2009-wayback-protocol hid">${waybackProtocol}</div>`)
-                        callbacksMade++;
-                        if(requiredCallbacks == callbacksMade) {
-                            render_endscreen();
-                            fillFlashIfNeeded();
-                            genRelay();
-                            callback(code)
-                        }
-                    }, req.query.resetcache == 1)
-                }, 500)
-            }
-            if(flags.includes("homepage_contribute")
-            && uploadJS.getFullYear() <= 2010) {
-                // add to "videos being watched now" and /videos
-                let go = true;
-                featured_videos.slice(0, 23).forEach(vid => {
-                    if(vid.id == data.id) {
-                        go = false;
-                    }
-                })
-
-                if(yt2009exports.read().masterWs) {
-                    try {
-                        yt2009exports.read().masterWs.send(JSON.stringify({
-                            "type": "vid-watched",
-                            "id": data.id
-                        }))
-                    }
-                    catch(error) {}
-                }
-
-                if(go) {
-                    featured_videos.forEach(vid => {
-                        if(vid.id == data.id) {
-                            // remove the previous entry for that video
-                            featured_videos = featured_videos
-                                                .filter(s => s !== vid)
-                        }
-                    })
-                    featured_videos.unshift({
-                        "id": data.id,
-                        "title": data.title,
-                        "views": yt2009utils.countBreakup(data.viewCount) + " views",
-                        "uploaderHandle": data.author_handle || false,
-                        "uploaderName": data.author_name,
-                        "uploaderUrl": data.author_url,
-                        "time": data.length,
-                        "category": data.category,
-                        "qualities": data.qualities || false,
-                        "upload": data.upload
-                    })
-                    videos_page.unshift({
-                        "id": data.id,
-                        "title": data.title,
-                        "views": yt2009utils.countBreakup(data.viewCount) + " views",
-                        "uploaderHandle": data.author_handle || false,
-                        "uploaderName": data.author_name,
-                        "uploaderUrl": data.author_url,
-                        "time": data.length,
-                        "category": data.category,
-                        "qualities": data.qualities || false,
-                        "upload": data.upload
-                    })
-                    fs.writeFile("./cache_dir/watched_now.json",
-                                JSON.stringify(featured_videos),
-                                (e) => {})
-                }
-            }
-
-            let uploadDate = data.upload
-
-            uploadDate = uploadDate.replace("Streamed live on ", "")
-                                    .replace("Premiered ", "")
-            if(uploadDate.includes("-")) {
-                // fallback format
-                let temp = new Date(uploadDate)
-                uploadDate = ["Jan", "Feb", "Mar", "Apr",
-                            "May", "Jun", "Jul", "Aug",
-                            "Sep", "Oct", "Nov", "Dec"][temp.getMonth()]
-                            + " " + temp.getDate()
-                            + ", " + temp.getFullYear()
-            }
-
-            if(flags.includes("fake_upload_dateadapt")
-            && new Date(uploadDate).getTime() > 1272664800000) {
-                uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
-            } else if(flags.includes("fake_upload_date")
-            && !flags.includes("fake_upload_dateadapt")) {
-                uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
-            }
-
-            // upload date language handle
-            let userLang = yt2009languages.get_language(req)
-            let upDateDay = uploadDate.split(" ")[1].replace(",", "")
-            let upDateMonth = uploadDate.split(" ")[0]
-            let upDateYear = uploadDate.split(" ")[2]
-            let languageUpDateRule = yt2009languages.raw_language_data(userLang)
-                                                    .watchpageUploadDate
-
-            if(!languageUpDateRule) {
-                languageUpDateRule = yt2009languages.raw_language_data("en")
-                                                    .watchpageUploadDate
-            }
-            uploadDate = languageUpDateRule.dateFormat.replace(
-                "[day]", upDateDay
-            ).replace(
-                "[monthcode]", languageUpDateRule.monthcodes[upDateMonth]
-            ).replace(
-                "[year]", upDateYear
-            )
-
-
-            let channelIcon = data.author_img;
-            if(flags.includes("default_avataradapt")) {
-                if(yt2009defaultavatarcache.use(`../${channelIcon}`)) {
-                    channelIcon = "/assets/site-assets/default.png"
-                }
-            } else if(flags.includes("default_avatar")
-                && !flags.includes("default_avataradapt")) {
-                channelIcon = "/assets/site-assets/default.png"
-            }
-            if(channelIcon == "default"
-            || channelIcon == "/assets/default.png") {
-                channelIcon = "/assets/site-assets/default.png"
-            }
-
-            function setChannelIcon() {
-                code = code.replace("channel_icon", channelIcon)
-            }
-
-
-            let views = yt2009utils.countBreakup(data.viewCount)
-            if(flags.includes("realistic_view_count")) {
-                if(parseInt(data.viewCount) > 100000) {
-                    views = yt2009utils.countBreakup(
-                        Math.floor(parseInt(data.viewCount) / 90)
-                    )
-                }
-            }
-
-            let ratings_estimate_power = 15
-            let ratings = "";
-            if(parseInt(views.replace(/[^0-9]/g, "")) >= 100000) {
-                ratings_estimate_power = 150
-            }
-            ratings = yt2009utils.countBreakup(
-                Math.floor(
-                    parseInt(views.replace(/[^0-9]/g, ""))
-                    / ratings_estimate_power
-                )
-            )
-            
-
-            // "more from" section
-            let authorUrl = data.author_url
-            if(authorUrl.startsWith("/")) {
-                authorUrl = authorUrl.replace("/", "")
-            }
-            let moreFromCode = yt2009templates.morefromEntry(author_name)
-            moreFromCode += `
-                        <div class="yt2009-mark-morefrom-fetch">Loading...</div>
-                        <div class="clearL"></div>
-                    </div>
-                </div>
-            </div>`
-            code = code.replace(`<!--yt2009_more_from_panel-->`, moreFromCode)
-
-            // flash player init
-            if((req.headers["cookie"] || "").includes("f_h264")) {
-                flash_url += "%2Fmp4"
-            }
-            flash_url += `&iv_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fiv_module.swf`
-            if(useFlash) {
-                code = code.replace(
-                    `<!DOCTYPE HTML>`,
-                    yt2009templates.html4
-                )
-                code = code.replace(
-                    `<!DOCTYPE html>`,
-                    yt2009templates.html4
-                )
-                if(userAgent.includes("Firefox/") || userAgent.includes("MSIE")) {
-                    code = code.replace(
-                        `><span style="display: block;">lang_search`,
-                        ` style="width: 40px;"><span>lang_search`
-                    )
-                }
-                code = code.replace(
-                    `<script src="/assets/site-assets/html5-player.js"></script>`,
-                    ``
-                )
-                code = code.replace(`initPlayer(`, `//initPlayer(`)
-                let removePart = code.split(`<!--yt2009_html5_rm_1-->`)[1]
-                                     .split(`<!--yt2009_html5_rm_2-->`)[0]
-                code = code.replace(`<!--yt2009_html5_rm_1-->`, "")
-                           .replace(`<!--yt2009_html5_rm_2-->`, "")
-                code = code.replace(removePart, "")
-                code = code.replace(
-                    `class="flash-player"`,
-                    `class="flash-player hid"`
-                )
-                code = code.replace(
-                    `<!--hook /assets/site-assets/f_script.js -->`,
-                    `<script src="/assets/site-assets/f_script.js"></script>`
-                )
-                code = code.replace(
-                    `<script src="nbedit_watch.js"></script>`,
-                    `<!--<script src="nbedit_watch.js"></script>-->`
-                )
-            }
-
-            // add basic html data
-            code = code.split("video_title").join(yt2009utils.xss(data.title).trim())
-            code = code.replace("video_view_count", views)
-            if(!flags.includes("author_old_avatar")
-            && !config.fastload) {
-                setChannelIcon()
-            }
-            if(config.fastload
-            || flags.includes("author_old_avatar")) {
-                requiredCallbacks++
-            }
-            code = code.replace("channel_name", yt2009utils.xss(author_name))
-            code = code.split("channel_url").join(data.author_url)
-            code = code.replace("upload_date", uploadDate)
-            code = code.replace("yt2009_ratings_count", ratings)
-            if(!useFlash) {
-                code = code.replace(
-                    "mp4_files", 
-                    `<source src="${data.pMp4 || (data.mp4 + ".mp4")}" type="video/mp4"></source>
-                    <source src="${data.mp4}.ogg" type="video/ogg"></source>`
-                )
-                if(data.pMp4) {
-                    code = code.replace(
-                        "//yt2009-pmp4",
-                        "showLoadingSprite()"
-                    )
-                    code = code.replace(
-                        `0:00 / 0:00`,
-                        `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
-                    )
-                }
-            }
-            code = code.replace(
-                "video_url",
-                `http://youtube.com/watch?v=${data.id}`
-            )
-            code = code.replace(
-                "video_embed_link",
-                `<object width=&quot;425&quot; height=&quot;344&quot;><param name=&quot;movie&quot; value=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot;></param><param name=&quot;allowFullScreen&quot; value=&quot;true&quot;></param><param name=&quot;allowscriptaccess&quot; value=&quot;always&quot;></param><embed src=&quot;http://${config.ip}%3A${config.port}/watch.swf?video_id=${data.id}&quot; type=&quot;application/x-shockwave-flash&quot; allowscriptaccess=&quot;always&quot; allowfullscreen=&quot;true&quot; width=&quot;425&quot; height=&quot;344&quot;></embed></object>`
-            )
-
-            let description = yt2009utils.descriptionDistill(data.description, req);
-
-            // markup descriptions - treat http and https as links
-            let shortDescription = description.split("\n").slice(0, 3).join("<br>")
-            let fullDescription = description.split("\n").join("<br>")
-
-            // descriptions
-            code = code.replace(
-                "video_short_description",
-                yt2009utils.markupDescription(shortDescription)
-            )
-            code = code.replace(
-                "video_full_description",
-                yt2009utils.markupDescription(fullDescription)
-            )
-
-            // comments
-            let comments_html = ""
-            let topLike = 0;
-            if(data.comments
-            && !flags.includes("comments_remove_future")) {
-
-                // hide show more comments if less than 21
-                // (20 standard + continuation token)
-                if(data.comments.length !== 21) {
-                    code = code.replace("yt2009_hook_more_comments", "hid")
-                }
-
-                // top like count
-                let likeCounts = []
-                data.comments.forEach(c => {
-                    if(c.likes) {
-                        likeCounts.push(c.likes)
-                    }
-                })
-                likeCounts = likeCounts.sort((a, b) => b - a)
-                topLike = likeCounts[0]
-
-
-                // add html
-                let commentTimes = []
-                data.comments.forEach(comment => {
-                    if(comment.continuation || !comment.time) return;
-                    commentTimes.push(new Date(
-                        yt2009utils.relativeToAbsoluteApprox(comment.time)
-                    ).getTime())
-                })
-                commentTimes = commentTimes.sort((a, b) => b - a)
-                // find the difference between oldest and newest comment
-                // and scale it down to a smaller difference
-                let i = 0;
-                let displayDates = yt2009utils.fakeDatesScale(commentTimes)
-
-                data.comments.forEach(comment => {
-                    if(comment.continuation) {
-                        continuationFound = true;
-                        code = code.replace(
-                            "yt2009_comments_continuation_token",
-                            comment.continuation
-                        )
-                        return;
-                    }
-                    // flags
-                    let commentTime = comment.time;
-                    if(flags.includes("fake_dates")) {
-                        commentTime = displayDates[i]
-                        i++
-                    }
-                    let commentPoster = comment.authorName || "";
-                    if(flags.includes("remove_username_space")) {
-                        try {
-                            commentPoster = commentPoster.split(" ").join("")
-                        }
-                        catch(error) {
-                            commentPoster = "deleted"
-                        }
-                    }
-
-                    if(flags.includes("username_asciify")) {
-                        commentPoster = yt2009utils.asciify(commentPoster)
-                    }
-        
-                    if(comment.authorUrl.includes("/user/")) {
-                        commentPoster = comment.authorUrl.split("/user/")[1]
-                    }
-
-                    let commentContent = comment.content
-        
-                    let future = constants.comments_remove_future_phrases
-                    let futurePass = true;
-                    if(flags.includes("comments_remove_future")) {
-                        commentContent = commentContent.replace(/\p{Other_Symbol}/gui, "") 
-                        // whatever THIS character is, displays sometimes on ff
-                        commentContent = commentContent.split("🏻").join("")
-                        future.forEach(futureWord => {
-                            if(commentContent.toLowerCase().includes(futureWord)) {
-                                futurePass = false;
-                            }
-                        })
-                        if(commentContent.trim().length == 0
-                        || commentContent.trim().length > 500) {
-                            futurePass = false;
-                        }
-                    }
-        
-                    if(!futurePass) return;
-                    // sam html
-                    commentTime = yt2009utils.relativeTimeCreate(
-                        commentTime, yt2009languages.get_language(req)
-                    )
-                    // like count clarif
-                    let presentedLikeCount = Math.floor((comment.likes / topLike) * 10)
-                    if(topLike < 10) {
-                        presentedLikeCount = comment.likes
-                    }
-
-                    if(isNaN(presentedLikeCount)) {presentedLikeCount = 0;}
-
-                    // comment id
-                    let id = commentId(comment.authorUrl, comment.content)
-
-                    let customRating = 0;
-                    let customData = hasComment(data.id, id)
-                    if(customData) {
-                        presentedLikeCount += customData.rating
-                        let token = yt2009utils.get_used_token(req)
-                        token == "" ? token = "dev" : ""
-                        if(customData.ratingSources[token]) {
-                            customRating = customData.ratingSources[token]
-                        }
-                    }
-
-                    if(!commentContent) return;
-
-                    let commentHTML = yt2009templates.videoComment(
-                        comment.authorUrl,
-                        commentPoster,
-                        commentTime,
-                        commentContent,
-                        flags,
-                        true,
-                        presentedLikeCount,
-                        id
-                    )
-
-                    if(customRating == 1) {
-                        commentHTML = commentHTML.replace(
-                            "watch-comment-up-hover",
-                            "watch-comment-up-on"
-                        )
-                    } else if(customRating == -1) {
-                        commentHTML = commentHTML.replace(
-                            "watch-comment-down-hover",
-                            "watch-comment-down-on"
-                        )
-                    }
-
-                    comments_html += commentHTML
-        
-                    totalCommentCount++
-                    
-                })
-                code = code.replace(`yt2009_comment_count`, totalCommentCount)
-                code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
-            } else if(flags.includes("comments_remove_future") && !config.fastload) {
-                get_old_comments(data, (comments) => {
-                    markTiming("old comments")
-                    let index = 0;
-                    comments.forEach(comment => {
-                        if(comment.continuation
-                        || comment.pinned
-                        || comment.content.trim().length == 0
-                        || comment.content == "<br>") return;
-                        // flags
-                        totalCommentCount++
-                        let commentTime = comment.time;
-                        if(flags.includes("fake_dates")) {
-                            commentTime = yt2009utils.fakeDateSmall(index)
-                        }
-
-                        let id = commentId(comment.authorUrl, comment.content)
-
-                        let likes = comment.likes > 10
-                                ? Math.floor(Math.random() * 15) : comment.likes
-                        let customRating = 0;
-                        let customData = hasComment(data.id, id)
-                        if(customData) {
-                            likes += customData.rating
-                            let token = yt2009utils.get_used_token(req)
-                            token == "" ? token = "dev" : ""
-                            if(customData.ratingSources[token]) {
-                                customRating = customData.ratingSources[token]
-                            }
-                        }
-
-                        commentTime = yt2009utils.relativeTimeCreate(
-                            commentTime, yt2009languages.get_language(req)
-                        )
-
-                        // add html
-                        let commentHTML = yt2009templates.videoComment(
-                            comment.authorUrl,
-                            yt2009utils.asciify(comment.authorName),
-                            commentTime,
-                            comment.content,
-                            flags,
-                            true,
-                            likes,
-                            id
-                        )
-
-                        if(customRating == 1) {
-                            commentHTML = commentHTML.replace(
-                                "watch-comment-up-hover",
-                                "watch-comment-up-on"
-                            )
-                        } else if(customRating == -1) {
-                            commentHTML = commentHTML.replace(
-                                "watch-comment-down-hover",
-                                "watch-comment-down-on"
-                            )
-                        }
-
-                        comments_html += commentHTML
-                        index++
-                    })
-                    if(data.comments.length !== 21) {
-                        code = code.replace("yt2009_hook_more_comments", "hid")
-                    }
-                    code = code.replace(`yt2009_comment_count`, totalCommentCount)
-                    code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
-                    callbacksMade++
-                    if(requiredCallbacks == callbacksMade) {
-                        render_endscreen();
-                        fillFlashIfNeeded();
-                        genRelay();
-                        callback(code)
-                    }
-                })
-            } else {
-                code = code.replace("yt2009_hook_more_comments", "hid")
-                code = code.replace(`yt2009_comment_count`, totalCommentCount)
-                code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
-            }
-
-            // playlist if used
-            if(playlistId) {
-                let index = 0;
-                let playlistsHTML = yt2009templates.watchpagePlaylistPanelEntry
-                
+            callbacksMade++;
+            if(requiredCallbacks <= callbacksMade) {
+                render_endscreen()
+                fillFlashIfNeeded();
+                genRelay();
                 try {
-                    yt2009playlists.parsePlaylist(
-                        playlistId, () => {}
-                    ).videos.forEach(video => {
-                        let playlistVideoHTML = yt2009templates.relatedVideo(
-                            video.id,
-                            video.title,
-                            req.protocol,
-                            "",
-                            "",
-                            video.uploaderUrl,
-                            video.uploaderName,
-                            flags,
-                            playlistId
-                        )
-                        if(data.id == video.id) {
-                            playlistVideoHTML = playlistVideoHTML.replace(
-                                `"video-entry"`,
-                                `"video-entry watch-ppv-vid"`
-                            )
-                        }
-                        playlistsHTML += playlistVideoHTML
-                        index++;
-                    })
-                }
-                catch(error) {
-                    playlistsHTML += `<div class="hid yt2009_marking_fetch_playlist_client"></div>`
-                }
-
-                playlistsHTML += `
-                        </div>
-                    </div>
-                    <div class="clearL"></div>
-                </div>`
-
-                code = code.replace(`<!--yt2009_playlist_panel-->`, playlistsHTML)
-            }
-
-            // tags
-            let tags_html = ""
-            let tags = yt2009utils.distillTags(data.tags, req)
-            tags.forEach(tag => {
-                tags_html += `<a href="#" class="hLink" style="margin-right: 5px;">${
-                    tag.toLowerCase()
-                }</a>\n`
-            })
-            code = code.replace("video_tags_html", tags_html)
-            
-            // category
-            const category_numbers = {
-                "Autos & Vehicles": 2,
-                "Comedy": "35",
-                "Education": "34",
-                "Entertainment": "24",
-                "Film & Animation": "1",
-                "Gaming": "33",
-                "Howto & Style": "26",
-                "Music": "31",
-                "News & Politics": "32",
-                "Nonprofits & Activism": "29",
-                "People & Blogs": "22",
-                "Pets & Animals": "15",
-                "Science & Technology": "28",
-                "Sports": "30",
-                "Travel & Events": "19"
-            }
-            code = code.replace(`category_name`, data.category)
-            code = code.replace(
-                `category_link`,
-                "/videos?c=" + (category_numbers[data.category] || 0)
-            )
-
-            // sub button
-            let subscribed = false;
-            subscribeList.forEach(sub => {
-                if(data.author_url == sub.url) {
-                    subscribed = true;
-                }
-            })
-
-            if(subscribed) {
-                // show unsubscribe
-                code = code.replace(
-                    `data-yt2009-unsubscribe-button`,
-                    ""
-                )
-                code = code.replace(
-                    `data-yt2009-subscribe-button`,
-                    `class="hid"`
-                )
-            } else {
-                // show subscribe
-                code = code.replace(
-                    `data-yt2009-unsubscribe-button`,
-                    `class="hid"`
-                )
-                code = code.replace(
-                    `data-yt2009-subscribe-button`,
-                    ``
-                )
-            }
-
-             // sharing
-            let shareBehaviorServices = constants.shareBehaviorServices
-            
-            function createShareHTML(sites) {
-                let shareHTML = `
-                <div id="watch-sharetab-options">
-                    <div id="more-options"><a href="#" class="hLink" rel="nofollow">(more share options)</a></div>
-                    <div style="display: none;" id="fewer-options"><a href="#" class="hLink" rel="nofollow">fewer share options</a></div>
-                </div>
-                <div id="watch-share-services-collapsed">
-                `
-                // 3 first
-                let collapsed_index = 0;
-                for(let site in sites) {
-                    if(collapsed_index <= 3) {
-                        let link = sites[site].replace(
-                            `%title%`,
-                            encodeURIComponent(data.title)
-                        ).split(`%id%`).join(data.id)
-                        .replace(
-                            `%url%`,
-                            `http://www.youtube.com/watch?v=${data.id}`
-                        )
-                        shareHTML += `
-                        <div class="watch-recent-shares-div">
-                            <div class="watch-recent-share">
-                                <a href="${link}" target="_blank"><span>${site}</span></a>
-                            </div>
-                        </div>`
-
-                        collapsed_index++;
-                    }
-                    
-                }
-                shareHTML += `
-                    <div class="clear"></div>
-                </div>
-                <div id="watch-share-services-expanded" style="display: none;">
-                `
-
-                // rest
-                for(let site in sites) {
-                    let link = sites[site].replace(
-                        `%title%`, 
-                        encodeURIComponent(data.title)
-                    ).replace(`%id%`, data.id)
-                    .replace(`%url%`, `http://www.youtube.com/watch?v=${data.id}`)
-                    shareHTML += `
-                    <div class="watch-recent-shares-div">
-                        <div class="watch-recent-share">
-                            <a href="${link}" target="_blank"><span>${site}</span></a>
-                        </div>
-                    </div>`
-                }
-
-                shareHTML += `
-                    <div class="clear"></div>
-                </div>
-                `
-
-                return shareHTML;
-            }
-            if(flags.includes("share_behavior")) {
-                if(shareBehaviorServices[
-                    flags.split("share_behavior")[1].split(":")[0]
-                ]) {
-                    code = code.replace(
-                        `<!--yt2009_share_insert-->`,
-                        createShareHTML(shareBehaviorServices[
-                            flags.split("share_behavior")[1].split(":")[0]
-                        ])
-                    )
-                } else {
-                    code = code.replace(
-                        `<!--yt2009_share_insert-->`,
-                        `[yt2009] value for share_behavior not recognized`
-                    )
-                }
-                
-            } else {
-                code = code.replace(
-                    `<!--yt2009_share_insert-->`,
-                    createShareHTML(shareBehaviorServices.default)
-                )
-            }
-
-            // channel banners
-            if(config.fastload) {
-                const yt2009channels = require("./yt2009channels")
-                yt2009channels.mini_channel_images(data.author_id, (c) => {
-                    markTiming("images fetched")
-                    channelIcon = "/fastload_hold_image?r=" + encodeURIComponent(c.avatar)
-                    setChannelIcon()
-                    if(c.banner) {
-                        let channelUrl = data.author_id
-                                ? "/channel/" + data.author_id
-                                : data.author_url
-                        code = code.replace(
-                            `<!--yt2009_bannercard-->`,
-                            yt2009templates.watchBanner(
-                                channelUrl,
-                                "/fastload_hold_image?r=" + encodeURIComponent(c.banner)
-                            )
-                        )
-                    }
-                    callbacksMade++;
-                    if(requiredCallbacks <= callbacksMade) {
-                        render_endscreen()
-                        fillFlashIfNeeded();
-                        genRelay();
-                        try {
-                            callback(code)
-                        }
-                        catch(error) {}
-                    }
-                })
-            } else {
-                getBanner(data, flags, (banner) => {
-                    let channelUrl = data.author_id
-                                ? "/channel/" + data.author_id
-                                : data.author_url
-                    if(banner) {
-                        code = code.replace(
-                            `<!--yt2009_bannercard-->`,
-                            yt2009templates.watchBanner(
-                                channelUrl, banner
-                            )
-                        )
-                    }
-                    callbacksMade++;
-                    if(requiredCallbacks <= callbacksMade) {
-                        render_endscreen()
-                        fillFlashIfNeeded();
-                        genRelay();
-                        try {
-                            callback(code)
-                        }
-                        catch(error) {}
-                    }
-                })
-            }
-
-            // exp_related
-            if(flags.includes("exp_related")) {
-                requiredCallbacks++;
-                let exp_related_html = ""
-                let lookup_keyword = ""
-                // tags
-                data.tags.forEach(tag => {
-                    if(lookup_keyword.length < 9) {
-                        lookup_keyword += `${tag.toLowerCase()} `
-                    }
-                })
-                // or the first word from the title
-                if(lookup_keyword.length < 9) {
-                    lookup_keyword = data.title.split(" ")[0]
-                }
-                
-                // get
-                yt2009search.related_from_keywords(
-                    lookup_keyword, data.id, flags, (html, rawData) => {
-                        rawData.forEach(video => {
-                            endscreen_queue.push({
-                                "title": video.title,
-                                "id": video.id,
-                                "length": yt2009utils.time_to_seconds(video.length),
-                                "url": encodeURIComponent(
-                                    `http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`
-                                ),
-                                "views": video.views,
-                                "creatorUrl": video.creatorUrl,
-                                "creatorName": video.creatorName
-                            })
-                        })
-                        exp_related_html += html;
-
-                        // add old defualt "related" videos at the end
-                        data.related.forEach(video => {
-                            if(parseInt(video.uploaded.split(" ")[0]) >= 12
-                            && video.uploaded.includes("years")
-                            && !html.includes(`data-id="${video.id}"`)) {
-                                // only 12 years or older & no repeats
-
-                                // handle flag
-                                // author name flags
-                                let authorName = video.creatorName;
-                                if(flags.includes("remove_username_space")) {
-                                    authorName = authorName.split(" ").join("")
-                                }
-                                if(flags.includes("username_asciify")) {
-                                    authorName = yt2009utils.asciify(authorName)
-                                }
-                                if(video.creatorUrl.includes("/user/")) {
-                                    authorName = video.creatorUrl.split("/user/")[1]
-                                                                .split("?")[0]
-                                }
-                
-                                // view count flags
-                                let viewCount = video.views;
-                                viewCount = parseInt(viewCount.replace(/[^0-9]/g, ""))
-                                if(flags.includes("realistic_view_count")
-                                && viewCount >= 100000) {
-                                    viewCount = Math.floor(viewCount / 90)
-                                }
-                                viewCount = "lang_views_prefix"
-                                            + yt2009utils.countBreakup(viewCount)
-                                            + "lang_views_suffix"
-
-                                endscreen_queue.push({
-                                    "title": video.title,
-                                    "id": video.id,
-                                    "length": yt2009utils.time_to_seconds(video.length),
-                                    "url": encodeURIComponent(`http://${config.ip}:${config.port}/watch?v=${video.id}&f=1`),
-                                    "views": viewCount,
-                                    "creatorUrl": video.creatorUrl,
-                                    "creatorName": authorName
-                                })
-
-                                exp_related_html += yt2009templates.relatedVideo(
-                                    video.id,
-                                    video.title,
-                                    req.protocol,
-                                    video.length,
-                                    viewCount,
-                                    video.creatorUrl,
-                                    authorName,
-                                    flags
-                                )
-                            }
-                        })
-
-                        markTiming("exp_related")
-
-                        code = code.replace(
-                            `<!--yt2009_exp_related_marking-->`,
-                            exp_related_html
-                        )
-                        callbacksMade++;
-                        if(requiredCallbacks == callbacksMade) {
-                            render_endscreen();
-                            fillFlashIfNeeded();
-                            genRelay();
-                            callback(code)
-                        }
-                    },
-                    req.protocol
-                )
-            }
-
-            // old_author_avatar
-            if(flags.includes("author_old_avatar")
-            && data.author_url.includes("channel/UC")) {
-                let id = data.author_url.split("channel/UC")[1]
-                let avatarUrl = `https://i3.ytimg.com/u/${id}/channel_icon.jpg`
-                let fname = __dirname + "/../assets/" + id + "_old_avatar.jpg"
-                let oldChannelIconPath = "/assets/" + id + "_old_avatar.jpg"
-
-                // callback at the top
-                function markAsDone() {
-                    callbacksMade++;
-                    if(requiredCallbacks <= callbacksMade) {
-                        render_endscreen()
-                        fillFlashIfNeeded();
-                        genRelay();
-                        callback(code)
-                    }
-                }
-                // exists and not there = set default
-                if(fs.existsSync(fname)
-                && fs.statSync(fname).size < 10) {
-                    setChannelIcon()
-                    markAsDone()
-                }
-                // exists and there
-                else if(fs.existsSync(fname)
-                && fs.statSync(fname).size > 10) {
-                    channelIcon = oldChannelIconPath
-                    setChannelIcon()
-                    markAsDone()
-                }
-                // doesn't exist
-                else {
-                    fetch(avatarUrl, {
-                        "headers": constants.headers
-                    }).then(r => {
-                        if(r.status !== 404) {
-                            r.buffer().then(buffer => {
-                                fs.writeFileSync(fname, buffer)
-                                channelIcon = oldChannelIconPath
-                                setChannelIcon()
-                                markAsDone()
-                            })
-                        } else {
-                            // no old icon, use current
-                            fs.writeFileSync(fname, "")
-                            if(!fs.existsSync(`../${channelIcon}`)) {
-                                channelIcon = "/assets/site-assets/default.png"
-                            }
-                            setChannelIcon()
-                            markAsDone()
-                        }
-                    })
-                }
-            } else if(flags.includes("author_old_avatar")
-            && !data.author_url.includes("channel/UC")) {
-                setChannelIcon()
-                callbacksMade++;
-                if(requiredCallbacks <= callbacksMade) {
-                    render_endscreen()
-                    fillFlashIfNeeded();
-                    genRelay();
                     callback(code)
                 }
-            } else if(config.fastload) {
-                requiredCallbacks--
+                catch(error) {}
             }
-
-            // exp_hq
-            if(!useFlash
-            && (data.qualities.includes("720p")
-            || data.qualities.includes("480p"))) {
-                let use720p = data.qualities.includes("720p")
-                code = code.replace(
-                    `<!--yt2009_style_hq_button-->`,
-                    yt2009templates.playerCssHDBtn   
-                )
-                code = code.replace(
-                    `//yt2009-exp-hq-btn`,
-                    yt2009templates.playerHDBtnJS(id, use720p)
-                )
+        })
         
-                // 720p
-                if(use720p) {
-                    code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq hd"></span>`)
-                } else {
-                    // 480p
-                    code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
-                }
-            }
-        }
 
-        if(!config.fastload) {
-            onData()
-        } else if(config.fastload && tCache[id]) {
-            data = tCache[id]
-            onData()
-        } else {
-            yt2009exports.waitForDataStatusChange(id, () => {
-                data = tCache[id]
-                onData()
-            })
+        if(requiredCallbacks == 0) {
+            render_endscreen()
+            fillFlashIfNeeded();
+            genRelay();
+            callback(code)
         }
+        
+        //return code;
     },
 
 
@@ -3013,103 +2800,5 @@ module.exports = {
         } else {
             defaultBanner()
         }
-    },
-
-    "getImagesFromChannel": function(data, flags, callback) {
-        const yt2009channels = require("./yt2009channels")
-        yt2009channels.mini_channel_images(data.author_id, (data) => {
-            callback(data)
-        })
-    },
-
-    "mini_fetch_video": function(id, callback, disableDownload, quickCallback) {
-        if(JSON.stringify(innertube_context) == "{}") {
-            innertube_context = constants.cached_innertube_context
-            api_key = this.get_api_key()
-        }
-
-        if(cache.read()[id]) {
-            callback(cache.read()[id])
-            return;
-        } else if(tCache[id]) {
-            callback(tCache[id])
-            return;
-        }
-
-        if(quickCallback) {
-            callback({})
-        }
-
-        fetch(`https://www.youtube.com/youtubei/v1/player?key=${api_key}`, {
-            "headers": constants.headers,
-            "referrer": `https://www.youtube.com/`,
-            "referrerPolicy": "strict-origin-when-cross-origin",
-            "body": JSON.stringify({
-                "contentCheckOk": false,
-                "context": innertube_context,
-                "playbackContext": {"vis": 0, "lactMilliseconds": "1"},
-                "racyCheckOk": false,
-                "videoId": id
-            }),
-            "method": "POST",
-            "mode": "cors"
-        }).then(r => {r.json().then(r => {
-            if(!r
-            || !r.videoDetails
-            || !r.videoDetails.title) {
-                tCache[id] = false;
-                if(quickCallback) {
-                    yt2009exports.updateDataFetch(id, false)
-                } else {
-                    callback(false)
-                }
-            }
-            let data = {
-                "title": r.videoDetails.title,
-                "description": r.videoDetails.shortDescription,
-                "viewCount": r.videoDetails.viewCount,
-                "author_name": r.videoDetails.author,
-                "author_url": "/channel/" + r.videoDetails.channelId,
-                "author_id": r.videoDetails.channelId,
-                "author_img": "default",
-                "upload": r.microformat.playerMicroformatRenderer.uploadDate,
-                "tags": r.videoDetails.keywords || [],
-                "related": [],
-                "length": parseInt(
-                    r.microformat.playerMicroformatRenderer.lengthSeconds
-                ),
-                "category": r.microformat.playerMicroformatRenderer.category,
-                "fastload": config.fastload,
-                "id": id,
-                "pMp4": "/fastload_exp_mp4?id=" + id
-            }
-            data.qualities = []
-            if(!r.streamingData) {
-                r.streamingData = {}
-            }
-            if(!r.streamingData.adaptiveFormats) {
-                r.streamingData.adaptiveFormats = [{"qualityLabel": "360p"}]
-            }
-            r.streamingData.adaptiveFormats.forEach(quality => {
-                if(quality.qualityLabel
-                && !data.qualities.includes(quality.qualityLabel)) {
-                    data.qualities.push(quality.qualityLabel)
-                }
-            })
-            tCache[id] = data;
-            if(quickCallback) {
-                yt2009exports.updateDataFetch(id, data)
-            } else {
-                callback(data)
-            }
-
-            if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload)) {
-                // ytdl
-                yt2009exports.updateFileDownload(id, 1)
-                yt2009utils.saveMp4(id, (path => {
-                    yt2009exports.updateFileDownload(id, 2)
-                }))
-            }
-        })})
     }
 }

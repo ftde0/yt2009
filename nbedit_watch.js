@@ -247,48 +247,6 @@ function morefrom_load() {
     }, false)
 }
 
-// related videos refetch, used with fastload in specific vid cases
-function commandRefetchRelated() {
-    // keyword
-    var lookup_keyword = ""
-    var tags = document.querySelectorAll("#watch-video-tags a")
-    tags.forEach(function(tag) {
-        if(lookup_keyword.length < 9) {
-            lookup_keyword += tag.innerHTML.toLowerCase() + " "
-        }
-    })
-    // words from title until 9 letters as backup
-    var title = $(".watch-vid-ab-title").innerHTML
-    var limit = 30;
-    var loops = 0;
-    while(lookup_keyword.length < 9
-    && loops < limit) {
-        title.split(" ").forEach(function(word) {
-            lookup_keyword += word += " "
-        })
-        loops++
-    }
-
-    var r = new XMLHttpRequest();
-    r.open("POST", "/fastload_related_refetch")
-    r.setRequestHeader("source", location.href)
-    r.send(lookup_keyword)
-    r.addEventListener("load", function(e) {
-        $(".yt2009-default-related").innerHTML = r.responseText
-    }, false)
-}
-
-// fastload: refetch comments
-function commandComments() {
-    var r = new XMLHttpRequest();
-    var id = location.href.split("v=")[1].split("&")[0].split("#")[0]
-    r.open("GET", "/fastload_initial_comments?id=" + id)
-    r.send(null)
-    r.addEventListener("load", function(e) {
-        $(".comments-container").innerHTML += r.responseText
-    }, false)
-}
-
 /*
 ======
 sub

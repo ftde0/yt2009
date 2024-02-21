@@ -27,7 +27,6 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_LOCKED_TOKENS` sets access tokens that will be redirected to /t.htm, seperated by commas, leave empty to disable
 - `YT2009_HOMEPAGETEXT` sets a custom text that will be shown on the homepage, leave empty to disable
 - `YT2009_REDIR` sets an absolute http path of a different yt2009 instance you wish to redirect to, leave empty to disable
-- `YT2009_FASTLOAD` allows you to enable experimental fast loading of slow pages by using various performance tricks (default: false)
 - `YT2009_LOGGED_TOKENS` sets tokens that have their usage logged in `/data/accessdata`, seperated by commas, leave empty to disable
 - `YT2009_TOKENS` allows you to specify custom auth tokens instead of generating them randomly, **requires prod env to work!**, seperated by commas, leave empty to disable, **this will override any existing access tokens when used!!!**
 

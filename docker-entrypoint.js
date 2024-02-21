@@ -110,18 +110,6 @@ if(process.env.YT2009_REDIR) {
     cfg.redirmode = process.env.YT2009_REDIR;
 }
 
-// set fastload
-switch (process.env.YT2009_FASTLOAD) {
-    case 'true':
-        cfg.fastload = true;
-        break;
-    case 'false':
-        cfg.fastload = false;
-        break;
-    default:
-        throw new Error('invalid YT2009_FASTLOAD')
-}
-
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

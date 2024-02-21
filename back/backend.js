@@ -36,7 +36,7 @@ const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
 const child_process = require("child_process")
 const yt2009charts = require("./yt2009charts")
-let devTimings = true;
+let devTimings = false;
 
 const https = require("https")
 const fs = require("fs")
@@ -988,7 +988,6 @@ app.get("/embed_get_endscreen", (req, res) => {
 channels
 ======
 */
-const channelsFastload = require("./yt2009channelsfastload")
 let channel_endpoints = [
     "/channel/*",
     "/user/*",
@@ -1024,12 +1023,6 @@ channel_endpoints.forEach(channel_endpoint => {
         }
         catch(error) {}
         flags += ";"
-
-        // fastload
-        if(config.fastload) {
-            channelsFastload.main(req, res, flags)
-            return;
-        }
 
         // autouser
         if(flags.includes("auto_user")) {
@@ -1103,11 +1096,6 @@ app.get("/channel_fh264_getvideo", (req, res) => {
     if(checkBaseline(req, res)) return;
 
     req.query.v = req.query.v.replace(/[^a-zA-Z0-9+\-+_]/g, "").substring(0, 11)
-
-    if(config.fastload) {
-        res.redirect("/fastload_exp_mp4?id=" + req.query.v)
-        return;
-    }
 
     if(yt2009_exports.getStatus(req.query.v)) {
         // wait for mp4 while it's downloading
@@ -3940,261 +3928,6 @@ if(config.auto_maintain) {
     let autoCheckSize = setInterval(checkSize, 1000 * 60 * 60 * 4)
     checkSize()
 }
-
-app.get("/fastload_initial_comments", (req, res) => {
-    if(!req.query.id) {
-        res.sendStatus(400)
-        return;
-    }
-    let id = req.query.id.substring(0, 11)
-                .replace(/[^a-zA-Z0-9+\-+_]/g, "")
-    let comments_html = ""
-    req = yt2009_utils.addFakeCookie(req)
-    if(req.headers.cookie.includes("comments_remove_future")) {
-        yt2009.mini_fetch_video(id, (data) => {
-            yt2009.get_old_comments(data, (comments) => {
-                let index = 0;
-                comments.forEach(comment => {
-                    if(comment.continuation
-                    || comment.pinned
-                    || comment.content.trim().length == 0
-                    || comment.content == "<br>") return;
-                    // flags
-                    let commentTime = comment.time;
-                    if(req.headers.cookie.includes("fake_dates")) {
-                        commentTime = yt2009_utils.fakeDateSmall(index)
-                    }
-    
-                    let commentId = yt2009.commentId(
-                        comment.authorUrl, comment.content
-                    )
-    
-                    let likes = comment.likes > 10
-                            ? Math.floor(Math.random() * 15) : comment.likes
-
-                    commentTime = yt2009_utils.relativeTimeCreate(
-                        commentTime, yt2009_languages.get_language(req)
-                    )
-    
-                    // add html
-                    let commentHTML = yt2009_templates.videoComment(
-                        comment.authorUrl,
-                        yt2009_utils.asciify(comment.authorName),
-                        commentTime,
-                        comment.content,
-                        req.headers.cookie,
-                        true,
-                        likes,
-                        commentId
-                    )
-    
-                    comments_html += commentHTML
-                    index++
-                })
-                res.send(yt2009_languages.apply_lang_to_code(comments_html, req))
-            })
-        }, true, false)
-    } else {
-        const fetch = require("node-fetch")
-        fetch(`http://${config.ip}:${config.port}/get_more_comments`, {
-            "headers": {
-                "source": "/watch?v=" + id,
-                "page": 1
-            }
-        }).then(r => {r.text().then(r => {
-            res.send(r)
-        })})
-    }
-})
-
-app.get("/fastload_hold_image", (req, res) => {
-    if(req.query.r
-    && req.query.r == "default") {
-        res.redirect("/assets/site-assets/default.png")
-        return;
-    }
-    if(!req.query.r
-    || !decodeURIComponent(req.query.r).startsWith("/assets/")) {
-        res.sendStatus(400)
-        return;
-    }
-    let l = decodeURIComponent(req.query.r)
-    let retryLimit = 15;
-    let retryCount = 0;
-    let x = setInterval(function() {
-        if(fs.existsSync("../" + l)) {
-            try {res.redirect(l)}catch(error){}
-            clearInterval(x)
-            return;
-        } else if(retryLimit <= retryCount) {
-            try {res.sendStatus(404)}catch(error) {}
-            clearInterval(x)
-            return;
-        } else {
-            retryCount++
-        }
-    }, 250)
-})
-
-app.post("/fastload_related_refetch", (req, res) => {
-    if(!yt2009_utils.isAuthorized(req)) {
-        res.sendStatus(401)
-        return;
-    }
-    if(!req.body || !req.body.toString() || !req.headers.source) {
-        res.sendStatus(400)
-        return;
-    }
-    req = yt2009_utils.addFakeCookie(req)
-    let cookies = req.headers.cookie
-    let source = req.headers.source
-    if(req.headers.source.includes("v=")) {
-        source = source.split("v=")[1].split("&")[0].split("#")[0]
-    }
-
-    let relatedHTML = ""
-
-    yt2009_search.get_search(req.body.toString(), cookies, {}, (data => {
-        data.forEach(v => {
-            if(v.type == "video" && v.id !== source) {
-                relatedHTML += yt2009_templates.relatedVideo(
-                    v.id,
-                    v.title,
-                    req.protocol,
-                    v.time,
-                    v.views,
-                    v.author_url,
-                    v.author_name,
-                    cookies,
-                    ""
-                )
-            }
-        })
-
-        res.send(relatedHTML)
-    }), "", false)
-})
-
-let tempBufferStorage = {}
-app.get("/fastload_exp_mp4", (req, res) => {
-    let id = req.query.id.substring(0, 11).replace(/[^a-zA-Z0-9+\-+_]/g, "")
-    if(tempBufferStorage[id] && tempBufferStorage[id] !== "waiting") {
-        console.log("fastload mp4", id, "sent from cache")
-        res.send(tempBufferStorage[id])
-        return;
-    } else if(tempBufferStorage[id] && tempBufferStorage[id] == "waiting") {
-        let timing = 0;
-        console.log("fastload mp4", id, "waiting")
-        let x = setInterval(function() {
-            if(tempBufferStorage[id] !== "waiting") {
-                res.send(tempBufferStorage[id])
-                console.log("fastload mp4", id, "sent after", timing + "s")
-                clearInterval(x)
-            }
-            timing += 0.1
-        }, 100)
-        return;
-    }
-    tempBufferStorage[id] = "waiting"
-    let internal = (req.query.internal == 1)
-    const fetch = require("node-fetch")
-    fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
-        "headers": {
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9,pl;q=0.8",
-            "content-type": "application/json",
-            "cookie": "",
-            "x-goog-authuser": "0",
-            "x-origin": "https://www.youtube.com/",
-            "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
-        },
-        "referrer": "https://www.youtube.com/watch?v=NXEksa_Rs7c",
-        "referrerPolicy": "origin-when-cross-origin",
-        "body": JSON.stringify({
-            "context": {
-            "client": {
-                "hl": "en",
-                "clientName": "ANDROID",
-                "clientVersion": "19.02.39",
-                "androidSdkVersion": 34,
-                "mainAppWebInfo": {
-                    "graftUrl": "/watch?v=" + id
-                }
-            }
-            },
-            "videoId": id
-        }),
-        "method": "POST",
-        "mode": "cors"
-    }).then(r => (r.json().then(r => {
-        let mp4 = r.streamingData.formats[0].url
-        fetch(mp4, {"headers": {
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9,pl;q=0.8",
-            "content-type": "application/json",
-            "cookie": "",
-            "x-goog-authuser": "0",
-            "x-origin": "https://www.youtube.com/",
-            "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
-        }}).then(r => {console.log(r.buffer().then(b => {
-            console.log("fastload mp4", id, b.length, "internal:", internal)
-            if(!internal) {
-                res.send(b)
-            } else {
-                res.send()
-            }
-            tempBufferStorage[id] = b;
-        }))})
-    })))
-})
-
-app.get("/em_channel_comments", (req, res) => {
-    if(!req.query.id) {res.sendStatus(400);return;}
-    req = yt2009_utils.addFakeCookie(req)
-    let flags = req.headers.cookie
-
-    let id = req.query.id.substring(0, 11).replace(/[^a-zA-Z0-9+\-+_]/g, "")
-    yt2009.get_video_comments(id, (data => {
-        let comments_html = ""
-        let count = 0;
-        data.forEach(comment => {
-            try {
-                if (comment.content.includes("video")) return;
-                let showComment = true;
-                yt2009_constant.comments_remove_future_phrases.forEach(phrase => {
-                    if(comment.content.split("\n")[0].includes(phrase)) {
-                        showComment = false
-                    }
-                })
-                let authorAvatar = yt2009_utils.fakeAvatarFlags(
-                    yt2009_utils.saveAvatar(
-                        comment.authorAvatar
-                    ),
-                    flags
-                )
-                let authorName = yt2009_utils.textFlags(
-                    comment.authorName,
-                    flags,
-                    comment.authorUrl
-                )
-
-                if(showComment) {
-                    comments_html += yt2009_templates.channelComment(
-                        comment.authorUrl,
-                        authorAvatar,
-                        authorName,
-                        yt2009_utils.fakeDateSmall(count),
-                        comment.content.split("\n")[0]
-                    )
-                    count++;
-                }
-            }
-            catch(error) {console.log(error);}
-        })
-
-        res.send(comments_html + ";comment_count=" + count)
-    }), "")
-})
 
 /*
 pizdec

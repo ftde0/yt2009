@@ -648,43 +648,6 @@ function morefrom_load() {
     }
 }
 
-// related videos refetch, used with fastload in specific vid cases
-function commandRefetchRelated() {
-    // keyword
-    var lookup_keyword = ""
-    var tags = document.querySelectorAll(".hLink")
-    for(var t in tags) {
-        try {
-            if(tags[t]
-            && tags[t].style.marginRight == "5px"
-            && lookup_keyword.length < 9) {
-                lookup_keyword += tags[t].innerHTML.toLowerCase() + " "
-            }
-        }
-        catch(error) {}
-    }
-    // first word from the title as backup
-    var title = $(".watch-vid-ab-title").innerHTML
-    if(lookup_keyword.length < 9) {
-        lookup_keyword = title.split(" ")[0]
-    }
-
-    var r;
-    if (window.XMLHttpRequest) {
-        r = new XMLHttpRequest()
-    } else {
-        r = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    r.open("POST", "/fastload_related_refetch")
-    r.setRequestHeader("source", location.href)
-    r.send(lookup_keyword)
-    r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
-            $(".yt2009-default-related").innerHTML = r.responseText
-        }
-    }
-}
-
 // star ratings
 var ratingText = document.getElementById("defaultRatingMessage")
                  .getElementsByTagName("span")[0]
