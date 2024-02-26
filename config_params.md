@@ -24,6 +24,4 @@ other params you can set:
 - `templocked_tokens` - an array of access tokens that will be redirected to /t.htm
 - `customHomepageText` - a custom text that will be shown on the homepage
 - `redirmode` - an **absolute** http path of a different yt2009 instance you wish to redirect to
-- `public` - an IP to your instance. set if you want your instance to pop up in the instance list.
-- `fastload` - experimental fast loading of slow pages by using various performance tricks. `true/false`
 - `logged_tokens` - an array of access tokens that will have their usage logged in `accessdata`.

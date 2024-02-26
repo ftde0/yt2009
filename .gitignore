@@ -19,6 +19,7 @@ mobile/*.3gp
 mobile/*.ogg
 changelogs/*.txt
 apksetup/
+back/logs/
 
 # yt assets
 master-vfl121679.png

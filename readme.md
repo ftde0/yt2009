@@ -39,10 +39,6 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 
 **as of november 2023, it still isn't merged with the main repo.**
 
-- patch the flash player(s) by following [flash_player_patch.md](flash_player_patch.md) and looking through [alt-swf/readme.md](alt-swf/readme.md).
-
-### some SWFs included here may be pre-patched for a different yt2009 url. make sure to replace the urls to your own if you come across those. 
-
 - set up an android app by following [apk_setup.md](apk_setup.md)
 
 ---
@@ -86,3 +82,16 @@ and just click around! you might find some useful features you didn't expect to 
 **they will be redownloaded when necessary.**
 
 ---
+
+## notes, docs
+
+over time some tools and documentation was written about yt2009. for an easy reference, those are listed below.
+
+- [apk_setup.md](apk_setup.md) - set early youtube android APKs to work with yt2009
+- [config_params.md](config_params.md) - a list of ALL available config options.
+- [docker.md](docker.md) - yt2009 setup with docker. also listed in the setup section. (thanks, breakgimme!)
+- [flash_additions.md](flash_additions.md) - some info on caption and annotations modules within the default 2009 flash player.
+- [flash_player_patch.md](flash_player_patch.md) - manual patch info for using flash players with yt2009.
+
+
+- [autoapk.js](autoapk.js) - a node cli file to automatically patch APKs supported by yt2009. your mileage may vary.

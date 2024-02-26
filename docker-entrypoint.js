@@ -42,12 +42,6 @@ try {
     throw new Error('invalid YT2009_MAINTAIN_MAX_CACHE_SIZE');
 }
 
-// set public
-if(process.env.YT2009_PUBLIC) {
-    cfg.public = process.env.YT2009_PUBLIC;
-}
-
-
 // set env
 if(process.env.YT2009_ENV === 'dev' || process.env.YT2009_ENV === 'prod') {
     cfg.env = process.env.YT2009_ENV;

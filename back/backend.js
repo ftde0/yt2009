@@ -186,22 +186,6 @@ if(!config.disableWs) {
         })
     }
 }
-let public = false
-if(config.public
-&& typeof(config.public) == "string"
-&& config.public.length > 2) {
-    public = config.public
-    let ver = require("../package.json")
-    let version = ver.version
-    const fetch = require("node-fetch")
-    fetch("https://orzeszek.website:204/api/hello", {
-        "headers": {
-            "pdata": public,
-            "yt2009": version
-        },
-        "method": "POST"
-    })
-}
 
 app.get('/back/*', (req,res) => {
     res.redirect("https://github.com/ftde0/yt2009")
@@ -813,7 +797,7 @@ app.get("/get_video_info", (req, res) => {
                 config.port
             }/get_video?video_id=${data.id}/mp4`
             res.send(`status=ok
-length_seconds=1
+length_seconds=${data.length}
 keywords=a
 vq=None
 muted=0
