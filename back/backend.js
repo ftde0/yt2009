@@ -315,6 +315,11 @@ app.get("/watch", (req, res) => {
             res.redirect("/?ytsession=1")
             return;
         }
+        if(data.error) {
+            let s = yt2009_home({"error": data.error})
+            res.redirect("/?ytsession=" + s)
+            return;
+        }
         yt2009.applyWatchpageHtml(data, req, (code => {
             if(code == "safetymode") {
                 res.redirect("/?ytsession=3")
@@ -3912,6 +3917,13 @@ if(config.auto_maintain) {
     let autoCheckSize = setInterval(checkSize, 1000 * 60 * 60 * 4)
     checkSize()
 }
+
+app.get("/player_204", (req, res) => {
+    res.sendStatus(204)
+})
+app.get("/media/iviv", (req, res) => {
+    res.redirect("/media/iviv/iv3_edit_module.swf")
+})
 
 /*
 pizdec

@@ -73,8 +73,19 @@ function section_fill(code, section_name, section_content, flags, protocol) {
     return temp_code;
 }
 
+let error_sessions = {}
 
 module.exports = function(req, res) {
+    if(req.error) {
+        let t = ""
+        let a = "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
+        while(t.length !== 15) {
+            let r = Math.floor(Math.random() * 36)
+            t += a[r]
+        }
+        error_sessions[t] = yt2009utils.xss(req.error)
+        return t;
+    }
     let flags = req.query.flags || ""
     try {
         req.headers.cookie.split(";").forEach(cookie => {
@@ -292,6 +303,11 @@ module.exports = function(req, res) {
     && ytsessions[req.query.ytsession]) {
         addNotice = true;
         noticeText = ytsessions[req.query.ytsession]
+    }
+    if(req.query.ytsession
+    && error_sessions[req.query.ytsession]) {
+        addNotice = true
+        noticeText = error_sessions[req.query.ytsession]
     }
 
     if(addNotice) {

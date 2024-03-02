@@ -174,7 +174,19 @@ module.exports = {
                     data.title = videoData.videoDetails.title
                 }
                 catch(error) {
-                    callback(false)
+                    let displayError = "This video is unavailable."
+                    if(videoData.playabilityStatus
+                    && videoData.playabilityStatus.status == "ERROR") {
+                        try {
+                            displayError = videoData.playabilityStatus
+                                           .errorScreen
+                                           .playerErrorMessageRenderer
+                                           .subreason.simpleText
+                        }
+                        catch(error) {}
+                    }
+                    data.error = displayError
+                    callback(data)
                     return;
                 }
 
