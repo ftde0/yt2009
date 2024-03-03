@@ -271,6 +271,8 @@ module.exports = {
                         })
                     })
                 }
+                if(!s.shelfRenderer.title
+                || !s.shelfRenderer.title.runs) return;
                 let shelfTitle = s.shelfRenderer.title.runs[0].text
                 featuredChannels[shelfTitle] = parsedSection
             })
