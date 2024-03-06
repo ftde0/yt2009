@@ -14,7 +14,10 @@ PREREQUISITES:
 - downloaded an old youtube APK (apkmirror will work)
 - java installed and in PATH (accessible from every directory)
 - apktool
-- grep (download and put to PATH if on Windows)
+- grep (for Windows you can use `findstr`, will work in a similar way)
+
+***if you decide to use `findstr`, replace all `-r` switches with `-s` and add a `[space] *` to the end of each command.***
+
 - [ApkRenamer](https://github.com/dvaoru/ApkRenamer) for installing the modified app along with the stock
 youtube app
 - an APK signer. [uber-apk-signer](https://github.com/patrickfav/uber-apk-signer) will be used throughout this doc.

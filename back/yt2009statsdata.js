@@ -129,6 +129,49 @@ function getUserCountry(id, callback) {
     })})
 }
 
+// google trends environment for charts
+let trends_token = false;
+function createTrendsEvironment(callback) {
+    if(!trends_token) {
+        fetch("https://trends.google.com/", {
+            "headers": yt2009constants.headers
+        }).then(r => {
+            let t = r.headers.get("set-cookie")
+            let nt = ""
+            t.split(";").forEach(d => {
+                d = d.trim()
+                if(d.startsWith("expires")
+                || d.startsWith("path")
+                || d.startsWith("domain")
+                || d.startsWith("Secure")
+                || d.startsWith("SameSite")
+                || d.startsWith("HttpOnly")) return;
+                nt += d + ";"
+            })
+            trends_token = nt;
+            callback(trends_token)
+        })
+        // expire trends_token after 6h
+        // primarily for safety reasons, as overused/blank cookies
+        // fail the next requests with 429.
+        setTimeout(() => {
+            trends_token = false;
+        }, 1000 * 60 * 60 * 6)
+    } else {
+        callback(trends_token)
+    }
+}
+
+function kurwaUnescapeDontWork(text) {
+    // WHY. WHY NODEJS. WORKS ON BROWSERS,
+    // WORKS ON EVERYONE ELSE. BUT NOT IN THIS CASE.
+    return text.replace(/\\x22/g, `"`)
+               .replace(/\\x7b/g, `{`)
+               .replace(/\\x7d/g, `}`)
+               .replace(/\\x5b/g, `[`)
+               .replace(/\\x5d/g, `]`)
+}
+
 // loop the above
 function bulkUserCountries(ids, callback) {
     let requestsMade = 0
@@ -146,7 +189,7 @@ function bulkUserCountries(ids, callback) {
 
 module.exports = {
     "mainPull": function(v, req, callback) {
-        let callbacksRequired = 5;
+        let callbacksRequired = 6;
         let callbacksMade = 0;
         let data = []
 
@@ -305,13 +348,11 @@ module.exports = {
 
         // audience countries
         let idList = []
-        if(!v.comments) {
-            markDone()
-            return;
-        }
         v.comments.slice(0, 10).forEach(c => {
             if(c.authorUrl.includes("channel/")) {
                 idList.push(c.authorUrl.split("channel/")[1].split("?")[0])
+            } else if(c.authorId) {
+                idList.push(c.authorId)
             }
         })
         let codeCountries = []
@@ -329,5 +370,86 @@ module.exports = {
         if(idList.length == 0) {
             markDone()
         }
+
+        // accurate chart with google trends data
+        // if not there, before we do anything, query trends.google.com for
+        // requests cookie
+
+        // then, get TIMESERIES embedded endpoint for a request token and params
+        // finally, get MULTILINE and parse to growing chart
+        function isoDate(date) {
+            return new Date(date).toISOString().split("T")[0]
+        }
+        let chartCountback = req.headers.cookie
+                          && req.headers.cookie.includes("enable_stats_countback")
+        let today = isoDate(Date.now())
+        if(chartCountback) {
+            today = "2010-04-01"
+        }
+        let videoKeyword = utils.exp_related_keyword(v.tags, v.title)
+                                .replace(/\"/g, "")
+        let timeseriesURL = [
+            "https://trends.google.com/trends/embed/explore/TIMESERIES",
+            "?req=",
+            encodeURIComponent(JSON.stringify(
+                {
+                    "category": 0,
+                    "property": "youtube",
+                    "comparisonItem": [{
+                        "geo": "",
+                        "keyword": videoKeyword,
+                        "time": isoDate(v.upload) + " " + today
+                    }]
+                }
+            )),
+            "&tz=-60",
+            "&eq=date=" + isoDate(v.upload) + "%20" + today,
+            "&grop=youtube&q=" + encodeURIComponent(videoKeyword),
+            "&hl=en"
+        ].join("")
+        createTrendsEvironment((requestCookie) => {
+            let headers = JSON.parse(JSON.stringify(yt2009constants.headers))
+            headers.cookie = requestCookie;
+            fetch(timeseriesURL, {"headers": headers}).then(r => {
+                r.text().then(r => {
+                    let token = r.split(`token\\x22:\\x22`)[1].split(`\\x22`)[0]
+                    let rdata = r.split(`'data': JSON.parse(`)[1].split(`),'`)[0]
+                                 .replace(/\'/g, "")
+                    rdata = JSON.parse(kurwaUnescapeDontWork(rdata))
+                    let requ = rdata.request
+                    // once token is set, get /multiline
+                    let multilineRequest = [
+                        "https://trends.google.com/trends/api/widgetdata/multiline",
+                        "?req=",
+                        encodeURIComponent(JSON.stringify(requ)),
+                        "&token=" + token,
+                        "&tz=-60"
+                    ].join("")
+                    fetch(multilineRequest, {"headers": headers})
+                    .then(mr => {mr.text().then(mr => {
+                        mr = JSON.parse(mr.replace(")]}',\n", ""))
+                        // timelineData has an unknown to us amount of entries,
+                        // all of which need to fit on our 0-100 scale.
+                        let t = [0]
+                        mr.default.timelineData.forEach(m => {
+                            let c = parseInt(m.value[0])
+                            t.push(t[t.length - 1] + c + 1)
+                        })
+                        let scale = (100 / t[t.length - 1])
+                        // scale down t to 100.0% max
+                        let nt = []
+                        t.forEach(m => {
+                            nt.push((m * scale).toFixed(1))
+                        })
+                        data.push({
+                            "type": "chart-data",
+                            "value": nt
+                        })
+                        markDone()
+                    })})
+                })
+            })
+        })
+        
     }
 }

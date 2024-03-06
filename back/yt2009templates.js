@@ -2623,8 +2623,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             "?cht=lc:nda&chs=70x15&chco=647b5c",
             "&chm=B,b6cfadaa,0,0,0&chd=t:0.0,60.0,70.0,100.0"].join(""),
             ["/chart",
-            "?cht=lc:nda&chs=70x15&chco=647b5c&chds=1000",
-            "&chm=B,b6cfadaa,0,0,0&chd=t:" + ((rating * 20) - 10) + ".0," + (rating * 20) + ".0"].join("")
+            "?cht=lc:nda&chs=70x15&chco=647b5c&chds=120",
+            "&chm=B,b6cfadaa,0,0,0&chd=t:" + (rating * 20) + ".0," + (rating * 20) + ".0"].join("")
         ]
 
         return `

@@ -274,14 +274,14 @@ module.exports = {
                 i = points.length
             }
             polyline.push([
-                chartXStart + ((chartXSize / updates) * i),
-                chartYSize - ((p / scale) * chartYSize) + chartYStart
+                (chartXStart + ((chartXSize / updates) * i)).toFixed(2),
+                (chartYSize - ((p / scale) * chartYSize) + chartYStart).toFixed(2)
             ].join(","))
             i++
             if(i == 1) {
                 firstLine = [
-                    chartXStart,
-                    chartYSize - ((p / scale) * chartYSize) + chartYStart
+                    (chartXStart).toFixed(2),
+                    (chartYSize - ((p / scale) * chartYSize) + chartYStart).toFixed(2)
                 ].join(",")
             }
         })
@@ -382,6 +382,10 @@ module.exports = {
                 let x = chartXStart + ((chartXSize / 100) * c.p)
                 let lineYStart = chartYStart + 20
                 let tY = Math.floor(c.p / 100 * updates)
+                try {
+                    polyline[tY].split(",")[1]
+                }
+                catch(error) {polyline[tY] = polyline[tY].join()}
                 let tp = polyline[tY].split(",")[1]
                 let lineYEnd = parseInt(tp) - 3
                 let lines = []

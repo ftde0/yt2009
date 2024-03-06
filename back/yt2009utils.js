@@ -80,6 +80,7 @@ module.exports = {
                         "authorAvatar": m.author.avatarThumbnailUrl,
                         "authorName": m.author.displayName.replace("@", ""),
                         "authorUrl": "/channel/" + m.author.channelId,
+                        "authorId": m.author.channelId,
                         "content": content,
                         "time": comment_flags.includes("fake_comment_dates")
                                 ? gen_fake_date()
@@ -208,6 +209,8 @@ module.exports = {
                                     .authorThumbnail.thumbnails[1].url,
                     "authorName": authorName,
                     "authorUrl": authorUrl,
+                    "authorId": comment_path_short.authorEndpoint
+                                .browseEndpoint.browseId,
                     "content": commentContent.split("\n\n").join("<br>"),
                     "time": comment_flags.includes("fake_comment_dates")
                             ? gen_fake_date()

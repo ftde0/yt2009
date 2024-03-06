@@ -3676,6 +3676,7 @@ app.get("/insight_ajax", (req, res) => {
                 let actualInsights = []
                 let audienceAges;
                 let audienceCountries;
+                let chartData = ["0.0", "100.0"]
 
                 let alph = ["A", "B", "C", "D"]
                 insights.forEach(i => {
@@ -3683,6 +3684,8 @@ app.get("/insight_ajax", (req, res) => {
                         audienceAges = i
                     } else if(i.type == "audience-countries") {
                         audienceCountries = i;
+                    } else if(i.type == "chart-data") {
+                        chartData = i.value
                     } else {
                         actualInsights.push(i)
                     }
@@ -3727,13 +3730,18 @@ app.get("/insight_ajax", (req, res) => {
                 linksHTML += "</table>"
 
                 // render view chart
+                let chxr = (Math.floor(bareViews / 1000) * 1000)
+                if(bareViews < 1000) {
+                    chxr = bareViews;
+                }
                 let chartLink = [
                     "/chart?cht=lc:nda&chs=593x110",
                     "&chco=647b5c",
                     "&chg=0,-1,1,1&chxt=y,x",
                     "&chxs=0N*s*%20,333333,10|1,333333,10",
                     "&chxl=1:|" + date1 + "|" + date2 + "|" + date3,
-                    "&chxp=1,5,50,95&chxr=0,0," + (Math.floor(bareViews / 1000) * 1000) + "|1,0,100&chd=t:0.0,100.0",
+                    "&chxp=1,5,50,95&chxr=0,0," + chxr + "|1,0,100&chd=t:",
+                    chartData.join(),
                     "&chm=B,b6cfadaa,0,0,0"
                 ].join("")
                 for(let l in chartPercentages) {
@@ -3923,6 +3931,21 @@ app.get("/player_204", (req, res) => {
 })
 app.get("/media/iviv", (req, res) => {
     res.redirect("/media/iviv/iv3_edit_module.swf")
+})
+app.post("/annotations_auth/update2", (req, res) => {
+    let annotations = ""
+    try {
+        annotations = req.body.toString()
+        annotations = annotations.split("<updatedItems>")[1].split("</updatedItems>")[0]
+    }
+    catch(error) {}
+    res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
+    ${annotations}
+    </annotations></document>`)
+})
+app.get("/auth/read2", (req, res) => {
+    res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
+    </annotations></document>`)
 })
 
 /*
