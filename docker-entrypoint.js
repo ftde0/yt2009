@@ -51,7 +51,7 @@ if(process.env.YT2009_ENV === 'dev' || process.env.YT2009_ENV === 'prod') {
 
 // set ip
 // no simple way to verify validity afaik, will need to trust the user on this one
-if(process.env.YT2009_PUBLIC) {
+if(process.env.YT2009_IP) {
     cfg.ip = process.env.YT2009_IP;
 }
 
