@@ -132,30 +132,69 @@ module.exports = {
             return;
         }
         data.name = r.metadata.channelMetadataRenderer.title
-        data.id = r.header.c4TabbedHeaderRenderer.channelId
-        data.url = r.metadata.channelMetadataRenderer.channelUrl
-        if(r.header.c4TabbedHeaderRenderer.channelHandleText) {
-            data.handle = r.header.c4TabbedHeaderRenderer
-                           .channelHandleText.runs[0].text
-        }
         data.properties = {
             "name": r.metadata.channelMetadataRenderer.title,
-            "subscribers": r.header.c4TabbedHeaderRenderer.subscriberCountText
-                         ? r.header.c4TabbedHeaderRenderer.subscriberCountText
-                                   .simpleText.replace(" subscribers", "")
-                         : "",
             "description": r.metadata.channelMetadataRenderer.description
                             .split("\n").join("<br>") || ""
         }
-        data.videos = []
-        try {
-            data.videoCount = r.header.c4TabbedHeaderRenderer
-                               .videosCountText.runs[0].text
+        // recently, an A/B test was launched that doesn't use
+        // c4TabbedHeaderRenderer which was used for a long time before that.
+        // the following code mitigation could have been simpler
+        // but i want to keep it readable.
+        let useViewmodelParse = false;
+        if(r.header.pageHeaderRenderer) {
+            useViewmodelParse = true
         }
-        catch(error) {}
+        if(useViewmodelParse) {
+            data.id = r.metadata.channelMetadataRenderer.channelUrl
+                       .split("channel/")[1]
+
+            // channel metadata
+            let metadataParts = []
+            try {
+                r.header.pageHeaderRenderer.content.pageHeaderViewModel
+                .metadata.contentMetadataViewModel.metadataRows[0].metadataParts
+                .forEach(m => {
+                    metadataParts.push(m.text.content)
+                })
+            }
+            catch(error) {}
+
+            metadataParts.forEach(m => {
+                // handle
+                if(m.startsWith("@")) {
+                    data.handle = m;
+                }
+                // subscriber count
+                if(m.includes(" subscriber")) {
+                    data.properties.subscribers = m.split(" ")[0]
+                }
+                // video count
+                if(m.includes(" video")) {
+                    data.videoCount = m.split(" ")[0]
+                }
+            })
+        } else {
+            data.id = r.header.c4TabbedHeaderRenderer.channelId
+            if(r.header.c4TabbedHeaderRenderer.channelHandleText) {
+                data.handle = r.header.c4TabbedHeaderRenderer
+                               .channelHandleText.runs[0].text
+            }
+            if(r.header.c4TabbedHeaderRenderer.subscriberCountText) {
+                let sub = r.header.c4TabbedHeaderRenderer
+                           .subscriberCountText.replace(" subscribers", "")
+                data.properties.subscribers = sub;
+            }
+            try {
+                data.videoCount = r.header.c4TabbedHeaderRenderer
+                                   .videosCountText.runs[0].text
+            }
+            catch(error) {}
+        }
+        data.url = r.metadata.channelMetadataRenderer.channelUrl
+        data.videos = []
 
         // fetch videos tab
-        let videosTabAvailable = false;
         data.tabParams = {}
         const popularVids = require("./proto/popularVidsChip_pb")
         let vidsContinuation = new popularVids.vidsChip()
@@ -288,7 +327,17 @@ module.exports = {
 
             // final things, dominant color and such
             // save avatar
-            let avatar = r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url
+            let avatar = "";
+            try {
+                if(useViewmodelParse) {
+                    avatar = r.header.pageHeaderRenderer.content
+                              .pageHeaderViewModel.image.decoratedAvatarViewModel
+                              .avatar.avatarViewModel.image.sources[0].url // jes
+                } else {
+                    avatar = r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url
+                }
+            }
+            catch(error) {}
             let fname = avatar.split("/")[avatar.split("/").length - 1]
             if(!fs.existsSync(`../assets/${fname}.png`)) {
                 yt2009utils.saveAvatar(avatar)
@@ -297,7 +346,13 @@ module.exports = {
 
             // get the dominant color from the banner
             try {
-                let banner = r.header.c4TabbedHeaderRenderer.banner.thumbnails[0].url
+                let banner = ""
+                if(useViewmodelParse) {
+                    banner = r.header.pageHeaderRenderer.content.pageHeaderViewModel
+                              .banner.imageBannerViewModel.image.sources[0].url
+                } else {
+                    banner = r.header.c4TabbedHeaderRenderer.banner.thumbnails[0].url
+                }
                 let cId = data.id.replace("UC", "")
                 data.banner = cId + "_banner.jpg"
                 data.newBanner = cId + "_uniq_banner.jpg"
@@ -1705,11 +1760,28 @@ module.exports = {
                         "method": "POST",
                         "mode": "cors"
                     }).then(r => {r.json().then(r => {
-                        try {
+                        let useViewmodelParse = false;
+                        if(r.header.pageHeaderRenderer) {
+                            useViewmodelParse = true
+                        }
+                        if(useViewmodelParse) {
+                            let metadataParts = []
+                            r.header.pageHeaderRenderer.content.pageHeaderViewModel
+                            .metadata.contentMetadataViewModel.metadataRows[0].metadataParts
+                            .forEach(m => {
+                                metadataParts.push(m.text.content)
+                            })
+
+                            metadataParts.forEach(m => {
+                                // handle
+                                if(m.startsWith("@")) {
+                                    userHandle = m;
+                                }
+                            })
+                        } else {
                             userHandle = r.header.c4TabbedHeaderRenderer
                                           .channelHandleText.runs[0].text
                         }
-                        catch(error) {}
                         compare()
                     })})
                 }
