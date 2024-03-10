@@ -182,7 +182,8 @@ module.exports = {
             }
             if(r.header.c4TabbedHeaderRenderer.subscriberCountText) {
                 let sub = r.header.c4TabbedHeaderRenderer
-                           .subscriberCountText.replace(" subscribers", "")
+                           .subscriberCountText.simpleText
+                           .replace(" subscribers", "")
                 data.properties.subscribers = sub;
             }
             try {
