@@ -93,6 +93,12 @@ module.exports = {
                 // get /videos param (if exists)
                 // fetch videos tab
                 let videosTabAvailable = false;
+                if(!r.contents
+                || !r.contents.twoColumnBrowseResultsRenderer) {
+                    videosTabAvailable = false;
+                    callback([])
+                    return;
+                }
                 r.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
                     if(tab.tabRenderer
                     && tab.tabRenderer.title.toLowerCase() == "videos") {
@@ -223,7 +229,10 @@ module.exports = {
                             "id": video.videoId,
                             "title": video.title.runs[0].text,
                             "views": video.viewCountText.simpleText,
-                            "upload": video.publishedTimeText.simpleText,
+                            "upload": video.publishedTimeText
+                                      && video.publishedTimeText.simpleText
+                                      ? video.publishedTimeText.simpleText
+                                      : "",
                             "thumbnail": "//i.ytimg.com/vi/"
                                         + video.videoId
                                         + thumbUrl,

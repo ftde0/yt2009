@@ -604,7 +604,7 @@ module.exports = {
     },
     "playnavVideo": function(video, video_index, views, upload_date, ratings, protocol) {
         return `
-        <div class="playnav-item playnav-video ${video_index == 0 ? "selected playnav-item-selected" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this)">
+        <div class="playnav-item playnav-video ${video_index == 0 ? "selected playnav-item-selected" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this);return false;">
             <div id="playnav-video-play-${video.id}-selector" class="selector"></div>
             <div class="content">
                 <div class="playnav-video-thumb link-as-border-color">
@@ -660,7 +660,7 @@ module.exports = {
     </div>`,
     "playnavPlaylist": function(playlist, protocol, useLanguage) {
         return `
-        <div class="playnav-item playnav-playlist" onclick="openPlaylist(this)" data-id="${playlist.id}">
+        <div class="playnav-item playnav-playlist" onclick="openPlaylist(this);return false;" data-id="${playlist.id}">
             <div class="content">
                 <div class="playnav-video-thumb link-as-border-color playlist-thumbnail">
                     <a class="video-thumb-90 no-quicklist" href="#"><img src="${playlist.thumbnail.replace("http", protocol)}" class="vimg90 yt-uix-hovercard-target"></a>

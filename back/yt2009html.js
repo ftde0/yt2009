@@ -119,7 +119,7 @@ module.exports = {
         let waitForOgv = false;
 
         // if firefox<=25 wait for ogg, otherwise callback mp4
-        if(userAgent.includes("Firefox/")) {
+        if((userAgent || "").includes("Firefox/")) {
             let ffVersion = parseInt(userAgent.split("Firefox/")[1].split(" ")[0])
             if(ffVersion <= 25 && !useFlash) {
                 waitForOgv = true;

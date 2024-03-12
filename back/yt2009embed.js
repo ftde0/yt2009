@@ -295,6 +295,13 @@ module.exports = function(req, res) {
     }
 
     // download the video if needed, also convert to ogv in case of ff<=25
+    if(!waitForOgv) {
+        res.send(code.replace(
+            "mp4_files",
+            templates.embedVideoSources(id)
+        ))
+        return;
+    }
     if(fs.existsSync(`../assets/${id}.mp4`)
     && !fs.existsSync(`../assets/${id}.ogg`)
     && waitForOgv) {
@@ -309,6 +316,9 @@ module.exports = function(req, res) {
     if(!fs.existsSync(`../assets/${id}.mp4`)) {
         yt2009exports.updateFileDownload(id, 1)
         utils.saveMp4(id, (path) => {
+            if(path.message) {
+                yt2009exports.updateFileDownload(id, 3)
+            }
             yt2009exports.updateFileDownload(id, 2)
             if(waitForOgv) {
                 child_process.exec(templates.createFffmpegOgg(id),
@@ -319,7 +329,7 @@ module.exports = function(req, res) {
                     ))
                 })
             }
-        })
+        }, true)
         if(!waitForOgv) {
             res.send(code.replace(
                 "mp4_files",

@@ -954,7 +954,7 @@ module.exports = {
                     .split(">").join("&gt;")
     },
 
-    "saveMp4": function(id, callback) {
+    "saveMp4": function(id, callback, extended) {
         let targetFilePath = `../assets/${id}.mp4`
         let writeStream = fs.createWriteStream(targetFilePath)
         writeStream.on("finish", () => {
@@ -965,10 +965,14 @@ module.exports = {
             "quality": 18
         })
         .on("error", (error) => {
-             callback(false)
-             writeStream.close()
-             return;
-         })
+            if(extended) {
+                callback(error)
+            } else {
+                callback(false)
+            }
+            writeStream.close()
+            return;
+        })
         .pipe(writeStream)
     },
 

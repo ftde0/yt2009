@@ -106,6 +106,10 @@ module.exports = {
 
     // handling /get_video (flv)
     "get_flv": function(req, res) {
+        if(!req.query.video_id) {
+            res.sendStatus(400)
+            return;
+        }
         if(req.query.fmt == 5
         || req.query.video_id.includes("/mp4")
         || (req.headers.referer || "").includes("/mp4")
@@ -113,6 +117,10 @@ module.exports = {
             req.query.video_id = req.query.video_id.replace("/mp4", "")
             res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
             return;
+        }
+        let v = req.query.video_id.replace("/mp4", "")
+        if(yt2009main.get_cache_video(v).restricted) {
+            res.redirect("/tvhtml5simply?v=" + v)
         }
         if(req.query.noflv == 1) {
             res.send("")

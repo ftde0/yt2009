@@ -1093,8 +1093,15 @@ app.get("/channel_fh264_getvideo", (req, res) => {
         })
         return;
     }
-    if(!fs.existsSync("../assets/" + req.query.v + ".mp4")) {
+    if(!fs.existsSync("../assets/" + req.query.v + ".mp4")
+    || (fs.existsSync("../assets/" + req.query.v + ".mp4")
+    && fs.statSync("../assets/" + req.query.v + ".mp4").size < 5)) {
         yt2009_utils.saveMp4(req.query.v, (vid) => {
+            if(vid.message
+            && vid.message.includes("410")) {
+                res.redirect("/tvhtml5simply?v=" + req.query.v)
+                return;
+            }
             if(!vid) {
                 res.sendStatus(404)
                 return;
@@ -1104,7 +1111,7 @@ app.get("/channel_fh264_getvideo", (req, res) => {
                 vidLink += ".mp4"
             }
             try {res.redirect(vidLink)}catch(error) {}
-        })
+        }, true)
     } else {
         try {res.redirect("/assets/" + req.query.v + ".mp4")}catch(error){}
     }
@@ -3255,7 +3262,13 @@ app.get("/nearyou", (req, res) => {
     let query = "a before:2012"
     let finishHTML = ""
     let videos = []
+    let calls = 0;
     function createSearch() {
+        if(calls > 4) {
+            renderVids()
+            return;
+        }
+        calls++
         yt2009_search.get_search(query, "", {
             "location": regionParam,
             "page": Math.floor(Math.random() * 4) + 1
@@ -3301,6 +3314,7 @@ app.get("/nearyou", (req, res) => {
             let l = 0
             while(randomVids.includes(v) && l < 20) {
                 v = videos[Math.floor(Math.random() * videos.length)]
+                l++
             }
             randomVids.push(v)
         }
@@ -3946,6 +3960,161 @@ app.post("/annotations_auth/update2", (req, res) => {
 app.get("/auth/read2", (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
     </annotations></document>`)
+})
+
+/*
+======
+login_required via tvhtml5simply
+======
+*/
+let simplyCachedPlayers = {}
+app.get("/tvhtml5simply", (req, res) => {
+    if(!req.query.v) {
+        res.sendStatus(400)
+        return;
+    }
+    let id = req.query.v.substring(0, 11)
+                .replace(/[^a-zA-Z0-9+\-+_]/g, "")
+    if(fs.existsSync("../assets/" + id + ".mp4")
+    && fs.statSync("../assets/" + id + ".mp4").size > 5) {
+        res.redirect("/assets/" + id + ".mp4")
+        return;
+    }
+
+    // range options for seeking through the video
+    let overrideRangeStart = false;
+    let overrideRangeEnd = false;
+    if(req.headers.range
+    && !req.headers.range.includes("=0-")) {
+        overrideRangeStart = parseInt(
+            req.headers.range.split("=")[1].split("-")[0]
+        )
+        if(req.headers.range.split("-")[1]
+        && req.headers.range.split("-")[1].length > 0) {
+            overrideRangeEnd = parseInt(
+                req.headers.range.split("-")[1]
+            )
+        } else {
+            overrideRangeEnd = overrideRangeStart + 100000
+        }
+    }
+
+    // needed stuff~!
+    const fetch = require("node-fetch")
+    let ua = yt2009_constant.headers["user-agent"]
+    res.status(206)
+    res.set("content-type", "video/mp4")
+    
+    // handle googlevideo requests
+    function handlePlayer(player) {
+        let url = player.streamingData.formats[0].url
+        let partSize = 100000
+        let fileParts = []
+        let lastSentPart = 0
+        // with range options
+        if(overrideRangeStart) {
+            function p() {
+                let range = overrideRangeStart + (lastSentPart * partSize) + lastSentPart
+                let rangeEnd = range + partSize
+                fetch(url, {
+                    "headers": {
+                        "range": "bytes=" + range + "-" + rangeEnd,
+                        "user-agent": ua
+                    }
+                }).then(r => {r.buffer().then(rr => {
+                    let length = r.headers.get("content-range").split("/")[1]
+                    console.log(r.headers.get("content-range").replace(" ", "="))
+                    try {
+                        //console.log(r.headers.get("content-range"))
+                        res.set("content-range", r.headers.get("content-range").replace(" ", "="))
+                    }
+                    catch(error) {}
+                    res.write(rr)
+                    lastSentPart++
+                    p()
+                })})
+            }
+            p()
+            return;
+        }
+        // without range options
+        function requestPart(p) {
+            let t = p
+            let partStartB = t * partSize
+            partStartB += t
+            fetch(url, {
+                "headers": {
+                    "range": "bytes=" + (partStartB) + "-" + (partStartB + partSize),
+                    "user-agent": ua
+                }
+            }).then(r => {r.buffer().then(rr => {
+                if(rr.length < 1) {
+                    res.end()
+                    onAllDone()
+                    return;
+                }
+                fileParts[t] = rr
+                try {
+                    res.set("content-range", r.headers.get("content-range"))
+                }
+                catch(error) {}
+                onPartGot(t)
+                requestPart(t + 1)
+            })})
+        }
+        function onPartGot(t) {
+            if(t == lastSentPart) {
+                res.write(fileParts[t])
+                lastSentPart++
+            }
+        }
+        function onAllDone() {
+            let h = Buffer.alloc(0)
+            fileParts.forEach(f => {
+                h = Buffer.concat([h, f])
+            })
+            fs.writeFile("../assets/" + id + ".mp4", h, (e) => {})
+        }
+        requestPart(0)
+    }
+    // get video URL from cache or through an innertube request
+    if(simplyCachedPlayers[id]
+    && Date.now() - simplyCachedPlayers[id].cacheAge < 3600000) {
+        handlePlayer(simplyCachedPlayers[id])
+        return;
+    }
+    fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
+        "headers": {
+            "accept": "*\/*",
+            "accept-language": "en-US,en;q=0.9,pl;q=0.8",
+            "content-type": "application/json",
+            "cookie": "",
+            "x-goog-authuser": "0",
+            "x-origin": "https://www.youtube.com/",
+			"user-agent": ua
+        },
+        "referrer": "https://www.youtube.com/watch?v=" + id,
+        "referrerPolicy": "origin-when-cross-origin",
+        "body": JSON.stringify({
+            "context": {
+            "client": {
+                "hl": "en",
+                "clientName": "TVHTML5_SIMPLY_EMBEDDED_PLAYER",
+                "clientVersion": "1.0",
+                "mainAppWebInfo": {
+                    "graftUrl": "/watch?v=" + id
+                }
+            }
+            },
+            "videoId": id
+        }),
+        "method": "POST",
+        "mode": "cors"
+    }).then(r => {r.json().then(r => {
+        handlePlayer(r)
+        simplyCachedPlayers[id] = r
+        simplyCachedPlayers[id].cacheAge = Date.now()
+    })})
 })
 
 /*
