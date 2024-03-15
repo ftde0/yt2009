@@ -85,15 +85,12 @@ module.exports = {
         if(creatorName.startsWith("by ")) {
             creatorName = creatorName.replace("by ", "")
         }
-        let thumbUrl = "hqdefault.jpg"
-        if(flags.includes("autogen_thumbnails")) {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(id, flags)
         return `<div class="video-entry" data-id="${id}">
                     <div class="v90WideEntry">
                         <div class="v90WrapperOuter">
                             <div class="v90WrapperInner">
-                                <a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" class="video-thumb-link" rel="nofollow"><img title="${title.split('"').join("&quot;")}" thumb="${protocol}://i.ytimg.com/vi/${id}/${thumbUrl}" src="${protocol}://i.ytimg.com/vi/${id}/${thumbUrl}" class="vimg90" qlicon="${id}" alt="${title.split('"').join("&quot;")}}" ${flags.includes("/wayback") ? `onload="checkExists(this)"` : ""}></a>
+                                <a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" class="video-thumb-link" rel="nofollow"><img title="${title.split('"').join("&quot;")}" thumb="${thumbUrl}" src="${thumbUrl}" class="vimg90" qlicon="${id}" alt="${title.split('"').join("&quot;")}}" ${flags.includes("/wayback") ? `onload="checkExists(this)"` : ""}></a>
         
                                 <div class="addtoQL90"><a href="#" ql="${id}" title="lang_add_to_ql"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(creatorName)}')"></button></a>
                                     <div class="hid quicklist-inlist"><a href="#">lang_ql_added</a></div>
@@ -114,17 +111,13 @@ module.exports = {
                     <div class="video-clear-list-left"></div>
                 </div>`;
     },
-    "videoResponse": function(id, time, uploaderName, uploaderUrl, protocol) {
-        let thumbUrl = "hqdefault.jpg"
-        if(id.includes("+autogen")) {
-            thumbUrl = "1.jpg"
-            id = id.replace("+autogen", "")
-        }
+    "videoResponse": function(id, time, uploaderName, uploaderUrl, req) {
+        let thumbUrl = utils.getThumbUrl(id, req)
         return `
                 <div class="video-bar-item">
                     <div class="v90WideEntry">
                         <div class="v90WrapperOuter">
-                            <div class="v90WrapperInner"><a href="/watch?v=${id}" class="video-thumb-link" rel="nofollow"><img src="${protocol}://i.ytimg.com/vi/${id}/${thumbUrl}" class="vimg90"></a>
+                            <div class="v90WrapperInner"><a href="/watch?v=${id}" class="video-thumb-link" rel="nofollow"><img src="$${thumbUrl}" class="vimg90"></a>
                                 <div class="video-time" style="margin-top: -28px;"><a href="/watch?v=${id}" rel="nofollow">${time}</a></div>
                             </div>
                         </div>
@@ -240,12 +233,8 @@ module.exports = {
     },
     "cpsSearchEnd": `
 </feed>`,
-    "searchVideo": function(id, title, description, authorUrl, authorName, uploadDate, viewCount, time, protocol, browser) {
-        let thumbUrl = "hqdefault.jpg"
-        if(browser.includes("+autogen")) {
-            browser = browser.replace("+autogen", "")
-            thumbUrl = "1.jpg"
-        }
+    "searchVideo": function(id, title, description, authorUrl, authorName, uploadDate, viewCount, time, protocol, browser, flags) {
+        let thumbUrl = utils.getThumbUrl(id, flags)
         return `
         <div class="video-cell" data-id="${id}">
             <div class="video-entry">
@@ -253,7 +242,7 @@ module.exports = {
                     <div class="v120WrapperOuter">
                         <div class="v120WrapperInner">
                             <a id="video-title-results" href="/watch?v=${id}" rel="nofollow">
-                                <img title="${title.split('"').join("&quot;")}" src="${protocol}://i.ytimg.com/vi/${id}/${thumbUrl}" class="vimg120">
+                                <img title="${title.split('"').join("&quot;")}" src="${thumbUrl}" class="vimg120">
                             </a>
                             <div id="quicklist-icon-${id}" class="addtoQL90"><a id="add-to-quicklist-${id}" href="#" ql="${id}" title="lang_add_to_ql"><button class="master-sprite QLIconImg ${browser == "firefox" ? "firefox" : ""} title="" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(authorName)}')"></button></a>
                                 <div class="hid quicklist-inlist"><a href="#">lang_ql_added</a></div>
@@ -407,10 +396,7 @@ module.exports = {
 	</div>
     `,
     "videoCell": function(id, title, protocol, uploaderName, uploaderUrl, views, flags, noLang) {
-        let thumbUrl = "default.jpg"
-        if(flags.includes("autogen_thumbnails")) {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(id, flags)
         let viewCount = noLang ? `lang_views_prefix${utils.countBreakup(utils.bareCount(views))}lang_views_suffix`
                       : views
         return `
@@ -419,7 +405,7 @@ module.exports = {
                 <div class="v120WideEntry">
                     <div class="v120WrapperOuter">
                         <div class="v120WrapperInner">
-                            <a class="video-thumb-link" href="/watch?v=${id}" rel="nofollow"><img title="${title.split("\"").join("&quot;")}" src="${protocol}://i.ytimg.com/vi/${id}/${thumbUrl}" onmouseover="videosPreview(this, '${id}')" onmouseout="removeVideoPreview()"></a>
+                            <a class="video-thumb-link" href="/watch?v=${id}" rel="nofollow"><img title="${title.split("\"").join("&quot;")}" src="${thumbUrl}" onmouseover="videosPreview(this, '${id}')" onmouseout="removeVideoPreview()"></a>
 
                             <div class="addtoQL90"><a href="#" ql="${id}" title="${noLang ? "lang_add_to_ql": "Add Video to Quickist"}"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(uploaderName.split(" ").join(""))}')"></button></a>
                                 <div class="hid quicklist-inlist"><a href="#">${noLang ? "lang_ql_added" : "Added to Quicklist"}</a></div>
@@ -509,14 +495,11 @@ module.exports = {
                         </div>
     `,
     "endscreenVideo": function(id, protocol, length, title, endscreen_version, creatorUrl, creatorName, views, rating, flags) {
-        let thumbUrl = "hqdefault.jpg"
-        if(flags.includes("autogen_thumbnails")) {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(id, flags)
         return `
         <div class="endscreen-video" onclick="videoNav('${id}')">
             <div class="endscreen-video-thumbnail">
-                <img src="${protocol}://i.ytimg.com/vi/${id}/${thumbUrl}" width="93" height="70"/>
+                <img src="${thumbUrl}" width="93" height="70"/>
                 ${endscreen_version !== 1 ? `<div class="video-time" style="float: right;"><a href="">${utils.seconds_to_time(length)}</a></div>` : ""}
             </div>
             <div class="endscreen-video-info">
@@ -1278,16 +1261,12 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 </div>
                 <script src="/assets/site-assets/homepage-recommended.js"></script>`,
     "recommended_videoCell": function(video, req) {
-        let thumbUrl = "default.jpg"
-        if(req.headers.cookie
-        && req.headers.cookie.includes("autogen_thumbnails")) {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(video.id, req)
         return `<div class="video-cell" style="width:24.5%" data-id="${video.id}">
         <div class="video-entry yt-uix-hovercard">
             <div class="v120WideEntry">
                 <div class="v120WrapperOuter">
-                    <div class="v120WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="${video.title.split(`"`).join(`&quot;`)}" src="//i.ytimg.com/vi/${video.id}/${thumbUrl}" class="vimg120 yt-uix-hovercard-target"></a>
+                    <div class="v120WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="${video.title.split(`"`).join(`&quot;`)}" src="${thumbUrl}" class="vimg120 yt-uix-hovercard-target"></a>
                         <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="lang_add_to_ql" onclick="addToQuicklist('${video.id}', '${video.title.split(`'`).join("&quot;").split(`"`).join("&quot;")}', '${utils.asciify(video.creatorName)}')"><button class="master-sprite QLIconImg" title=""></button></a>
                             <div class="hid quicklist-inlist"><a href="/my_quicklist">lang_ql_added_homepage</a></div>
                         </div>
@@ -1391,10 +1370,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         `
     }, `</td></tr></tbody>`],
     "listview_video": function(v, index, flags) {
-        let thumbUrl = "hqdefault.jpg"
-        if(flags.includes("autogen_thumbnail")) {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(v.id, flags)
         return `
     <tr id="video-${v.id}" class="video ${index % 2 == 0 ? "even" : "odd"}">
         <td class="column-check first"><input type="checkbox" value="${v.id}"></td>
@@ -1402,7 +1378,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <div class="video-panel">
                 <div class="video-details" style="margin: 0 0 10px 130px;">
                     <div class="video-image" style="position: absolute; margin-left: -130px;overflow: hidden;height: 78px;">
-                        <a class="video-thumb-120 no-quicklist" href="/watch?v=${v.id}"><img title="${v.title.split("\"").join("&quot;")}" src="//i.ytimg.com/vi/${v.id}/${thumbUrl}" class="vimg120 yt-uix-hovercard-target" style="margin-top: -6px" alt="${v.title.split("\"").join("&quot;")}"></a>
+                        <a class="video-thumb-120 no-quicklist" href="/watch?v=${v.id}"><img title="${v.title.split("\"").join("&quot;")}" src="${thumbUrl}" class="vimg120 yt-uix-hovercard-target" style="margin-top: -6px" alt="${v.title.split("\"").join("&quot;")}"></a>
                     </div>
                     <div class="video-title">
                         <div class="clipper">
@@ -1517,11 +1493,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 </div>`
     },
     "historyVideo": function(video, req) {
-        let thumbUrl = "hqdefault.jpg"
-        if(req.headers.cookie
-        && req.headers.cookie.includes("autogen_thumbnail")) {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(video.id, req)
         return `
                 <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">
                     <div style="float: left;">
@@ -1530,7 +1502,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                         </div>
                     </div>
                     <div style="float: left; width: 120px;">
-                        <a href="/watch?v=${video.id}" class="video-thumb"><img src="${req.protocol}://i.ytimg.com/vi/${video.id}/${thumbUrl}"/></a>
+                        <a href="/watch?v=${video.id}" class="video-thumb"><img src="${thumbUrl}"/></a>
                         <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
                         <div class="video-stats">
                             <div class="video-stat"><span class="stat-views">lang_userpage_views_prefix${video.views}</span></div>
@@ -1606,10 +1578,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             let username = at.replace("@", "")
             commentContent = atReply(username) + commentContent.replace(at, "")
         }
-        let thumbUrl = "hqdefault.jpg"
-        if(flags.includes("autogen_thumbnails")) {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(comment.video, flags)
         return `
     <div class="comment-result">
         <div class="comment-result-video">
@@ -1617,7 +1586,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 <div class="v90WrapperOuter">
                     <div class="v90WrapperInner">
                         <a href="/watch?v=${comment.video}" class="video-thumb-link" rel="nofollow">
-                            <img title="${comment.videoTitle || ""}" thumb="http://i.ytimg.com/vi/${comment.video}/${thumbUrl}" src="http://i.ytimg.com/vi/${comment.video}/${thumbUrl}" class="vimg90" alt="${comment.videoTitle || ""}">
+                            <img title="${comment.videoTitle || ""}" thumb="${thumbUrl}" src="${thumbUrl}" class="vimg90" alt="${comment.videoTitle || ""}">
                         </a>
                     </div>
                 </div>
@@ -2374,10 +2343,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         }
         viewCount = utils.countBreakup(viewCount) + " views"
 
-        let thumbUrl = "hqdefault.jpg"
-        if(flags.includes("autogen_thumbnails"))  {
-            thumbUrl = "1.jpg"
-        }
+        let thumbUrl = utils.getThumbUrl(video.id, flags)
         return `
         <div class="video-cell" data-id="${video.id}">
             <div class="feedmodule-smtitle-wrapper" style="margin-bottom: 0px;">
@@ -2391,7 +2357,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <div class="video-entry yt-uix-hovercard feedmodule-cmt-vid">
                 <div class="v90WideEntry">
                     <div class="v90WrapperOuter">
-                        <div class="v90WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="vititle" src="//i.ytimg.com/vi/${video.id}/${thumbUrl}" class="vimg90 yt-uix-hovercard-target"></a>
+                        <div class="v90WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="vititle" src="${thumbUrl}" class="vimg90 yt-uix-hovercard-target"></a>
                             <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="Add Video to QuickList" onclick="addToQuicklist('${video.id}', '${video.title.split('"').join("&quot;")}', '${author}')"><button class="master-sprite QLIconImg" title=""></button></a>
                                 <div class="hid quicklist-inlist"><a href="/my_quicklist">Added to <br> QuickList</a></div>
                             </div>

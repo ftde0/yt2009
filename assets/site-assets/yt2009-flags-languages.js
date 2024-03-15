@@ -50,7 +50,8 @@ var languageData_EN = {
         "global-login-simulate": "simulates a logged in user",
         "global-no-controls-fade": "disables video controls fade out",
         "global-annotation-redirect": "redirects all youtube.com links within annotations to yt2009",
-        "global-shows-tab": "shows a Shows tab (only for demo, doesn't actually work)"
+        "global-shows-tab": "shows a Shows tab (only for demo, doesn't actually work)",
+        "global-thumbnail-proxy": "routes thumbnails through yt2009 to fix them on networks that might block youtube."
     },
 
     "elements": {

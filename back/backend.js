@@ -380,7 +380,7 @@ app.post("/videoresponse_load", (req, res) => {
                     entry.time,
                     entry.author_name,
                     entry.author_url,
-                    req.protocol
+                    req
                 )}`
                 responseCount++;
             }
@@ -4115,6 +4115,39 @@ app.get("/tvhtml5simply", (req, res) => {
         simplyCachedPlayers[id] = r
         simplyCachedPlayers[id].cacheAge = Date.now()
     })})
+})
+
+/*
+======
+thumbnail proxy
+======
+*/
+let thumbnailProxyEndpoints = [
+    "/get_still.php",
+    "/thumb_proxy"
+]
+thumbnailProxyEndpoints.forEach(t => {
+    app.get(t, (req, res) => {
+        if(!req.query.video_id && !req.query.v) {
+            res.sendStatus(400)
+            return;
+        }
+        let id = req.query.video_id || req.query.v;
+        id = id.substring(0, 11)
+               .replace(/[^a-zA-Z0-9+\-+_]/g, "");
+        let thumbFile = "hqdefault.jpg"
+        if(req.headers.cookie
+        && req.headers.cookie.includes("autogen_thumbnails")) {
+            thumbFile = "1.jpg"
+        }
+        const fetch = require("node-fetch")
+        fetch("http://i.ytimg.com/vi/" + id + "/" + thumbFile, {
+            "headers": yt2009_constant.headers
+        }).then(r => {r.buffer().then(rr => {
+            res.set("content-type", "image/jpg")
+            res.send(rr)
+        })})
+    })
 })
 
 /*

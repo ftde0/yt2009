@@ -129,7 +129,7 @@ if(window.localStorage) {
     if(document.cookie.indexOf("autogen_thumbnail") !== -1) {
         thumbUrl = "1.jpg"
     }
-
+    
     var path = location.pathname.split("?")[0].split("&")[0]
     switch(path) {
         case "/my_favorites": {
@@ -173,6 +173,12 @@ if(window.localStorage) {
             current_page_item_count = 0;
             prepNewPage();
         }
+        var fullThumbUrl = location.protocol + '//i.ytimg.com/vi/'
+                        + video.id + '/' + thumbUrl
+        if(document.cookie.indexOf("thumbnail_proxy") !== -1) {
+            fullThumbUrl = "/thumb_proxy?v=" + video.id
+        }
+
         document.querySelector(".videos-page-0 td").innerHTML = '\
     <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">\
         <div style="float: left;">\
@@ -181,7 +187,7 @@ if(window.localStorage) {
             </div>\
         </div>\
         <div style="float: left; width: 120px;">\
-            <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + location.protocol + '//i.ytimg.com/vi/' + video.id + '/' + thumbUrl + '"/></a>\
+            <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + fullThumbUrl + '"/></a>\
             <a href="/watch?v=' + video.id + '" class="title" style="display: block; color: #03c;">' + video.title + '</a>\
             <div class="video-stats">\
                 <div class="video-stat' + (path == "/watch_queue" ? " hid" : "") + '"><span class="stat-views">' + viewPrefix + video.views + '</span></div>\
@@ -378,6 +384,11 @@ function show_playlist_localstorage(playlist) {
             }
             catch(error) {}
         }
+        var fullThumbUrl = location.protocol + '//i.ytimg.com/vi/'
+                            + video.id + '/' + thumbUrl
+        if(document.cookie.indexOf("thumbnail_proxy") !== -1) {
+            fullThumbUrl = "/thumb_proxy?v=" + video.id
+        }
         playlistVideosHTML += '\
         <tr class="video ' + (playlistVideoIndex % 2 == 0 ? "even" : "odd") + '" data-videoid="' + video.id + '">\
             <td id="heading-check" class="first heading">\
@@ -388,7 +399,7 @@ function show_playlist_localstorage(playlist) {
             </td>\
             <td id="heading-title" class="heading">\
                 <button title="" class="master-sprite"></button>\
-                <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="//i.ytimg.com/vi/' + video.id + '/' + thumbUrl + '"></a>\
+                <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="' + fullThumbUrl + '"></a>\
                 <a href="/watch?v=' + video.id + '" class="video-title">' + video.title + '</a>\
             </td>\
             <td id="heading-time" class="heading">\

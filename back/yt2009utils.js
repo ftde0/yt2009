@@ -1338,5 +1338,28 @@ module.exports = {
         }
 
         return unduplicateKeywordList;
+    },
+    
+    "getThumbUrl": function(id, req) {
+        if(typeof(req) == "string") {
+            req = {
+                "headers": {
+                    "cookie": req
+                }
+            };
+        }
+        let file = "hqdefault.jpg"
+        if(req.headers
+        && req.headers.cookie
+        && req.headers.cookie.includes("autogen_thumbnails")) {
+            file = "1.jpg"
+        }
+        let fullUrl = "//i.ytimg.com/vi/" + id + "/" + file
+        if(req.headers
+        && req.headers.cookie
+        && req.headers.cookie.includes("thumbnail_proxy")) {
+            fullUrl = "/thumb_proxy?v=" + id
+        }
+        return fullUrl;
     }
 }

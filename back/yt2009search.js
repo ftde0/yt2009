@@ -486,11 +486,6 @@ module.exports = {
                         cancelled = true;
                     }
 
-                    // autogen_thumbnails
-                    if(flags.includes("autogen_thumbnails")) {
-                        browser += "+autogen"
-                    }
-
                     try {
                         uploadDate = yt2009utils.relativeTimeCreate(
                             uploadDate, yt2009languages.get_language(req)
@@ -513,7 +508,8 @@ module.exports = {
                             viewCount,
                             video.time,
                             protocol,
-                            browser
+                            browser,
+                            flags
                         )
                     }
 

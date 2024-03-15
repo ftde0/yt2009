@@ -1691,17 +1691,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             endscreen_queue.forEach(video => {
                 if(related_index <= 7
                 && encodeURIComponent(rv_url).length < 1700) {
-                    let thumbUrl = "hqdefault.jpg"
-                    if(flags.includes("autogen_thumbnails")) {
-                        thumbUrl = "hq1.jpg"
-                    }
+                    let thumbUrl = yt2009utils.getThumbUrl(video.id, req)
                     rv_url += `&rv.${related_index}.title=${
                         encodeURIComponent(video.title)
                     }`
                     rv_url += `&rv.${related_index}.thumbnailUrl=${
-                        encodeURIComponent(
-                            `http://i.ytimg.com/vi/${video.id}/${thumbUrl}`
-                        )
+                        encodeURIComponent(thumbUrl)
                     }`
                     rv_url += `&rv.${related_index}.length_seconds=${
                         video.length

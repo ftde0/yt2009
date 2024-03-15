@@ -43,8 +43,8 @@ module.exports = {
         if(req.query.chs
         && req.query.chs.includes("x")) {
             size = req.query.chs.split("x")
-            size[0] = parseInt(size[0])
-            size[1] = parseInt(size[1])
+            size[0] = Math.min(parseInt(size[0]), 1000)
+            size[1] = Math.min(parseInt(size[1]), 1000)
         }
 
         let bg = "#FFFFFF"
@@ -172,13 +172,14 @@ module.exports = {
         if(sizes.length == 0) {sizes = [0]}
 
         // place X text
-        let xStart = ((sizes[0] / 100) + 0.04) * size[0]
-        let xSize = (1 - (sizes[0] / 100) - 0.15) * size[0]
-        let xYPlacement = 0.97 * size[1]
+        let xStart = ((sizes[0] / 100) + 0.01) * size[0]
+        let xSize = (1 - (sizes[0] / 100) - 0.04) * size[0]
+        let xYPlacement = 0.99 * size[1]
         xText.forEach(d => {
             if(d.t) {
                 d.t = this.s(d.t)
             }
+            console.log(d)
             command.push(
                 `-draw "text ${xStart + ((xSize / 100) * d.p)},${xYPlacement} '${d.t}'"`
             )
@@ -285,8 +286,8 @@ module.exports = {
                 ].join(",")
             }
         })
-        polyline.push(chartXStart + chartXSize, chartYStart + chartYSize)
-        
+        polyline.push([chartXStart + chartXSize, chartYStart + chartYSize].join(","))
+
         command.push(
             `-draw "polyline ${polyline.join(" ")}"`
         )
@@ -323,7 +324,11 @@ module.exports = {
 
                 // polyline mid placements
                 while(i <= polylineLength) {
-                    let tp = polyline[iStartPlacement + i]
+                    let tp = polyline[iStartPlacement + i].toString()
+                    if(!tp.includes(",")) {
+                        i++
+                        return;
+                    }
                     let polylineX = tp.split(",")[0]
                     let polylineY = parseFloat(tp.split(",")[1]) + 1.5
                     fbPolyline.push(polylineX + "," + polylineY)
@@ -387,7 +392,7 @@ module.exports = {
                 }
                 catch(error) {polyline[tY] = polyline[tY].join()}
                 let tp = polyline[tY].split(",")[1]
-                let lineYEnd = parseInt(tp) - 3
+                let lineYEnd = parseInt(tp)
                 let lines = []
                 if(textCenter == x
                 || Math.abs(textCenter - x) <= 3) {

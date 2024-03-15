@@ -86,22 +86,6 @@ do you want to use SSL on a second port?`)
             cfg.tokens = ["*"]
         }
     }
-
-    // public
-    let public = ""
-    console.log(`
-
-set your instance as a public instance? enter its publicly-reachable IP
-address or the domain name if so. leave empty/reply with "N" otherwise.
-
-setting your instance as a public one will allow it to show up on
-the public instances list, available at either of those sites:
-http://orzeszek.website:203/
-https://orzeszek.website:204/`)
-    public = readline.question("\npublic IP address. leave empty if none: ")
-    if(public.length > 5) {
-        cfg.public = public;
-    }
 }
 
 cfg.auto_mtaintain = false;

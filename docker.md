@@ -13,6 +13,11 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_PORT` sets the HTTP port (default: `80`)
 - `YT2009_ENV` sets the usage environment, dev is used for development purposes, prod is designed for production, adds an authentication system and is needed if you want to use the built-in SSL support (default: `dev`)
 - `YT2009_IP` sets the IP/Hostname used that will be used to connect to yt2009, is required for legacy stuff where it has to be hardcoded (default: `127.0.0.1`)
+
+**for YT2009_IP, if you intend to use things like the mobile app, make sure to set it to an address those devices can access!**
+
+**you're most likely looking at using your public IP provided you can port forward.**
+
 - `YT2009_SSL` allows you to enable built-in SSL support, **requires prod env to work!** (default: `false`)
 - `YT2009_SSLPORT` sets the HTTPS port (default: `443`)
 - `YT2009_SSLPATH` sets the path for the SSL certificate (default: `/yt2009/cert.crt`)
