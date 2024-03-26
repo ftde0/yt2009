@@ -366,9 +366,11 @@ module.exports = {
                 }
                 let subCount = "0 subscribers"
                 if(result.subscriberCountText
+                && result.subscriberCountText.simpleText
                 && result.subscriberCountText.simpleText.includes("subscriber")) {
                     subCount = result.subscriberCountText.simpleText
                 } else if(result.videoCountText
+                && result.videoCountText.simpleText
                 && result.videoCountText.simpleText.includes("subscriber")) {
                     subCount = result.videoCountText.simpleText
                 }

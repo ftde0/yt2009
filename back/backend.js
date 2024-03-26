@@ -1102,7 +1102,7 @@ app.get("/channel_fh264_getvideo", (req, res) => {
                 res.redirect("/tvhtml5simply?v=" + req.query.v)
                 return;
             }
-            if(!vid) {
+            if(!vid || vid.message || typeof(vid) !== "string") {
                 res.sendStatus(404)
                 return;
             }
@@ -2111,6 +2111,11 @@ app.get("/yt2009_recommended", (req, res) => {
         res.send("YT2009_NO_DATA")
         return;
     }
+    let disableOld = false;
+    if(req.headers.cookie
+    && req.headers.cookie.includes("new_recommended")) {
+        disableOld = true;
+    }
     let baseVids = req.headers.ids.split(",").slice(0, 3)
     let processedVideos = 0;
     let videoSuggestions = []
@@ -2154,7 +2159,8 @@ app.get("/yt2009_recommended", (req, res) => {
                             return;
                         }
                     },
-                    req.protocol
+                    req.protocol,
+                    disableOld
                 )
             }, Math.floor(Math.random() * 1000) + 300)
         })  
@@ -2250,6 +2256,13 @@ if(fs.existsSync("../wordlist.txt")) {
     const charsRegex = /[-"'&_+=?!.,\[\]:;\/\\|]/g
     app.get("/suggest", (req, res) => {
         let q = req.query.q.toLowerCase();
+        if(req.headers.cookie
+        && req.headers.cookie.includes("new_suggestions")) {
+            pullNewSuggestions(q, (data) => {
+                res.send(data);
+            })
+            return;
+        }
         let matching = []
         let response = ``
         // add to matching array
@@ -2275,6 +2288,33 @@ if(fs.existsSync("../wordlist.txt")) {
         })
         res.send(response)
     })
+}
+
+function pullNewSuggestions(q, callback) {
+    const fetch = require("node-fetch")
+    fetch("http://suggestqueries.google.com/complete/search?ds=yt&client=androidyt&hjson=t&oe=UTF-8&q=" + q, {
+        "headers": yt2009_constant.headers
+    }).then(r => {r.json().then(r => {
+        let suggestions = []
+        let response = ""
+        r.forEach(element => {
+            if(typeof(element) == "object"
+            && element.length) {
+                element.forEach(s => {
+                    suggestions.push(s[0].replace(/\p{Other_Symbol}/gui, ""))
+                })
+            }
+        })
+        suggestions = suggestions.sort((a, b) => {return a.length - b.length})
+        suggestions.forEach(m => {
+            response += `
+            <tr class="google-ac-a">
+                <td class="google-ac-c">${m}</td>
+                <td class="google-ac-d"></td>
+            </tr>`
+        })
+        callback(response)
+    })})
 }
 
 /*
@@ -3940,28 +3980,6 @@ if(config.auto_maintain) {
     checkSize()
 }
 
-app.get("/player_204", (req, res) => {
-    res.sendStatus(204)
-})
-app.get("/media/iviv", (req, res) => {
-    res.redirect("/media/iviv/iv3_edit_module.swf")
-})
-app.post("/annotations_auth/update2", (req, res) => {
-    let annotations = ""
-    try {
-        annotations = req.body.toString()
-        annotations = annotations.split("<updatedItems>")[1].split("</updatedItems>")[0]
-    }
-    catch(error) {}
-    res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
-    ${annotations}
-    </annotations></document>`)
-})
-app.get("/auth/read2", (req, res) => {
-    res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
-    </annotations></document>`)
-})
-
 /*
 ======
 login_required via tvhtml5simply
@@ -4148,6 +4166,49 @@ thumbnailProxyEndpoints.forEach(t => {
             res.send(rr)
         })})
     })
+})
+
+/*
+======
+misc dummy flash endpoints
+======
+*/
+
+app.get("/wiitv", (req, res) => {
+    if(req.query.action_get_flashvars) {
+        res.status(200).send("")
+        return;
+    }
+    res.status(200).send("")
+})
+app.get("/leanback_ajax", (req, res) => {
+    if(req.query.action_featured) {
+        let r = fs.readFileSync("../assets/site-assets/leanback_ajax.json").toString()
+        res.send(r)
+        return;
+    }
+    res.status(200).send("")
+})
+app.get("/player_204", (req, res) => {
+    res.sendStatus(204)
+})
+app.get("/media/iviv", (req, res) => {
+    res.redirect("/media/iviv/iv3_edit_module.swf")
+})
+app.post("/annotations_auth/update2", (req, res) => {
+    let annotations = ""
+    try {
+        annotations = req.body.toString()
+        annotations = annotations.split("<updatedItems>")[1].split("</updatedItems>")[0]
+    }
+    catch(error) {}
+    res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
+    ${annotations}
+    </annotations></document>`)
+})
+app.get("/auth/read2", (req, res) => {
+    res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
+    </annotations></document>`)
 })
 
 /*
