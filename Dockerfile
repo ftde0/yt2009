@@ -14,6 +14,7 @@ WORKDIR /yt2009
 USER node
 
 RUN npm install
+RUN node backend_wrap.js
 ENV YT2009_PORT=80 \
     YT2009_ENV=dev \
     YT2009_IP=yt2009mobile.onrender.com \
