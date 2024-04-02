@@ -1,4 +1,4 @@
-IFROM node:lts-alpine3.19
+FROM node:lts-alpine3.19
 RUN apk add --no-cache imagemagick ffmpeg cabextract && \
     wget -P /tmp/ https://www.freedesktop.org/software/fontconfig/webfonts/webfonts.tar.gz && \
     tar -xzf /tmp/webfonts.tar.gz -C /tmp && \
