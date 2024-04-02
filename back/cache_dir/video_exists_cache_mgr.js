@@ -4,7 +4,12 @@ const constants = require("../yt2009constants.json")
 const config = require("../config.json")
 let cache = {}
 if(!config.fallbackMode) {
-    cache = JSON.parse(fs.readFileSync(`${__dirname}/video_exists_cache.json`).toString())
+    try {
+        cache = JSON.parse(
+            fs.readFileSync(`${__dirname}/video_exists_cache.json`).toString()
+        )
+    }
+    catch(error) {}
 } 
 
 module.exports = {
