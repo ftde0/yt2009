@@ -4,14 +4,6 @@ a fairly accurate 2009 youtube frontend.
 <img src="doc-imgs/ie6-ss.png" width="400">
 <img src="doc-imgs/ie6-ss2.png" width="400">
 
-## **looking for a public instance?**
-check this site for a list of public instances, along with their speed.
-
-- http://orzeszek.website:203/
-- https://orzeszek.website:204/
-
-the initial load may take up to 60 seconds as that's the limit for instances to respond.
-
 ---
 
 ## setup

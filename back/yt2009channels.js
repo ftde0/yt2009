@@ -1459,7 +1459,12 @@ module.exports = {
 
         let banner = `https://i3.ytimg.com/u/${cId}/profile_header.jpg`
         let oBg = overrideBgs[cId]
-        let bg = `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`
+        let bgsTry = [
+            `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`,
+            `https://i3.ytimg.com/bg/${cId}/default.jpg`
+        ]
+        let bgsTryIndex = 0;
+        //let bg = `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`
         let bgfile = __dirname + "/../assets/" + cId + "_background.jpg"
 
         // channel background
@@ -1473,6 +1478,7 @@ module.exports = {
                 return;
             }
             // download old background if used
+            let bg = bgsTry[bgsTryIndex]
             if(!fs.existsSync(bgfile)) {
                 fetch(bg, {
                     "headers": yt2009constants.headers
@@ -1488,8 +1494,15 @@ module.exports = {
                             c()
                         })
                     } else {
-                        fs.writeFileSync(bgfile, "")
-                        c()
+                        bgsTryIndex++
+                        if(bgsTry.length <= bgsTryIndex) {
+                            // no working bgs, set default
+                            fs.writeFileSync(bgfile, "")
+                            c()
+                        } else {
+                            getOldBg()
+                        }
+                        
                     }
                 })
             } else if(fs.existsSync(bgfile) && fs.statSync(bgfile).size > 5) {
