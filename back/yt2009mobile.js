@@ -799,7 +799,9 @@ module.exports = {
                 }
             }
 
-            let subcount = data.properties ? data.properties.subscribers : "0"
+            let subcount = data.properties
+                        && data.properties.subscribers
+                        ? data.properties.subscribers : "0"
             subcount = utils.approxSubcount(subcount)
 
             let channelViewCount = Math.floor(videoViewCount / 90)
@@ -968,7 +970,9 @@ module.exports = {
                         req.query.author,
                         video.title,
                         video.id,
-                        utils.relativeToAbsoluteApprox(video.upload)
+                        utils.relativeToAbsoluteApprox(video.upload),
+                        video.time,
+                        video.views
                     )
                 })
                 response += templates.gdata_feedEnd
