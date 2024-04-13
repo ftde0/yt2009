@@ -1173,7 +1173,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 		<summary>${summary}</summary>
 	</entry>`
     },
-    "gdata_activityEntry": function(type, author, title, id, timestamp) {
+    "gdata_activityEntry": function(type, author, title, id, timestamp, length, views) {
         return `
     <entry>
 		<id>tag:youtube.com,2008:video:${id}</id>
@@ -1182,12 +1182,19 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 		<category scheme='http://gdata.youtube.com/schemas/2007/userevents.cat' term='${type}'/>
 		<title>${title.split("<").join("").split(">").join("").split("&").join("").trim()}</title>
 		<yt:videoid>${id}</yt:videoid>
-        <yt:username>${author}</yt:username>
+        <yt:username>${id}</yt:username>
         <yt:groupId>0</yt:groupId>
         <author>
 			<name>${author}</name>
 			<uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
 		</author>
+        <link rel='http://gdata.youtube.com/schemas/2007#video' href='http://${config.ip}:${config.port}/feeds/api/videos/${id}'>
+            ${this.gdata_feedVideo(
+                id, title, author,
+                utils.bareCount(views), utils.time_to_seconds(length),
+                "-", timestamp, "-", "-", ""
+            )}
+        </link>
 	</entry>`
     },
     "gdata_userPlaylistStart": function(playlistId, playlistName, firstVideoId, author, updateDate, videoCount) {

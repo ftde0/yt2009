@@ -275,10 +275,29 @@ module.exports = {
                                 .itemSectionRenderer.contents
                 }
                 catch(error) {}
+                if(JSON.stringify(videoData).includes("richGridRenderer")) {
+                    try {
+                        related = videoData.contents.twoColumnWatchNextResults
+                                  .secondaryResults.secondaryResults.results[0]
+                                  .richGridRenderer.contents
+                    }
+                    catch(error) {}
+                }
                 related.forEach(video => {
-                    if(!video.compactVideoRenderer) return;
+                    if(!video.compactVideoRenderer && !video.richItemRenderer) return;
 
-                    video = video.compactVideoRenderer;
+                    let gridResult = false;
+                    if(video.richItemRenderer) {
+                        gridResult = true;
+                    }
+
+                    video = video.compactVideoRenderer || video.richItemRenderer;
+
+                    if(gridResult
+                    && (!video.content
+                    || !video.content.videoRenderer)) return;
+
+                    if(gridResult) {video = video.content.videoRenderer}
 
                     let creatorName = ""
                     let creatorUrl = ""
@@ -2535,10 +2554,29 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                             .contents
                         }
                         catch(error) {}
+                        if(JSON.stringify(data).includes("richGridRenderer")) {
+                            try {
+                                related = videoData.contents.twoColumnWatchNextResults
+                                          .secondaryResults.secondaryResults.results[0]
+                                          .richGridRenderer.contents
+                            }
+                            catch(error) {}
+                        }
                         related.forEach(video => {
-                            if(!video.compactVideoRenderer) return;
+                            if(!video.compactVideoRenderer && !video.richItemRenderer) return;
         
-                            video = video.compactVideoRenderer;
+                            let gridResult = false;
+                            if(video.richItemRenderer) {
+                                gridResult = true;
+                            }
+        
+                            video = video.compactVideoRenderer || video.richItemRenderer;
+        
+                            if(gridResult
+                            && (!video.content
+                            || !video.content.videoRenderer)) return;
+        
+                            if(gridResult) {video = video.content.videoRenderer}
         
                             let creatorName = ""
                             let creatorUrl = ""
