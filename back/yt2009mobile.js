@@ -513,11 +513,11 @@ module.exports = {
         }
         // default feeds
         let start = parseInt(req.query["start-index"] || 1)
-        if(start < 0) {
+        if(start < 0 || isNaN(start)) {
             start = 0;
         }
         let max = parseInt(req.query["max-results"] || 25)
-        if(max < 0) {
+        if(max < 0 || isNaN(max)) {
             max = start + 25
         }
         if(max > 1000) {
@@ -531,7 +531,6 @@ module.exports = {
             // 25 recently watched
             let response = templates.gdata_feedStart
                            .split(">1<").join(`>${start}<`)
-                           .split(">25<").join(`>${max}<`)
             let videosAdded = 0;
             let vids = yt2009html.featured().slice(start, start + max)
             vids.forEach(video => {
@@ -560,43 +559,48 @@ module.exports = {
                     }
                 }, "", "", false, false, true)
             })
+            response = response.split(">25<").join(`>${videosAdded}<`)
         } else if(req.originalUrl.includes("most_popular")) {
             // grab popular videos (100k+ views) from featured 25-50
             // and put them into the feed
-            if(!req.query["max-results"]) {
-                max = 25
-            }
             let response = templates.gdata_feedStart
                            .split(">1<").join(`>${start}<`)
-                           .split(">25<").join(`>${max}<`)
-            if(yt2009html.featured().length > 25) {
-                yt2009html.featured().slice(start + 25, start + 25 + max).forEach(video => {
-                    yt2009html.fetch_video_data(video.id, (data) => {
-                        if(utils.bareCount(video.views) > 100000) {
-                            response += templates.gdata_feedVideo(
-                                video.id,
-                                video.title,
-                                video.author_handle
-                                || utils.asciify(video.uploaderName),
-                                utils.bareCount(video.views),
-                                utils.time_to_seconds(data.length || 0),
-                                data.description,
-                                data.upload,
-                                (data.tags || []).join(),
-                                data.category,
-                                mobileflags.get_flags(req).watch
-                            )
-                        }
-                    }, "", "", false, false, true)
-                })
+            let videosAdded = 0;
+            let indexes = [start, start + max]
+            if(yt2009html.featured().length > 70) {
+                indexes = [start + 25, start + 25 + max]
             }
+            yt2009html.featured().slice(indexes[0], indexes[1]).forEach(video => {
+                yt2009html.fetch_video_data(video.id, (data) => {
+                    if(utils.bareCount(video.views) > 100000) {
+                        response += templates.gdata_feedVideo(
+                            video.id,
+                            video.title,
+                            video.author_handle
+                            || utils.asciify(video.uploaderName),
+                            utils.bareCount(video.views),
+                            utils.time_to_seconds(data.length || 0),
+                            data.description,
+                            data.upload,
+                            (data.tags || []).join(),
+                            data.category,
+                            mobileflags.get_flags(req).watch
+                        )
+                        videosAdded++
+                    }
+                }, "", "", false, false, true)
+            })
+            response = response.split(">25<").join(`>${videosAdded}<`)
             response += templates.gdata_feedEnd
             res.set("content-type", "application/atom+xml")
             res.send(response)
         } else {
             // send empty video feeds on other requests
             res.set("content-type", "application/atom+xml")
-            res.send(templates.gdata_feedStart + templates.gdata_feedEnd)
+            res.send(
+                templates.gdata_feedStart.split(">25<").join(">0<")
+                + templates.gdata_feedEnd
+            )
         }
     },
 
@@ -1051,7 +1055,7 @@ module.exports = {
         }, "")
         let response = templates.gdata_feedStart
                        .split(">1<").join(`>${start}<`)
-                       .split(">25<").join(`>${max}<`)
+        let videosAdded = 0;
         videos.forEach(video => {
             let cacheVideo = yt2009html.get_cache_video(video.id)
             response += templates.gdata_feedVideo(
@@ -1066,7 +1070,9 @@ module.exports = {
                 cacheVideo.category || "",
                 mobileflags.get_flags(req).watch
             )
+            videosAdded++
         })
+        response = response.split(">25<").join(`>${videosAdded}<`)
         response += templates.gdata_feedEnd
         res.set("content-type", "application/atom+xml")
         res.send(response)

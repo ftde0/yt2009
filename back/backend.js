@@ -1704,9 +1704,15 @@ app.post("/youtube/accounts/registerDevice", (req, res) => {
         deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
                     [Math.floor(Math.random() * 36)]
     }
+    /*
+    as cool as that text was, i have to get rid of it from response
+    for 1.6.21 and below.
+
+    sorry!
+    
+    #yt2009 - devicekey created with aes secret from 2.3.4 apk*/
     res.send(`DeviceId=${deviceId}
-DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=
-#yt2009 - devicekey created with aes secret from 2.3.4 apk`)
+DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=`)
 })
 app.get("/feeds/api/standardfeeds/*", (req, res) => {
     yt2009_mobile.feeds(req, res)
