@@ -1,0 +1,2 @@
+# force unix line feeds on shell scripts to fix issues with docker on windows
+*.sh text eol=lf
