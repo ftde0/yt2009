@@ -389,7 +389,7 @@ function switchWidescreen() {
         $("#player-toggle-switch").className = "reverse-tooltip-wrapper watch-wide-mode"
         localStorage.widescreenEnabled = true
         fourthreechecked = false
-        annotation43()
+        try {annotation43()}catch(error) {}
     } else {
         player_overlay.className = "yt-rounded"
         player_element.className = "flash-player"
@@ -397,7 +397,7 @@ function switchWidescreen() {
         $("#player-toggle-switch").className = "reverse-tooltip-wrapper"
         localStorage.removeItem("widescreenEnabled")
         fourthreechecked = false
-        annotation43()
+        try {annotation43()}catch(error) {}
     }
 
     adjustSeekbarWidth();

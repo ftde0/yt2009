@@ -98,7 +98,8 @@ module.exports = {
                     cacheData.upload
                     || utils.relativeToAbsoluteApprox(video.upload),
                     (cacheData.tags || []).join() || "-",
-                    cacheData.category || "-"
+                    cacheData.category || "-",
+                    cacheData.qualities || []
                 )
             })
 

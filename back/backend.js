@@ -206,6 +206,7 @@ app.get('/', (req,res) => {
         res.redirect("/auth.html")
         return;
     }
+    if(yt2009_utils.isRatelimited(req, res)) return;
     if(config.env == "dev") {
         console.log(`(${yt2009_utils.get_used_token(req)}) mainpage ${Date.now()}`)
     }
@@ -264,6 +265,7 @@ app.get("/watch", (req, res) => {
         res.redirect("/unauth.htm")
         return;
     }
+    if(yt2009_utils.isRatelimited(req, res)) return;
     req = yt2009_utils.addFakeCookie(req)
 
     let id = req.query.v
@@ -604,6 +606,7 @@ app.get("/results", (req, res) => {
         res.redirect("/unauth.htm")
         return;
     }
+    if(yt2009_utils.isRatelimited(req, res)) return;
     let query = req.query.search_query
     let flags = req.query.flags || ""
     let resetCache = false;
@@ -664,6 +667,7 @@ app.get("/xl", (req, res) => {
         res.send("[yt2009] please authorize to use XL.")
         return;
     }
+    if(yt2009_utils.isRatelimited(req, res)) return;
     let url = "/xl/index.htm"
     if(req.query.html5 == 1) {
         url += "?html5=1"
@@ -677,7 +681,7 @@ app.get("/xl/index.htm", (req, res) => {
         res.redirect("/unauth.htm")
         return;
     }
-
+    if(yt2009_utils.isRatelimited(req, res)) return;
     res.send(xlInitial)
 })
 
@@ -778,12 +782,20 @@ app.get("/get_video_info", (req, res) => {
             let fmt_map = ""
             qualities.forEach(quality => {
                 switch(quality) {
+                    case "1080p": {
+                        fmt_list += "37/1920x1080/9/0/115,"
+                        fmt_map += "37/3000000/9/0/115,"
+                        fmt_stream_map += `37|http://${config.ip}:${
+                            config.port
+                        }/exp_hd?video_id=${req.query.video_id}&fhd=1&,`
+                        break;
+                    }
                     case "720p": {
                         fmt_list += "22/1280x720/9/0/115,"
                         fmt_map += "22/2000000/9/0/115,"
                         fmt_stream_map += `22|http://${config.ip}:${
                             config.port
-                        }/exp_hd?video_id=${req.query.video_id},`
+                        }/exp_hd?video_id=${req.query.video_id}&,`
                         break;
                     }
                     case "480p": {
@@ -791,7 +803,7 @@ app.get("/get_video_info", (req, res) => {
                         fmt_map += "35/0/9/0/115,"
                         fmt_stream_map +=  `35|http://${config.ip}:${
                             config.port
-                        }/get_480?video_id=${req.query.video_id},`
+                        }/get_480?video_id=${req.query.video_id}&,`
                         break;
                     }
                 }
@@ -993,6 +1005,7 @@ channel_endpoints.forEach(channel_endpoint => {
             res.redirect("/unauth.htm")
             return;
         }
+        if(yt2009_utils.isRatelimited(req, res)) return;
 
         // flags
         let flags = decodeURIComponent(req.query.flags) || ""
@@ -1089,7 +1102,9 @@ app.get("/channel_fh264_getvideo", (req, res) => {
     if(yt2009_exports.getStatus(req.query.v)) {
         // wait for mp4 while it's downloading
         yt2009_exports.waitForStatusChange(req.query.v, () => {
-            try {res.redirect("/assets/" + req.query.v + ".mp4")}catch(error) {}
+            try {
+                res.redirect("/assets/" + req.query.v + ".mp4")
+            }catch(error) {}
         })
         return;
     }
@@ -1113,7 +1128,9 @@ app.get("/channel_fh264_getvideo", (req, res) => {
             try {res.redirect(vidLink)}catch(error) {}
         }, true)
     } else {
-        try {res.redirect("/assets/" + req.query.v + ".mp4")}catch(error){}
+        try {
+            res.redirect("/assets/" + req.query.v + ".mp4")
+        }catch(error){}
     }
     
 })
@@ -1199,6 +1216,7 @@ playlist_endpoints.forEach(playlistEndpoint => {
             res.redirect("/unauth.htm")
             return;
         }
+        if(yt2009_utils.isRatelimited(req, res)) return;
         let playlistId = (req.query.list || req.query.p)
         yt2009_playlists.parsePlaylist(playlistId, (list) => {
             res.send(yt2009_playlists.applyPlaylistHTML(list, req))
@@ -1534,6 +1552,7 @@ leanbackEndpoints.forEach(lbe => {
             res.redirect("/unauth.htm")
             return;
         }
+        if(yt2009_utils.isRatelimited(req, res)) return;
         res.send(leanback)
     })
 })
@@ -1582,37 +1601,23 @@ app.get("/test_only_legacy_cookie_auth", (req, res) => {
 */
 app.get("/exp_hd", (req, res) => {
     let id = req.query.video_id.substring(0, 11)
-
+    let quality = "720p"
+    if((req.headers.cookie
+    && req.headers.cookie.includes("hd_1080"))
+    || req.query.fhd) {
+        quality = "1080p"
+    }
     // callback mp4 if we already have one
-    if(fs.existsSync(`../assets/${id}-hd.mp4`)) {
-        res.redirect(`/assets/${id}-hd.mp4`)
+    if(fs.existsSync(`../assets/${id}-${quality}.mp4`)) {
+        res.redirect(`/assets/${id}-${quality}.mp4`)
     } else {
-        // download hd video and merge with main mp4 audio
-        let writeStream = fs.createWriteStream(`../assets/${id}-hd-video.mp4`)
-        writeStream.on("finish", () => {
-            let videoFilename = `${__dirname}/../assets/${id}-hd-video.mp4`
-            let audioFilename = `${__dirname}/../assets/${id}.mp4`
-            let targetFilename = `${__dirname}/../assets/${id}-hd.mp4`
-            let cmd = yt2009_templates.format_merge_command(
-                videoFilename,
-                audioFilename,
-                targetFilename
-            )
-            child_process.exec(cmd, (error, stdout, stderr) => {
-                res.redirect(`/assets/${id}-hd.mp4`)
-                if(fs.existsSync(videoFilename)) {
-                    fs.unlinkSync(videoFilename)
-                }
-            })
-        })
-        require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
-            "quality": 136
-        })
-        .on("error", () => {
-            res.redirect(`/get_video?video_id=${id}/mp4`)
-            return;
-        })
-        .pipe(writeStream)
+        yt2009_utils.saveMp4_android(id, (success) => {
+            if(success) {
+                res.redirect("/assets/" + success)
+            } else {
+                res.sendStatus(404)
+            }
+        }, false, quality)
     }
 })
 
@@ -1623,41 +1628,18 @@ app.get("/exp_hd", (req, res) => {
 */
 app.get("/get_480", (req, res) => {
     let id = req.query.video_id.substring(0, 11)
-    if(!fs.existsSync(`../assets/${id}.mp4`)) {
-        yt2009_utils.saveMp4(id, () => {
-            res.redirect(`/get_480?video_id=${id}&r=1`)
-            return;
-        })
-        return;
-    }
-    if(fs.existsSync(`../assets/${id}-480.mp4`)) {
-        res.redirect(`/assets/${id}-480.mp4`)
+    let quality = "480p"
+    // callback mp4 if we already have one
+    if(fs.existsSync(`../assets/${id}-${quality}.mp4`)) {
+        res.redirect(`/assets/${id}-${quality}.mp4`)
     } else {
-        let writeStream = fs.createWriteStream(`../assets/${id}-480-temp.mp4`)
-        writeStream.on("finish", () => {
-            let videoFilename = `${__dirname}/../assets/${id}-480-temp.mp4`
-            let audioFilename = `${__dirname}/../assets/${id}.mp4`
-            let targetFilename = `${__dirname}/../assets/${id}-480.mp4`
-            let cmd = yt2009_templates.format_merge_command(
-                videoFilename,
-                audioFilename,
-                targetFilename
-            )
-            child_process.exec(cmd, (error, stdout, stderr) => {
-                res.redirect(`/assets/${id}-480.mp4`)
-                if(fs.existsSync(videoFilename)) {
-                    fs.unlinkSync(videoFilename)
-                }
-            })
-        })
-        require("ytdl-core")(`https://youtube.com/watch?v=${id}`, {
-            "quality": 135
-        })
-        .on("error", () => {
-            res.redirect(`/get_video?video_id=${id}/mp4`)
-            return;
-        })
-        .pipe(writeStream)
+        yt2009_utils.saveMp4_android(id, (success) => {
+            if(success) {
+                res.redirect("/assets/" + success)
+            } else {
+                res.sendStatus(404)
+            }
+        }, false, quality)
     }
 })
 
@@ -1873,6 +1855,7 @@ blazerEndpoints.forEach(e => {
             res.redirect("/auth.html?redir=blzr")
             return;
         }
+        if(yt2009_utils.isRatelimited(req, res)) return;
         res.send(blazer)
     })
 })

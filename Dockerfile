@@ -25,7 +25,8 @@ ENV YT2009_PORT=80 \
     YT2009_MAINTAIN_MAX_SIZE=10 \
     YT2009_MAINTAIN_MAX_CACHE_SIZE=15 \
 	YT2009_FALLBACK=false \
-	YT2009_DISABLEMASTER=false
+	YT2009_DISABLEMASTER=false \
+    YT2009_RATELIMIT=false
     
 RUN ln -s /data/config.json back/config.json && \
     ln -s /data/comments.json back/cache_dir/comments.json && \

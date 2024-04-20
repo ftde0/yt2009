@@ -549,7 +549,8 @@ module.exports = {
                         data.upload,
                         (data.tags || []).join(),
                         data.category,
-                        mobileflags.get_flags(req).watch
+                        mobileflags.get_flags(req).watch,
+                        data.qualities
                     )
                     videosAdded++;
                     if(videosAdded >= vids.length) {
@@ -584,7 +585,8 @@ module.exports = {
                             data.upload,
                             (data.tags || []).join(),
                             data.category,
-                            mobileflags.get_flags(req).watch
+                            mobileflags.get_flags(req).watch,
+                            data.qualities
                         )
                         videosAdded++
                     }
@@ -626,7 +628,9 @@ module.exports = {
                 data.description,
                 data.upload,
                 (data.tags || []).join(),
-                data.category
+                data.category,
+                "",
+                data.qualities
             )
             res.set("content-type", "application/atom+xml")
             res.send(response)
@@ -1068,7 +1072,8 @@ module.exports = {
                 cacheVideo.upload || "Dec 23, 2009",
                 (cacheVideo.tags || []).join() || "-",
                 cacheVideo.category || "",
-                mobileflags.get_flags(req).watch
+                mobileflags.get_flags(req).watch,
+                cacheVideo.qualities
             )
             videosAdded++
         })

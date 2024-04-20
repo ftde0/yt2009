@@ -1008,7 +1008,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <openSearch:startIndex>1</openSearch:startIndex>
     <openSearch:itemsPerPage>25</openSearch:itemsPerPage>`,
     "gdata_feedEnd": "\n</feed>",
-    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category, flags) {
+    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category, flags, qualities) {
         // flag handling
         if((flags || []).includes("realistic-view-count")
         && views >= 100000) {
@@ -1046,6 +1046,17 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             unduplicateKeywordList.push("-")
         }
 
+        // qualities
+        let qualityCode = ""
+        if(qualities) {
+            if(qualities.includes("480p")) {
+                qualityCode += `<media:content url='http://${config.ip}:${config.port}/get_480?video_id=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='14'/>`
+            }
+            if(qualities.includes("720p")) {
+                qualityCode += `<media:content url='http://${config.ip}:${config.port}/exp_hd?video_id=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='8'/>`
+            }
+        }
+
         // category names
         category = (category || "-").split("&").join("&amp;")
         return `
@@ -1067,7 +1078,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             </gd:comments>
             <media:group>
                 <media:category label='${category}' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>${category}</media:category>
-                <media:content url='http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>
+                <media:content url='http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
                 <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("")}</media:description>
                 <media:keywords>${unduplicateKeywordList.join(", ")}</media:keywords>
                 <media:player url='http://www.youtube.com/watch?v=${id}'/>
@@ -1297,7 +1308,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                         utils.fakeDatesModern("2010-04-02", utils.relativeToAbsoluteApprox(video.upload)), langs.get_language(req)
                     ) : video.upload}</span>
                     <span id="video-num-views-${video.id}" class="video-view-count">lang_views_prefix${utils.countBreakup(
-                        utils.bareCount(video.views)
+                        utils.bareCount(video.views || "0")
                     )}lang_views_suffix</span>
                     <span id="video-average-rating-${video.id}" class="video-rating-grid ">
                         <div>
