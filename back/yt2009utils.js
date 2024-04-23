@@ -985,6 +985,15 @@ module.exports = {
             quality = "360p"
         }
 
+        if(yt2009exports.getStatus(`${id}-${quality}`)) {
+            yt2009exports.waitForStatusChange(`${id}-${quality}`, () => {
+                callback(`${id}-${quality}.mp4`)
+            })
+            return;
+        }
+
+        yt2009exports.updateFileDownload(`${id}-${quality}`, 1)
+
         fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
             "headers": {
                 "accept": "*/*",
@@ -1017,6 +1026,7 @@ module.exports = {
             // parse formats
             if(!r.streamingData) {
                 callback(false)
+                yt2009exports.updateFileDownload(`${id}-${quality}`, 2)
                 return;
             }
             let qualities = {}
@@ -1072,6 +1082,7 @@ module.exports = {
             }
             if(!qualities[quality]) {
                 callback(false)
+                yt2009exports.updateFileDownload(`${id}-${quality}`, 2)
                 return;
             }
 
@@ -1109,11 +1120,14 @@ module.exports = {
                     setTimeout(() => {
                         // delete temp assets
                         try {
-                            fs.unlinkSync(`${__dirname}/${audioPath}`)
+                            if(!audioPath.includes(".mp4")) {
+                                fs.unlinkSync(`${__dirname}/${audioPath}`)
+                            }
                             fs.unlinkSync(`${__dirname}/${videoPath}`)
                         }
                         catch(error) {}
                     }, 10000)
+                    yt2009exports.updateFileDownload(`${id}-${quality}`, 2)
                 })
             }
         })})

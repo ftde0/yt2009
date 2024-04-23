@@ -117,7 +117,7 @@ module.exports = {
                 <div class="video-bar-item">
                     <div class="v90WideEntry">
                         <div class="v90WrapperOuter">
-                            <div class="v90WrapperInner"><a href="/watch?v=${id}" class="video-thumb-link" rel="nofollow"><img src="$${thumbUrl}" class="vimg90"></a>
+                            <div class="v90WrapperInner"><a href="/watch?v=${id}" class="video-thumb-link" rel="nofollow"><img src="${thumbUrl}" class="vimg90"></a>
                                 <div class="video-time" style="margin-top: -28px;"><a href="/watch?v=${id}" rel="nofollow">${time}</a></div>
                             </div>
                         </div>
@@ -900,7 +900,7 @@ module.exports = {
     }
     </style>
     `,
-    "playerHDBtnJS": function(id, use720p) {
+    "playerHDBtnJS": function(id, use720p, autoHQ) {
         return `
         //exp_hq
         seekbarRemoveWidth = 245;
@@ -914,7 +914,7 @@ module.exports = {
             if(!hqPlaying) {
                 hqPlaying = true;
                 $("video").innerHTML = "";
-                var length = seconds_to_time(Math.floor(video.duration))
+                var length = seconds_to_time(Math.floor(video.duration || 0))
                 $("video").src = "/${use720p ? "exp_hd" : "get_480"}?video_id=${id}"
                 setTimeout(function() {
                     $(".video_controls .timer").innerHTML = "0:00 / " + length;
@@ -936,8 +936,18 @@ module.exports = {
                 hqPlaying = false;
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
             }
-        }, false)`
+        }, false)${autoHQ ? `
+        
+        hqPlaying = true;
+        showLoadingSprite();` : ""}`
     },
+    "hqCheckConnection": `
+        
+    if(navigator.connection
+    && navigator.connection.downlink >= 10) {
+        try {$(".video_controls .hq").click()}catch(error) {}
+    }
+    `,
     "channelspageChannel": function(channel, channelName) {
         channel.url = channel.url.replace(`https://www.youtube.com`, ``)
         return `<div class="channel-cell" style="width:19.5%">

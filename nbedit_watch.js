@@ -400,7 +400,7 @@ function switchWidescreen() {
         try {annotation43()}catch(error) {}
     }
 
-    adjustSeekbarWidth();
+    try {adjustSeekbarWidth();}catch(error) {}
 }
 $("#watch-longform-player").addEventListener("click", switchWidescreen, false)
 if(localStorage && localStorage.widescreenEnabled) {
