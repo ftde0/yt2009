@@ -264,10 +264,8 @@ module.exports = function(req, res) {
 
     // exp_hd=1
     let videoQualities = require("./yt2009html").get_cache_video(id).qualities || []
-    if(((req.headers.cookie || "").includes("exp_hd")
-    || req.query.exp_hd == 1)
-    && (videoQualities.includes("720p")
-    || videoQualities.includes("480p"))) {
+    if(videoQualities.includes("720p")
+    || videoQualities.includes("480p")) {
         let use720p = videoQualities.includes("720p")
         code = code.replace(
             `<!--yt2009_style_hq_button-->`,

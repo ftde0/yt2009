@@ -114,6 +114,10 @@ function openTab(tabName) {
             pullHomepageSettings()
             break;
         }
+        case "playback": {
+            pullPlaybackSettings()
+            break;
+        }
     }
 }
 
@@ -121,6 +125,10 @@ function openTab(tabName) {
 switch(location.hash) {
     case "#customize/homepage": {
         openTab("homepage");
+        break;
+    }
+    case "#playback/quality": {
+        openTab("playback");
         break;
     }
 }
@@ -187,3 +195,124 @@ if(document.cookie
     favoritesCount += f.split(":").length
 }
 document.getElementById("videos-favd").innerHTML = favoritesCount
+
+// playback settings
+var playbackAnnotationsChanged = false;
+var playbackCCChanged = false;
+function savePlayback() {
+    var playbackSetting = 0;
+    var checks = getElementsByClassName(document, "playback-set")
+    for(var c in checks) {
+        var i = c;
+        c = checks[c]
+        if(c.tagName
+        && c.checked) {
+            playbackSetting = i;
+        }
+    }
+    var cookie = [
+        "playback_quality=" + playbackSetting + "; ",
+        "Path=/; ",
+        "Expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    ]
+    document.cookie = cookie.join("")
+    var msg = $(".page-playback-message")
+    msg.style.display = "block"
+    setTimeout(function() {
+        msg.style.display = "none"
+    }, 5000)
+
+    var globalFlags = ""
+    if(playbackAnnotationsChanged || playbackCCChanged) {
+        try {
+            globalFlags = document.cookie.split("global_flags=")[1].split(";")[0]
+        }
+        catch(error) {}
+    }
+    if(playbackAnnotationsChanged) {
+        var enabled = document.getElementById("playback-annotation-enable").checked
+        if(!enabled && globalFlags.indexOf("always_annotations") !== -1) {
+            globalFlags = globalFlags.replace("always_annotations:", "")
+                          .replace("always_annotations", "")
+        } else if(enabled && globalFlags.indexOf("always_annotations") == -1) {
+            globalFlags += "always_annotations:"
+        }
+    }
+    if(playbackCCChanged) {
+        var enabled = document.getElementById("playback-cc-enable").checked
+        if(!enabled && globalFlags.indexOf("always_captions") !== -1) {
+            globalFlags = globalFlags.replace("always_captions:", "")
+                          .replace("always_captions", "")
+        } else if(enabled && globalFlags.indexOf("always_captions") == -1) {
+            globalFlags += "always_captions:"
+        }
+    }
+    if(playbackAnnotationsChanged || playbackCCChanged) {
+        var cookie = [
+            "global_flags=" + globalFlags + "; ",
+            "Path=/; ",
+            "Expires=Fri, 31 Dec 2066 23:59:59 GMT"
+        ]
+        document.cookie = cookie.join("")
+    }
+}
+
+function pullPlaybackSettings() {
+    var cookies = document.cookie.split("; ")
+    var quality = 1; //slow
+    for(var c in cookies) {
+        c = cookies[c]
+        if(c.indexOf("playback_quality") == 0) {
+            quality = parseInt(c.split("playback_quality=")[1].split(","))
+        }
+    }
+    getElementsByClassName(document, "playback-set")[quality].setAttribute("checked", "true")
+
+    if(document.cookie.indexOf("always_annotations") !== -1) {
+        document.getElementById("playback-annotation-enable").checked = true;
+    }
+    if(document.cookie.indexOf("always_captions") !== -1) {
+        document.getElementById("playback-cc-enable").checked = true;
+    }
+}
+
+function markCcChanged() {
+    playbackCCChanged = true;
+}
+
+function markAnnotationsChanged() {
+    playbackAnnotationsChanged = true;
+}
+
+// expanders
+function toggleExpander(context, expanderName) {
+    // check if toggled expander is current
+    var targetExpander = getElementsByClassName(
+        getElementsByClassName(document, "page-" + context)[0],
+        "section-" + expanderName
+    )[0]
+    var isCurrentExpander = false;
+    if(targetExpander.className.indexOf("current") !== -1) {
+        isCurrentExpander = true;
+    }
+
+    // hide all expanders from context
+    var expanders = getElementsByClassName(
+        getElementsByClassName(document, "page-" + context)[0],
+        "section"
+    )
+    for(var e in expanders) {
+        e = expanders[e]
+        if(e.tagName) {
+            e.className = e.className.replace(" current", "")
+            getElementsByClassName(e, "page")[0].className += " hid"
+            getElementsByClassName(e, "bullet")[0].style.backgroundPosition = ""
+        }
+    }
+
+    if(isCurrentExpander) return;
+    targetExpander.className += " current"
+    var expanderContent = getElementsByClassName(targetExpander, "page")[0]
+    expanderContent.className = expanderContent.className.split("hid").join("")
+    getElementsByClassName(targetExpander, "bullet")[0].style.backgroundPosition = "-78px 0px"
+}

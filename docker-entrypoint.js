@@ -130,6 +130,13 @@ if (cfg.useSSL) {
     }
 }
 
+// set ratelimit
+try {
+    cfg.ratelimit = parseInt(process.env.YT2009_RATELIMIT);
+} catch {
+    throw new Error('invalid YT2009_RATELIMIT');
+}
+
 // try to get tokens from env, if there's none then take get from old config and if no tokens are found then generate new ones
 if (process.env.YT2009_TOKENS) {
     cfg.tokens = process.env.YT2009_TOKENS.split(',');

@@ -9,6 +9,7 @@ var languageData_EN = {
         "watch-exclude-cs": "hides comments you post from /comment_search",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
         "watch-fake-upload-date": "fake 2009 upload year",
+        "watch-hd-1080": "HD button in player will load 1080p instead of 720p",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",
         "watch-old-banners": "uses old channel banners without wayback_features if possible",
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",

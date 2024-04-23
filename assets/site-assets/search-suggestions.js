@@ -30,6 +30,9 @@ adjustTablePos()
 sTable.setAttribute("cellpadding", "0")
 sTable.setAttribute("cellspacing", "0")
 sTable.className = "google-ac-m"
+if(location.href.indexOf("/results") !== -1) {
+    sTable.style.zIndex = "90"
+}
 document.body.appendChild(sTable)
 
 var sTbody = document.createElement("tbody")

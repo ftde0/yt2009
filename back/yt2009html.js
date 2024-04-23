@@ -174,7 +174,8 @@ module.exports = {
                     data.title = videoData.videoDetails.title
                 }
                 catch(error) {
-                    let displayError = "This video is unavailable."
+                    let defaultError = "This video is unavailable."
+                    let displayError = defaultError
                     if(videoData.playabilityStatus
                     && videoData.playabilityStatus.status == "ERROR") {
                         try {
@@ -185,6 +186,7 @@ module.exports = {
                         }
                         catch(error) {}
                     }
+                    if(!displayError) {displayError = defaultError;}
                     data.error = displayError
                     callback(data)
                     return;
@@ -560,7 +562,41 @@ module.exports = {
 
         let uploadJS = new Date(data.upload)
 
-        
+        // auto hd
+        let autoHQ = false;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("playback_quality=2")) {
+            let startQuality = false;
+            if(data.qualities.includes("480p")) {
+                autoHQ = "/get_480?video_id=" + data.id
+                if(!data.qualities.includes("720p")) {
+                    code = code.replace(
+                        `<!--yt2009_hq_btn-->`,
+                        `<span class="hq enabled"></span>`
+                    )
+                }
+                startQuality = "480p"
+            }
+            if(data.qualities.includes("720p")) {
+                autoHQ = "/exp_hd?video_id=" + data.id
+                code = code.replace(
+                    `<!--yt2009_hq_btn-->`,
+                    `<span class="hq hd enabled"></span>`
+                )
+                startQuality = "720p"
+            }
+            if(data.qualities.includes("1080p")
+            && req.headers.cookie
+            && req.headers.cookie.includes("hd_1080")) {
+                startQuality = "1080p"
+            }
+
+            // start saving in advance for quicker video load for end user
+            if(startQuality) {
+                yt2009utils.saveMp4_android(data.id, () => {}, false, startQuality)
+            }
+        }
+
         // login_simulate comments
         if(req.headers.cookie.includes("login_simulate")
         && !req.headers.cookie.includes("relay_key")) {
@@ -1253,7 +1289,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(!useFlash) {
             code = code.replace(
                 "mp4_files", 
-                `<source src="${data.pMp4 || (data.mp4 + ".mp4")}" type="video/mp4"></source>
+                `<source src="${autoHQ || data.pMp4 || (data.mp4 + ".mp4")}" type="video/mp4"></source>
                 <source src="${data.mp4}.ogg" type="video/ogg"></source>`
             )
             if(data.pMp4) {
@@ -1304,9 +1340,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(data.comments
         && !flags.includes("comments_remove_future")) {
 
-            // hide show more comments if less than 21
-            // (20 standard + continuation token)
-            if(data.comments.length !== 21) {
+            // hide show more comments if less than 20
+            if(data.comments.length < 20) {
                 code = code.replace("yt2009_hook_more_comments", "hid")
             }
 
@@ -1508,7 +1543,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     comments_html += commentHTML
                     index++
                 })
-                if(data.comments.length !== 21) {
+                if(data.comments.length < 20) {
                     code = code.replace("yt2009_hook_more_comments", "hid")
                 }
                 code = code.replace(`yt2009_comment_count`, totalCommentCount)
@@ -1973,6 +2008,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         function fillFlashIfNeeded() {
             // flash
             if(useFlash) {
+                if(autoHQ) {
+                    flash_url += "&vq=2"
+                }
                 flash_url += render_endscreen_f()
                 if(new Date().getMonth() == 3
                 && new Date().getDate() == 1
@@ -2064,6 +2102,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(!useFlash
         && (qualityList.includes("720p")
         || qualityList.includes("480p"))) {
+            let enableConnCheck = "";
+            if(req.headers.cookie
+            && req.headers.cookie.includes("playback_quality=0")) {
+                enableConnCheck = yt2009templates.hqCheckConnection
+            }
+
             let use720p = qualityList.includes("720p")
             code = code.replace(
                 `<!--yt2009_style_hq_button-->`,
@@ -2071,7 +2115,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
             code = code.replace(
                 `//yt2009-exp-hq-btn`,
-                yt2009templates.playerHDBtnJS(data.id, use720p)
+                yt2009templates.playerHDBtnJS(data.id, use720p, autoHQ)
+                + enableConnCheck
             )
 
             // 720p

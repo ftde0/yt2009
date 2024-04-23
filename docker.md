@@ -33,6 +33,7 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_REDIR` sets an absolute http path of a different yt2009 instance you wish to redirect to, leave empty to disable
 - `YT2009_LOGGED_TOKENS` sets tokens that have their usage logged in `/data/accessdata`, seperated by commas, leave empty to disable
 - `YT2009_TOKENS` allows you to specify custom auth tokens instead of generating them randomly, **requires prod env to work!**, seperated by commas, leave empty to disable, **this will override any existing access tokens when used!!!**
+- `YT2009_RATELIMIT` sets a number of web fetch (watch, search etc) requests one ipv4 address/one ipv6 block can make in a minute.
 
 ## troubleshooting
 #### reading auth tokens from a running container

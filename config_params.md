@@ -11,9 +11,9 @@ inside you will find the properties you have set up using yt2009setup.js:
 - `SSLKeyPath` - SSL private key
 - `SSLPort` - the port HTTP**s** yt2009 will use
 - `ip` - the IP address used for paths that need to have it hardcoded (e.g. gdata endpoints)
-- `auto_maintain` - automatically maintains space used by yt2009
-- `maintain_max_size` - max size of the /assets/ folder. to be set with `auto_maintain`.
-- `maintain_max_cache_size` - max size per cache file. to be set with `auto_maintain`.
+- `auto_maintain` - automatically maintains space used by yt2009. toggle false: `true/false`.
+- `maintain_max_size` - max size of the /assets/ folder - number in GB. to be set with `auto_maintain`.
+- `maintain_max_cache_size` - max size per cache file - number in MB. to be set with `auto_maintain`.
 
 other params you can set:
 
@@ -25,3 +25,4 @@ other params you can set:
 - `customHomepageText` - a custom text that will be shown on the homepage
 - `redirmode` - an **absolute** http path of a different yt2009 instance you wish to redirect to
 - `logged_tokens` - an array of access tokens that will have their usage logged in `accessdata`.
+- `ratelimit` - a number of web fetch requests one ipv4 address/one ipv6 block can make in 1 minute.

@@ -13,6 +13,14 @@
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 	<meta name="description" content="Share your videos with friends, family, and the world">
 	<meta name="keywords" content="video, sharing, camera phone, video phone, free, upload">
+	<style>
+		.user-thumb-xlarge {
+			overflow: hidden;
+		}
+		#user-profile-picture {
+			text-align: center;
+		}
+	</style>
 	<!-- begin postpage section -->
 </head>
 <body class="watch5-inactive date-20100326 en_US is-english">
@@ -64,8 +72,6 @@
                                 <li><a href="/my_videos_insight" onclick="">Insight: Statistics and Data</a></li>
                             </ul>
                         </span>
-                        &nbsp;<span class="subSep">/</span>&nbsp;
-                        <span>History </span>
                     </h1>
                 </div>
             </div>
@@ -98,16 +104,46 @@
                     <div class="section-page page-overview">
                         <div class="header">
                             <div class="page">
-                                <div id="centered-loading-template">
-                                    <div class="centered-loading-spinny">
-                                        <img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">
-                                    </div>
-			                    </div>
+                                <table id="overview-userinfo">
+									<tr>
+										<td>
+											<div id="user-profile-picture" class="fl">
+												<div class="user-thumb-xlarge">
+													<img src="/assets/site-assets/default.png" style="margin-left: -12px"/>
+												</div>
+												<a class="imageChange">change</a>
+											</div>
+											<div class="statBlock statsBox">
+												<a href="#" id="overview-username" class="nameDiv" style="display: block;">username</a>
+												<span class="greyText">Videos Uploaded:</span>
+												<span id="videos-uploaded">0</span><br>
+												<span class="greyText">Video Views:</span>
+												<span id="videos-views">0</span><br>
+												<span class="greyText">Favorites:</span>
+												<span id="videos-favd">0</span>
+											</div>
+										</td>
+										<td>
+											<div class="statBlock statsBox">
+												<span class="greyText">Channel Type:</span><br>
+												<span class="greyText">Channel Views:</span>
+												<span id="channel-views">1</span><br>
+												<span class="greyText">Subscribers:</span>
+												<span id="channel-subscribers">0</span>
+											</div>
+										</td>
+										<td>
+											<div class="statBlock statsBox">
+												
+											</div>
+										</td>
+									</tr>
+								</table>
                             </div>
                         </div>
                         <div class="body">
                             <div class="section-tabs">
-                                <div class="section current last">
+                                <div class="section current last section-quicklinks">
                                     <div class="tab">
                                         <div class="fl">
                                             <div class="bullet" style="background-position: -78px 0px;"></div>
@@ -117,9 +153,25 @@
                                     </div>
                                     <div class="page">
                                         <div class="page">
-                                            <div id="loading-template">
-				                                <img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">
-			                                </div>
+                                            <table>
+												<tr>
+													<td class="quicklinks-section">
+														<a href="#" class="bold">AdSense Account Settings</a><br>
+														<span class="grayText">Manage your Google AdSense Account.</span>
+													</td>
+													<td class="quicklinks-section">
+														<a href="#" class="bold">Authorized Sites</a><br>
+														<span class="grayText">Manage third-party access to your YouTube account.</span>
+													</td>
+												</tr>
+												<tr>
+													<td class="quicklinks-section">
+														<br>
+														<a href="#" class="bold">Promote your Video with Promoted Videos</a><br>
+														<span class="grayText">Create and manage your video and channel promotions on YouTube. Your promotion can appear alongside natural search resutls when people search for similar content.</span>
+													</td>
+												</tr>
+											</table>
                                         </div>
                                     </div>
                                 </div>
@@ -206,6 +258,89 @@
                             <div class="page">
                                 <div id="save-template" class="save-button">
                                     <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveHomepage();return false;"><span>Save Changes</span></a>
+                                    <div class="cb"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+					<div class="section-page page-playback hid">
+                        <div class="message">
+                            <div id="response-holder-template" class="confirmBox page-playback-message" style="display: none">Changes saved.</div>
+                        </div>
+                        <div class="header">
+                            <div class="page">
+                                <div id="save-template" class="save-button">
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="savePlayback();return false;"><span>Save Changes</span></a>
+                                    <div class="cb"></div>
+                                </div>
+                            </div>
+                        </div>
+						<div class="body">
+							<div class="section-tabs">
+								<div class="section current section-playback" onclick="toggleExpander('playback', 'playback')">
+									<div class="tab">
+										<div class="fl">
+											<div class="bullet" style="background-position: -78px 0px;"></div><a href="javascript:;">Video Playback Quality</a>
+										</div>
+										<div class="dirty-indicator fr" style="display: none;">[changed]</div>
+										<div class="cb"></div>
+									</div>
+									<div class="page" id="page">
+										<div class="page">
+											<span class="greyText">Choose the default setting for viewing videos</span>
+											<div class="playback-pref">
+												<input id="playback-dynamic" type="radio" name="playback" class="playback-set">
+												<label for="playback-dynamic">Choose my video quality dynamically, based on the current connection speed.</label><br>
+												<input id="playback-slow" type="radio" name="playback" class="playback-set">
+												<label for="playback-slow">I have a slow connection. Never play higher-quality video.</label><br>
+												<input id="playback-fast" type="radio" name="playback" class="playback-set">
+												<label for="playback-fast">I have a fast connection. Always play higher-quality video when it's available.</label>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="section section-captions" onclick="toggleExpander('playback', 'captions')">
+									<div class="tab">
+										<div class="fl">
+											<div class="bullet"></div><a href="javascript:;">Captions</a>
+										</div>
+										<div class="dirty-indicator fr" style="display: none;">[changed]</div>
+										<div class="cb"></div>
+									</div>
+									<div class="page hid" id="page">
+										<div class="page">
+											<span class="greyText">Choose the default setting for displaying captions when watching movies.</span>
+											<div class="playback-cc-ref">
+												<input id="playback-cc-enable" type="checkbox" class="playback-cc-enable" onclick="markCcChanged();">
+												<label for="playback-cc-enable">Show captions</label><br>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="section last section-annotations" onclick="toggleExpander('playback', 'annotations')">
+									<div class="tab">
+										<div class="fl">
+											<div class="bullet"></div><a href="javascript:;">Annotations</a>
+										</div>
+										<div class="dirty-indicator fr" style="display: none;">[changed]</div>
+										<div class="cb"></div>
+									</div>
+									<div class="page hid" id="page">
+										<div class="page">
+											<span class="greyText">Choose the default setting for displaying annotations when watching movies.</span>
+											<div class="playback-annotation-ref">
+												<input id="playback-annotation-enable" type="checkbox" class="playback-annotation-enable" onclick="markAnnotationsChanged();">
+												<label for="playback-annotation-enable">Show annotations</label><br>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+                        <div class="footer">
+                            <div class="page">
+                                <div id="save-template" class="save-button">
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="savePlayback();return false;"><span>Save Changes</span></a>
                                     <div class="cb"></div>
                                 </div>
                             </div>
