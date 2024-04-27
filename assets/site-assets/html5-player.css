@@ -232,6 +232,7 @@
     width: 29px;
     height: 21px;
     background-image: url("/player-imgs/additions-buttons.png");
+    z-index: 9;
 }
 
 .player_additions_popout .annotations:hover, .player_additions_popout .cc:hover {
@@ -741,4 +742,48 @@
 
 .captions_selection, .captions_selection li {
     list-style: none;
+}
+
+.player_additions_tooltip {
+    position: absolute;
+    z-index: 5;
+}
+
+.player_additions_tooltip #tooltip-entry {
+    display: inline-block;
+    width: 7px;
+    height: 22px;
+    background-image: url("/player-imgs/player-additions-tooltip-outside.png");
+    overflow: hidden;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+.player_additions_tooltip #tooltip-end {
+    display: inline-block;
+    width: 7px;
+    height: 22px;
+    background-image: url("/player-imgs/player-additions-tooltip-outside.png");
+    background-position: 7px 0px;
+    overflow: hidden;
+    position: absolute;
+    top: 0px;
+}
+
+.player_additions_tooltip #tooltip-text-container {
+    display: inline-block;
+    height: 22px;
+    background-image: url("/player-imgs/player-additions-tooltip-inside.png");
+    background-repeat: repeat;
+    position: absolute;
+    left: 7px;
+    top: 0px;
+}
+
+.player_additions_tooltip #tooltip-text {
+    color: white;
+    font-size: 10px;
+    position: relative;
+    top: 3px;
 }

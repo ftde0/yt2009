@@ -1608,7 +1608,16 @@ app.get("/exp_hd", (req, res) => {
         quality = "1080p"
     }
     // callback mp4 if we already have one
-    if(fs.existsSync(`../assets/${id}-${quality}.mp4`)) {
+    if(quality == "1080p"
+    && fs.existsSync(`../assets/${id}-1080p.mp4`)
+    && fs.statSync(`../assets/${id}-1080p.mp4`).size < 5
+    && fs.existsSync(`../assets/${id}-720p.mp4`)) {
+        res.redirect(`/assets/${id}-720p.mp4`)
+        return;
+    }
+
+    if(fs.existsSync(`../assets/${id}-${quality}.mp4`)
+    && fs.statSync(`../assets/${id}-${quality}.mp4`).size > 5) {
         res.redirect(`/assets/${id}-${quality}.mp4`)
     } else {
         yt2009_utils.saveMp4_android(id, (success) => {
@@ -2105,6 +2114,13 @@ app.get("/yt2009_recommended", (req, res) => {
     && req.headers.cookie.includes("new_recommended")) {
         disableOld = true;
     }
+    let targetVideos = 8;
+    let isRecommendedPage = false;
+    if(req.headers.source
+    && req.headers.source == "recommended_page") {
+        targetVideos = 25;
+        isRecommendedPage = true;
+    }
     let baseVids = req.headers.ids.split(",").slice(0, 3)
     let processedVideos = 0;
     let videoSuggestions = []
@@ -2158,7 +2174,7 @@ app.get("/yt2009_recommended", (req, res) => {
     function createSuggestionsResponse() {
         // get 8 random videos from videoSuggestions
         let filteredSuggestions = []
-        while(filteredSuggestions.length !== 8) {
+        while(filteredSuggestions.length !== targetVideos) {
             let randomVideo = videoSuggestions[
                 Math.floor(Math.random() * videoSuggestions.length)
             ]
@@ -2187,7 +2203,19 @@ app.get("/yt2009_recommended", (req, res) => {
         // create and send html of filteredSuggestions
         let response = ""
         filteredSuggestions.forEach(video => {
-            response += yt2009_templates.recommended_videoCell(video, req)
+            if(isRecommendedPage) {
+                response += yt2009_templates.videoCell(
+                    video.id,
+                    video.title,
+                    req.protocol,
+                    video.creatorName,
+                    video.creatorUrl,
+                    video.views,
+                    req, true
+                )
+            } else {
+                response += yt2009_templates.recommended_videoCell(video, req)
+            }
         })
 
         response = yt2009_languages.apply_lang_to_code(response, req)
@@ -3900,14 +3928,16 @@ if(config.auto_maintain) {
         fs.readdir(__dirname + "/../assets/", (err, data) => {
             data.forEach(f => {
                 fs.stat(__dirname + "/../assets/" + f, (err, stats) => {
-                    fileSizes.push([
-                        __dirname + "/../assets/" + f,
-                        stats.size
-                    ])
-                    totalSize += stats.size
-                    filesChecked++
-                    if(filesChecked >= data.length) {
-                        fileGrabComplete()
+                    if(stats.size) {
+                        fileSizes.push([
+                            __dirname + "/../assets/" + f,
+                            stats.size
+                        ])
+                        totalSize += stats.size
+                        filesChecked++
+                        if(filesChecked >= data.length) {
+                            fileGrabComplete()
+                        }
                     }
                 })
             })

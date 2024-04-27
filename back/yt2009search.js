@@ -426,7 +426,7 @@ module.exports = {
                     if(flags.includes("only_old") &&
                     ((!uploadDate.includes("years"))
                     || (uploadDate.includes("years")
-                    && parseInt(uploadDate.split(" ")[0]) < yearsDiff))) {
+                    && parseInt(uploadDate.split(" ")[0]) < yearsDiff - 1))) {
                         cancelled = true;
                     }
 
@@ -534,7 +534,8 @@ module.exports = {
                         protocol,
                         playlist.videos,
                         playlist.name,
-                        playlist.videoCount
+                        playlist.videoCount,
+                        playlist.a
                     );
 
                     playlist.videos.forEach(video => {

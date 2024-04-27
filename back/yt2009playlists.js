@@ -141,8 +141,12 @@ module.exports = {
                 videoList.name = primarySidebar.title.runs[0].text
                 videoList.views = primarySidebar.stats[1].simpleText
                 videoList.creatorName = owner.text
-                videoList.creatorUrl = owner.navigationEndpoint.browseEndpoint
-                                            .canonicalBaseUrl
+                if(owner.navigationEndpoint) {
+                    videoList.creatorUrl = owner.navigationEndpoint.browseEndpoint
+                                                .canonicalBaseUrl
+                } else {
+                    videoList.creatorUrl = "#"
+                }
                 try {
                     videoList.description = primarySidebar.description
                                             ? primarySidebar.description
