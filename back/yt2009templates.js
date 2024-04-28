@@ -399,6 +399,12 @@ module.exports = {
         let thumbUrl = utils.getThumbUrl(id, flags)
         let viewCount = noLang ? `lang_views_prefix${utils.countBreakup(utils.bareCount(views))}lang_views_suffix`
                       : views
+        if(typeof(flags) !== "string") {
+            try {
+                flags = flags.headers.cookie
+            }
+            catch(error) {}
+        }
         return `
         <div class="video-cell *vl" style="width:19.5%" data-id="${id}">
             <div class="video-entry yt-uix-hovercard">
@@ -537,7 +543,7 @@ module.exports = {
             </div>
         </div>`
     },
-    "searchPlaylistEntry": function(id, protocol, videos, name, videoCount) {
+    "searchPlaylistEntry": function(id, protocol, videos, name, videoCount, a) {
         return `
         <div class="playlist-cell" style="width:24.5%">
             <div class="playlist-entry yt-uix-hovercard">
@@ -545,8 +551,8 @@ module.exports = {
                     <div class="vCluster120WideEntry">
                         <div class="vCluster120WrapperOuter playlist-thumbnail">
                             <div class="vCluster120WrapperInner">
-                                <a href="/playlist?list=${id}" rel="nofollow"><img src="${protocol}://i.ytimg.com/vi/${videos[0].id}/hqdefault.jpg" class="vimgCluster120 yt-uix-hovercard-target"></a>
-                                <div class="video-corner-text"><span>${videos[0].length}</span></div>
+                                <a href="/playlist?list=${id}" rel="nofollow">${videos[0] ? `<img src="${protocol}://i.ytimg.com/vi/${videos[0].id}/hqdefault.jpg" class="vimgCluster120 yt-uix-hovercard-target">` : (a ? `<img src="${a}" class="vimgCluster120 yt-uix-hovercard-target"/>` : "")}</a>
+                                ${videos[0] ? `<div class="video-corner-text"><span>${videos[0].length}</span></div>` : ""}
                             </div>
                         </div>
                     </div>
@@ -923,7 +929,7 @@ module.exports = {
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
                 video_play()
             } else {
-                $("video").src = "/assets/${id}.mp4";
+                $("video").src = "/get_video?video_id=${id}/mp4";
                 hqPlaying = false;
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
             }
@@ -932,7 +938,7 @@ module.exports = {
         // fallback do 360p
         $("video").addEventListener("error", function() {
             if(hqPlaying) {
-                $("video").src = "/assets/${id}.mp4";
+                $("video").src = "/get_video?video_id=${id}/mp4";
                 hqPlaying = false;
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
             }

@@ -389,22 +389,32 @@ module.exports = {
             else if(result.playlistRenderer) {
                 result = result.playlistRenderer
                 let videoList = []
-                result.videos.forEach(previewVideo => {
-                    if(!previewVideo.childVideoRenderer) return;
-                    previewVideo = previewVideo.childVideoRenderer
-                    videoList.push({
-                        "type": "playlist-video",
-                        "length": previewVideo.lengthText.simpleText,
-                        "title": previewVideo.title.simpleText,
-                        "id": previewVideo.videoId
+                let a = false
+                if(result.videos) {
+                    result.videos.forEach(previewVideo => {
+                        if(!previewVideo.childVideoRenderer) return;
+                        previewVideo = previewVideo.childVideoRenderer
+                        videoList.push({
+                            "type": "playlist-video",
+                            "length": previewVideo.lengthText.simpleText,
+                            "title": previewVideo.title.simpleText,
+                            "id": previewVideo.videoId
+                        })
                     })
-                })
+                } else {
+                    try {
+                        a = result.thumbnailRenderer.playlistCustomThumbnailRenderer
+                        .thumbnail.thumbnails[0].url
+                    }
+                    catch(error) {}
+                }
                 resultsToCallback.push({
                     "type": "playlist",
                     "id": result.playlistId,
                     "name": result.title.simpleText,
                     "videoCount": result.videoCount,
-                    "videos": videoList
+                    "videos": videoList,
+                    a
                 })
             }
         })
@@ -1057,9 +1067,9 @@ module.exports = {
             // we can pull from already download mp4 if not
             let downloadAudio = true;
             let audioDownloadDone = false;
-            if(fs.existsSync("../assets/" + id + ".mp4")) {
+            /*if(fs.existsSync("../assets/" + id + ".mp4")) {
                 downloadAudio = false;
-            }
+            }*/
 
             if(downloadAudio) {
                 this.downloadInParts_file(
@@ -1079,6 +1089,7 @@ module.exports = {
             let videoDownloadDone = false;
             if(!qualities["1080p"] && quality == "1080p") {
                 quality = "720p"
+                fs.writeFileSync("../assets/" + id + "-1080p.mp4", "")
             }
             if(!qualities[quality]) {
                 callback(false)

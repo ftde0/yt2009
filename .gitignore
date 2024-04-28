@@ -7,6 +7,7 @@ assets/*.png
 assets/*.jpg
 assets/*.3gp
 assets/*.mp3
+assets/*.m4a
 back/cache_dir/annotations/*
 back/cache_dir/*.json
 back/config.json

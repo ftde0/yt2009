@@ -93,6 +93,30 @@ module.exports = {
             )
         }
 
+        // minimal send for ?r=1 (recommended for you)
+        if(req.query.r == "1") {
+            code = code.split("yt2009_category_name").join("Recommended for You")
+            code = code.replace(
+                " last yt-rounded",
+                " last category-selected yt-rounded"
+            )
+            code = code.replace(`<!--yt2009_videos_insert-->`,
+            `<script src="/assets/site-assets/homepage-recommended.js"></script>
+            <div id="recommended-loading-sprite">
+                <img src="/assets/site-assets/icn_loading_animated-vfl24663.gif"
+                style="margin-left: 360px;margin-top: 30px;margin-bottom: 30px;"/>
+            </div>`)
+            code = code.replace(
+                `browse-basic-modifiers"`,
+                `browse-basic-modifiers" style="display: none;"`
+            )
+            code = require("./yt2009loginsimulate")(req, code)
+            code = doodles.applyDoodle(code)
+            code = language.apply_lang_to_code(code, req)
+            res.send(code)
+            return;
+        }
+
         let categoryNumber = req.query.c || "0"
         let categoryName = category_numbers_lang[categoryNumber]
 

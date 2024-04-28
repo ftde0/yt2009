@@ -15,6 +15,7 @@ var captionsEnabled = false;
 var browserModernFeatures = false;
 var fullscreen_anim_playing = false;
 var fullscreen_btn = $(".video_controls .fullscreen");
+var fullscreen_btn_hovered = false;
 
 function initPlayer(parent, fullscreenEnabled) {
     mainElement = parent;
@@ -41,13 +42,18 @@ function initPlayer(parent, fullscreenEnabled) {
         // button
         fullscreen_btn.addEventListener("mouseover", function() {
             if(fullscreen_anim_playing || player_fullscreen) return;
+            fullscreen_btn_hovered = true;
             fullscreen_anim_playing = true;
             var anim_frame = 0;
             var anim = setInterval(function() {
                 if(player_fullscreen) return;
                 anim_frame++;
+                var xPos = "0px"
+                if(!fullscreen_btn_hovered) {
+                    xPos = "-28px"
+                }
                 fullscreen_btn.style.backgroundPosition
-                = "0px -" + (anim_frame * 22) + "px"
+                = xPos + " -" + (anim_frame * 22) + "px"
                 if(anim_frame * 22 == 220) {
                     clearInterval(anim);
                     fullscreen_anim_playing = false;
@@ -60,6 +66,7 @@ function initPlayer(parent, fullscreenEnabled) {
                 if(player_fullscreen) return;
                 retractFullscreen()
             }, 420)
+            fullscreen_btn_hovered = false;
         }, false)
 
         // the whole thing functioning
@@ -187,16 +194,10 @@ function initPlayer(parent, fullscreenEnabled) {
         $("#watch-player-div").addEventListener("mouseout", function(e) {
             var mouse_left = e.pageX || e.clientX;
             var mouse_top = e.pageY || e.clientY;
-            if(controlsFadeProgress
-            || !fadeControlsEnable
-            || videoEnded
+            if(videoEnded
             || checkBounds($("#watch-player-div"), mouse_left, mouse_top))
             return;
-            controlsFadeProgress = true;
-            non_css_anim_remove($(".video_controls"), "bottom", 0, -23);
             setTimeout(function() {
-                videoControlsShown = false;
-                controlsFadeProgress = false;
                 mousedown = false;
 
                 // hide volume if it were to get glitched
@@ -217,10 +218,19 @@ function initPlayer(parent, fullscreenEnabled) {
 
                 // revert fullscreen animation to 1st frame
                 if(fullscreenEnabled) {
-                    $(".video_controls .fullscreen")
-                    .style.backgroundPosition = "0px 0px"
+                    //retractFullscreen();
                 }
             }, 250)
+
+            if(fadeControlsEnable
+            && !controlsFadeProgress) {
+                controlsFadeProgress = true;
+                non_css_anim_remove($(".video_controls"), "bottom", 0, -23);
+                setTimeout(function () {
+                    videoControlsShown = false;
+                    controlsFadeProgress = false;
+                }, 250)
+            }
         }, false)
 
 
@@ -243,16 +253,22 @@ function initPlayer(parent, fullscreenEnabled) {
 // reversed fullscreen anim
 function retractFullscreen() {
     if(fullscreen_anim_playing || player_fullscreen) return;
-    //fullscreen_anim_playing = true
+    fullscreen_anim_playing = true
     var anim_frame = 10;
     var anim = setInterval(function() {
         if(player_fullscreen) return;
         anim_frame--;
+        var xPos = "0px"
+        if(!fullscreen_btn_hovered) {
+            xPos = "-28px"
+        }
         fullscreen_btn.style.backgroundPosition
-        = "0px -" + (anim_frame * 22) + "px"
+        = xPos + " -" + (anim_frame * 22) + "px"
+        /*fullscreen_btn.style.backgroundPosition
+        = "0px -" + (anim_frame * 22) + "px"*/
         if(anim_frame <= 0) {
             clearInterval(anim);
-            //fullscreen_anim_playing = false;
+            fullscreen_anim_playing = false;
         }
     }, 25)
 }
@@ -697,6 +713,7 @@ volume_panel.addEventListener("mouseout", function(e) {
 }, false)
 
 // check if the cursor went to the left (.timer)
+// (use the same function to unbug seeker)
 $(".timer").addEventListener("mouseover", function() {
     if(parseInt(volume_panel.style.bottom) >= 10) {
         volume_up = false;
@@ -707,6 +724,9 @@ $(".timer").addEventListener("mouseover", function() {
         }, 500)
         volume_panel_mousedown = false;
     }
+
+    mousedown = false;
+    $(".seek_btn").className = "seek_btn"
 }, false)
 
 // or the right (fullscreen)
@@ -1071,7 +1091,49 @@ player_add_popout.addEventListener("mouseout", function(e) {
     }, 500)
 }, false)
 
+function initPopoutFadeout() {
+    // further make sure popout menus (volume, additions) are removed
+    var ac = document.querySelector(".annotations_container") || mainElement
+    ac.addEventListener("mousemove", function(e) {
+        var mouse_left = e.pageX || e.clientX;
+        var mouse_top = e.pageY || e.clientY;
 
+        // ADDITIONS CONTAINER
+        if(!checkBounds(player_add_popout, mouse_left, mouse_top)
+        && parseInt(player_add_popout.style.bottom) >= 25
+        && !player_add_popout_debounce) {
+            $(".captions_popup").style.display = "none"
+            player_add_popout_debounce = true;
+            setTimeout(function() {
+                non_css_anim_remove(player_add_popout, "bottom", 25, -59)
+            }, 200)
+            setTimeout(function() {
+                player_add_popout_debounce = false;
+            }, 300)
+        }
+
+        // VOLUME PANEL
+        if(!checkBounds(volume_panel, mouse_left, mouse_top)
+        && parseInt(volume_panel.style.bottom) >= 25
+        && !volume_popping) {
+            volume_up = false;
+            volume_popping = true;
+            setTimeout(function() {
+                non_css_anim_remove(volume_panel, "bottom", 25, -64)
+            }, 200)
+            setTimeout(function() {
+                volume_popping = false;
+            }, 500)
+        }
+        
+        // SEEK BAR (unhover)
+        mousedown = false;
+        $(".seek_btn").className = "seek_btn"
+    }, false)
+}
+setTimeout(function() {
+    initPopoutFadeout();
+}, 1000)
 
 var seekMoveDebounce = false
 var seekbarElements = $(".seek, .elapsed, .loaded, .seek_btn")
@@ -1605,7 +1667,10 @@ function annotationsMain() {
     if(!document.querySelector(".annotations_container")) {
         var ac = document.createElement("div")
         ac.className = "annotations_container"
-        mainElement.appendChild(ac)
+        try {
+            mainElement.appendChild(ac)
+        }
+        catch(error) {document.body.appendChild(ac);}
         ac.addEventListener("click", function() {
             if(!video.paused) {
                 video_pause();
@@ -1626,16 +1691,39 @@ function annotationsMain() {
         r.setRequestHeader("source", location.href)
         r.send(null)
         r.addEventListener("load", function(e) {
-            // proper icon
-            $(".player_additions_popout .annotations").className = "annotations"
             // index the received annotations
             // for easier checking based on start time
             var annotations = JSON.parse(r.responseText)
+            var annotationsExist = false;
             annotations.forEach(function(annotation) {
                 if(!annotation.fromTime) return;
                 annotationsTimeIndex[annotation.fromTime.toFixed(1)]
-                                                        = annotation
+                                                        = annotation;
+                annotationsExist = true;
             })
+
+            if(annotationsExist) {
+                // proper icon if at least 1 annotation
+                annotationsSwitch.className = "annotations"
+            } else {
+                // show paTooltip if no annotations
+                // (use annotationsPaHovered for delay)
+                var annotationsPaHovered = false;
+                annotationsSwitch.addEventListener("mousemove", function() {
+                    annotationsPaHovered = true;
+                    setTimeout(function() {
+                        if(annotationsPaHovered) {
+                            updatePaTooltip("Annotations are not available")
+                            showPaTooltip()
+                            paTooltipContainer.style.top = "0px"
+                        }
+                    }, 500)
+                }, false)
+                annotationsSwitch.addEventListener("mouseout", function() {
+                    hidePaTooltip()
+                    annotationsPaHovered = false;
+                }, false)
+            }
 
             // interval for annotations checking
             // (timeUpdate doesn't fire quick enough)
@@ -1699,12 +1787,14 @@ function captionsMain() {
         r.send(null)
         r.addEventListener("load", function(e) {
             var langs = JSON.parse(r.responseText)
+            var captionsFound = false;
             captionsLangIndex = langs;
 
             // load english captions as default
             if(langs["en"]) {
                 loadCaptions(videoId, "en")
                 placeCaptions();
+                captionsFound = true;
             } else {
                 var i = 0;
                 var firstLang = ""
@@ -1717,13 +1807,39 @@ function captionsMain() {
                 if(firstLang) {
                     loadCaptions(videoId, firstLang)
                     placeCaptions();
+                    captionsFound = true;
                 }
+            }
+
+            if(!captionsFound) {
+                var captionsPaHovered = false;
+                captionsSwitch.addEventListener("mousemove", function() {
+                    captionsPaHovered = true;
+                    setTimeout(function() {
+                        if(captionsPaHovered) {
+                            updatePaTooltip("Captions are not available")
+                            showPaTooltip()
+                            paTooltipContainer.style.top = "25px"
+                        }
+                    }, 500)
+                }, false)
+                captionsSwitch.addEventListener("mouseout", function() {
+                    hidePaTooltip()
+                    captionsPaHovered = false;
+                }, false)
             }
         }, false)
     } else {
         // show ui disabled and remove previous captions
         $(".player_additions_popout .cc").className += " none"
         var s = document.querySelectorAll(".caption")
+        for(var e in s) {
+            try {
+                s[e].parentNode.removeChild(s[e])
+            }
+            catch(error) {}
+        }
+        s = document.querySelectorAll(".captions-page")
         for(var e in s) {
             try {
                 s[e].parentNode.removeChild(s[e])
@@ -2050,3 +2166,42 @@ document.body.addEventListener("keydown", function(e) {
         }
     }
 }, false)
+
+// unhover seeker if on pause button
+$(".pause_btn").addEventListener("mousemove", function() {
+    mousedown = false;
+    $(".seek_btn").className = "seek_btn"
+}, false)
+
+// side tooltips for player additions
+var paTooltipContainer = document.createElement("div")
+paTooltipContainer.style.display = "none"
+paTooltipContainer.className = "player_additions_tooltip"
+paTooltipContainer.innerHTML = '<span id="tooltip-entry"></span>\
+<span id="tooltip-text-container"><span id="tooltip-text"></span></span>\
+<span id="tooltip-end"></span>'
+player_add_popout.appendChild(paTooltipContainer)
+
+function updatePaTooltip(text) {
+    paTooltipContainer.querySelector("#tooltip-text").innerHTML = text;
+    var approxTextLength = Math.floor(text.length * 5)
+    paTooltipContainer.querySelector("#tooltip-text-container")
+    .style.width = approxTextLength + "px"
+    
+    var startInsideWidth = 7;
+    startInsideWidth += paTooltipContainer
+                        .querySelector("#tooltip-text-container")
+                        .getBoundingClientRect().width;
+    paTooltipContainer.querySelector("#tooltip-end").style.left = startInsideWidth + "px"
+    paTooltipContainer.style.right = startInsideWidth + 14 + 45 + "px"
+}
+
+function showPaTooltip() {
+    paTooltipContainer.style.display = "block"
+}
+
+function hidePaTooltip() {
+    paTooltipContainer.style.display = "none"
+    paTooltipContainer.style.right = "0px"
+    paTooltipContainer.style.top = "0px"
+}

@@ -1,3 +1,12 @@
+var targetId = "yt2009-recommended-cells-container"
+
+// use same script for /videos?r=1
+var isVideosPage = false;
+if(location.href.indexOf("/videos") !== -1) {
+    isVideosPage = true;
+    targetId = "browse-video-data"
+}
+
 // get videos (localstorage/cookie)
 var videoIdString = ""
 if(window.localStorage
@@ -38,6 +47,9 @@ if (window.XMLHttpRequest) {
 }
 r.open("GET", "/yt2009_recommended")
 r.setRequestHeader("ids", videoIdString)
+if(isVideosPage) {
+    r.setRequestHeader("source", "recommended_page")
+}
 try {
     r.send(null)
     r.onreadystatechange = function(e) {
@@ -45,9 +57,9 @@ try {
             // fill recommended with videos from server
             document.getElementById("recommended-loading-sprite")
                     .style.display = "none"
-            document.getElementById("yt2009-recommended-cells-container")
-                    .innerHTML = r.responseText
-            if(r.responseText.indexOf("YT2009_NO_DATA") !== -1) {
+            document.getElementById(targetId).innerHTML = r.responseText
+            if(r.responseText.indexOf("YT2009_NO_DATA") !== -1
+            && !isVideosPage) {
                 document.getElementById("feedmodule-REC").style.display = "none"
             }
         }
@@ -56,12 +68,14 @@ try {
 catch(error) {}
 
 // learn more
-document.getElementById("yt2009-rec-learn-more").onclick = function() {
-    document.getElementById("logged_out_rec_learn_more_box")
-            .style.display = "block"
-}
-
-document.getElementById("yt2009-rec-more-close").onclick = function() {
-    document.getElementById("logged_out_rec_learn_more_box")
-            .style.display = "none"
+if(!isVideosPage) {
+    document.getElementById("yt2009-rec-learn-more").onclick = function() {
+        document.getElementById("logged_out_rec_learn_more_box")
+                .style.display = "block"
+    }
+    
+    document.getElementById("yt2009-rec-more-close").onclick = function() {
+        document.getElementById("logged_out_rec_learn_more_box")
+                .style.display = "none"
+    }
 }
