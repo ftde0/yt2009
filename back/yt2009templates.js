@@ -47,6 +47,7 @@ module.exports = {
                 )
             }
         })
+        content = content.split("$").join("&#36;")
         let dislikeCode = `onclick="sendCmtRating('${id}', 'dislike');return false;"`
         let likeCode = `onclick="sendCmtRating('${id}', 'like');return false;"`
         return `<div class="watch-comment-entry" ${id ? `id="comment-${id}"` : ""}>

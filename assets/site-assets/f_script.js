@@ -1308,7 +1308,7 @@ function openPlaylist(element, switchMode) {
         } else {
             r = new ActiveXObject("Microsoft.XMLHTTP");
         }
-        r.open("GET", "/channel_get_playlist")
+        r.open("GET", "/channel_get_playlist?rt=" + Date.now())
         r.setRequestHeader("id", element.getAttribute("data-id"))
         r.send(null)
         r.onreadystatechange = function(e) {
@@ -1615,7 +1615,7 @@ function playnav_searchChannel() {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/search_channel")
+    r.open("GET", "/search_channel?rt=" + Date.now())
     r.setRequestHeader("source", location.pathname)
     r.setRequestHeader("query", $("#upload_search_query-play").value)
     r.send(null)
@@ -1642,7 +1642,7 @@ function playnav_sort(sortMode) {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/channel_sort")
+    r.open("GET", "/channel_sort?rt=" + Date.now())
     r.setRequestHeader("source", location.pathname)
     r.setRequestHeader("sort", sortMode)
     r.send(null)

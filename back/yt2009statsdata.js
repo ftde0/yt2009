@@ -388,6 +388,7 @@ module.exports = {
         }
         let videoKeyword = utils.exp_related_keyword(v.tags, v.title)
                                 .replace(/\"/g, "")
+        videoKeyword = videoKeyword.split("'").join("").split("\"").join("")
         let timeseriesURL = [
             "https://trends.google.com/trends/embed/explore/TIMESERIES",
             "?req=",

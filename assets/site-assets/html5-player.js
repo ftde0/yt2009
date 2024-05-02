@@ -44,21 +44,35 @@ function initPlayer(parent, fullscreenEnabled) {
             if(fullscreen_anim_playing || player_fullscreen) return;
             fullscreen_btn_hovered = true;
             fullscreen_anim_playing = true;
-            var anim_frame = 0;
-            var anim = setInterval(function() {
-                if(player_fullscreen) return;
-                anim_frame++;
-                var xPos = "0px"
-                if(!fullscreen_btn_hovered) {
-                    xPos = "-28px"
+            function showFullscreenAnim() {
+                if(!fullscreen_btn_hovered) return;
+                var anim_frame = 0;
+                var anim = setInterval(function() {
+                    if(player_fullscreen) return;
+                    anim_frame++;
+                    var xPos = "0px"
+                    if(!fullscreen_btn_hovered) {
+                        xPos = "-28px"
+                    }
+                    fullscreen_btn.style.backgroundPosition
+                    = xPos + " -" + (anim_frame * 22) + "px"
+                    if(anim_frame * 22 == 220) {
+                        clearInterval(anim);
+                        fullscreen_anim_playing = false;
+                    }
+                }, 25)
+            }
+            showFullscreenAnim();
+            var animLoop = setInterval(function() {
+                if(fullscreen_btn_hovered) {
+                    retractFullscreen(true)
+                    setTimeout(function() {
+                        showFullscreenAnim();
+                    }, 700)
+                } else {
+                    clearInterval(animLoop);
                 }
-                fullscreen_btn.style.backgroundPosition
-                = xPos + " -" + (anim_frame * 22) + "px"
-                if(anim_frame * 22 == 220) {
-                    clearInterval(anim);
-                    fullscreen_anim_playing = false;
-                }
-            }, 25)
+            }, 1200)
         }, false)
 
         fullscreen_btn.addEventListener("mouseout", function() {
@@ -215,11 +229,6 @@ function initPlayer(parent, fullscreenEnabled) {
                     = "annotations-tooltip player-tooltip hid"
                     $(".captions_popup").style.display = "none"
                 }
-
-                // revert fullscreen animation to 1st frame
-                if(fullscreenEnabled) {
-                    //retractFullscreen();
-                }
             }, 250)
 
             if(fadeControlsEnable
@@ -251,8 +260,12 @@ function initPlayer(parent, fullscreenEnabled) {
 }
 
 // reversed fullscreen anim
-function retractFullscreen() {
+function retractFullscreen(skipLastFrame) {
     if(fullscreen_anim_playing || player_fullscreen) return;
+    var lastFrame = 0;
+    if(skipLastFrame) {
+        lastFrame = 1;
+    }
     fullscreen_anim_playing = true
     var anim_frame = 10;
     var anim = setInterval(function() {
@@ -266,7 +279,7 @@ function retractFullscreen() {
         = xPos + " -" + (anim_frame * 22) + "px"
         /*fullscreen_btn.style.backgroundPosition
         = "0px -" + (anim_frame * 22) + "px"*/
-        if(anim_frame <= 0) {
+        if(anim_frame <= lastFrame) {
             clearInterval(anim);
             fullscreen_anim_playing = false;
         }
@@ -591,6 +604,7 @@ function adjustSeekbarWidth() {
 
     sizeAnnotationsContainer()
     setVidHeight()
+    resizeCaptions()
 }
 
 window.addEventListener("resize", adjustSeekbarWidth, false);
@@ -627,8 +641,14 @@ function mouseup() {
     mousedown = false;
 }
 
+var seekTimeout = false;
 function videoSeek(e) {
     if(mousedown) {
+        if(seekTimeout) return;
+        seekTimeout = true;
+        setTimeout(function() {
+            seekTimeout = false;
+        }, 40)
         $(".seek_btn").className = "seek_btn hovered"
         var offsetX = e.pageX - seekbar.getBoundingClientRect().left;
         video.currentTime = (offsetX / seekbar.getBoundingClientRect().width)
@@ -2043,6 +2063,27 @@ function renderCaption(caption) {
             return;
         }
     }, 100)
+}
+
+// resize captions when player resized
+function resizeCaptions() {
+    var m = mainElement;
+    if(mainElement == document) {
+        m = $(".embed-container")
+    }
+    var s;
+    try {
+        s = m.querySelectorAll(".caption")
+    }
+    catch(error) {
+        s = document.querySelectorAll(".caption")
+    }
+    for(var e in s) {
+        try {
+            s[e].style.fontSize = m.getBoundingClientRect().width / 40 + "px"
+        }
+        catch(error) {}
+    }
 }
 
 // hover-over caption selection ui
