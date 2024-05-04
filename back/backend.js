@@ -1297,9 +1297,16 @@ video comments
 ======
 */
 app.get("/get_more_comments", (req, res) => {
-    let id = req.headers.source
-             .split("watch?v=")[1]
-             .split("&")[0].split("#")[0]
+    let id = ""
+    try {
+        id = req.headers.source
+                .split("watch?v=")[1]
+                .split("&")[0].split("#")[0]
+    }
+    catch(e) {
+        id = req.headers.source
+                .split("v=")[1].split("&")[0].split("#")[0]
+    }
     let pageNumber = parseInt(req.headers.page)
     let flags = ""
     try {
@@ -2961,26 +2968,20 @@ app.get("/channel_sort", (req, res) => {
     }
 
     // get channel by source
-    yt2009_channels.main(
-        {"path": req.headers.source,
-        "headers": {},
-        "query": {}},
-        {"send": function(data) {
-            // get chips if set to most popular/latest and no only_old
-            // search in any other case
-            if(req.headers.sort == "date" && !useOnlyOld) {
-                getByChip(yt2009_templates.latestChip, data.id)
-                return;
-            }
-            if(req.headers.sort == "popularity" && !useOnlyOld) {
-                getByChip(yt2009_templates.popularChip, data.id)
-                return;
-            }
-            
-            getNextPage(data.name, data.id)
-            
+    yt2009_channels.get_id(req.headers.source, (id) => {
+        // get chips if set to most popular/latest and no only_old
+        // search in any other case
+        if(req.headers.sort == "date" && !useOnlyOld) {
+            getByChip(yt2009_templates.latestChip, id)
+            return;
         }
-    }, "", true)
+        if(req.headers.sort == "popularity" && !useOnlyOld) {
+            getByChip(yt2009_templates.popularChip, id)
+            return;
+        }
+
+        getNextPage(data.name, data.id)
+    })
 
     // loop search until 10 videos (or 5 fetches to avoid infinite)
     function getNextPage(name, id) {
@@ -3119,6 +3120,9 @@ app.get("/comment_search", (req, res) => {
         code = code.replace(`yt2009_query`, "")
     }
     // by page
+    if(req.query.page) {
+        req.query.page = yt2009_utils.xss(req.query.page)
+    }
     let page = parseInt(req.query.page || 1) - 1
     if(page < 0) {page = 0}
     let unpagedComments = JSON.parse(JSON.stringify(commentsA))
@@ -3131,7 +3135,7 @@ app.get("/comment_search", (req, res) => {
     })
 
     // pager render
-    let pagerHTML = "Page " + (req.query.page || 1)
+    let pagerHTML = "Page " + parseInt(req.query.page || 1)
     if(req.query.page && parseInt(req.query.page) > 1) {
         let previousPage = parseInt(req.query.page) - 1
         let nextPage = parseInt(req.query.page) + 1

@@ -1823,12 +1823,15 @@ module.exports = {
     "get_id": function(link, callback) {
         link = link.split("/")
         link.forEach(p => {
+            if(p.startsWith("UC")) {
+                link = "channel/" + p
+            }
             if(p.startsWith("@")) {
                 link = p
             }
-            if(p == "user") {
+            if(p == "user" || p == "c") {
                 link = link[link.indexOf(p) + 1]
-            }
+            } 
         })
         userid_cache.read(link, (id) => {
             // clean fetch the channel
