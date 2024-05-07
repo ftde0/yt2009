@@ -143,7 +143,7 @@ function switchChannel(element) {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/subscriptions_new_videos")
+    r.open("GET", "/subscriptions_new_videos?r=" + Math.random().toString())
     r.setRequestHeader("url", url)
     r.send(null)
     r.onreadystatechange = function(e) {

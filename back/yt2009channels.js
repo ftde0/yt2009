@@ -153,9 +153,10 @@ module.exports = {
             let metadataParts = []
             try {
                 r.header.pageHeaderRenderer.content.pageHeaderViewModel
-                .metadata.contentMetadataViewModel.metadataRows[0].metadataParts
-                .forEach(m => {
-                    metadataParts.push(m.text.content)
+                .metadata.contentMetadataViewModel.metadataRows.forEach(mr => {
+                    mr.metadataParts.forEach(m => {
+                        metadataParts.push(m.text.content)
+                    })
                 })
             }
             catch(error) {}
@@ -826,6 +827,24 @@ module.exports = {
                         flashUrl += `&iv_module=http%3A%2F%2F`
                         + `${config.ip}%3A${config.port}%2Fiv_module.swf`;
                     }
+                    if(watch_url.includes("2012.swf")) {
+                        let modulePrefix = `http://${config.ip}:${config.port}/alt-swf/modules/`
+                        let args = {
+                            "BASE_YT_URL": `http://${config.ip}:${config.port}/`,
+                            "iv3_module": `${modulePrefix}2012_iv3_module-vfl7CyC10.swf`,
+                            "cc3_module": `${modulePrefix}2012_subtitles3_module-vflX-PxNh.swf`,
+                            "cc_load_policy": "1",
+                            "iv_load_policy": "1"
+                        }
+                        let argsMerged = ""
+                        for(let a in args) {
+                            argsMerged += "&" + a + "=" + args[a]
+                        }
+                        flashUrl += argsMerged;
+                    }
+                    if(watch_url.includes("cps2.swf")) {
+                        flashUrl += `&BASE_YT_URL=http://${config.ip}:${config.port}/`;
+                    }
                     code = code.replace(
                         "<!--yt2009_player-->",
                         templates.flashObject(flashUrl)
@@ -833,7 +852,9 @@ module.exports = {
                     code = code.replace(
                         `//yt2009-f-custom-player`,
                         `var customPlayerUrl = "${watch_url}";
-                        var customPlayerArg = "${watch_arg}"`
+                        var customPlayerArg = "${watch_arg}";
+                        var baseUrlSetting = "http://${config.ip}:${config.port}/";
+                        var currentVideo = "${video.id}";`
                     )
                 }
             } else {

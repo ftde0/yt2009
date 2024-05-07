@@ -1738,13 +1738,21 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // fmode endscreen
-        function render_endscreen_f() {
-            if(!flash_url.includes("/watch.swf")) return "";
+        function render_endscreen_f(rvLength) {
+            if(!rvLength) {
+                rvLength = 1700
+            }
+            if(!flash_url.includes("/watch.swf")
+            && !flash_url.includes("2010.swf")) return "";
             let rv_url = ""
             let related_index = 0;
             endscreen_queue.forEach(video => {
                 if(related_index <= 7
-                && encodeURIComponent(rv_url).length < 1700) {
+                && encodeURIComponent(rv_url).length < rvLength) {
+                    if(!req.headers.cookie) {
+                        req.headers.cookie = ""
+                    }
+                    req.headers.cookie += "; flash_url=" + flash_url
                     let thumbUrl = yt2009utils.getThumbUrl(video.id, req)
                     rv_url += `&rv.${related_index}.title=${
                         encodeURIComponent(video.title)
@@ -2008,10 +2016,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         function fillFlashIfNeeded() {
             // flash
             if(useFlash) {
-                if(autoHQ) {
-                    flash_url += "&vq=2"
+                let vq = "2"
+                if(flash_url.includes("2012.swf")
+                || flash_url.includes("2010.swf")) {
+                    vq = "hd1080"
                 }
-                flash_url += render_endscreen_f()
+                if(autoHQ) {
+                    flash_url += "&vq=" + vq
+                }
                 if(new Date().getMonth() == 3
                 && new Date().getDate() == 1
                 && !req.headers.cookie.includes("unflip=1")) {
@@ -2043,7 +2055,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         fmtUrls += ","
                     }
                     fmtMap += "5/0/7/0/0"
-                    fmtUrls += `5|http://${config.ip}:${config.port}/assets/${data.id}.mp4`
+                    fmtUrls += `5|http://${config.ip}:${config.port}/get_video?video_id=${data.id}/mp4`
                     flash_url += "&fmt_map=" + encodeURIComponent(fmtMap)
                     flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
                 }
@@ -2055,6 +2067,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     flash_url += "&cc_load_policy=1"
                 } else {
                     flash_url += "&cc_load_policy=2"
+                }
+
+                // always_annotations flash
+                if(flags.includes("always_annotations")) {
+                    flash_url += "&iv_load_policy=1"
+                } else {
+                    flash_url += "&iv_load_policy=2"
                 }
 
                 flash_url += "&enablejsapi=1"
@@ -2070,7 +2089,42 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         "http://" + config.ip + ":" + config.port + "/"
                     )
                 }
+
+                // 2012 subtitles/annotations
+                let cc3_module = ""
+                let iv3_module = ""
+                let endscreen_module = ""
+                if(flash_url.includes("2012.swf")) {
+                    cc3_module = "2012_subtitles3_module-vflX-PxNh.swf"
+                    iv3_module = "2012_iv3_module-vfl7CyC10.swf"
+                }
+                if(flash_url.includes("2010.swf")) {
+                    cc3_module = "2010_subtitles3_module-vfl183159.swf"
+                    iv3_module = "2010_iv3_module-vfl183159.swf"
+                    endscreen_module = "2010_endscreen-vfl183159.swf"
+                }
+                if(cc3_module) {
+                    flash_url += "&cc3_module=" + encodeURIComponent(
+                        "http://" + config.ip + ":" + config.port
+                        + "/alt-swf/modules/" + cc3_module
+                    )
+                }
+                if(iv3_module) {
+                    flash_url += "&iv3_module=" + encodeURIComponent(
+                        "http://" + config.ip + ":" + config.port
+                        + "/alt-swf/modules/" + iv3_module
+                    )
+                }
+                if(endscreen_module) {
+                    flash_url += "&endscreen_module=" + encodeURIComponent(
+                        "http://" + config.ip + ":" + config.port
+                        + "/alt-swf/modules/" + endscreen_module
+                    )
+                }
                 
+                flash_url += render_endscreen_f()
+
+                // final flash object
                 code = code.replace(
                     `<!--yt2009_f-->`,
                     yt2009templates.flashObject(flash_url)

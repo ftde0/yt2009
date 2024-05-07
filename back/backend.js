@@ -780,6 +780,11 @@ app.get("/get_video_info", (req, res) => {
             let fmt_list = ""
             let fmt_stream_map = ""
             let fmt_map = ""
+            let url_encoded_fmt_stream_map = []
+            let addUrlEncoded = false;
+            if(req.query.html5) {
+                addUrlEncoded = true;
+            }
             qualities.forEach(quality => {
                 switch(quality) {
                     case "1080p": {
@@ -788,6 +793,17 @@ app.get("/get_video_info", (req, res) => {
                         fmt_stream_map += `37|http://${config.ip}:${
                             config.port
                         }/exp_hd?video_id=${req.query.video_id}&fhd=1&,`
+                        if(addUrlEncoded) {
+                            let fmtData = [
+                                "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
+                                "itag=37",
+                                `url=${encodeURIComponent(`http://${config.ip}:${
+                                    config.port
+                                }/exp_hd?video_id=${req.query.video_id}&fhd=1`)}`,
+                                "quality=hd1080"
+                            ].join("&")
+                            url_encoded_fmt_stream_map.push(fmtData)
+                        }
                         break;
                     }
                     case "720p": {
@@ -796,6 +812,17 @@ app.get("/get_video_info", (req, res) => {
                         fmt_stream_map += `22|http://${config.ip}:${
                             config.port
                         }/exp_hd?video_id=${req.query.video_id}&,`
+                        if(addUrlEncoded) {
+                            let fmtData = [
+                                "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
+                                "itag=22",
+                                `url=${encodeURIComponent(`http://${config.ip}:${
+                                    config.port
+                                }/exp_hd?video_id=${req.query.video_id}`)}`,
+                                "quality=hd720"
+                            ].join("&")
+                            url_encoded_fmt_stream_map.push(fmtData)
+                        }
                         break;
                     }
                     case "480p": {
@@ -804,6 +831,17 @@ app.get("/get_video_info", (req, res) => {
                         fmt_stream_map +=  `35|http://${config.ip}:${
                             config.port
                         }/get_480?video_id=${req.query.video_id}&,`
+                        if(addUrlEncoded) {
+                            let fmtData = [
+                                "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
+                                "itag=35",
+                                `url=${encodeURIComponent(`http://${config.ip}:${
+                                    config.port
+                                }/get_480?video_id=${req.query.video_id}`)}`,
+                                "quality=large"
+                            ].join("&")
+                            url_encoded_fmt_stream_map.push(fmtData)
+                        }
                         break;
                     }
                 }
@@ -813,6 +851,22 @@ app.get("/get_video_info", (req, res) => {
             fmt_stream_map += `5|http://${config.ip}:${
                 config.port
             }/get_video?video_id=${data.id}/mp4`
+            if(addUrlEncoded && url_encoded_fmt_stream_map.length == 0) {
+                let fmtData = [
+                    "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
+                    "itag=5",
+                    `url=${encodeURIComponent(`http://${config.ip}:${
+                        config.port
+                    }/get_video?video_id=${req.query.video_id}/mp4`)}`,
+                    "quality=medium"
+                ].join("&")
+                url_encoded_fmt_stream_map.push(fmtData)
+            }
+            let urlStreams = (addUrlEncoded
+            ? "\nurl_encoded_fmt_stream_map=" + encodeURIComponent(
+                url_encoded_fmt_stream_map.join(",")
+            )
+            : "")
             res.send(`status=ok
 length_seconds=${data.length}
 keywords=a
@@ -837,10 +891,51 @@ author=${data.author_name}
 title=${data.title}
 video_id=${req.query.video_id}
 fmt_list=${encodeURIComponent(fmt_list)}
-fmt_stream_map=${encodeURIComponent(fmt_stream_map)}`.split("\n").join("&"))
+fmt_stream_map=${encodeURIComponent(fmt_stream_map)}${urlStreams}`.split("\n").join("&"))
         }))
-        
     }), "", "", false, false)
+})
+
+app.get("/get_video_metadata", (req, res) => {
+    if(!req.query.video_id) {
+        res.sendStatus(400)
+        return;
+    }
+    req.query.video_id = req.query.video_id.replace("/mp4", "")
+    yt2009.fetch_video_data(req.query.video_id, (data) => {
+        let channelRequest = {
+            "path": "/channel/" + data.author_id,
+            "headers": {},
+            "query": {}
+        }
+        yt2009_channels.main(channelRequest, ({"send": function(channel) {
+            let authorImg = data.author_img
+            if(authorImg == "default"
+            || authorImg == "/assets/default.png") {
+                authorImg = "/assets/site-assets/default.png"
+            }
+            res.send(`<root><return_code>0</return_code>
+<html_content>
+    <video_info>
+        <description>${yt2009_utils.xss(data.description)}</description>
+        <view_count>${data.viewCount}</view_count>
+        <likes_count_unformatted></likes_count_unformatted>
+        <dislikes_count_unformatted></dislikes_count_unformatted>
+    </video_info>
+    <user_info>
+        <username>${yt2009_utils.xss(data.author_name)}</username>
+        <image_url>http://${config.ip}:${config.port}${authorImg}</image_url>
+        <external_id>${data.author_id}</external_id>
+        <public_name>${yt2009_utils.xss(data.author_name)}</public_name>
+        <subscriber_count>${
+            channel.properties
+            && channel.properties.subscribers
+            ? channel.properties.subscribers : "?"}</subscriber_count>
+    </user_info>
+</html_content></root>`)
+        }}), "", true)
+    }, "", "source-get_video_metadata-" + yt2009_utils.get_used_token(req),
+    false, false, true)
 })
 
 app.get("/xl/embed", (req, res) => {
@@ -1396,6 +1491,15 @@ app.get("/get_awesome", (req, res) => {
 })
 app.get("/set_awesome", (req, res) => {
     yt2009_warp_swf.get_related(req, res)
+})
+app.get("/embed_api_rest", (req, res) => {
+    if(req.query.method == "list_recs"
+    && req.query.v) {
+        req.query.video_id = req.query.v
+        yt2009_warp_swf.get_related(req, res)
+    } else {
+        res.sendStatus(200)
+    }
 })
 app.get("/next_awesome", (req, res) => {
     yt2009_warp_swf.get_related(req, res)
@@ -2980,7 +3084,14 @@ app.get("/channel_sort", (req, res) => {
             return;
         }
 
-        getNextPage(data.name, data.id)
+        let channelRequest = {
+            "path": "/channel/" + id,
+            "headers": {},
+            "query": {}
+        }
+        yt2009_channels.main(channelRequest, ({"send": function(data) {
+            getNextPage(data.name, data.id)
+        }}), "", true)
     })
 
     // loop search until 10 videos (or 5 fetches to avoid infinite)
@@ -3928,20 +4039,24 @@ if(config.auto_maintain) {
     function checkSize() {
         let totalSize = 0;
         let filesChecked = 0;
+        let totalFiles = 0;
         let fileSizes = []
         fs.readdir(__dirname + "/../assets/", (err, data) => {
             data.forEach(f => {
+                totalFiles++
                 fs.stat(__dirname + "/../assets/" + f, (err, stats) => {
-                    if(stats.size) {
+                    if(stats && stats.size) {
                         fileSizes.push([
                             __dirname + "/../assets/" + f,
                             stats.size
                         ])
                         totalSize += stats.size
                         filesChecked++
-                        if(filesChecked >= data.length) {
+                        if(filesChecked >= totalFiles) {
                             fileGrabComplete()
                         }
+                    } else {
+                        totalFiles--
                     }
                 })
             })
@@ -4193,7 +4308,7 @@ thumbnailProxyEndpoints.forEach(t => {
 
 /*
 ======
-misc dummy flash endpoints
+misc flash endpoints
 ======
 */
 
@@ -4205,6 +4320,51 @@ app.get("/wiitv", (req, res) => {
     res.status(200).send("")
 })
 app.get("/leanback_ajax", (req, res) => {
+    if(req.query.action_search) {
+        if(!req.query.search_query) {
+            res.sendStatus(400)
+            return;
+        }
+        let query = req.query.search_query;
+        let page = req.query.page || "1"
+        page = parseInt(page)
+        if(isNaN(page)) {page = 1;}
+        let quality = req.query.quality || "all"
+        let searchParams = {}
+        if(quality == "HD") {
+            searchParams.high_definition = true;
+            searchParams.page = page;
+        }
+        res.status(200)
+        yt2009_search.get_search(query, "", searchParams, (data => {
+            let formattedResults = []
+            let resultCount = 20;
+            data.forEach(r => {
+                if(r.type == "video") {
+                    formattedResults.push({
+                        "title": r.title,
+                        "id": r.id,
+                        "encrypted_id": r.id,
+                        "thumbnail": yt2009_utils.getThumbUrl(r.id, req),
+                        "views": yt2009_utils.bareCount(r.views).toString(),
+                        "duration": r.time,
+                        "author": r.author_name,
+                        "user_id": r.author_url.split("channel/")[1],
+                        "time_created": r.upload,
+                        "description": r.description
+                    })
+                } else if(r.type == "metadata") {
+                    resultCount = r.resultCount;
+                }
+            })
+
+            res.send({
+                "total": resultCount,
+                "videos": formattedResults
+            })
+        }), yt2009_utils.get_used_token(req), false)
+        return;
+    }
     if(req.query.action_featured) {
         let r = fs.readFileSync("../assets/site-assets/leanback_ajax.json").toString()
         res.send(r)
@@ -4233,6 +4393,20 @@ app.get("/auth/read2", (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
     </annotations></document>`)
 })
+
+/*
+======
+yt2009upgrade: updates that can't be applied through git through various reasons
+======
+*/
+
+// remove obama video (removed from youtube)
+let obamaVideoObject = yt2009_constant.homepageCache_news.filter(s => s.id == "Z9eId_9n1NM")
+if(obamaVideoObject) {
+    let newNewsCache = yt2009_constant.homepageCache_news.filter(s => s.id !== "Z9eId_9n1NM")
+    yt2009_constant.homepageCache_news = newNewsCache;
+    fs.writeFileSync("./yt2009constants.json", JSON.stringify(yt2009_constant))
+}
 
 /*
 pizdec

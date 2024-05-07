@@ -1563,6 +1563,11 @@ module.exports = {
         && req.headers.cookie.includes("autogen_thumbnails")) {
             file = "1.jpg"
         }
+        if(req.headers
+        && req.headers.cookie
+        && req.headers.cookie.includes("2010.swf")) {
+            file = "default.jpg"
+        }
         let fullUrl = "//i.ytimg.com/vi/" + id + "/" + file
         if(req.headers
         && req.headers.cookie

@@ -1221,6 +1221,7 @@ function switchVideo(video) {
     }
     
     var id = video.id.split("-").splice(2, video.id.split("-").length).join("-")
+    currentVideo = id;
 
     var videoUrl = customPlayerUrl + '?' + customPlayerArg + '=' + id
     if(document.cookie.indexOf("f_h264=on") !== -1) {
@@ -1230,6 +1231,10 @@ function switchVideo(video) {
                       + "/channel_fh264_getvideo?v=" + id
         videoUrl += "&fmt_map=" + encodeURIComponent(fmtMap)
         videoUrl += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+    }
+    if(customPlayerUrl.indexOf("2012.swf") !== -1
+    || customPlayerUrl.indexOf("cps2.swf") !== -1) {
+        videoUrl += "&BASE_YT_URL=" + baseUrlSetting
     }
 
     var infoTitle = $("#playnav-curvideo-title")
@@ -1272,7 +1277,7 @@ function switchTab(tab_name, tabElement) {
         try {
             e[sel].className += " hid"
         }
-        catch(error) {console.log(error)}
+        catch(error) {}
     }
 
     var s = document.querySelectorAll(".navbar-tab")
@@ -1308,7 +1313,7 @@ function openPlaylist(element, switchMode) {
         } else {
             r = new ActiveXObject("Microsoft.XMLHTTP");
         }
-        r.open("GET", "/channel_get_playlist?rt=" + Date.now())
+        r.open("GET", "/channel_get_playlist?r=" + Math.random().toString())
         r.setRequestHeader("id", element.getAttribute("data-id"))
         r.send(null)
         r.onreadystatechange = function(e) {
@@ -1380,13 +1385,6 @@ function get_video_comments() {
     // obecny film
     var l = '<img src="/assets/site-assets/icn_loading_animated-vfl24663.gif">'
     $("#playnav-panel-comments").innerHTML = l;
-    var currentId = document.getElementsByTagName("embed")[0]
-                            .getAttribute("src")
-                            .split("?")[1].split("=")[1]
-                            .split("&")[0]
-    currentId = currentId.replace("%2Fmp4", "")
-                         .replace("/mp4", "")
-
     // request
     var r;
     if (window.XMLHttpRequest) {
@@ -1395,7 +1393,7 @@ function get_video_comments() {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
     r.open("GET", "/playnav_get_comments")
-    r.setRequestHeader("id", currentId)
+    r.setRequestHeader("id", currentVideo)
     r.send(null)
     r.onreadystatechange = function(e) {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
@@ -1529,10 +1527,7 @@ function grid_fillFromScrollbox() {
 
 // playnav: favorite videos
 function playnav_favorite_video() {
-    var currentId = document.getElementsByTagName("embed")[0]
-                            .getAttribute("src")
-                            .split("?")[1].split("=")[1]
-                            .split("&")[0]
+    var currentId = currentVideo;
     var videoString = encodeURIComponent(
         document.querySelector(".video-title-" + currentId).innerHTML
         + "&" + document.querySelector(".video-meta-" + currentId)
@@ -1615,7 +1610,7 @@ function playnav_searchChannel() {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/search_channel?rt=" + Date.now())
+    r.open("GET", "/search_channel?r=" + Math.random().toString())
     r.setRequestHeader("source", location.pathname)
     r.setRequestHeader("query", $("#upload_search_query-play").value)
     r.send(null)
@@ -1642,7 +1637,7 @@ function playnav_sort(sortMode) {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/channel_sort?rt=" + Date.now())
+    r.open("GET", "/channel_sort?r=" + Math.random().toString())
     r.setRequestHeader("source", location.pathname)
     r.setRequestHeader("sort", sortMode)
     r.send(null)
@@ -1788,6 +1783,9 @@ video response
 */
 // expander button
 var responseExpander = document.querySelector(".yt2009-video-response-expander")
+if(!responseExpander) {
+    responseExpander = {"onlick": false}
+}
 var videoResponsesLoaded = false;
 responseExpander.onclick = function() {
     var responseParent = responseExpander.parentNode

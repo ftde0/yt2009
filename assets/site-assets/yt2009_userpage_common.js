@@ -90,7 +90,7 @@ function switchChannel(element) {
 
     // fetch new videos
     var r = new XMLHttpRequest();
-    r.open("GET", "/subscriptions_new_videos")
+    r.open("GET", "/subscriptions_new_videos?r=" + Math.random().toString())
     r.setRequestHeader("url", url)
     r.send(null)
     r.addEventListener("load", function(e) {
@@ -142,7 +142,7 @@ if(window.localStorage) {
         }
         case "/watch_queue":
         case "/my_quicklist": {
-            storageObject = JSON.parse(localStorage.quicklistVids)
+            storageObject = JSON.parse(localStorage.quicklistVids || "[]")
             if(!storageObject || storageObject.length == 0) {
                 setTimeout(function() {
                     qlNoVidsShow()
