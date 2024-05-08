@@ -1214,10 +1214,19 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             swfArgPath = decodeURIComponent(
                 req.headers.cookie.split("alt_swf_arg=")[1].split(";")[0]
             )
+            if(!swfArgPath) {
+                swfArgPath = "video_id"
+            }
         }
         let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}`
         if((req.headers["cookie"] || "").includes("f_h264")) {
             flash_url += "%2Fmp4"
+        }
+        let flashCompat = ""
+        if(req.headers.cookie
+        && req.headers.cookie.includes("f_compat=")) {
+            flashCompat = req.headers.cookie.split("f_compat=")[1].split(";")[0]
+            flash_url += "&rt=" + Date.now()
         }
         if(useFlash) {
             code = code.replace(
@@ -1738,17 +1747,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // fmode endscreen
-        function render_endscreen_f(rvLength) {
-            if(!rvLength) {
-                rvLength = 1700
-            }
-            if(!flash_url.includes("/watch.swf")
-            && !flash_url.includes("2010.swf")) return "";
+        function render_endscreen_f() {
+            if((!flash_url.includes("/watch.swf")
+            && !flash_url.includes("2010.swf"))
+            || flashCompat.includes("endscreen")) return "";
             let rv_url = ""
             let related_index = 0;
             endscreen_queue.forEach(video => {
                 if(related_index <= 7
-                && encodeURIComponent(rv_url).length < rvLength) {
+                && encodeURIComponent(rv_url).length < 1700) {
                     if(!req.headers.cookie) {
                         req.headers.cookie = ""
                     }
@@ -2024,6 +2031,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 if(autoHQ) {
                     flash_url += "&vq=" + vq
                 }
+                let enableModules = !flashCompat.includes("modules")
                 if(new Date().getMonth() == 3
                 && new Date().getDate() == 1
                 && !req.headers.cookie.includes("unflip=1")) {
@@ -2036,7 +2044,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     }
                 }
                 if((req.headers["cookie"] || "").includes("f_h264")
-                && flash_url.includes("/watch.swf")) {
+                && flash_url.includes("/watch.swf")
+                && !flashCompat.includes("formats")) {
                     // create format maps and urls for the 2009 player
                     // 22 - hd720
                     // 35 - "large" - hq - 480p
@@ -2060,7 +2069,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
                 }
                 
-                flash_url += `&cc_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fsubtitle-module.swf`
+                if(enableModules) {
+                    flash_url += `&cc_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fsubtitle-module.swf`
+                }
 
                 // always_captions flash
                 if(flags.includes("always_captions")) {
@@ -2103,19 +2114,19 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     iv3_module = "2010_iv3_module-vfl183159.swf"
                     endscreen_module = "2010_endscreen-vfl183159.swf"
                 }
-                if(cc3_module) {
+                if(cc3_module && enableModules) {
                     flash_url += "&cc3_module=" + encodeURIComponent(
                         "http://" + config.ip + ":" + config.port
                         + "/alt-swf/modules/" + cc3_module
                     )
                 }
-                if(iv3_module) {
+                if(iv3_module && enableModules) {
                     flash_url += "&iv3_module=" + encodeURIComponent(
                         "http://" + config.ip + ":" + config.port
                         + "/alt-swf/modules/" + iv3_module
                     )
                 }
-                if(endscreen_module) {
+                if(endscreen_module && enableModules) {
                     flash_url += "&endscreen_module=" + encodeURIComponent(
                         "http://" + config.ip + ":" + config.port
                         + "/alt-swf/modules/" + endscreen_module

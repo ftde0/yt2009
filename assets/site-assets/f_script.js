@@ -649,8 +649,12 @@ function morefrom_load() {
 }
 
 // star ratings
-var ratingText = document.getElementById("defaultRatingMessage")
+var ratingText = ""
+try {
+    ratingText = document.getElementById("defaultRatingMessage")
                  .getElementsByTagName("span")[0]
+}
+catch(error) {}
 var defaultRatingText = ratingText.innerHTML
 function showStars(rating, source) {
     if(document.cookie.indexOf("login_simulate") == -1) return;

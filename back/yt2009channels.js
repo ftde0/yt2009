@@ -808,6 +808,7 @@ module.exports = {
                         watch_arg = req.headers.cookie.split("alt_swf_arg=")[1]
                                                     .split(";")[0]
                     }
+                    if(!watch_arg) {watch_arg = "video_id"}
 
                     
                     let flashUrl = `${watch_url}?${watch_arg}=${video.id}`

@@ -65,6 +65,10 @@ module.exports = {
                 let id = s[2]
 
                 if(!views) return;
+
+                if(title.startsWith("undefined")) {
+                    title = title.replace("undefined", "")
+                }
     
                 historyReadable.push({
                     "title": decodeURIComponent(title).trim(),

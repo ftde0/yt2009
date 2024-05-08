@@ -68,11 +68,11 @@ function initPlayer(parent, fullscreenEnabled) {
                     retractFullscreen(true)
                     setTimeout(function() {
                         showFullscreenAnim();
-                    }, 700)
+                    }, 600)
                 } else {
                     clearInterval(animLoop);
                 }
-            }, 1200)
+            }, 1000)
         }, false)
 
         fullscreen_btn.addEventListener("mouseout", function() {
@@ -277,8 +277,6 @@ function retractFullscreen(skipLastFrame) {
         }
         fullscreen_btn.style.backgroundPosition
         = xPos + " -" + (anim_frame * 22) + "px"
-        /*fullscreen_btn.style.backgroundPosition
-        = "0px -" + (anim_frame * 22) + "px"*/
         if(anim_frame <= lastFrame) {
             clearInterval(anim);
             fullscreen_anim_playing = false;
@@ -344,7 +342,7 @@ function non_css_anim_remove(element, cssProperty, from, to) {
         if(current <= to) {
             clearInterval(x);
         }
-    }, ff ? 20 : 33)
+    }, ff ? 33 : 33)
 }
 function $(element) {
     if(document.querySelectorAll(element).length !== 1) {
@@ -1120,6 +1118,7 @@ function initPopoutFadeout() {
 
         // ADDITIONS CONTAINER
         if(!checkBounds(player_add_popout, mouse_left, mouse_top)
+        && !checkBounds($(".captions_popup"), mouse_left, mouse_top)
         && parseInt(player_add_popout.style.bottom) >= 25
         && !player_add_popout_debounce) {
             $(".captions_popup").style.display = "none"
@@ -1884,6 +1883,7 @@ function placeCaptions() {
     }
     var langPages = []
     var index = 0;
+    var englishCcElement = false;
     var pagesCount = Math.floor(langArray.length / 8) + 1
     var c = 0
     while(c !== pagesCount) {
@@ -1906,8 +1906,8 @@ function placeCaptions() {
                         + "<p>" + name + "</p>";
             li.setAttribute("onclick", "loadCaptions(\"" + videoId
                                         + "\", \"" + lang.code + "\")")
-            if(index == 0) {
-                li.querySelector(".circle").className += " selected"
+            if(lang.code == "en") {
+                englishCcElement = li;
             }
             e.appendChild(li)
             index++
@@ -1922,6 +1922,15 @@ function placeCaptions() {
         }
         lastCaptionsPage++
         c++
+    }
+
+    // mark english captions as selected
+    // or if none, mark first captions
+    if(englishCcElement) {
+        englishCcElement.querySelector(".circle").className += " selected"
+    } else {
+        document.querySelector(".captions_selection li")
+                .querySelector(".circle").className += " selected"
     }
 }
 

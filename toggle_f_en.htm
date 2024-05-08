@@ -69,6 +69,18 @@
 		<b>h264 may not be supported depending on your browser, OS and the picked video player.</b></p>
 		<h4 id="fh264-status">h264: disabled.</h4>
 		<a class="yt-button yt-button-primary" id="" href="#" onclick="toggle_f_h264();"><span>switch</span></a>
+		<hr>
+		<h4 style="margin-top: 25px;">compatibility fixes</h4>
+		<p>if flash player doesn't show up on watchpages but works everywhere else, you can try<br>
+		the compatibility fixes listed below. <b>years in brackets indicate the players those settings<br>
+		will have an effect on.</b></p>
+		<input type="checkbox" id="compat-formats" title="list of available video qualities won't be sent. will cause other qualities to not show up in affected players.">
+		<label for="compat-formats">no quality list (2009)</label><br>
+		<input type="checkbox" id="compat-endscreen" title="related videos shown when the video ends won't be shown.">
+		<label for="compat-endscreen">no endscreen videos (2009-2010)</label><br>
+		<input type="checkbox" id="compat-modules" title="captions and annotations (2009-2012) and endscreen (2010) modules won't be sent.">
+		<label for="compat-modules">no modules (2009-2012)</label><br>
+		<a class="yt-button yt-button-primary" id="" href="#" onclick="save_compatibility();"><span>save</span></a>
 		<!-- end bottom section -->
 	</div>
 	<a name="pageBottom"></a>
@@ -140,6 +152,57 @@
 				case "alt_swf_arg": {
 					document.getElementById("alt-swf-id-arg").value = value
 					break;
+				}
+			}
+		}
+
+		// compatibility descriptions on labels
+		var labels = document.getElementsByTagName("input")
+		for(var label in labels) {
+			label = labels[label]
+			if(label.id && label.getAttribute("type") == "checkbox") {
+				var target = document.getElementsByTagName("label")
+				for(var p in target) {
+					if(target[p]
+					&& target[p].tagName
+					&& target[p].getAttribute("for") == label.id) {
+						target = target[p]
+					}
+				}
+				var labelText = label.getAttribute("title")
+				target.setAttribute("title", labelText)
+			}
+		}
+
+		// compatibility fix apply
+		function save_compatibility() {
+			var checkedCompatibility = []
+			for(var i in labels) {
+				i = labels[i]
+				if(i.id && i.getAttribute("type") == "checkbox" && i.checked) {
+					checkedCompatibility.push(i.id.replace("compat-", ""))
+				}
+			}
+
+			if(checkedCompatibility.length > 0) {
+				// save cookie if any set
+				document.cookie = "f_compat=" + checkedCompatibility.join()
+								+ "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			} else {
+				// delete cookie if entirely unset
+				document.cookie = "f_compat=s; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
+			}
+
+			alert("ok")
+		}
+
+		// compatibility fix automark previous
+		if(document.cookie && document.cookie.indexOf("f_compat=") !== -1) {
+			var compat = document.cookie.split("f_compat=")[1].split(";")[0].split(",")
+			for(var s in compat) {
+				s = compat[s]
+				if(document.getElementById("compat-" + s)) {
+					document.getElementById("compat-" + s).setAttribute("checked", "true")
 				}
 			}
 		}
