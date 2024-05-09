@@ -12,6 +12,7 @@ const utils = require("./yt2009utils")
 const child_process = require("child_process")
 const ytdl = require("ytdl-core")
 const config = require("./config.json")
+let flvProcessingVideos = []
 
 module.exports = {
     "get_video": function(req, res) {
@@ -158,6 +159,16 @@ module.exports = {
         ]
 
         // have flv?
+        if(flvProcessingVideos.includes(id)) {
+            // wait for flv to finish processing (another request sent before)
+            let x = setInterval(() => {
+                if(!flvProcessingVideos.includes(id)) {
+                    callback();
+                    clearInterval(x)
+                }
+            }, 250)
+            return;
+        }
         if(!fs.existsSync(`../assets/${id}.flv`)
         && yt2009exports.getStatus(id)) {
             // mp4 downloading, wait and convert
@@ -186,8 +197,10 @@ module.exports = {
         }
 
         function convert_mp4_to_flv(id, callback) {
+            flvProcessingVideos.push(id)
             child_process.exec(ffmpegCommandFlv.join(" "),
             (error, stdout, stderr) => {
+                flvProcessingVideos = flvProcessingVideos.filter(s => s !== id)
                 callback()
             })
         }

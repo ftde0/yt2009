@@ -10,8 +10,8 @@ module.exports = {
 
     "read": function(id, fullUrl, callback) {
         // get locally saved if exists, otherwise get from web archive
-        if(fs.existsSync(`${__dirname}/annotations/${id}.xml`)) {
-            callback(fs.readFileSync(`${__dirname}/annotations/${id}.xml`).toString())
+        if(fs.existsSync(`${__dirname}/annotations/${id.substring(0, 11)}.xml`)) {
+            callback(fs.readFileSync(`${__dirname}/annotations/${id.substring(0, 11)}.xml`).toString())
         } else {
             fetch(fullUrl, {
                 "headers": {
@@ -19,7 +19,7 @@ module.exports = {
                 }
             }).then(r => {
                 r.text().then(xml => {
-                    fs.writeFileSync(`${__dirname}/annotations/${id}.xml`, xml)
+                    fs.writeFileSync(`${__dirname}/annotations/${id.substring(0, 11)}.xml`, xml)
                     callback(xml)
                 })
             })
