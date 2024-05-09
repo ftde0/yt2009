@@ -22,7 +22,7 @@ module.exports = {
                     fs.writeFileSync(`${__dirname}/annotations/${id.substring(0, 11)}.xml`, xml)
                     callback(xml)
                 })
-            })
+            }).catch(error => {callback("")})
         }
     },
 

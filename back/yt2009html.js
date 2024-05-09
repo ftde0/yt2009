@@ -338,25 +338,12 @@ module.exports = {
                             [data.author_img.split("/").length - 1]
                 if(!fs.existsSync(`../assets/${fname}.png`)
                 && data.author_img !== "default") {
-                    fetch(data.author_img, {
-                        "headers": constants.headers
-                    }).then(r => {
-                        r.buffer().then(buffer => {
-                            fs.writeFileSync(`../assets/${fname}.png`, buffer)
-                            fetchesCompleted++;
-                            if(fetchesCompleted >= 3) {
-                                callback(data)
-                            }
-                            
-                        })
-                    })
-                } else {
-                    fetchesCompleted++;
-                    if(fetchesCompleted >= 3) {
-                        callback(data)
-                    }
+                    data.author_img = yt2009utils.saveAvatar(data.author_img, false)
                 }
-                data.author_img = `/assets/${fname}.png`
+                fetchesCompleted++;
+                if(fetchesCompleted >= 3) {
+                    callback(data)
+                }
             
 
                 // fetch comments

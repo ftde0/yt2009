@@ -32,6 +32,9 @@ module.exports = {
                     callback(utils.custom_rating_round(response.rating))
                     cache[id] = utils.custom_rating_round(response.rating)
                 })
+            }).catch(error => {
+                console.log("[e] return youtube dislike api failed to load!", error)
+                callback(5)
             })
         }
     },
