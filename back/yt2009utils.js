@@ -513,11 +513,22 @@ module.exports = {
         }
         fname = fname.replace(".png", "")
         if(!fs.existsSync(`../assets/${fname}.png`)) {
-            fetch(link, {
+            fetch(link.replace("ggpht.com", "googleusercontent.com"), {
                 "headers": constants.headers
             }).then(r => {
                 r.buffer().then(buffer => {
                     fs.writeFileSync(`../assets/${fname}.png`, buffer)
+                })
+            }).catch(e => {
+                console.log("googleusercontent load fail! trying ggpht")
+                fetch(link, {
+                    "headers": constants.headers
+                }).then(r => {
+                    r.buffer().then(buffer => {
+                        fs.writeFileSync(`../assets/${fname}.png`, buffer)
+                    })
+                }).catch(e => {
+                    console.log("attempt 2 of loading user avatar fail!", link)
                 })
             })
         }
