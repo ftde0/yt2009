@@ -422,7 +422,6 @@ module.exports = {
                     }
 
                     // ytdl
-                    yt2009exports.updateFileDownload(id, 1)
                     if(!waitForOgv) {
                         data.pMp4 = "/get_video?video_id=" + id + "/mp4"
                         yt2009utils.saveMp4(id, (path => {
@@ -431,6 +430,7 @@ module.exports = {
                         on_mp4_save_finish(`../assets/${id}`)
                     } else {
                         yt2009utils.saveMp4(id, (path => {
+                            yt2009exports.updateFileDownload(id, 2)
                             on_mp4_save_finish(path)
                         }))
                     }

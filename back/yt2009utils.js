@@ -121,6 +121,7 @@ module.exports = {
         let comments = []
         try {
             // get to the comments themselves
+            if(!response.onResponseReceivedEndpoints) return [];
             response.onResponseReceivedEndpoints.forEach(received => {
                 let endpoint = 
                 received.reloadContinuationItemsCommand
@@ -980,7 +981,10 @@ module.exports = {
     },
 
     "saveMp4": function(id, callback, extended) {
-        let targetFilePath = `../assets/${id}.mp4`
+        this.saveMp4_android(id, (() => {
+            callback(`../assets/${id}`)
+        }))
+        /*let targetFilePath = `../assets/${id}.mp4`
         let writeStream = fs.createWriteStream(targetFilePath)
         writeStream.on("finish", () => {
             callback(targetFilePath.replace(".mp4", ""))
@@ -998,7 +1002,7 @@ module.exports = {
             writeStream.close()
             return;
         })
-        .pipe(writeStream)
+        .pipe(writeStream)*/
     },
 
     "saveMp4_android": function(id, callback, extended, quality) {
@@ -1006,14 +1010,19 @@ module.exports = {
             quality = "360p"
         }
 
-        if(yt2009exports.getStatus(`${id}-${quality}`)) {
-            yt2009exports.waitForStatusChange(`${id}-${quality}`, () => {
-                callback(`${id}-${quality}.mp4`)
+        let fname = `${id}-${quality}`
+        if(quality == "360p") {
+            fname = id;
+        }
+
+        if(yt2009exports.getStatus(fname)) {
+            yt2009exports.waitForStatusChange(fname, () => {
+                callback(`${fname}.mp4`)
             })
             return;
         }
 
-        yt2009exports.updateFileDownload(`${id}-${quality}`, 1)
+        yt2009exports.updateFileDownload(fname, 1)
 
         fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
             "headers": {
@@ -1047,7 +1056,7 @@ module.exports = {
             // parse formats
             if(!r.streamingData) {
                 callback(false)
-                yt2009exports.updateFileDownload(`${id}-${quality}`, 2)
+                yt2009exports.updateFileDownload(fname, 2)
                 return;
             }
             let qualities = {}
@@ -1078,9 +1087,18 @@ module.exports = {
             // we can pull from already download mp4 if not
             let downloadAudio = true;
             let audioDownloadDone = false;
+            let videoDownloadDone = false;
             /*if(fs.existsSync("../assets/" + id + ".mp4")) {
                 downloadAudio = false;
             }*/
+            if(quality == "360p" && !qualities["360p"]) {
+                for(let q in qualities) {
+                    if(qualities[q].itag == 18) {quality = q;}
+                }
+            }
+            if(qualities[quality] && !qualities[quality].dash) {
+                downloadAudio = false;
+            }
 
             if(downloadAudio) {
                 this.downloadInParts_file(
@@ -1093,18 +1111,30 @@ module.exports = {
                         }
                     })
                 )
+            } else {
+                this.downloadInParts_file(
+                    qualities[quality].url,
+                    "../assets/" + fname + ".mp4",
+                    (() => {
+                        callback(`${fname}.mp4`)
+                        yt2009exports.updateFileDownload(`${fname}`, 2)
+                    })
+                )
+                return;
             }
 
             // download video if quality requirement satisfied
             // override 1080 with 720 for exp_hd
-            let videoDownloadDone = false;
             if(!qualities["1080p"] && quality == "1080p") {
                 quality = "720p"
                 fs.writeFileSync("../assets/" + id + "-1080p.mp4", "")
             }
+            if(!qualities[quality] && qualities[quality + "60"]) {
+                quality = quality + "60"
+            }
             if(!qualities[quality]) {
                 callback(false)
-                yt2009exports.updateFileDownload(`${id}-${quality}`, 2)
+                yt2009exports.updateFileDownload(fname, 2)
                 return;
             }
 
@@ -1133,12 +1163,12 @@ module.exports = {
                     `-i "${__dirname}/${audioPath}"`,
                     `-c:v copy -c:a copy`,
                     `-map 0:v -map 1:a`,
-                    `"${__dirname}/../assets/${id}-${quality}.mp4"`
+                    `"${__dirname}/../assets/${fname}.mp4"`
                 ].join(" ")
 
                 require("child_process").exec(cmd, (e, so) => {
                     if(e) {callback(false);return;}
-                    callback(`${id}-${quality}.mp4`)
+                    callback(`${fname}.mp4`)
                     setTimeout(() => {
                         // delete temp assets
                         try {
@@ -1149,7 +1179,7 @@ module.exports = {
                         }
                         catch(error) {}
                     }, 10000)
-                    yt2009exports.updateFileDownload(`${id}-${quality}`, 2)
+                    yt2009exports.updateFileDownload(fname, 2)
                 })
             }
         })})

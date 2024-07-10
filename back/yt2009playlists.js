@@ -173,7 +173,10 @@ module.exports = {
                                             .navigationEndpoint.browseEndpoint
                                             .canonicalBaseUrl,
                         "time": video.lengthText ?
-                                video.lengthText.simpleText : ""
+                                video.lengthText.simpleText : "",
+                        "views": utils.approxSubcount(
+                            video.videoInfo.runs[0].text.split(" ")[0]
+                        )
                     })
                 })
 
