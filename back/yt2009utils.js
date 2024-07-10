@@ -1201,16 +1201,16 @@ module.exports = {
             const partStartB = partNumber * partSize;
             const newHeaders = { ...androidHeaders };
             newHeaders.range = `bytes=${partStartB}-${partStartB + partSize}`;
-            fetch(url, newHeaders).then(r => { r.buffer().then(buffer => {
-                if (buffer.length < 1) {
+            fetch(url, newHeaders).then(r => {
+                if (r.headers.get('Content-Length') === '0') {
                     stream.end();
                     return callback();
                 }
-                stream.write(buffer, err => {
-                    if (err) return callback(err);
+                r.body.pipe(stream, { end: false });
+                r.body.on('end', () => {
+                    fetchNextPart(partNumber + 1);
                 });
-                fetchNextPart(partNumber + 1);
-            })})
+            })
         }
         fetchNextPart(0);
     },
