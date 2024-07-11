@@ -825,7 +825,7 @@ module.exports = {
             <yt:videoid>${video.id}</yt:videoid>
         </media:group>
         <gd:rating average='5.0' max='5' min='1' numRaters='1' rel='http://schemas.google.com/g/2005#overall'/>
-        <yt:statistics favoriteCount='0' viewCount='0'/>
+        <yt:statistics favoriteCount='0' viewCount='${video.views || 0}'/>
         <yt:position>${index}</yt:position>
     </entry>`
     },

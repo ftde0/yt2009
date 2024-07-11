@@ -37,6 +37,8 @@ const config = require("./config.json")
 const child_process = require("child_process")
 const yt2009charts = require("./yt2009charts")
 let devTimings = false;
+const package = require("../package.json")
+const version = package.version;
 
 const https = require("https")
 const fs = require("fs")
@@ -56,7 +58,7 @@ if(config.env == "dev") {
     yt2009 - dev
 
     ==========
-    ${launchTime}
+    ${version}, ${launchTime}
         `);
     });
 } else if(config.env == "prod") {
@@ -72,6 +74,7 @@ if(config.env == "dev") {
     ==========
 
     yt2009 - prod
+    ${version}
 
     ==========
         `);
@@ -3671,8 +3674,6 @@ app.post("/homepage_subscriptions", (req, res) => {
 })
 
 app.get("/ver", (req, res) => {
-    let ver = require("../package.json")
-    let version = ver.version
     let wsEnabled = config.disableWs || true
     let wsCon = yt2009_exports.read().masterWs ? true : false
     res.send(`${version}<br>sync enabled:${wsEnabled}<br>sync connected:${wsCon}`)
@@ -4163,6 +4164,11 @@ app.get("/tvhtml5simply", (req, res) => {
     
     // handle googlevideo requests
     function handlePlayer(player) {
+        if(!player.streamingData
+        || !player.streamingData.formats[0]) {
+            res.sendStatus(404)
+            return;
+        }
         let url = player.streamingData.formats[0].url
         let partSize = 100000
         let fileParts = []
@@ -4178,17 +4184,16 @@ app.get("/tvhtml5simply", (req, res) => {
                         "user-agent": ua
                     }
                 }).then(r => {r.buffer().then(rr => {
-                    let length = r.headers.get("content-range").split("/")[1]
-                    console.log(r.headers.get("content-range").replace(" ", "="))
                     try {
-                        //console.log(r.headers.get("content-range"))
                         res.set("content-range", r.headers.get("content-range").replace(" ", "="))
                     }
                     catch(error) {}
                     res.write(rr)
                     lastSentPart++
                     p()
-                })})
+                })}).catch(error => {
+                    console.log("error while loading " + id + " part?", error)
+                })
             }
             p()
             return;
@@ -4216,7 +4221,9 @@ app.get("/tvhtml5simply", (req, res) => {
                 catch(error) {}
                 onPartGot(t)
                 requestPart(t + 1)
-            })})
+            })}).catch(error => {
+                console.log("error while loading " + id + " part?", error)
+            })
         }
         function onPartGot(t) {
             if(t == lastSentPart) {
@@ -4393,6 +4400,17 @@ app.get("/auth/read2", (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
     </annotations></document>`)
 })
+
+if(config.ac) {
+    let exceptions = [
+        "uncaughtException", "unhandledRejection"
+    ]
+    exceptions.forEach(e => {
+        process.on(e, (msg) => {
+            console.log(msg)
+        })
+    })
+}
 
 /*
 ======
