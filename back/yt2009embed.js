@@ -312,12 +312,7 @@ module.exports = function(req, res) {
         })
     }
     if(!fs.existsSync(`../assets/${id}.mp4`)) {
-        yt2009exports.updateFileDownload(id, 1)
         utils.saveMp4(id, (path) => {
-            if(path.message) {
-                yt2009exports.updateFileDownload(id, 3)
-            }
-            yt2009exports.updateFileDownload(id, 2)
             if(waitForOgv) {
                 child_process.exec(templates.createFffmpegOgg(id),
                 (error, stdout, stderr) => {

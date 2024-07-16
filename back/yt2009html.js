@@ -133,10 +133,7 @@ module.exports = {
             }
 
             if(!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload) {
-                yt2009exports.updateFileDownload(id, 1)
-                yt2009utils.saveMp4(id, (path => {
-                    yt2009exports.updateFileDownload(id, 2)
-                }))
+                yt2009utils.saveMp4(id, (path => {}))
                 callback(v)
             } else {
                 callback(v)
@@ -424,13 +421,10 @@ module.exports = {
                     // ytdl
                     if(!waitForOgv) {
                         data.pMp4 = "/get_video?video_id=" + id + "/mp4"
-                        yt2009utils.saveMp4(id, (path => {
-                            yt2009exports.updateFileDownload(id, 2)
-                        }))
+                        yt2009utils.saveMp4(id, (path => {}))
                         on_mp4_save_finish(`../assets/${id}`)
                     } else {
                         yt2009utils.saveMp4(id, (path => {
-                            yt2009exports.updateFileDownload(id, 2)
                             on_mp4_save_finish(path)
                         }))
                     }
@@ -1285,7 +1279,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(!useFlash) {
             code = code.replace(
                 "mp4_files", 
-                `<source src="${autoHQ || data.pMp4 || (data.mp4 + ".mp4")}" type="video/mp4"></source>
+                `<source src="${autoHQ || "/get_video?video_id=" + data.id + "/mp4"}" type="video/mp4"></source>
                 <source src="${data.mp4}.ogg" type="video/ogg"></source>`
             )
             if(data.pMp4) {

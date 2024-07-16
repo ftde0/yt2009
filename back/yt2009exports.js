@@ -28,6 +28,8 @@ module.exports = {
             })
             delete fileDownloadListeners[id]
             delete data.fileDownloadStatus[id]
+        } else if(status == 2) {
+            delete data.fileDownloadStatus[id]
         }
     },
 
