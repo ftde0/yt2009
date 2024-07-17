@@ -28,6 +28,7 @@ ENV YT2009_PORT=80 \
 	YT2009_FALLBACK=false \
 	YT2009_DISABLEMASTER=false \
     YT2009_RATELIMIT=false
+YT2009_HOMEPAGETEXT="TEST"
 
     
 RUN ln -s /data/config.json back/config.json && \
