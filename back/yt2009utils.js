@@ -1186,7 +1186,7 @@ module.exports = {
     },
 
     "downloadInParts_file": function(url, out, callback) {
-        let androidHeaders = {"headers": {
+        const androidHeaders = {"headers": {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,pl;q=0.8",
             "content-type": "application/json",
@@ -1195,35 +1195,25 @@ module.exports = {
             "x-origin": "https://www.youtube.com/",
             "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
         }}
-        let partSize = 9 * 1000 * 1000 //9MB
-        let fileParts = []
-        let lastSentPart = 0
-        function fetchNextPart() {
-            let partStartB = lastSentPart * partSize
-            partStartB += lastSentPart
-            let newHeaders = JSON.parse(JSON.stringify(androidHeaders))
-            newHeaders.headers.range = "bytes=" + (partStartB) + "-" + (partStartB + partSize)
-            fetch(url, newHeaders).then(r => {r.buffer().then(rr => {
-                if(rr.length < 1) {
-                    onAllDone()
-                    return;
+        const partSize = 9_000_000; //9MB
+        const stream = fs.createWriteStream(out, { flags: 'a' });
+        function fetchNextPart(partNumber) {
+            let partStartB = partNumber * partSize;
+            if(partNumber !== 0) {partStartB += partNumber}
+            const newHeaders = { ...androidHeaders };
+            newHeaders.headers.range = `bytes=${partStartB}-${partStartB + partSize}`;
+            fetch(url, newHeaders).then(r => {
+                if (r.headers.get('Content-Length') === '0') {
+                    stream.end();
+                    return callback();
                 }
-                fileParts[lastSentPart] = rr
-                lastSentPart++
-                fetchNextPart(lastSentPart)
-            })})
-        }
-        fetchNextPart(0)
-    
-        function onAllDone() {
-            let h = Buffer.alloc(0)
-            fileParts.forEach(f => {
-                h = Buffer.concat([h, f])
-            })
-            fs.writeFile(out, h, (e) => {
-                callback()
+                r.body.pipe(stream, { end: false });
+                r.body.on('end', () => {
+                    fetchNextPart(partNumber + 1);
+                });
             })
         }
+        fetchNextPart(0);
     },
 
     "relativeTimeCreate": function(baseString, language) {
