@@ -15,7 +15,7 @@ USER node
 
 RUN npm install
 ENV YT2009_PORT=80 \
-    YT2009_TOKENS="token"
+    YT2009_TOKENS="token" \
     YT2009_ENV=dev \
     YT2009_IP=yt2009akivec.onrender.com \
     YT2009_SSL=false \
@@ -36,5 +36,5 @@ RUN ln -s /data/config.json back/config.json && \
     echo "{\"env\": \"dev\"}" > back/config.json && \
     node post_config_setup.js
 
-CMD ["node", "backend_wrap.js"]
+CMD ["node", "backend.js"]
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
