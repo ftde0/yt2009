@@ -28,7 +28,7 @@ ENV YT2009_PORT=80 \
 	YT2009_FALLBACK=false \
 	YT2009_DISABLEMASTER=false \
     YT2009_RATELIMIT=false
-YT2009_HOMEPAGETEXT="TEST" \
+    YT2009_HOMEPAGETEXT="TEST" \
 
     
 RUN ln -s /data/config.json back/config.json && \
@@ -37,5 +37,5 @@ RUN ln -s /data/config.json back/config.json && \
     echo "{\"env\": \"dev\"}" > back/config.json && \
     node post_config_setup.js
 
-CMD ["node", "backend.js"]
+CMD ["node", "backend_wrap.js"]
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
