@@ -17,7 +17,6 @@ RUN npm install
 ENV YT2009_PORT=80 \
     YT2009_ENV=dev \
     YT2009_IP=yt2009akivec.onrender.com \
-    YT2009_TOKENS="token"
     YT2009_SSL=false \
     YT2009_SSLPORT=443 \
     YT2009_SSLPATH=/yt2009/cert.crt \
@@ -29,6 +28,13 @@ ENV YT2009_PORT=80 \
 	YT2009_DISABLEMASTER=false \
     YT2009_RATELIMIT=false
     
+YT2009_TOKENS="token"
+
+
+
+
+
+
     
 RUN ln -s /data/config.json back/config.json && \
     ln -s /data/comments.json back/cache_dir/comments.json && \
