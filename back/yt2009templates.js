@@ -2676,5 +2676,47 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         </div>
     </div>`,
 
-    "map_audiences_empty": `<img width="350" height="170" id="stats-big-map-expanded" src="/chart?cht=t&chs=350x170&chtm=world&chd=t:&chf=bg,s,eff8fe&chco=f6f6f6,32501a&chld="/>`
+    "map_audiences_empty": `<img width="350" height="170" id="stats-big-map-expanded" src="/chart?cht=t&chs=350x170&chtm=world&chd=t:&chf=bg,s,eff8fe&chco=f6f6f6,32501a&chld="/>`,
+
+    "gdata_entryAuth": function(device) {
+        let msg = `authorize with your yt2009 instance token at: http://${config.ip}:${config.port}/mobile/gdata_gen_auth_page?device=${device}`
+        if(!device) {
+            msg = `add a &token= param with your yt2009 instance token to continue`
+        }
+        return `
+    <entry>
+        <id>http://${config.ip}:${config.port}/feeds/api/videos/12345678901</id>
+        <youTubeId id='12345678901'>12345678901</youTubeId>
+        <published>${new Date().toISOString()}</published>
+        <updated>${new Date().toISOString()}</updated>
+        <category scheme="http://gdata.youtube.com/schemas/2007/categories.cat" label="-" term="-">-</category>
+        <title type='text'>authorization required - open for more info</title>
+        <content type='text'>${msg}</content>
+        <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/12345678901/related"/>
+        <author>
+            <name>auth_required</name>
+            <uri>http://gdata.youtube.com/feeds/api/users/auth_required</uri>
+        </author>
+        <gd:comments>
+            <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/12345678901/comments' countHint='530'/>
+        </gd:comments>
+        <media:group>
+            <media:category label='-' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>-</media:category>
+            <media:content url='http://${config.ip}:${config.port}/assets/site-assets/black.mp4' type='video/3gpp' medium='video' expression='full' duration='25' yt:format='3'/>
+            <media:description type='plain'>${msg}</media:description>
+            <media:keywords>-</media:keywords>
+            <media:player url='http://www.youtube.com/watch?v=12345678901'/>
+            <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/Oz_7ZF6fQW4/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
+            <media:thumbnail yt:name='poster' url='http://i.ytimg.com/vi/Oz_7ZF6fQW4/0.jpg' height='240' width='320' time='00:00:00'/>
+            <media:thumbnail yt:name='default' url='http://i.ytimg.com/vi/Oz_7ZF6fQW4/0.jpg' height='240' width='320' time='00:00:00'/>
+            <yt:duration seconds='25'/>
+            <yt:videoid id='12345678901'>12345678901</yt:videoid>
+            <youTubeId id='12345678901'>12345678901</youTubeId>
+            <media:credit role='uploader' name='auth_required'>auth_required</media:credit>
+        </media:group>
+        <gd:rating average='5' max='5' min='1' numRaters='1' rel='http://schemas.google.com/g/2005#overall'/>
+        <yt:statistics favoriteCount="0" viewCount="0"/>
+        <yt:rating numLikes="0" numDislikes="0"/>
+    </entry>`
+    }
 }

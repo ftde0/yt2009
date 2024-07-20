@@ -7,6 +7,7 @@ const playlist_html = fs.readFileSync("../playlist.htm").toString();
 const doodles = require("./yt2009doodles")
 const language = require("./language_data/language_engine")
 const utils = require("./yt2009utils")
+const mobileauths = require("./yt2009mobileauths")
 
 let cache = require("./cache_dir/playlist_cache_manager")
 
@@ -187,6 +188,13 @@ module.exports = {
     },
 
     "create_cpb_xml": function(req, res) {
+        let compatAuth = false;
+        if((req.headers.referer && req.headers.referer.includes(".swf"))
+        || (req.headers["user-agent"]
+        && req.headers["user-agent"].includes("Shockwave Flash"))) {
+            compatAuth = true;
+        }
+        if(!compatAuth && !mobileauths.isAuthorized(req, res, "feed")) return;
         let id = req.originalUrl.split("playlists/")[1].split("?")[0]
         let xmlResponse = ""
         this.parsePlaylist(id, (data) => {

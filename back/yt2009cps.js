@@ -3,10 +3,23 @@ const templates = require("./yt2009templates")
 const search = require("./yt2009search")
 const html = require("./yt2009html")
 const channels = require("./yt2009channels")
+const mobileauths = require("./yt2009mobileauths")
 
 module.exports = {
     "get_search": function(req, res) {
         req = utils.addFakeCookie(req)
+        
+        let compatAuth = false;
+        if((req.headers.referer && req.headers.referer.includes(".swf"))
+        || (req.headers["user-agent"]
+        && req.headers["user-agent"].includes("Shockwave Flash"))) {
+            compatAuth = true;
+        }
+        if(!compatAuth && !mobileauths.isAuthorized(req, res, "feed")) return;
+
+        if(!req.query.q && req.query.vq) {
+            req.query.q = req.query.vq;
+        }
 
         let flags = ""
         if(req.headers.cookie.includes("search_flags")) {

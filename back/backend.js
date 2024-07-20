@@ -36,6 +36,7 @@ const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
 const child_process = require("child_process")
 const yt2009charts = require("./yt2009charts")
+const yt2009gdataauths = require("./yt2009mobileauths")
 let devTimings = false;
 const package = require("../package.json")
 const version = package.version;
@@ -965,7 +966,7 @@ cps.swf/mobile videoinfo
 ======
 */
 app.get("/feeds/api/videos/", (req, res) => {
-    if(!req.query.q) {
+    if(!req.query.q && !req.query.vq) {
         yt2009_mobile.videoData(req, res)
         return;
     }
@@ -975,7 +976,7 @@ app.get("/feeds/api/videos/", (req, res) => {
 //left this when messing about with leanbacklite_v3
 // this gets it partially working lol
 app.post("/feeds/api/videos/", (req, res) => {
-    if(!req.query.q) {
+    if(!req.query.q && !req.query.vq) {
         yt2009_mobile.videoData(req, res)
         return;
     }
@@ -1842,7 +1843,7 @@ app.get("/feeds/api/videos/*/related", (req, res) => {
     yt2009_mobile.apkVideoRelated(req, res)
 })
 app.get("/feeds/api/videos/*", (req, res) => {
-    if(!req.query.q) {
+    if(!req.query.q && !req.query.vq) {
         yt2009_mobile.videoData(req, res)
         return;
     }
@@ -1959,6 +1960,13 @@ app.get("/get_name_by_session", (req, res) => {
         }))
     }
     catch(error) {}
+})
+
+app.get("/mobile/gdata_gen_auth_page", (req, res) => {
+    yt2009gdataauths.genMainPage(req, res)
+})
+app.post("/mobile/gdata_set_auth", (req, res) => {
+    yt2009gdataauths.setAuth(req, res)
 })
 
 /*
