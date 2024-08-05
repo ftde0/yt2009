@@ -20,8 +20,8 @@ the yt2009 container is configured by using the following environment variables:
 
 - `YT2009_SSL` allows you to enable built-in SSL support, **requires prod env to work!** (default: `false`)
 - `YT2009_SSLPORT` sets the HTTPS port (default: `443`)
-- `YT2009_SSLPATH` sets the path for the SSL certificate (default: `/yt2009/cert.crt`)
-- `YT2009_SSLKEY` sets the path for the SSL certificate private key (default: `/yt2009/cert.key`)
+- `YT2009_SSLPATH` sets the path for the SSL certificate (default: `/yt2009/cert.crt` which is linked to `/data/cert.crt` so you can use either)
+- `YT2009_SSLKEY` sets the path for the SSL certificate private key (default: `/yt2009/cert.key` which is linked to `/data/cert.key` so you can use either)
 - `YT2009_AUTO_MAINTAIN` sets whether to enable automatic instance cleaning (default: false)
 - `YT2009_MAINTAIN_MAX_SIZE` sets the maximum assets folder size in GB, works with auto_maintain (default: 10)
 - `YT2009_MAINTAIN_MAX_CACHE_SIZE` sets the maximum cache file size in MB, works with auto_maintain (default: 15)
@@ -33,7 +33,9 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_REDIR` sets an absolute http path of a different yt2009 instance you wish to redirect to, leave empty to disable
 - `YT2009_LOGGED_TOKENS` sets tokens that have their usage logged in `/data/accessdata`, seperated by commas, leave empty to disable
 - `YT2009_TOKENS` allows you to specify custom auth tokens instead of generating them randomly, **requires prod env to work!**, seperated by commas, leave empty to disable, **this will override any existing access tokens when used!!!**
-- `YT2009_RATELIMIT` sets a number of web fetch (watch, search etc) requests one ipv4 address/one ipv6 block can make in a minute.
+- `YT2009_RATELIMIT` sets a number of web fetch (watch, search etc) requests one ipv4 address/one ipv6 block can make in a minute
+- `YT2009_AC` sets whether to suppress errors that would normally crash yt2009 (default: `false`)
+- `YT2009_GDATA_AUTH` allows you to enable token-based authorization for the gdata api (e.g. mobile apps) (default: `false`)
 
 ## troubleshooting
 #### reading auth tokens from a running container
