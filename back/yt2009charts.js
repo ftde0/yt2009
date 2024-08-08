@@ -179,7 +179,6 @@ module.exports = {
             if(d.t) {
                 d.t = this.s(d.t)
             }
-            console.log(d)
             command.push(
                 `-draw "text ${xStart + ((xSize / 100) * d.p)},${xYPlacement} '${d.t}'"`
             )
@@ -358,6 +357,9 @@ module.exports = {
                 let textStart = Math.floor(
                     chartXStart + ((chartXSize / 100) * c.p) - (approxTextSize / 2)
                 )
+                if(textStart < chartXStart) {
+                    textStart = chartXStart + 4
+                }
                 let textEnd = textStart + Math.floor(approxTextSize)
                 command.push(`-fill ${c.c}`)
                 command.push(`-pointsize ${parseInt(c.s)}`)
@@ -404,9 +406,15 @@ module.exports = {
                     lines.push(`${textCenter - diffLine},${lineYStart + 7} ${textCenter - diffLine},${lineYEnd}`)
                 }
                 lines.forEach(l => {
-                    command.push(
-                        `-draw "stroke black stroke-width 0.5 line ${l}"`
-                    )
+                    // find yStart (yS) and yEnd(yE) to make sure we're not drawing
+                    // messy lines
+                    let yS = parseFloat(l.split(",")[1].split(" ")[0])
+                    let yE = parseFloat(l.split(",")[2])
+                    if(yS <= yE) {
+                        command.push(
+                            `-draw "stroke black stroke-width 0.5 line ${l}"`
+                        )
+                    }
                 })
             })
         }
@@ -493,7 +501,7 @@ module.exports = {
         
         // generate in image
         for(var c in countries) {
-            if(world[c]) {
+            if(world[c] && chco[countries[c]]) {
                 let p = countries[c]
                 command.push(
                     `-draw "fill ${chco[p]} ${world[c]}"`
