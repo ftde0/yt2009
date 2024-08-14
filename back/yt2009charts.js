@@ -493,7 +493,7 @@ module.exports = {
         // get used countries & percentages
         let i = 0;
         let countries = {};
-        (req.query.chd || "").replace("t:", "").split(",").forEach(chd => {
+        (req.query.chd || "").replace("t:", "").replace("s:", "").split(",").forEach(chd => {
             let c = (req.query.chld || "").substring(i, i + 2)
             countries[this.s(c)] = parseInt(chd)
             i += 2

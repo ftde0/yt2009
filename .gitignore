@@ -21,6 +21,7 @@ mobile/*.ogg
 changelogs/*.txt
 apksetup/
 back/logs/
+back/tvdata.json
 
 # yt assets
 master-vfl121679.png

@@ -3,6 +3,7 @@ const constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const fs = require("fs")
 const ytdl = require("ytdl-core")
+const yt2009tvsignin = require("./yt2009tvsignin")
 const dominant_color = require("./dominant_color")
 const config = require("./config.json")
 const tokens = config.tokens || ["amogus"]
@@ -1024,16 +1025,14 @@ module.exports = {
 
         yt2009exports.updateFileDownload(fname, 1)
 
+        let rHeaders = JSON.parse(JSON.stringify(constants.headers))
+        rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+        if(yt2009tvsignin.needed() && yt2009tvsignin.getTvData().accessToken) {
+            let tv = yt2009tvsignin.getTvData()
+            rHeaders.Authorization = `${tv.tokenType} ${tv.accessToken}`
+        }
         fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
-            "headers": {
-                "accept": "*/*",
-                "accept-language": "en-US,en;q=0.9,pl;q=0.8",
-                "content-type": "application/json",
-                "cookie": "",
-                "x-goog-authuser": "0",
-                "x-origin": "https://www.youtube.com/",
-                "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
-            },
+            "headers": rHeaders,
             "referrer": "https://www.youtube.com/watch?v=" + id,
             "referrerPolicy": "origin-when-cross-origin",
             "body": JSON.stringify({
@@ -1048,7 +1047,9 @@ module.exports = {
                     }
                 }
                 },
-                "videoId": id
+                "videoId": id,
+                "racyCheckOk": true,
+                "contentCheckOk": true
             }),
             "method": "POST",
             "mode": "cors"
