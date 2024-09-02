@@ -1,13 +1,16 @@
 FROM node:lts-alpine3.20
-RUN apk add --no-cache imagemagick ffmpeg cabextract && \
+RUN apk add --no-cache imagemagick cabextract && \
     wget -P /tmp/ https://www.freedesktop.org/software/fontconfig/webfonts/webfonts.tar.gz && \
     tar -xzf /tmp/webfonts.tar.gz -C /tmp && \
     cabextract /tmp/msfonts/arial32.exe -d /tmp && \
+    apk del cabextract && \
     install -D -t /usr/share/fonts /tmp/Arial.TTF && \
     rm -rf /tmp/* && \
     fc-cache -f && \
     mkdir /data && \
     chown node /data
+
+COPY --from=mwader/static-ffmpeg:7.0.2 /ffmpeg /usr/local/bin/
 
 ADD --chown=node . /yt2009
 WORKDIR /yt2009
