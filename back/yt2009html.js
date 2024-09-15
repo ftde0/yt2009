@@ -1202,6 +1202,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 req.headers.cookie.split("alt_swf_path=")[1].split(";")[0]
             )
             if(!swfFilePath) {swfFilePath = "/watch.swf"}
+            swfFilePath = swfFilePath.split(`"`).join(`%22`)
         }
         if(req.headers.cookie.includes("alt_swf_arg")) {
             swfArgPath = decodeURIComponent(
@@ -1210,6 +1211,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             if(!swfArgPath) {
                 swfArgPath = "video_id"
             }
+            swfArgPath = swfArgPath.split(`"`).join(`%22`)
         }
         let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}`
         if((req.headers["cookie"] || "").includes("f_h264")) {
@@ -1220,6 +1222,18 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         && req.headers.cookie.includes("f_compat=")) {
             flashCompat = req.headers.cookie.split("f_compat=")[1].split(";")[0]
             flash_url += "&rt=" + Date.now()
+        }
+        let flashCustomModules = {
+            "iv": false,
+            "cc": false
+        }
+        if(req.headers.cookie
+        && req.headers.cookie.includes("f_civ=")) {
+            flashCustomModules.iv = req.headers.cookie.split("f_civ=")[1].split(";")[0]
+        }
+        if(req.headers.cookie
+        && req.headers.cookie.includes("f_ccc=")) {
+            flashCustomModules.cc = req.headers.cookie.split("f_ccc=")[1].split(";")[0]
         }
         if(useFlash) {
             code = code.replace(
@@ -2025,6 +2039,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     flash_url += "&vq=" + vq
                 }
                 let enableModules = !flashCompat.includes("modules")
+                let customModulesPath = ""
                 if(new Date().getMonth() == 3
                 && new Date().getDate() == 1
                 && !req.headers.cookie.includes("unflip=1")) {
@@ -2062,8 +2077,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
                 }
                 
+                let ccModuleAs2 = encodeURIComponent(
+                    `http://${config.ip}:${config.port}/subtitle-module.swf`
+                )
+                let ivModuleAs2 = encodeURIComponent(
+                    `http://${config.ip}:${config.port}/iv_module.swf`
+                )
                 if(enableModules) {
-                    flash_url += `&cc_module=http%3A%2F%2F${config.ip}%3A${config.port}%2Fsubtitle-module.swf`
+                    flash_url += `&cc_module=${flashCustomModules.cc || ccModuleAs2}`
+                    flash_url += `&iv_module=${flashCustomModules.iv || ivModuleAs2}`
                 }
 
                 // always_captions flash

@@ -319,5 +319,11 @@
     "userpage_vl_table_rating": "Ocena",
     "vl_permalink_label": "Playlista/adres URL (link bezpośredni):",
     "vl_embed_label": "Odtwarzacz osadzony na stronie:",
-    "vl_playall": "Odtwórz wszystkie filmy wideo"
+    "vl_playall": "Odtwórz wszystkie filmy wideo",
+    "channelpage_all": "Wszystkie kanały",
+    "channelpage_pages": "Strony: ",
+    "channelpage_prev": "Poprzednia",
+    "channelpage_next": "Następna",
+    "channelpage_type": "Kanał",
+    "channelpage_subs": " Subskrybentów"
 }

@@ -2,7 +2,6 @@ const fetch = require("node-fetch")
 const constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const fs = require("fs")
-const ytdl = require("ytdl-core")
 const yt2009tvsignin = require("./yt2009tvsignin")
 const dominant_color = require("./dominant_color")
 const config = require("./config.json")
@@ -254,7 +253,9 @@ module.exports = {
             itemsPath.forEach(container => {
                 // actual results
                 if(container.itemSectionRenderer) {
-                    results = container.itemSectionRenderer.contents
+                    container.itemSectionRenderer.contents.forEach(r => {
+                        results.push(r)
+                    })
                 }
 
                 // continuation token
@@ -417,6 +418,51 @@ module.exports = {
                     "videoCount": result.videoCount,
                     "videos": videoList,
                     a
+                })
+            }
+            // playlist but who hurt you my poor boy..
+            else if(result.lockupViewModel
+            && result.lockupViewModel.contentType == "LOCKUP_CONTENT_TYPE_PLAYLIST") {
+                result = result.lockupViewModel
+                let vCount = 0;
+                try {
+                    let wtf = result.contentImage.collectionThumbnailViewModel
+                    .primaryThumbnail.thumbnailViewModel.overlays[0]
+                    .thumbnailOverlayBadgeViewModel.thumbnailBadges[0]
+                    .thumbnailBadgeViewModel.text;
+                    vCount = this.bareCount(wtf).toString()
+                    if(wtf == "Mix") {
+                        vCount = "50+"
+                    }
+                }
+                catch(error) {}
+                let videoList = []
+                let m = result.metadata.lockupMetadataViewModel
+                try {
+                    let vm = m.metadata.contentMetadataViewModel
+                    let d = " · ";
+                    vm.metadataRows.forEach(n => {
+                        try {
+                            n = n.metadataParts[0].text
+                            let watch = n.commandRuns[0].onTap.innertubeCommand
+                                        .watchEndpoint;
+                            videoList.push({
+                                "type": "playlist-video",
+                                "id": watch.videoId,
+                                "title": n.content.split(d)[0],
+                                "length": n.content.split(d)[1]
+                            })
+                        }
+                        catch(error) {}
+                    })
+                }
+                catch(error) {console.log("lockupviewmodel:",error)}
+                resultsToCallback.push({
+                    "type": "playlist",
+                    "id": result.contentId,
+                    "name": m.title.content,
+                    "videoCount": vCount,
+                    "videos": videoList
                 })
             }
         })
@@ -1132,6 +1178,9 @@ module.exports = {
             }
             if(!qualities[quality] && qualities[quality + "60"]) {
                 quality = quality + "60"
+            }
+            if(!qualities[quality] && qualities[quality + "50"]) {
+                quality = quality + "50"
             }
             if(!qualities[quality]) {
                 callback(false)

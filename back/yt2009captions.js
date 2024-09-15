@@ -98,6 +98,11 @@ module.exports = {
                                 })
                                 .then(r => {r.text().then(r => {
                                     if(r.includes(defaults[0])) {
+                                        if(retryCount < 2) {
+                                            retryCount++
+                                            getFile(true)
+                                            return;
+                                        }
                                         r = defaults[1]
                                     }
                                     callback(r)

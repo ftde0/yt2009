@@ -107,6 +107,11 @@ module.exports = {
 
     // handling /get_video (flv)
     "get_flv": function(req, res) {
+        let avoidRedirect = false;
+        if(req.headers["user-agent"]
+        && req.headers["user-agent"].includes("Nintendo 3DS")) {
+            avoidRedirect = true;
+        }
         if(!req.query.video_id) {
             res.sendStatus(400)
             return;
@@ -116,7 +121,28 @@ module.exports = {
         || (req.headers.referer || "").includes("/mp4")
         || req.query.t == "amogus") {
             req.query.video_id = req.query.video_id.replace("/mp4", "")
-            res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
+            if(avoidRedirect) {
+                let v = req.query.video_id;
+                let d = __dirname.split("back")
+                d.pop()
+                d = d.join("back")
+                let f = d + "/assets/" + v + ".mp4"
+                if(!fs.existsSync(f)
+                || (fs.existsSync(f)
+                && fs.statSync(f).size < 5)) {
+                    utils.saveMp4(v, () => {
+                        if(fs.existsSync(f)) {
+                            res.sendFile(f)
+                        } else {
+                            res.sendStatus(404)
+                        }
+                    }, false)
+                } else {
+                    res.sendFile(f)
+                }
+            } else {
+                res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
+            }
             return;
         }
         let v = req.query.video_id.replace("/mp4", "")

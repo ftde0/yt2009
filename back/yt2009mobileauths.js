@@ -55,6 +55,19 @@ module.exports = {
             return true;
         }
 
+        // classic site-based auth
+        if(req.headers.cookie && req.headers.cookie.includes("auth=")) {
+            let a = req.headers.cookie.split("auth=")[1].split(";")[0].trim()
+            if((config.tokens && config.tokens.includes(a))
+            && (!config.templocked_tokens
+            || !config.templocked_tokens.includes(a))) {
+                if(useTShare) {
+                    require("./yt2009ts").add(req)
+                }
+                return true;
+            }
+        }
+
         // header-based auth: mobile apps
         if((!deviceId && !token)
         || !gdataAuths[deviceId]

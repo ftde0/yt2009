@@ -4,6 +4,7 @@ const search = require("./yt2009search")
 const html = require("./yt2009html")
 const channels = require("./yt2009channels")
 const mobileauths = require("./yt2009mobileauths")
+const yt2009jsongdata = require("./yt2009jsongdata")
 
 module.exports = {
     "get_search": function(req, res) {
@@ -41,6 +42,13 @@ module.exports = {
         }
 
         let page = ((req.query["start-index"] || 0) / 20)
+
+        // jsongdata
+        if(req.query.alt == "json") {
+            yt2009jsongdata.search(req, res)
+            return;
+        }
+
         /*
         =======
         create the search XML

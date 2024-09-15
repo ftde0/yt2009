@@ -978,9 +978,9 @@ module.exports = {
                             </div>
                         </div>
                         <div class="channel-facets">
-                            <span class="result-type">Channel</span>
+                            <span class="result-type">lang_channelpage_type</span>
                             <span class="channel-video-count"></span>
-                            <span>${channel.properties.subscribers ? channel.properties.subscribers : "0"} <span class="channel-text-break-grid"></span>Subscribers</span>
+                            <span>${channel.properties.subscribers ? channel.properties.subscribers : "0"} <span class="channel-text-break-grid"></span>lang_channelpage_subs</span>
                             <span class="channel-username"><a class="hLink" href="${channel.url}">${channelName}</a></span>
                         </div>
                     </div>

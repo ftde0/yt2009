@@ -12,6 +12,7 @@ const channels = require("./yt2009channels")
 const utils = require("./yt2009utils")
 const templates = require("./yt2009templates")
 const doodles = require("./yt2009doodles")
+const languages = require("./language_data/language_engine")
 
 module.exports = {
     "apply": function(req, res) {
@@ -42,8 +43,8 @@ module.exports = {
         // shows tab
         if(req.headers.cookie.includes("shows_tab")) {
             code = code.replace(
-                `<a href="/channels">Channels</a>`,
-                `<a href="/channels">Channels</a><a href="#">Shows</a>`
+                `<a href="/channels">lang_channels</a>`,
+                `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
         }
 
@@ -76,7 +77,7 @@ module.exports = {
         let pagingHTML = `
         <div class="searchFooterBox">
             <div class="pagingDiv">
-                <span class="pagerLabel smallText label">Pages: </span>`
+                <span class="pagerLabel smallText label">lang_channelpage_pages</span>`
         let pageNumbers = [
             pageNumber - 2,
             pageNumber - 1,
@@ -85,7 +86,7 @@ module.exports = {
             pageNumber + 2
         ]
         if(pageNumbers[1] >= 1) {
-            pagingHTML += `<a href="?p=${pageNumber - 1}" class="pagerNotCurrent">Previous</a>`
+            pagingHTML += `<a href="?p=${pageNumber - 1}" class="pagerNotCurrent">lang_channelpage_prev</a>`
         }
         let addedPages = []
         pageNumbers.forEach(page => {
@@ -104,7 +105,7 @@ module.exports = {
             addedPages.push(lastPage + 1)
             pagingHTML += `<a href="?p=${p}" class="pagerNotCurrent">${p}</a>`
         }
-        pagingHTML += `<a href="?p=${pageNumber + 1}" class="pagerNotCurrent">Next</a>`
+        pagingHTML += `<a href="?p=${pageNumber + 1}" class="pagerNotCurrent">lang_channelpage_next</a>`
         pagingHTML += `
             </div>
         </div>`
@@ -112,6 +113,7 @@ module.exports = {
         // final
         code = code.replace(`<!--yt2009_channels_insert-->`, channelsHTML + pagingHTML)
         code = doodles.applyDoodle(code)
+        code = languages.apply_lang_to_code(code, req)
 
         res.send(code)
     }

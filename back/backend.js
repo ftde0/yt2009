@@ -82,6 +82,13 @@ if(config.env == "dev") {
     });
 }
 
+if(fs.existsSync("./yt2009experimentals.js")) {
+    try {
+        require("./yt2009experimentals").set(app)
+    }
+    catch(error) {}
+}
+
 if(config.redirmode
 && typeof(config.redirmode) == "string") {
     app.get("*", (req, res) => {
@@ -2499,14 +2506,18 @@ app.get("/retry_video", (req, res) => {
 signin endpoints
 ======
 */
-let signin = fs.readFileSync("../signin.htm").toString()
+const signin = fs.readFileSync("../signin.htm").toString()
 app.get("/signin", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
         res.redirect("/unauth.htm")
         return;
     }
 
-    res.send(signin)
+    let code = signin;
+    if(req.headers.cookie && req.headers.cookie.includes("shows_tab")) {
+        code = code.replace(`<!--shows_tab-->`, `<a href="#">Shows</a>`)
+    }
+    res.send(code)
 })
 app.get("/logout", (req, res) => {
     let flags = req.headers.cookie || ""
@@ -4347,6 +4358,64 @@ if(config.ac) {
         })
     })
 }
+
+/*
+======
+data export through yt2009flags
+======
+*/
+let exportedDataCodes = {}
+let eRatelimit = {}
+app.post("/export_flags_data", (req, res) => {
+    if(!eRatelimit[req.ip]) {
+        eRatelimit[req.ip] = 0;
+        setTimeout(() => {
+            delete eRatelimit[req.ip];
+        }, 1000 * 60)
+    }
+    eRatelimit[req.ip]++
+    if(eRatelimit[req.ip] >= 3) {
+        res.status(429).send("exporting called too many times recently");
+        return;
+    }
+    let b = req.body.toString()
+    let randomCode = ""
+    if(b.startsWith("c:") && b.includes("\x00")) {
+        function s() {
+            randomCode = ""
+            let c = "qwertyuiopasdfghjklzxcvbnm".split("")
+            while(randomCode.length !== 8) {
+                randomCode += c[Math.floor(Math.random() * 26)]
+            }
+        }
+        s()
+        while(exportedDataCodes[randomCode]) {s()}
+        exportedDataCodes[randomCode] = req.body.toString()
+        setTimeout(() => {
+            if(exportedDataCodes[randomCode]) {
+                delete exportedDataCodes[randomCode];
+            }
+        }, 1000 * 60 * 15)
+        res.send(randomCode)
+    } else {
+        res.sendStatus(400);
+        return;
+    }
+})
+app.get("/get_flags_data", (req, res) => {
+    if(!req.headers.code) {
+        res.status(400).send("no code found.")
+        return;
+    }
+    req.headers.code = req.headers.code.replace(/[^a-z]/g, "").trim()
+    let c = req.headers.code
+    if(!exportedDataCodes[c]) {
+        res.status(404).send(c + ": invalid data code.");
+        return;
+    }
+    res.send(exportedDataCodes[c]);
+    delete exportedDataCodes[c]
+})
 
 /*
 ======

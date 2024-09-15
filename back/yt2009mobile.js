@@ -12,6 +12,7 @@ const yt2009playlists = require("./yt2009playlists")
 const mobileflags = require("./yt2009mobileflags")
 const yt2009_exports = require("./yt2009exports")
 const mobileauths = require("./yt2009mobileauths")
+const yt2009jsongdata = require("./yt2009jsongdata")
 const env = config.env
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 const ffmpeg_process_144 = [
@@ -789,8 +790,12 @@ module.exports = {
                 id = mobileflags.get_flags(req).login_simulate.split("/")[1]
             }
         }
+        let path = "/@" + id
+        if(id.startsWith("UC") && id.length == 24) {
+            path = "/channel/" + id
+        }
         let flags = mobileflags.get_flags(req).channel
-        channels.main({"path": "/@" + id, 
+        channels.main({"path": path, 
         "headers": {"cookie": ""},
         "query": {"f": 0}}, 
         {"send": function(data) {
@@ -805,7 +810,7 @@ module.exports = {
                 if(data.videoCount) {
                     videoCount = data.videoCount
                 } else {
-                    channels.fill_videocount("/@" + id, (count) => {
+                    channels.fill_videocount(path, (count) => {
                         if(count !== "") {
                             videoCount = count;
                         }
@@ -838,7 +843,11 @@ module.exports = {
         if(!mobileauths.isAuthorized(req, res, "feed")) return;
         let id = req.originalUrl.split("/users/")[1]
                                 .split("/uploads")[0]
-        channels.main({"path": "/@" + id, 
+        let path = "/@" + id
+        if(id.startsWith("UC") && id.length == 24) {
+            path = "/channel/" + id
+        }
+        channels.main({"path": path, 
         "headers": {"cookie": ""},
         "query": {"f": 0}}, 
         {"send": function(data) {
@@ -875,8 +884,12 @@ module.exports = {
         if(!mobileauths.isAuthorized(req, res, "feed")) return;
         let id = req.originalUrl.split("/users/")[1]
                                 .split("/playlists")[0]
+        let path = "/@" + id
+        if(id.startsWith("UC") && id.length == 24) {
+            path = "/channel/" + id
+        }
         setTimeout(function() {
-            channels.main({"path": "/@" + id, 
+            channels.main({"path": path,
             "headers": {"cookie": ""},
             "query": {"f": 0}}, 
             {"send": function(data) {
@@ -907,8 +920,12 @@ module.exports = {
         if(!mobileauths.isAuthorized(req, res, "feed")) return;
         let id = req.originalUrl.split("/users/")[1]
                                 .split("/playlists")[0]
+        let path = "/@" + id
+        if(id.startsWith("UC") && id.length == 24) {
+            path = "/channel/" + id
+        }
         setTimeout(function() {
-            channels.main({"path": "/@" + id, 
+            channels.main({"path": path, 
             "headers": {"cookie": ""},
             "query": {"f": 0}}, 
             {"send": function(data) {
@@ -971,9 +988,14 @@ module.exports = {
         }
 
         // i do love being too lazy to develop this function properly
+        let path = "/@" + req.query.author
+        if(req.query.author.startsWith("UC")
+        && req.query.author.length == 24) {
+            path = "/channel/" + path
+        }
         require("./yt2009subscriptions").fetch_new_videos({
             "headers": {
-                "url": "/@" + req.query.author
+                "url": path
             },
             "query": {
                 "flags": ""

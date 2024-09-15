@@ -22,7 +22,8 @@
 		}
 		#i_export, #i_import,
 		#imported-flags-container, #exported-flags-container,
-		#exported-session-container {
+		#exported-session-container, #exported-data-container,
+		#imported-data-container {
 			margin-top: 10px;
 			overflow: hidden;
 		}
@@ -84,6 +85,18 @@
 			<div id="imported-session-container" class="hid" style="height: 0px;">
 				<textarea id="import-session-text" spellcheck="false" style="height: 40px"></textarea><br>
 				<a class="yt-button yt-button-primary" href="#" onclick="import_session_do();"><span id="i_import">import</span></a>
+			</div><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="data_export();"><span id="i_export">export all data</span></a><br>
+			<div id="exported-data-container" class="hid" style="height: 0px;">
+				<p>copy the export code listed below and paste it where needed.<br>
+				valid <b>only for the same yt2009 instance</b>, for 15 minutes or until claimed.</p>
+				<textarea id="export-data-text" readonly spellcheck="false" style="height: 40px"></textarea><br>
+			</div><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="data_import();"><span id="i_import">import data</span></a><br>
+			<div id="imported-data-container" class="hid" style="height: 0px;">
+				<p>importing from a different setup <b>will overwrite your current data.</b></p>
+				<textarea id="import-data-text" spellcheck="false" style="height: 40px"></textarea><br>
+				<a class="yt-button yt-button-primary" href="#" onclick="data_import_do();"><span id="i_import">import</span></a>
 			</div>
 			<hr>
 			<p>bring login_simulate to the mobile app:</p>
@@ -508,6 +521,116 @@
 			document.cookie = "syncses=" + f + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
 			alert("session imported.")
 			location.reload()
+		}
+
+		// export data
+		function data_export() {
+			var compiledData = "c:\x00" + document.cookie + "\x00"
+			var r;
+			if (window.XMLHttpRequest) {
+				r = new XMLHttpRequest()
+			} else {
+				r = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			if(window.localStorage) {
+				var saveVars = [
+					"favorites", "filtered", "lastNotif", "playlistsIndex",
+					"quicklistVids", "subscriptions", "watch_history"
+				]
+				saveVars.forEach(function(v) {
+					if(localStorage[v]) {
+						compiledData += "/l:" + v + ":\x00" + localStorage[v] + "\x00";
+						if(v == "playlistsIndex") {
+							JSON.parse(localStorage[v]).forEach(function(p) {
+								if(localStorage["playlist-" + p.id]) {
+									compiledData += "/l:" + "playlist-" + p.id + ":\x00"
+												 + localStorage["playlist-" + p.id]
+												 + "\x00"
+								}
+							})
+						}
+					}
+				})
+			}
+			r.open("POST", "/export_flags_data")
+			r.send(compiledData)
+			r.onreadystatechange = function(e) {
+				if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+					var ta = document.getElementById("export-data-text")
+					ta.value = r.responseText
+					var f = document.getElementById("exported-data-container")
+					f.className = ""
+					funExpand(f, 90)
+				}
+			}
+		}
+
+		// import data
+		function data_import() {
+			var f = document.getElementById("imported-data-container")
+			f.className = ""
+			funExpand(f, 90)
+		}
+
+		function data_import_do() {
+			var t = document.getElementById("import-data-text").value
+			var r;
+			if (window.XMLHttpRequest) {
+				r = new XMLHttpRequest()
+			} else {
+				r = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			r.open("GET", "/get_flags_data?rn=" + Math.random())
+			r.setRequestHeader("code", t)
+			r.send(null)
+			r.onreadystatechange = function(e) {
+				if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+					if(r.responseText.indexOf("c:") == -1) {
+						alert(r.responseText)
+					} else {
+						applyImport(r.responseText)
+					}
+				}
+			}
+		}
+
+		function applyImport(d) {
+			var importMsg = "import done - "
+			var cookiesChanged = 0;
+			var localChanged = 0;
+
+			// cookies
+			var cookies = d.split("c:\x00")[1].split("\x00")[0].split("; ")
+			for(let c in cookies) {
+				c = cookies[c]
+				if(typeof(c) == "string" && c.indexOf("=") !== -1) {
+					var name = c.split("=")[0]
+					var value = c.split("=")[1]
+					document.cookie = name + "=" + value + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+					cookiesChanged++
+				}
+			}
+			importMsg += cookiesChanged + " cookies affected"
+
+			// localstorage
+			var ls = ""
+			if(d.indexOf("/l:") !== -1 && window.localStorage) {
+				var e = d.split("/l:")
+				for(var f in e) {
+					f = e[f]
+					if(typeof(f) == "string" && f.indexOf(":\x00") !== -1) {
+						var name = f.split(":\x00")[0]
+						var value = f.split(":\x00")[1].split("\x00")[0]
+						localStorage[name] = value;
+						localChanged++
+					}
+				}
+			}
+			if(localChanged > 0) {
+				importMsg += ", " + localChanged + " localStorage elements."
+			}
+
+			alert(importMsg)
 		}
 	</script>
 </body>

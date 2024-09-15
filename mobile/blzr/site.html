@@ -1670,6 +1670,9 @@
     && document.cookie.indexOf("no-warning") !== -1) {
         noWarningFlag = true;
     }
+    if(location.href.indexOf("?nw=1")) {
+        noWarningFlag = true;
+    }
     function query(elem) {
         var s = new String(document.location);
         elem.href = "#/results?q=" + encodeURIComponent(document.f.q.value);

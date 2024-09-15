@@ -19,6 +19,8 @@
     "GY": "rectangle 146,115 148,122",
     "GF": "rectangle 154,118 155,120",
     "SR": "rectangle 150,117 152,120",
+    "GL": "rectangle 130,0 206,8 rectangle 146,9 207,33",
+    "AR": "rectangle 137,165 149,186 rectangle 149,169 151,172 rectangle 137,163 147,165 rectangle 138,161 145,163 rectangle 133,186 146,209 rectangle 131,201 133,207",
 
 
     "IE": "rectangle 209,41 213,42",
