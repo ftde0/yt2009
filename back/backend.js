@@ -82,6 +82,17 @@ if(config.env == "dev") {
     });
 }
 
+if(require("os").totalmem() <= 110000000) {
+    console.log(`
+        
+    
+    low RAM amount (1G or less) detected!
+    you might run into issues with video encoding.
+    
+    
+`)
+}
+
 if(fs.existsSync("./yt2009experimentals.js")) {
     try {
         require("./yt2009experimentals").set(app)
@@ -4380,7 +4391,10 @@ app.post("/export_flags_data", (req, res) => {
     }
     let b = req.body.toString()
     let randomCode = ""
-    if(b.startsWith("c:") && b.includes("\x00")) {
+    if(b.startsWith("c:") && (
+        b.includes("\x00")
+        || b.includes("/x/x/x/x/x/")
+    )) {
         function s() {
             randomCode = ""
             let c = "qwertyuiopasdfghjklzxcvbnm".split("")
@@ -4428,6 +4442,13 @@ let obamaVideoObject = yt2009_constant.homepageCache_news.filter(s => s.id == "Z
 if(obamaVideoObject) {
     let newNewsCache = yt2009_constant.homepageCache_news.filter(s => s.id !== "Z9eId_9n1NM")
     yt2009_constant.homepageCache_news = newNewsCache;
+    fs.writeFileSync("./yt2009constants.json", JSON.stringify(yt2009_constant))
+}
+// remove zombies video (privated)
+let zombiesVideoObject = yt2009_constant.homepageCache_featured.filter(s => s.id == "czWoP7qVNSI")
+if(zombiesVideoObject) {
+    let newFeaturedCache = yt2009_constant.homepageCache_featured.filter(s => s.id !== "czWoP7qVNSI")
+    yt2009_constant.homepageCache_featured = newFeaturedCache
     fs.writeFileSync("./yt2009constants.json", JSON.stringify(yt2009_constant))
 }
 

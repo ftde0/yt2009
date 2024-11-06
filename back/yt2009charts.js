@@ -433,7 +433,7 @@ module.exports = {
         command.push(`"${fullF}"`)
 
         command = command.join(" ").split(";").join("")
-        if(process.platform == "linux") {
+        if(process.platform == "linux" || process.platform == "darwin") {
             command = command.split("#").join("\\#")
         }
 

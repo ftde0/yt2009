@@ -13,7 +13,7 @@ const child_process = require("child_process")
 module.exports = function(file_path) {
     let result = false;
     let command = [
-        "convert",
+        "magick convert",
         `"${file_path}"`,
         "+dither",
         "-colors 2",
@@ -23,7 +23,10 @@ module.exports = function(file_path) {
     ]
     let stdout = child_process.execSync(
         command.join(" ")
-        + ` | sort ${process.platform == "linux" ? "-n" : ""}`
+        + ` | sort ${(
+            process.platform == "linux"
+            || process.platform == "darwin"
+        ) ? "-n" : ""}`
     ).toString()
     let split_output = stdout.split("\n")[0];
     try {

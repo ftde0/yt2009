@@ -9,6 +9,15 @@ const tokens = config.tokens || ["amogus"]
 const logged_tokens = config.logged_tokens || []
 const templocked_tokens = config.templocked_tokens || []
 const useTShare = fs.existsSync("./yt2009ts.js")
+const androidHeaders = {"headers": {
+    "accept": "*/*",
+    "accept-language": "en-US,en;q=0.9,pl;q=0.8",
+    "content-type": "application/json",
+    "cookie": "",
+    "x-goog-authuser": "0",
+    "x-origin": "https://www.youtube.com/",
+    "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+}}
 const wlist = /discord.gg|tiktok|tik tok|pre-vevo|2023|lnk.to|official hd video|smarturl/gui
 let ip_uses_flash = []
 let ratelimitData = {}
@@ -1052,7 +1061,170 @@ module.exports = {
         .pipe(writeStream)*/
     },
 
-    "saveMp4_android": function(id, callback, extended, quality) {
+    "testF18": function(url, callback) {
+        const newHeaders = { ...androidHeaders };
+        newHeaders.headers.range = `bytes=0-1`;
+        fetch(url, newHeaders).then(r => {
+            callback(r.status !== 403)
+        })
+    },
+
+    "saveMp4_android": function(id, callback, existingPlayer, quality) {
+        let testF18 = this.testF18;
+        let downloadInParts_file = this.downloadInParts_file;
+
+        function parseResponse(r) {
+            // parse formats
+            if(!r.streamingData) {
+                callback(false)
+                yt2009exports.updateFileDownload(fname, 2)
+                return;
+            }
+            let qualities = {}
+            let h264DashAudioUrl;
+            // prefer nondash formats
+            // existingPlayer exists = re-called due to nonworking f18
+            if(!existingPlayer) {
+                r.streamingData.formats.forEach(q => {
+                    q.dash = false;
+                    qualities[q.qualityLabel] = q;
+                })
+            }
+            // add h264 dash formats
+            let audioFormats = []
+            r.streamingData.adaptiveFormats.forEach(q => {
+                if(q.mimeType.includes("audio/mp4")) {
+                    audioFormats.push(q)
+                } else if(q.mimeType.includes("video/mp4")
+                && q.mimeType.includes("avc")
+                && !qualities[q.qualityLabel]) {
+                    q.dash = true;
+                    qualities[q.qualityLabel] = q;
+                }
+            })
+            if(audioFormats.length > 0) {
+                audioFormats = audioFormats.sort((a, b) => b.bitrate - a.bitrate)
+            }
+            h264DashAudioUrl = audioFormats[0].url
+
+            // check if dash audio is needed
+            let downloadAudio = true;
+            let audioDownloadDone = false;
+            let videoDownloadDone = false;
+            if(quality == "360p" && !qualities["360p"]) {
+                for(let q in qualities) {
+                    if(qualities[q].itag == 18) {quality = q;}
+                }
+            }
+            if(qualities[quality] && !qualities[quality].dash && !existingPlayer) {
+                downloadAudio = false;
+            }
+
+            if(downloadAudio) {
+                downloadInParts_file(
+                    h264DashAudioUrl,
+                    "../assets/" + id + "-audio.m4a",
+                    (() => {
+                        audioDownloadDone = true;
+                        if(audioDownloadDone && videoDownloadDone) {
+                            onFormatsDone()
+                        }
+                    })
+                )
+            } else {
+                testF18(qualities[quality].url, (working) => {
+                    if(working) {
+                        downloadInParts_file(
+                            qualities[quality].url,
+                            "../assets/" + fname + ".mp4",
+                            (() => {
+                                callback(`${fname}.mp4`)
+                                yt2009exports.updateFileDownload(`${fname}`, 2)
+                            })
+                        )
+                    } else {
+                        this.saveMp4_android(id, callback, r, quality)
+                    }
+                })
+                return;
+            }
+
+            // download video if quality requirement satisfied
+            // override 1080 with 720 for exp_hd, other patchups for qualities
+            if(!qualities["1080p"] && quality == "1080p") {
+                quality = "720p"
+                fs.writeFileSync("../assets/" + id + "-1080p.mp4", "")
+            }
+            if(!qualities[quality] && qualities[quality + "60"]) {
+                quality = quality + "60"
+            }
+            if(!qualities[quality] && qualities[quality + "50"]) {
+                quality = quality + "50"
+            }
+            if(!qualities[quality] && quality == "360p") {
+                let qlist = []
+                for(let q in qualities) {
+                    qlist.push(q)
+                }
+                quality = q;
+            }
+            if(!qualities[quality]) {
+                callback(false)
+                yt2009exports.updateFileDownload(fname, 2)
+                return;
+            }
+
+            downloadInParts_file(
+                qualities[quality].url,
+                "../assets/" + id + "-temp-" + quality + ".mp4",
+                (() => {
+                    videoDownloadDone = true;
+                    if(audioDownloadDone || !downloadAudio) {
+                        onFormatsDone()
+                    }
+                })
+            )
+
+            // merge formats once both are ready
+            function onFormatsDone() {
+                let audioPath = "../assets/" + id + "-audio.m4a"
+                if(!downloadAudio) {
+                    audioPath = "../assets/" + id + ".mp4"
+                }
+                let videoPath = "../assets/" + id + "-temp-" + quality + ".mp4"
+
+                let cmd = [
+                    "ffmpeg",
+                    `-y -i "${__dirname}/${videoPath}"`,
+                    `-i "${__dirname}/${audioPath}"`,
+                    `-c:v copy -c:a copy`,
+                    `-map 0:v -map 1:a`,
+                    `"${__dirname}/../assets/${fname}.mp4"`
+                ].join(" ")
+
+                require("child_process").exec(cmd, (e, so) => {
+                    if(e) {callback(false);return;}
+                    callback(`${fname}.mp4`)
+                    setTimeout(() => {
+                        // delete temp assets
+                        try {
+                            if(!audioPath.includes(".mp4")) {
+                                fs.unlinkSync(`${__dirname}/${audioPath}`)
+                            }
+                            fs.unlinkSync(`${__dirname}/${videoPath}`)
+                        }
+                        catch(error) {}
+                    }, 10000)
+                    yt2009exports.updateFileDownload(fname, 2)
+                })
+            }
+        }
+
+        if(existingPlayer) {
+            parseResponse(existingPlayer)
+            return;
+        }
+
         if(!quality) {
             quality = "360p"
         }
@@ -1100,152 +1272,12 @@ module.exports = {
             "method": "POST",
             "mode": "cors"
         }).then(r => {r.json().then(r => {
-            // parse formats
-            if(!r.streamingData) {
-                callback(false)
-                yt2009exports.updateFileDownload(fname, 2)
-                return;
-            }
-            let qualities = {}
-            let h264DashAudioUrl;
-            // prefer nondash formats
-            r.streamingData.formats.forEach(q => {
-                q.dash = false;
-                qualities[q.qualityLabel] = q;
-            })
-            // add h264 dash formats
-            let audioFormats = []
-            r.streamingData.adaptiveFormats.forEach(q => {
-                if(q.mimeType.includes("audio/mp4")) {
-                    audioFormats.push(q)
-                } else if(q.mimeType.includes("video/mp4")
-                && q.mimeType.includes("avc")
-                && !qualities[q.qualityLabel]) {
-                    q.dash = true;
-                    qualities[q.qualityLabel] = q;
-                }
-            })
-            if(audioFormats.length > 0) {
-                audioFormats = audioFormats.sort((a, b) => b.bitrate - a.bitrate)
-            }
-            h264DashAudioUrl = audioFormats[0].url
-
-            // check if dash audio is needed
-            // we can pull from already download mp4 if not
-            let downloadAudio = true;
-            let audioDownloadDone = false;
-            let videoDownloadDone = false;
-            /*if(fs.existsSync("../assets/" + id + ".mp4")) {
-                downloadAudio = false;
-            }*/
-            if(quality == "360p" && !qualities["360p"]) {
-                for(let q in qualities) {
-                    if(qualities[q].itag == 18) {quality = q;}
-                }
-            }
-            if(qualities[quality] && !qualities[quality].dash) {
-                downloadAudio = false;
-            }
-
-            if(downloadAudio) {
-                this.downloadInParts_file(
-                    h264DashAudioUrl,
-                    "../assets/" + id + "-audio.m4a",
-                    (() => {
-                        audioDownloadDone = true;
-                        if(audioDownloadDone && videoDownloadDone) {
-                            onFormatsDone()
-                        }
-                    })
-                )
-            } else {
-                this.downloadInParts_file(
-                    qualities[quality].url,
-                    "../assets/" + fname + ".mp4",
-                    (() => {
-                        callback(`${fname}.mp4`)
-                        yt2009exports.updateFileDownload(`${fname}`, 2)
-                    })
-                )
-                return;
-            }
-
-            // download video if quality requirement satisfied
-            // override 1080 with 720 for exp_hd
-            if(!qualities["1080p"] && quality == "1080p") {
-                quality = "720p"
-                fs.writeFileSync("../assets/" + id + "-1080p.mp4", "")
-            }
-            if(!qualities[quality] && qualities[quality + "60"]) {
-                quality = quality + "60"
-            }
-            if(!qualities[quality] && qualities[quality + "50"]) {
-                quality = quality + "50"
-            }
-            if(!qualities[quality]) {
-                callback(false)
-                yt2009exports.updateFileDownload(fname, 2)
-                return;
-            }
-
-            this.downloadInParts_file(
-                qualities[quality].url,
-                "../assets/" + id + "-temp-" + quality + ".mp4",
-                (() => {
-                    videoDownloadDone = true;
-                    if(audioDownloadDone || !downloadAudio) {
-                        onFormatsDone()
-                    }
-                })
-            )
-
-            // merge formats once both are ready
-            function onFormatsDone() {
-                let audioPath = "../assets/" + id + "-audio.m4a"
-                if(!downloadAudio) {
-                    audioPath = "../assets/" + id + ".mp4"
-                }
-                let videoPath = "../assets/" + id + "-temp-" + quality + ".mp4"
-
-                let cmd = [
-                    "ffmpeg",
-                    `-y -i "${__dirname}/${videoPath}"`,
-                    `-i "${__dirname}/${audioPath}"`,
-                    `-c:v copy -c:a copy`,
-                    `-map 0:v -map 1:a`,
-                    `"${__dirname}/../assets/${fname}.mp4"`
-                ].join(" ")
-
-                require("child_process").exec(cmd, (e, so) => {
-                    if(e) {callback(false);return;}
-                    callback(`${fname}.mp4`)
-                    setTimeout(() => {
-                        // delete temp assets
-                        try {
-                            if(!audioPath.includes(".mp4")) {
-                                fs.unlinkSync(`${__dirname}/${audioPath}`)
-                            }
-                            fs.unlinkSync(`${__dirname}/${videoPath}`)
-                        }
-                        catch(error) {}
-                    }, 10000)
-                    yt2009exports.updateFileDownload(fname, 2)
-                })
-            }
+            parseResponse(r);
         })})
     },
 
     "downloadInParts_file": function(url, out, callback) {
-        const androidHeaders = {"headers": {
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9,pl;q=0.8",
-            "content-type": "application/json",
-            "cookie": "",
-            "x-goog-authuser": "0",
-            "x-origin": "https://www.youtube.com/",
-            "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
-        }}
-        const partSize = 9_000_000; //9MB
+        const partSize = 9 * 1000 * 1000; //9MB
         const stream = fs.createWriteStream(out, { flags: 'a' });
         function fetchNextPart(partNumber) {
             let partStartB = partNumber * partSize;

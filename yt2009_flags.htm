@@ -235,7 +235,7 @@
 			- comments - komentarze kanału<br></p>
 		</div>
 
-		<div class="group3">
+		<div class="group4">
 			<h2>/, /videos, /channels, /my_subscriptions</h2>
 			<input type="checkbox" id="mainpage-disable-fallback" title="ukrywa ostrzeżenie o trybu fallback">
 			<label for="mainpage-disable-fallback">disable_fallback</label><br>
@@ -250,7 +250,7 @@
 			<label for="mainpage-username-asciify">username_asciify</label><br>
 		</div>
 
-		<div class="group4">
+		<div class="group5">
 			<h2>[global]</h2>
 			<h4 id="i_all_pages">te flagi działają na wszystkich podstronach które będą ich używać.</h4>
 			<input type="checkbox" id="global-always-annotations" title="automatycznie włącza adnotacje na filmach">
@@ -290,8 +290,7 @@
 		// login_simulate
 
 		function updateDescriptions() {
-			// show flag descriptions on labels BECAUSE PEOPLE CAN'T HOVER
-			// OVER THE CHECKBOX.
+			// show flag descriptions on labels
 			var labels = document.getElementsByTagName("input")
 			for(var label in labels) {
 				label = labels[label]
@@ -389,7 +388,7 @@
 
 		// expander pokazujący więcej informacji o fladze jak takie są
 		function toggleExpander(expanderName) {
-			var element = document.querySelector("#" + expanderName);
+			var element = document.getElementById(expanderName);
 
 			if(element.className == "hid") {
 				element.className = ""
@@ -524,8 +523,12 @@
 		}
 
 		// export data
+		var separatorChar = "\x00"
+		if(navigator.userAgent.indexOf("MSIE") !== -1) {
+			separatorChar = "/x/x/x/x/x/"
+		}
 		function data_export() {
-			var compiledData = "c:\x00" + document.cookie + "\x00"
+			var compiledData = "c:" + separatorChar + document.cookie + separatorChar
 			var r;
 			if (window.XMLHttpRequest) {
 				r = new XMLHttpRequest()
@@ -537,20 +540,20 @@
 					"favorites", "filtered", "lastNotif", "playlistsIndex",
 					"quicklistVids", "subscriptions", "watch_history"
 				]
-				saveVars.forEach(function(v) {
+				for(var v in saveVars) {
 					if(localStorage[v]) {
-						compiledData += "/l:" + v + ":\x00" + localStorage[v] + "\x00";
+						compiledData += "/l:" + v + ":" + separatorChar + localStorage[v] + separatorChar;
 						if(v == "playlistsIndex") {
 							JSON.parse(localStorage[v]).forEach(function(p) {
 								if(localStorage["playlist-" + p.id]) {
-									compiledData += "/l:" + "playlist-" + p.id + ":\x00"
+									compiledData += "/l:" + "playlist-" + p.id + ":" + separatorChar
 												 + localStorage["playlist-" + p.id]
-												 + "\x00"
+												 + separatorChar
 								}
 							})
 						}
 					}
-				})
+				}
 			}
 			r.open("POST", "/export_flags_data")
 			r.send(compiledData)
@@ -599,9 +602,14 @@
 			var cookiesChanged = 0;
 			var localChanged = 0;
 
+			var lsep = "\x00"
+			if(d.indexOf("/x/x/x/x/x/") !== -1) {
+				lsep = "/x/x/x/x/x/"
+			}
+
 			// cookies
-			var cookies = d.split("c:\x00")[1].split("\x00")[0].split("; ")
-			for(let c in cookies) {
+			var cookies = d.split("c:" + lsep)[1].split(lsep)[0].split("; ");
+			for(var c in cookies) {
 				c = cookies[c]
 				if(typeof(c) == "string" && c.indexOf("=") !== -1) {
 					var name = c.split("=")[0]
@@ -618,9 +626,9 @@
 				var e = d.split("/l:")
 				for(var f in e) {
 					f = e[f]
-					if(typeof(f) == "string" && f.indexOf(":\x00") !== -1) {
-						var name = f.split(":\x00")[0]
-						var value = f.split(":\x00")[1].split("\x00")[0]
+					if(typeof(f) == "string" && f.indexOf(":" + lsep) !== -1) {
+						var name = f.split(":" + lsep)[0]
+						var value = f.split(":" + lsep)[1].split(lsep)[0]
 						localStorage[name] = value;
 						localChanged++
 					}

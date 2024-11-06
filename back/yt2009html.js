@@ -1582,7 +1582,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let related_html = ""
         let related_index = 0;
         data.related.forEach(video => {
-            if(yt2009utils.time_to_seconds(video.length) >= 1800) return;
+            if(yt2009utils.time_to_seconds(video.length) >= 1800
+            && data.length <= 1200) return;
 
             // flagi
             let uploader = video.creatorName

@@ -11,8 +11,6 @@ a fairly accurate 2009 youtube frontend.
 
 - **make sure you have [imagemagick](https://imagemagick.org/) and [ffmpeg](https://ffmpeg.org/) in your PATH.**
 
-### when installing imagemagick, make sure you also install its legacy tools (convert)! 
-
 - install node.js
 - open a terminal (windows powershell/cmd) in the directory you cloned yt2009 to, then:
 - install required dependencies with: `npm install`
@@ -26,10 +24,6 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 ---
 
 ## optional after-setup steps
-
-### - **if experiencing issues with ytdl-core, apply this pull. https://github.com/fent/node-ytdl-core/pull/1217**
-
-**as of november 2023, it still isn't merged with the main repo.**
 
 - set up an android app by following [apk_setup.md](apk_setup.md)
 

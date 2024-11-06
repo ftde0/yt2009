@@ -9,7 +9,7 @@ const fs = require("fs")
 check external clis
 =======
 */
-let check_tools = ["ffmpeg -h", "magick --help", "convert --version"]
+let check_tools = ["ffmpeg -h", "magick --help"]
 check_tools.forEach(tool => {
     console.log("== checking external tool: " + tool.split(" ")[0])
     try {

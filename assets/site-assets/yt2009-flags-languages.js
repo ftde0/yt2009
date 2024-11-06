@@ -136,27 +136,27 @@ var languageData_EN = {
 }
 
 function setEnglish() {
-    document.querySelector("#lang-pl").removeAttribute("checked")
+    document.getElementById("lang-pl").removeAttribute("checked")
     // set tooltips
     var tooltips = languageData_EN.tooltips;
     for(var text in tooltips) {
-        document.querySelector("#" + text).setAttribute("title", tooltips[text])
+        document.getElementById(text).setAttribute("title", tooltips[text])
     }
 
     // set element text
     var elements = languageData_EN.elements;
     for(var element in elements) {
-        document.querySelector(element).innerHTML = elements[element]
+        document.getElementById(element.replace("#", "")).innerHTML = elements[element]
     }
 
     // set placeholder texts
     var placeholders = languageData_EN.placeholders;
     for(var element in placeholders) {
-        document.querySelector("#" + element).setAttribute("placeholder", placeholders[element])
+        document.getElementById(element).setAttribute("placeholder", placeholders[element])
     }
 
     updateDescriptions()
 }
 
 
-document.querySelector("#lang-en").checked = false;
+document.getElementById("lang-en").checked = false;
