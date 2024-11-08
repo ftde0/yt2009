@@ -205,7 +205,7 @@ module.exports = {
         // need to figure out what that does, leaving it in as it's
         // what came out of decode
         msg.setChipparam(
-            "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D"
+            "8gYuGix6KhImCiQ2N2ViM2Y1NS0wMDAwLTI2ZWEtYjE4NS01ODI0MjliZTA1NjggAg%3D%3D"
         )
         vidsContinuation.addMsg(msg)
         let chip = encodeURIComponent(Buffer.from(

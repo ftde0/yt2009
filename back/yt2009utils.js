@@ -906,6 +906,36 @@ module.exports = {
         let parsedPlaylists = []
         if(section.gridRenderer) {
             section.gridRenderer.items.forEach(item => {
+                if(item.lockupViewModel
+                && item.lockupViewModel.contentType == "LOCKUP_CONTENT_TYPE_PLAYLIST") {
+                    item = item.lockupViewModel
+                    let videoId = item.rendererContext.commandContext.onTap
+                                      .innertubeCommand.watchEndpoint.videoId;
+
+                    // video count
+                    let vcount = 0;
+                    item.contentImage.collectionThumbnailViewModel
+                    .primaryThumbnail.thumbnailViewModel.overlays.forEach(o => {
+                        if(o.thumbnailOverlayBadgeViewModel) {
+                            o = o.thumbnailOverlayBadgeViewModel;
+                            let v = o.thumbnailBadges[0]
+                                     .thumbnailBadgeViewModel.text;
+                            vcount = this.bareCount(v).toString()
+                        }
+                    })
+
+                    let title = item.metadata.lockupMetadataViewModel.title;
+                    let id = item.contentId;
+
+                    parsedPlaylists.push({
+                        "name": title,
+                        "id": id,
+                        "videos": vcount + " videos",
+                        "thumbnail": "//i.ytimg.com/vi/"
+                                     + videoId
+                                     + "/hqdefault.jpg",
+                    })
+                }
                 if(item.gridPlaylistRenderer) {
                     item = item.gridPlaylistRenderer
                     let videoId = item.navigationEndpoint.watchEndpoint.videoId

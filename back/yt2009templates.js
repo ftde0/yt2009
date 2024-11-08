@@ -1583,8 +1583,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         <span>“${term}”</span>
     </div>`
     },
-    "latestChip": "8gYuGix6KhImCiQ2NTQ1MjBkZS0wMDAwLTJkOGYtYjkwNS1kNGY1NDdlYWM4OGMYAQ%3D%3D",
-    "popularChip": "8gYuGix6KhImCiQ2NTMyYTQzMi0wMDAwLTI3ODQtOTYzOC0xNGMxNGVmNDA5YjAYAg%3D%3D",
+    "latestChip": "8gYuGix6KhImCiQ2N2VlMmNlOS0wMDAwLTI5NWMtOTBjMy01ODI0MjliZTEzZWMgBA%3D%3D",
+    "popularChip": "8gYuGix6KhImCiQ2N2ViM2Y1NS0wMDAwLTI2ZWEtYjE4NS01ODI0MjliZTA1NjggAg%3D%3D",
     "replyTemplate": function(commentIndex, video, loginSimulateName) {
         return `
     <div id="div_comment_form_id_${commentIndex}">
