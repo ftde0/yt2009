@@ -540,6 +540,7 @@
 					"favorites", "filtered", "lastNotif", "playlistsIndex",
 					"quicklistVids", "subscriptions", "watch_history"
 				]
+				v = saveVars[v]
 				for(var v in saveVars) {
 					if(localStorage[v]) {
 						compiledData += "/l:" + v + ":" + separatorChar + localStorage[v] + separatorChar;

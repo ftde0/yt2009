@@ -4,7 +4,8 @@ let data = {
     "context": {},
     "fileDownloadStatus": {},
     "masterWs": false,
-    "dataFetches": {}
+    "dataFetches": {},
+    "players": {}
 }
 let fileDownloadListeners = {
 
@@ -18,6 +19,14 @@ module.exports = {
 
     "read": function() {
         return data;
+    },
+
+    "extendWrite": function(name, property, value) {
+        data[name][property] = value;
+    },
+
+    "delete": function(name, value) {
+        delete data[name][value]
     },
 
     "updateFileDownload": function(id, status) {

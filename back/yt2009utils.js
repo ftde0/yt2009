@@ -1273,6 +1273,14 @@ module.exports = {
 
         yt2009exports.updateFileDownload(fname, 1)
 
+        if(yt2009exports.read().players[id]) {
+            parseResponse(yt2009exports.read().players[id])
+            setTimeout(() => {
+                yt2009exports.delete("players", id)
+            }, 200)
+            return;
+        }
+
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
         rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
         if(yt2009tvsignin.needed() && yt2009tvsignin.getTvData().accessToken) {
