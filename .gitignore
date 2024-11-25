@@ -22,6 +22,7 @@ changelogs/*.txt
 apksetup/
 back/logs/
 back/tvdata.json
+back/androiddata.json
 
 # yt assets
 master-vfl121679.png

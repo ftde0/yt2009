@@ -8,7 +8,7 @@ if(!fs.existsSync("./logs/")) {
 }
 console.log("logs will be saved to /back/logs/")
 
-if(!fs.existsSync("./tvdata.json")) {
+if(!fs.existsSync("./androiddata.json")) {
     const vids = [
         "evJ6gX1lp2o", "dQw4w9WgXcQ", "jNQXAC9IVRw",
         "yQwPhCI_qO0", "ts2a9cW4nLY"

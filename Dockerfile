@@ -37,6 +37,7 @@ ENV YT2009_PORT=80 \
     YT2009_GDATA_AUTH=false
 
 RUN npm install && \
+    ln -s /data/androiddata.json back/androiddata.json && \
     ln -s /data/tvdata.json back/tvdata.json && \
     ln -s /data/config.json back/config.json && \
     ln -s /data/comments.json back/cache_dir/comments.json && \

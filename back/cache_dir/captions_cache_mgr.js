@@ -28,8 +28,16 @@ module.exports = {
                         data.captions.playerCaptionsTracklistRenderer
                             .captionTracks.forEach(track => {
                             if(!track.kind) {
+                                let name = track.name.simpleText || ""
+                                if(track.name && track.name.runs) {
+                                    name = track.name.runs[0].text
+                                }
+                                if(track.baseUrl.includes("fmt=")) {
+                                    let fmt = track.baseUrl.split("fmt=")[1].split("&")[0]
+                                    track.baseUrl = track.baseUrl.replace("&fmt=" + fmt, "")
+                                }
                                 languages[track.languageCode] = {
-                                    "name": track.name.simpleText || "",
+                                    "name": name,
                                     "url": track.baseUrl || ""
                                 }
                             }
