@@ -440,6 +440,11 @@ var loadedbar = $(".video_controls .loaded");
 // going forward within the video
 function timeUpdate() {
     elapsedbar.style.width = (video.currentTime / video.duration) * 100 + "%"
+    if(video.duration <= video.currentTime) {
+        // ??
+        video_pause();
+        showEndscreen();
+    }
     if(video.buffered && !isNaN(video.duration)) {
         try {
             loadedbar.style.width = (video.buffered.end(0) / video.duration)
@@ -2184,9 +2189,14 @@ catch(error) {}
 
 // on mp4 error redirect to retryVideo
 video.querySelector("source").addEventListener("error", function() {
-    var videoId = video.querySelector("source").src
-                       .split("assets/")[1]
-                       .split(".mp4")[0]
+    var videoId = ""
+    if(video.innerHTML.indexOf("?video_id=") !== -1) {
+        videoId = video.innerHTML.split("?video_id=")[1]
+                       .split("\"")[0].split("&")[0]
+    } else if(video.getAttribute("src")
+    && video.getAttribute("src").indexOf("?video_id=") !== -1) {
+        videoId = video.getAttribute("src").split("?video_id=")[1].split("&")[0]
+    }
     video.src = "/retry_video?video_id=" + videoId
     showLoadingSprite();
 

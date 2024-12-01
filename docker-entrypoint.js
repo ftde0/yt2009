@@ -104,14 +104,16 @@ if(process.env.YT2009_REDIR) {
     cfg.redirmode = process.env.YT2009_REDIR;
 }
 
-// set ac
-if(process.env.YT2009_AC) {
-    cfg.ac = process.env.YT2009_AC;
-}
-
 // set gdata auth requirement
-if(process.env.YT2009_GDATA_AUTH) {
-    cfg.gdata_auth = process.env.YT2009_GDATA_AUTH;
+switch (process.env.YT2009_GDATA_AUTH) {
+    case 'true':
+        cfg.gdata_auth = true;
+        break;
+    case 'false':
+        cfg.gdata_auth = false;
+        break;
+    default:
+        throw new Error('invalid YT2009_GDATA_AUTH')
 }
 
 // set ssl

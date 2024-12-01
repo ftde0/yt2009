@@ -71,8 +71,20 @@ function section_fill(code, section_name, section_content, flags, req) {
 }
 
 let error_sessions = {}
+let customHomepageText = false;
+if(require("./config.json").customHomepageText) {
+    customHomepageText = require("./config.json").customHomepageText
+}
 
 module.exports = function(req, res) {
+    if(req.version && req.current
+    && req.type == "version-warning"
+    && (!customHomepageText
+    || customHomepageText.includes("outdated version"))) {
+        customHomepageText = "you may be running an outdated version of yt2009!"
+                           + `latest: ${req.version}, running: ${req.current}`
+        return;
+    }
     if(req.error) {
         let t = ""
         let a = "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
@@ -286,7 +298,7 @@ module.exports = function(req, res) {
                    + " work correctly."
     }
 
-    if(require("./config.json").customHomepageText) {
+    if(customHomepageText) {
         addNotice = true;
         noticeText = require("./config.json").customHomepageText
     }

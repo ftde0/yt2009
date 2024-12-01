@@ -523,8 +523,8 @@ module.exports = {
         if(max < 0 || isNaN(max)) {
             max = start + 25
         }
-        if(max > 1000) {
-            max = 1000
+        if(max > 100) {
+            max = 100
         }
         if(req.originalUrl.includes("featured")
         || (req.originalUrl.includes("most_discussed")
@@ -564,6 +564,11 @@ module.exports = {
                 }, "", "", false, false, true)
             })
             response = response.split(">25<").join(`>${videosAdded}<`)
+            if(vids.length == 0) {
+                response += templates.gdata_feedEnd
+                res.set("content-type", "application/atom+xml")
+                res.send(response)
+            }
         } else if(req.originalUrl.includes("most_popular")) {
             // grab popular videos (100k+ views) from featured 25-50
             // and put them into the feed

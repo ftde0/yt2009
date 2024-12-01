@@ -2932,6 +2932,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
     },
 
+    "masterWarningRm": function() {
+        featured_videos = featured_videos.filter(
+            s => !s.title.includes("please update your sync")
+        )
+    },
+
     "getBanner": function(data, flags, callback) {
         let dataSent = false;
         const yt2009channels = require("./yt2009channels")

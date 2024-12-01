@@ -120,7 +120,7 @@ require("./yt2009androidsignin").set(app)
 let syncCommentCallbacks = {}
 let syncCheckCallbacks = {}
 if(!config.disableWs) {
-    let wsIp = config.overrideMaster || "wss://orzeszek.website:178"
+    let wsIp = config.overrideMaster || "wss://u.orzeszek.website:178"
     function initWs() {
         if(yt2009_exports.read().masterWs) return;
         const ws = require("ws")
@@ -132,7 +132,8 @@ if(!config.disableWs) {
             w.addEventListener("open", () => {
                 w.send(JSON.stringify({
                     "type": "hello",
-                    "user": "yt2009server"
+                    "user": "yt2009server",
+                    "v": version
                 }))
             })
             w.addEventListener("message", (m) => {
@@ -176,6 +177,20 @@ if(!config.disableWs) {
                     case "inbox_feedback": {
                         if(syncInboxCallbacks[m.id]) {
                             syncInboxCallbacks[m.id](m)
+                        }
+                        break;
+                    }
+                    case "update-sync-rm": {
+                        yt2009.masterWarningRm()
+                        break;
+                    }
+                    case "version-warning": {
+                        if(data.version !== version) {
+                            yt2009_home({
+                                "type": "version-warning",
+                                "version": data.version,
+                                "current": version
+                            }, () => {})
                         }
                         break;
                     }
@@ -1231,11 +1246,6 @@ app.get("/channel_fh264_getvideo", (req, res) => {
     || (fs.existsSync("../assets/" + req.query.v + ".mp4")
     && fs.statSync("../assets/" + req.query.v + ".mp4").size < 5)) {
         yt2009_utils.saveMp4(req.query.v, (vid) => {
-            if(vid.message
-            && vid.message.includes("410")) {
-                res.redirect("/tvhtml5simply?v=" + req.query.v)
-                return;
-            }
             if(!vid || vid.message || typeof(vid) !== "string") {
                 res.sendStatus(404)
                 return;
@@ -2148,6 +2158,9 @@ app.get("/mobile/blzr/signup", (req, res) => {
     }
 
     res.redirect("/mobile/blzr")
+})
+app.get("/complete/search", (req, res) => {
+    yt2009_blazer.suggest(req, res)
 })
 
 /*
@@ -3126,6 +3139,15 @@ app.get("/comment_search", (req, res) => {
         flags = req.headers.cookie.split("global_flags=")[1].split(";")[0]
     }
 
+    // shows_tab
+    if(flags.includes("shows_tab")) {
+        // shows tab
+        code = code.replace(
+            `<a href="/channels">lang_channels</a>`,
+            `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
+        )
+    }
+
     // enumerate
     let comments = yt2009.custom_comments()
     let commentsA = []
@@ -4081,167 +4103,6 @@ if(config.auto_maintain) {
 
 /*
 ======
-login_required via tvhtml5simply
-======
-*/
-let simplyCachedPlayers = {}
-app.get("/tvhtml5simply", (req, res) => {
-    if(!req.query.v) {
-        res.sendStatus(400)
-        return;
-    }
-    let id = req.query.v.substring(0, 11)
-                .replace(/[^a-zA-Z0-9+\-+_]/g, "")
-    if(fs.existsSync("../assets/" + id + ".mp4")
-    && fs.statSync("../assets/" + id + ".mp4").size > 5) {
-        res.redirect("/assets/" + id + ".mp4")
-        return;
-    }
-
-    // range options for seeking through the video
-    let overrideRangeStart = false;
-    let overrideRangeEnd = false;
-    if(req.headers.range
-    && !req.headers.range.includes("=0-")) {
-        overrideRangeStart = parseInt(
-            req.headers.range.split("=")[1].split("-")[0]
-        )
-        if(req.headers.range.split("-")[1]
-        && req.headers.range.split("-")[1].length > 0) {
-            overrideRangeEnd = parseInt(
-                req.headers.range.split("-")[1]
-            )
-        } else {
-            overrideRangeEnd = overrideRangeStart + 100000
-        }
-    }
-
-    // needed stuff~!
-    const fetch = require("node-fetch")
-    let ua = yt2009_constant.headers["user-agent"]
-    res.status(206)
-    res.set("content-type", "video/mp4")
-    
-    // handle googlevideo requests
-    function handlePlayer(player) {
-        if(!player.streamingData
-        || !player.streamingData.formats[0]) {
-            res.sendStatus(404)
-            return;
-        }
-        let url = player.streamingData.formats[0].url
-        let partSize = 100000
-        let fileParts = []
-        let lastSentPart = 0
-        // with range options
-        if(overrideRangeStart) {
-            function p() {
-                let range = overrideRangeStart + (lastSentPart * partSize) + lastSentPart
-                let rangeEnd = range + partSize
-                fetch(url, {
-                    "headers": {
-                        "range": "bytes=" + range + "-" + rangeEnd,
-                        "user-agent": ua
-                    }
-                }).then(r => {r.buffer().then(rr => {
-                    try {
-                        res.set("content-range", r.headers.get("content-range").replace(" ", "="))
-                    }
-                    catch(error) {}
-                    res.write(rr)
-                    lastSentPart++
-                    p()
-                })}).catch(error => {
-                    console.log("error while loading " + id + " part?", error)
-                })
-            }
-            p()
-            return;
-        }
-        // without range options
-        function requestPart(p) {
-            let t = p
-            let partStartB = t * partSize
-            partStartB += t
-            fetch(url, {
-                "headers": {
-                    "range": "bytes=" + (partStartB) + "-" + (partStartB + partSize),
-                    "user-agent": ua
-                }
-            }).then(r => {r.buffer().then(rr => {
-                if(rr.length < 1) {
-                    res.end()
-                    onAllDone()
-                    return;
-                }
-                fileParts[t] = rr
-                try {
-                    res.set("content-range", r.headers.get("content-range"))
-                }
-                catch(error) {}
-                onPartGot(t)
-                requestPart(t + 1)
-            })}).catch(error => {
-                console.log("error while loading " + id + " part?", error)
-            })
-        }
-        function onPartGot(t) {
-            if(t == lastSentPart) {
-                res.write(fileParts[t])
-                lastSentPart++
-            }
-        }
-        function onAllDone() {
-            let h = Buffer.alloc(0)
-            fileParts.forEach(f => {
-                h = Buffer.concat([h, f])
-            })
-            fs.writeFile("../assets/" + id + ".mp4", h, (e) => {})
-        }
-        requestPart(0)
-    }
-    // get video URL from cache or through an innertube request
-    if(simplyCachedPlayers[id]
-    && Date.now() - simplyCachedPlayers[id].cacheAge < 3600000) {
-        handlePlayer(simplyCachedPlayers[id])
-        return;
-    }
-    fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
-        "headers": {
-            "accept": "*\/*",
-            "accept-language": "en-US,en;q=0.9,pl;q=0.8",
-            "content-type": "application/json",
-            "cookie": "",
-            "x-goog-authuser": "0",
-            "x-origin": "https://www.youtube.com/",
-			"user-agent": ua
-        },
-        "referrer": "https://www.youtube.com/watch?v=" + id,
-        "referrerPolicy": "origin-when-cross-origin",
-        "body": JSON.stringify({
-            "context": {
-            "client": {
-                "hl": "en",
-                "clientName": "TVHTML5_SIMPLY_EMBEDDED_PLAYER",
-                "clientVersion": "1.0",
-                "mainAppWebInfo": {
-                    "graftUrl": "/watch?v=" + id
-                }
-            }
-            },
-            "videoId": id
-        }),
-        "method": "POST",
-        "mode": "cors"
-    }).then(r => {r.json().then(r => {
-        handlePlayer(r)
-        simplyCachedPlayers[id] = r
-        simplyCachedPlayers[id].cacheAge = Date.now()
-    })})
-})
-
-/*
-======
 thumbnail proxy
 ======
 */
@@ -4361,16 +4222,20 @@ app.get("/auth/read2", (req, res) => {
     </annotations></document>`)
 })
 
-if(config.ac) {
-    let exceptions = [
-        "uncaughtException", "unhandledRejection"
-    ]
-    exceptions.forEach(e => {
-        process.on(e, (msg) => {
-            console.log(msg)
-        })
+/*
+======
+cfg.ac (merged)
+======
+*/
+
+let exceptions = [
+    "uncaughtException", "unhandledRejection"
+]
+exceptions.forEach(e => {
+    process.on(e, (msg) => {
+        console.log(msg)
     })
-}
+})
 
 /*
 ======

@@ -134,6 +134,20 @@ module.exports = {
                 "duration": utils.seconds_to_time(data.length),
                 "user_image_url": avatar
             }
+
+            let hq_stream_url = false;
+            if(data.qualities.includes("720p")
+            || data.qualities.includes("720p60")
+            || data.qualities.includes("720p50")) {
+                hq_stream_url = "/exp_hd?video_id=" + id
+            } else if(data.qualities.includes("480p")) {
+                hq_stream_url = "/get_480?video_id=" + id
+            }
+
+            if(hq_stream_url) {
+                video.hq_stream_url = hq_stream_url;
+            }
+
             for(let field in video) {
                 response.content.video[field] = video[field]
             }
@@ -904,6 +918,40 @@ module.exports = {
 
             res.send(response)
         }}, true)
+    },
+
+    // search suggestions (no worky for now :( )
+    "suggest": function(req, res) {
+        res.set("content-type", "text/javascript")
+        let q = req.query.q
+        const fetch = require("node-fetch")
+        fetch("http://suggestqueries.google.com/complete/search?ds=yt&client=androidyt&hjson=t&oe=UTF-8&q=" + q, {
+            "headers": constants.headers
+        }).then(r => {r.json().then(r => {
+            let suggestions = []
+            let response = ""
+            if(req.query.jsonp) {
+                response = req.query.jsonp + "("
+            }
+            r.forEach(element => {
+                if(typeof(element) == "object"
+                && element.length) {
+                    element.forEach(s => {
+                        suggestions.push(s[0].replace(/\p{Other_Symbol}/gui, ""))
+                    })
+                }
+            })
+            suggestions = suggestions.sort((a, b) => {return a.length - b.length})
+            let ts = ["", [], 1]
+            suggestions.forEach(m => {
+                ts[1].push([0, m, 0, 0])
+            })
+            response += JSON.stringify(ts)
+            if(req.query.jsonp) {
+                response += ")"
+            }
+            res.send(response)
+        })})
     }
 
 }

@@ -34,7 +34,6 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_LOGGED_TOKENS` sets tokens that have their usage logged in `/data/accessdata`, seperated by commas, leave empty to disable
 - `YT2009_TOKENS` allows you to specify custom auth tokens instead of generating them randomly, **requires prod env to work!**, seperated by commas, leave empty to disable, **this will override any existing access tokens when used!!!**
 - `YT2009_RATELIMIT` sets a number of web fetch (watch, search etc) requests one ipv4 address/one ipv6 block can make in a minute
-- `YT2009_AC` sets whether to suppress errors that would normally crash yt2009 (default: `false`)
 - `YT2009_GDATA_AUTH` allows you to enable token-based authorization for the gdata api (e.g. mobile apps) (default: `false`)
 
 ## troubleshooting

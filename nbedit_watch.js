@@ -1567,3 +1567,20 @@ function toggleLights() {
         $("#watch-longform-shade").style.display = "none"
     }
 }
+
+/*
+======
+show more from if no related
+======
+*/
+var related = document.getElementById("watch-related-discoverbox")
+              .getElementsByClassName("video-entry");
+if(related.length <= 0) {
+    var channelVids = document.getElementById("watch-channel-videos-panel")
+                      .getElementsByTagName("h2")[0]
+    toggleExpander(channelVids)
+
+    var relatedExpander = document.getElementById("watch-related-videos-panel")
+                          .getElementsByTagName("h2")[0]
+    toggleExpander(relatedExpander)
+}

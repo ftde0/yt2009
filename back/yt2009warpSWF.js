@@ -146,9 +146,6 @@ module.exports = {
             return;
         }
         let v = req.query.video_id.replace("/mp4", "")
-        if(yt2009main.get_cache_video(v).restricted) {
-            res.redirect("/tvhtml5simply?v=" + v)
-        }
         if(req.query.noflv == 1) {
             res.send("")
             return;

@@ -1467,7 +1467,6 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             "watch_link": "/watch?v=" + id,
             "thumbnail_for_list": "<img src=\"http://i.ytimg.com/vi/" + id + "/default.jpg\"/>",
             "stream_url": "/get_video?video_id=" + id + "/mp4",
-            "u_hq_stream_url": "/get_480?video_id=" + id + "/mp4",
             "landscape": true,
             "stitched_thumbnail_large": {
                 "url": "http://i.ytimg.com/vi/" + id + "/hqdefault.jpg",
