@@ -116,6 +116,11 @@ switch (process.env.YT2009_GDATA_AUTH) {
         throw new Error('invalid YT2009_GDATA_AUTH')
 }
 
+// set reencode device list
+if(process.env.YT2009_REENCODE_DEVS) {
+    cfg.reencode_devs = process.env.YT2009_REENCODE_DEVS;
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

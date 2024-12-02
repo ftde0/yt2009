@@ -27,3 +27,4 @@ other params you can set:
 - `logged_tokens` - an array of access tokens that will have their usage logged in `accessdata`.
 - `ratelimit` - a number of web fetch requests one ipv4 address/one ipv6 block can make in 1 minute.
 - `gdata_auth` - require token-based authorization for gdata api (e.g. mobile apps). `true/false`
+- `reencode_devs` - a list of user agent parts to reencode mp4s to a more compatible codec. comma-separated.

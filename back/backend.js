@@ -1212,8 +1212,22 @@ app.get("/playnav_get_comments", (req, res) => {
     yt2009_channels.playnav_get_comments(req, res)
 })
 
+let reencodeDevs = [
+    "HTC Streaming Player",
+    "Android NexPlayer",
+    "LG Player 1."
+]
+if(config.reencode_devs && typeof(config.reencode_devs) == "string") {
+    let d = config.reencode_devs.split(",")
+    d.forEach(device => {
+        if(device.length > 1) {
+            reencodeDevs.push(device)
+        }
+    })
+}
 function checkBaseline(req, res) {
     let tr = false;
+    if(!req.headers["user-agent"]) return false;
     if(req.headers["user-agent"].includes("Android")) {
         let androidVersion = 9;
         androidVersion = req.headers["user-agent"].split("Android")[1]
@@ -1224,6 +1238,16 @@ function checkBaseline(req, res) {
             ffmpegEncodeBaseline(req, res)
             tr = true;
         }
+    }
+    let inReencodeDevs = false;
+    reencodeDevs.forEach(dev => {
+        if(req.headers["user-agent"].includes(dev)) {
+            inReencodeDevs = true;
+        }
+    })
+    if(inReencodeDevs) {
+        ffmpegEncodeBaseline(req, res)
+        tr = true;
     }
     return tr;
 }

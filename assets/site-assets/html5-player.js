@@ -2188,7 +2188,8 @@ try {
 catch(error) {}
 
 // on mp4 error redirect to retryVideo
-video.querySelector("source").addEventListener("error", function() {
+// commented out for now cause it causin issues with hd
+/*video.querySelector("source").addEventListener("error", function() {
     var videoId = ""
     if(video.innerHTML.indexOf("?video_id=") !== -1) {
         videoId = video.innerHTML.split("?video_id=")[1]
@@ -2204,7 +2205,7 @@ video.querySelector("source").addEventListener("error", function() {
         $(".html5-loading").className += " hid"
         stopLoadingRototo()
     }, false)
-}, false)
+}, false)*/
 
 // space=pause
 document.body.addEventListener("keydown", function(e) {

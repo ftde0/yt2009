@@ -172,11 +172,13 @@ module.exports = {
 
         device = device.replace(/[^a-zA-Z0-9]/g, "").substring(0, 6)
 
-        if(config.templocked_tokens.includes(token)) {
+        if(config.templocked_tokens
+        && config.templocked_tokens.includes(token)) {
             res.redirect("/mobile/gdata_gen_auth_page?device=" + device + "&c=2")
             return;
         }
-        if(!config.tokens.includes(token)) {
+        if(config.tokens
+        && !config.tokens.includes(token)) {
             res.redirect("/mobile/gdata_gen_auth_page?device=" + device + "&c=1")
             return;
         }
