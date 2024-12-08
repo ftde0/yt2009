@@ -118,7 +118,7 @@ module.exports = {
         }
         req.query.device = req.query.device
                            .replace(/[^a-zA-Z0-9]/g, "")
-                           .substring(0, 6)
+                           .substring(0, 9)
         
         let msg = ""
         if(req.query.c) {
@@ -170,7 +170,7 @@ module.exports = {
             return;
         }
 
-        device = device.replace(/[^a-zA-Z0-9]/g, "").substring(0, 6)
+        device = device.replace(/[^a-zA-Z0-9]/g, "").substring(0, 9)
 
         if(config.templocked_tokens
         && config.templocked_tokens.includes(token)) {
