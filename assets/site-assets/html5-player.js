@@ -16,6 +16,7 @@ var browserModernFeatures = false;
 var fullscreen_anim_playing = false;
 var fullscreen_btn = $(".video_controls .fullscreen");
 var fullscreen_btn_hovered = false;
+var videoStartedPlaying = false;
 
 function initPlayer(parent, fullscreenEnabled) {
     mainElement = parent;
@@ -507,7 +508,7 @@ function timeUpdate() {
     }
 
     annotation43()
-
+    videoStartedPlaying = true;
 }
 video.addEventListener("timeupdate", timeUpdate, false)
 
@@ -2206,6 +2207,17 @@ catch(error) {}
         stopLoadingRototo()
     }, false)
 }, false)*/
+
+// retry video load if stuck after 5 seconds
+setTimeout(function() {
+    if(!video.playing && video.buffered.length <= 0 && !videoStartedPlaying) {
+        var src = video.src;
+        if(!src) {
+            src = video.querySelector("source").getAttribute("src")
+        }
+        video.src = src;
+    }
+}, 5000)
 
 // space=pause
 document.body.addEventListener("keydown", function(e) {

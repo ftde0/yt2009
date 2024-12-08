@@ -4,6 +4,7 @@ const search = require("./yt2009search")
 const html = require("./yt2009html")
 const channels = require("./yt2009channels")
 const mobileauths = require("./yt2009mobileauths")
+const mobileflags = require("./yt2009mobileflags")
 const yt2009jsongdata = require("./yt2009jsongdata")
 
 module.exports = {
@@ -83,6 +84,7 @@ module.exports = {
             let videos = ``
             let videosCount = 0;
             let resultCount = 0;
+            let flags = mobileflags.get_flags(req).watch
             data.forEach(video => {
                 if(video.type == "metadata") {
                     resultCount = video.resultCount
@@ -120,6 +122,7 @@ module.exports = {
                     || utils.relativeToAbsoluteApprox(video.upload),
                     (cacheData.tags || []).join() || "-",
                     cacheData.category || "-",
+                    flags,
                     cacheData.qualities || []
                 )
             })

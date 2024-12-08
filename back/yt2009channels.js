@@ -1753,11 +1753,29 @@ module.exports = {
                 "mode": "cors"
             }).then(r => {r.json().then(r => {
                 let videoCount = ""
-                try {
-                    videoCount = r.header.c4TabbedHeaderRenderer
-                                  .videosCountText.runs[0].text
+                if(r.header.pageHeaderRenderer) {
+                    try {
+                        let vm = r.header.pageHeaderRenderer
+                                  .content.pageHeaderViewModel;
+                        vm.metadata.contentMetadataViewModel
+                          .metadataRows.forEach(r => {
+                            if(r.metadataParts) {
+                                r.metadataParts.forEach(mp => {
+                                    if(mp.text && mp.text.content.includes(" videos")) {
+                                        videoCount = mp.text.content.split(" ")[0]
+                                    }
+                                })
+                            }
+                        })
+                    }
+                    catch(error) {console.log(error)}
+                } else if(r.header.c4TabbedHeaderRenderer) {
+                    try {
+                        videoCount = r.header.c4TabbedHeaderRenderer
+                                      .videosCountText.runs[0].text
+                    }
+                    catch(error) {} 
                 }
-                catch(error) {}
                 if(n_impl_yt2009channelcache.read("main")[id]
                 && !n_impl_yt2009channelcache.read("main")[id].videoCount
                 && videoCount.length !== 0) {

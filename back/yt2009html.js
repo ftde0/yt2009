@@ -575,8 +575,10 @@ module.exports = {
 
         // auto hd
         let autoHQ = false;
-        if(req.headers.cookie
-        && req.headers.cookie.includes("playback_quality=2")) {
+        if((req.headers.cookie
+        && req.headers.cookie.includes("playback_quality=2"))
+        || (req.query.fmt
+        && (req.query.fmt == "18" || req.query.fmt == "22"))) {
             let startQuality = false;
             if(data.qualities.includes("480p")) {
                 autoHQ = "/get_480?video_id=" + data.id
@@ -1352,14 +1354,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let shortDescription = description.split("\n").slice(0, 3).join("<br>")
         let fullDescription = description.split("\n").join("<br>")
 
+        let useRedir = flags.includes("yt_redir")
+
         // descriptions
         code = code.replace(
             "video_short_description",
-            yt2009utils.markupDescription(shortDescription)
+            yt2009utils.markupDescription(shortDescription, useRedir)
         )
         code = code.replace(
             "video_full_description",
-            yt2009utils.markupDescription(fullDescription)
+            yt2009utils.markupDescription(fullDescription, useRedir)
         )
 
         // hide signin buttons if logged in

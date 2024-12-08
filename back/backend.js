@@ -1769,6 +1769,7 @@ app.get("/test_only_legacy_cookie_auth", (req, res) => {
 ======
 */
 app.get("/exp_hd", (req, res) => {
+    let lower = req.query.video_id.includes("/lower")
     let id = req.query.video_id.substring(0, 11)
     let quality = "720p"
     if((req.headers.cookie
@@ -1793,7 +1794,11 @@ app.get("/exp_hd", (req, res) => {
             if(success) {
                 res.redirect("/assets/" + success)
             } else {
-                res.sendStatus(404)
+                if(lower) {
+                    res.redirect("/get_480?video_id=" + id + "/lower")
+                } else {
+                    res.sendStatus(404)
+                }
             }
         }, false, quality)
     }
@@ -1805,6 +1810,7 @@ app.get("/exp_hd", (req, res) => {
 ======
 */
 app.get("/get_480", (req, res) => {
+    let lower = req.query.video_id.includes("/lower")
     let id = req.query.video_id.substring(0, 11)
     let quality = "480p"
     // callback mp4 if we already have one
@@ -1815,7 +1821,11 @@ app.get("/get_480", (req, res) => {
             if(success) {
                 res.redirect("/assets/" + success)
             } else {
-                res.sendStatus(404)
+                if(lower) {
+                    res.redirect("/channel_fh264_getvideo?v=" + id)
+                } else {
+                    res.sendStatus(404)
+                }
             }
         }, false, quality)
     }
@@ -1858,12 +1868,26 @@ videoProcessEndpoints.forEach(endpoint => {
 mobile (apk) endpoints
 ======
 */
+let mobileHelper = false;
+let useMobileHelper = false;
+if(fs.existsSync("./yt2009mobilehelper.js")) {
+    require("./yt2009mobilehelper").set(app)
+    mobileHelper = require("./yt2009mobilehelper");
+    useMobileHelper = true;
+}
 app.post("/youtube/accounts/registerDevice", (req, res) => {
     let deviceId = ""
-    while(deviceId.length !== 5) {
+    while(deviceId.length !== 7) {
         deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
                     [Math.floor(Math.random() * 36)]
     }
+    while(useMobileHelper && mobileHelper.hasLogin(deviceId)) {
+        deviceId = ""
+        while(deviceId.length !== 7) {
+            deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
+                        [Math.floor(Math.random() * 36)]
+        }
+    } 
     /*
     as cool as that text was, i have to get rid of it from response
     for 1.6.21 and below.
@@ -1878,9 +1902,14 @@ app.get("/feeds/api/standardfeeds/*", (req, res) => {
     yt2009_mobile.feeds(req, res)
 })
 app.get("/feeds/api/videos/*/comments", (req, res) => {
-    yt2009_mobile.apkVideoComments(req, res)
+    let mhelper = (useMobileHelper && mobileHelper.hasLogin(req))
+    yt2009_mobile.apkVideoComments(req, res, mhelper)
 })
 app.post("/feeds/api/videos/*/comments", (req, res) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.addComment(req, res)
+        return;
+    }
     yt2009_mobile.videoCommentPost(req, res)
 })
 let twoHundredEndpoints = [
@@ -1889,11 +1918,16 @@ let twoHundredEndpoints = [
     "/feeds/api/users/*/subscriptions"
 ]
 twoHundredEndpoints.forEach(e => {
+    if(useMobileHelper) return;
     app.post(e, (req, res) => {
         res.status(200).send()
     })
 })
 app.get("/feeds/api/videos/*/related", (req, res) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.personalizedRelated(req, res)
+        return;
+    }
     yt2009_mobile.apkVideoRelated(req, res)
 })
 app.get("/feeds/api/videos/*", (req, res) => {
@@ -1903,9 +1937,67 @@ app.get("/feeds/api/videos/*", (req, res) => {
     }
 })
 app.post("/feeds/api/videos/*/ratings", (req, res) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.rateVideo(req, res)
+        return;
+    }
     res.status(200).send()
 })
+app.get("/feeds/api/users/default/subscriptions", (req, res, next) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.getSubscriptions(req, res)
+        return;
+    }
+    next()
+})
+app.get("/feeds/api/users/default/playlists", (req, res, next) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.getPlaylists(req, res)
+        return;
+    }
+    next()
+})
+app.get("/feeds/api/users/default/uploads", (req, res, next) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.getUploads(req, res)
+        return;
+    }
+    next()
+})
+app.get("/feeds/api/users/default/watch_later", (req, res, next) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        req.playlistId = "WL"
+        mobileHelper.pullPlaylistAsUser(req, res)
+        return;
+    }
+    next()
+})
+app.get("/feeds/api/users/default/favorites", (req, res, next) => {
+    if(useMobileHelper && mobileHelper.hasLogin(req)) {
+        req.unfiltered = true;
+        req.fake = true;
+        let done = false;
+        mobileHelper.getPlaylists(req, {"send": (d) => {
+            d.forEach(p => {
+                if(p[1] == "Favorites") {
+                    done = true;
+                    res.redirect("/feeds/api/users/you/playlists/" + p[0])
+                }
+            })
+
+            if(!done) {
+                res.send(yt2009_templates.gdata_emptyfeed)
+            }
+        },"set": function(s1,s2){}})
+        return;
+    }
+    next()
+})
 app.get("/feeds/api/users/*/recommendations", (req, res) => {
+    if(useMobileHelper) {
+        mobileHelper.handle_recommendations(req, res)
+        return;
+    }
     res.redirect("/feeds/api/standardfeeds/recently_featured")
 })
 app.get("/feeds/api/users/default/*", (req, res) => {
@@ -1920,6 +2012,11 @@ app.get("/feeds/api/users/*/newsubscriptionvideos", (req, res) => {
 app.get("/feeds/api/users/*/uploads", (req, res) => {
     yt2009_mobile.userVideos(req, res)
 })
+if(useMobileHelper) {
+    app.get("/feeds/api/users/you/playlists/*", (req, res) => {
+        mobileHelper.pullPlaylistAsUser(req, res)
+    })
+}
 app.get("/feeds/api/users/*/playlists/*", (req, res) => {
     yt2009_mobile.userPlaylistStart(req, res)
 })
@@ -1930,6 +2027,11 @@ app.get("/feeds/api/users/*/favorites", (req, res) => {
     yt2009_mobile.userFavorites(req, res)
 })
 app.get("/feeds/api/users/*", (req, res) => {
+    if(req.originalUrl.includes("users/default")
+    && useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.userData(req, res)
+        return;
+    }
     yt2009_mobile.userInfo(req, res)
 })
 app.get("/feeds/api/events", (req, res) => {
@@ -1950,6 +2052,9 @@ app.post("/mobile/save_flags", (req, res) => {
 })
 app.get("/mobile/get_flags", (req, res) => {
     res.send(yt2009_mobileflags.get_flags(req));
+})
+app.get("/mobile/avatar_process", (req, res) => {
+    yt2009_mobile.avatarUncrop(req, res)
 })
 let shorter_sessions = {}
 app.get("/shorten_session", (req, res) => {
@@ -2022,6 +2127,23 @@ app.get("/mobile/gdata_gen_auth_page", (req, res) => {
 app.post("/mobile/gdata_set_auth", (req, res) => {
     yt2009gdataauths.setAuth(req, res)
 })
+if(useMobileHelper) {
+    app.post("/feeds/api/users/default/playlists", (req, res) => {
+        mobileHelper.createPlaylist(req, res)
+    })
+    app.post("/feeds/api/users/you/playlists/*", (req, res) => {
+        mobileHelper.addToPlaylist(req, res);
+    })
+    app.post("/feeds/api/users/default/favorites", (req, res) => {
+        mobileHelper.addToFavorites(req, res);
+    })
+    app.post("/feeds/api/users/default/watch_later", (req, res) => {
+        mobileHelper.addToWatchLater(req, res);
+    })
+    app.post("/feeds/api/users/default/subscriptions", (req, res) => {
+        mobileHelper.manageSubscription(req, res)
+    })
+}
 
 /*
 ======

@@ -540,16 +540,24 @@ module.exports = {
     },
 
     
-    "markupDescription": function(description) {
+    "markupDescription": function(description, useRedir) {
         let descriptionMarkedup = ``
         description.split("<br>").forEach(part => {
             part.split(" ").forEach(word => {
                 if(word.startsWith("http://")
                 || word.startsWith("https://")) {
+                    let displayWord = (
+                        word.length > 40
+                        ? word.substring(0, 40) + "..." 
+                        : word
+                    )
+                    if(useRedir && word.includes("//www.youtube.com/")) {
+                        word = word.replace("http://www.youtube.com", "")
+                        word = word.replace("https://www.youtube.com", "")
+                    }
                     descriptionMarkedup += 
                     "<a href=\"" + word + "\" target=\"_blank\">"
-                    + (word.length > 40 ? word.substring(0, 40) + "..." : word)
-                    + "</a>"
+                    + displayWord + "</a>"
                 } else {
                     descriptionMarkedup += `${word} `
                 }

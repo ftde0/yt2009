@@ -1027,9 +1027,23 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     "gdata_feedEnd": "\n</feed>",
     "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category, flags, qualities) {
         // flag handling
-        if((flags || []).includes("realistic-view-count")
+        if(typeof(flags) == "object") {
+            try {
+                flags = flags.join(",")
+            }
+            catch(error){}
+        }
+        if(flags && flags.includes("realistic-view-count")
         && views >= 100000) {
             views = Math.floor(views / 90)
+        }
+
+        // is a video from favorites
+        let isFav = id.includes("/fav")
+        id = id.replace("/fav", "")
+        let favCode = ""
+        if(isFav) {
+            favCode = `<link rel="edit" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/edit"/>`
         }
 
         // rating
@@ -1074,6 +1088,13 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             }
         }
 
+        // auto-try hd
+        let videoUrl = `http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}`
+        if(flags && flags.includes("better-hd")) {
+            videoUrl = `http://${config.ip}:${config.port}/exp_hd?video_id=${id}/lower`
+            qualityCode = ""
+        }
+
         // category names
         category = (category || "-").split("&").join("&amp;")
         return `
@@ -1085,7 +1106,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <category scheme="http://gdata.youtube.com/schemas/2007/categories.cat" label="${category}" term="${category}">${category}</category>
             <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("")}</title>
             <content type='text'>${description.split("<").join("").split(">").join("").split("&").join("")}</content>
-            <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>
+            <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>${favCode}
             <author>
                 <name>${author}</name>
                 <uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
@@ -1095,7 +1116,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             </gd:comments>
             <media:group>
                 <media:category label='${category}' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>${category}</media:category>
-                <media:content url='http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
+                <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
                 <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("")}</media:description>
                 <media:keywords>${unduplicateKeywordList.join(", ")}</media:keywords>
                 <media:player url='http://www.youtube.com/watch?v=${id}'/>
@@ -1134,6 +1155,10 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 	</entry>`
     },
     "gdata_user": function(id, name, avatar, subs, videoCount, channelViews, uploadViews, flags) {
+        if(flags.includes("uncrop-avatar")
+        && avatar.includes("/assets/")) {
+            avatar = `http://${config.ip}:${config.port}/mobile/avatar_process?avatar=/assets/${avatar.split("assets/")[1]}`
+        }
         if(flags.includes("default-avatar-adapt")) {
             let avatarUrl = avatar.replace(
                 `http://${config.ip}:${config.port}`,
@@ -2717,5 +2742,17 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         <yt:statistics favoriteCount="0" viewCount="0"/>
         <yt:rating numLikes="0" numDislikes="0"/>
     </entry>`
+    },
+
+    "gdata_subscriptionChannel": function(name, avatar, id, handle) {
+        let fname = handle ? handle : utils.asciify(name)
+        return `
+        <entry>
+            <category scheme='http://gdata.youtube.com/schemas/2007/subscriptiontypes.cat'
+term='channel'/>
+            <content type='application/atom+xml;type=feed' src='http://${config.ip}:${config.port}/feeds/api/users/${fname}/videos'/>
+            <link rel='edit' href='http://${config.ip}:${config.port}/edit'/>
+            <yt:username>${fname}</yt:username>
+        </entry>`
     }
 }

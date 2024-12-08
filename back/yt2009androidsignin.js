@@ -27,7 +27,7 @@ let redirect_url = [
 	"&xoauth_display_name=Android%20Phone",
 	"&ph=%2B15555215554&imsi=310260000000000",
 	"&lang=en&langCountry=en_us&hl=en-US&cc=us",
-	"&multilogin=1&hide_status_bar=1",
+	"&multilogin=1&hide_status_bar=0",
 	"&use_native_navigation=0&alignment=center"
 ].join("")
 let gredir_work = test_alwayssign;

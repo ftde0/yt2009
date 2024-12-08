@@ -23,6 +23,7 @@ apksetup/
 back/logs/
 back/tvdata.json
 back/androiddata.json
+back/mobilehelper_userdata.json
 
 # yt assets
 master-vfl121679.png

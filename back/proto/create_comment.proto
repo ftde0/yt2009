@@ -1,0 +1,11 @@
+syntax = "proto3";
+package create_comment_request;
+
+message root {
+    string videoId = 2;
+    message zeroMsg {
+        int64 zeroInt = 1;
+    }
+    repeated zeroMsg fiveMsg = 5;
+    int64 sevenInt = 10;
+}

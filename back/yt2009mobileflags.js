@@ -5,9 +5,9 @@ if(!fs.existsSync("./cache_dir/mobile_flags.json")) {
 }
 const mflags = require("./cache_dir/mobile_flags.json")
 const knownFlagNames = {
-    "watch": ["new-related", "realistic-view-count"],
+    "watch": ["new-related", "realistic-view-count", "better-hd"],
     "search": ["only-old"],
-    "channel": ["default-avatar-adapt", "uploads-count"]
+    "channel": ["default-avatar-adapt", "uploads-count", "uncrop-avatar"]
 }
 let sessions = {}
 
@@ -21,6 +21,22 @@ module.exports = {
     },
 
     "get_session": function(req, res) {
+        if(req.ip.includes("192.168.")) {
+            let altSession = false;
+            for(let ip in sessions) {
+                if(ip.includes("192.168.")) {
+                    altSession = sessions[ip]
+                }
+            }
+
+            if(!altSession) {
+                res.sendStatus(404)
+                return;
+            }
+
+            res.send(altSession)
+            return;
+        }
         if(sessions[req.ip]) {
             res.send(sessions[req.ip])
         } else {
