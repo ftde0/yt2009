@@ -37,6 +37,7 @@ const config = require("./config.json")
 const child_process = require("child_process")
 const yt2009charts = require("./yt2009charts")
 const yt2009gdataauths = require("./yt2009mobileauths")
+const yt2009basefeeds = require("./yt2009basefeeds")
 let devTimings = false;
 const package = require("../package.json")
 const version = package.version;
@@ -1581,6 +1582,9 @@ app.get("/channels", (req, res) => {
 app.get("/videos-rss", (req, res) => {
     yt2009_videos_page.create_rss(req, res)
 })
+app.post("/rec-submit", (req, res) => {
+    yt2009_videos_page.submitById(req, res)
+})
 
 /*
 ======
@@ -1628,7 +1632,8 @@ let static_sites = {
     "/warp_speed": "warp_speed.html",
     "/warp_speed_en": "warp_speed_en.html",
     "/t/new_viewing_experience": "new_viewing_experience.html",
-    "/cbackground": "cbackground.html"
+    "/cbackground": "cbackground.html",
+    "/wariolandshakeit2008": "wariolandshakeit2008.html"
 }
 for(let site in static_sites) {
     app.get(site, (req, res) => {
@@ -2144,6 +2149,25 @@ if(useMobileHelper) {
         mobileHelper.manageSubscription(req, res)
     })
 }
+
+/*
+======
+standardfeeds (gdata rss) basic support
+======
+*/
+app.get("/feeds/base/standardfeeds/*", (req, res) => {
+    yt2009basefeeds.standardfeed(req, res)
+})
+app.get("/feeds/base/videos/*", (req, res) => {
+    yt2009basefeeds.videoData(req, res)
+})
+app.get("/feeds/base/videos", (req, res) => {
+    if(req.query.q || req.query.vq) {
+        yt2009basefeeds.search(req, res)
+        return;
+    }
+    res.sendStatus(400)
+})
 
 /*
 ======
@@ -4366,6 +4390,10 @@ app.post("/annotations_auth/update2", (req, res) => {
 app.get("/auth/read2", (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
     </annotations></document>`)
+})
+app.get("/v/*", (req, res) => {
+    let video = req.originalUrl.split("/v/")[1]
+    res.redirect("/embedF/" + video)
 })
 
 /*

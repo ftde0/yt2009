@@ -2000,3 +2000,22 @@ if(related.length <= 0) {
                           .getElementsByTagName("h2")[0]
     toggleExpander(relatedExpander)
 }
+
+/*
+======
+update recommended rss if should
+======
+*/
+if(location.href.indexOf("/watch") !== -1
+&& document.cookie && document.cookie.indexOf("rec_rss_id=") !== -1) {
+    var rssId = document.cookie.split("rec_rss_id=")[1].split(";")[0]
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("POST", "/rec-submit")
+    r.setRequestHeader("source", location.href)
+    r.send(null)
+}

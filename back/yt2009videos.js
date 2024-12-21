@@ -14,6 +14,7 @@ const utils = require("./yt2009utils")
 const fs = require("fs")
 const page = fs.readFileSync("../videos.htm").toString()
 const templates = require("./yt2009templates")
+const search = require("./yt2009search")
 const config = require("./config.json")
 const wayback_watchpage = require("./cache_dir/wayback_watchpage")
 const category_numbers = {
@@ -54,6 +55,8 @@ const category_numbers_lang = {
 }
 const doodles = require("./yt2009doodles")
 const language = require("./language_data/language_engine")
+
+let uidVideos = {}
 
 module.exports = {
     "apply": function(req, res) {
@@ -110,6 +113,15 @@ module.exports = {
                 `browse-basic-modifiers"`,
                 `browse-basic-modifiers" style="display: none;"`
             )
+            // rss this page button
+            let uid = Math.floor(Math.random() * 888888) + 100000
+            if(req.headers.cookie
+            && req.headers.cookie.includes("rec_rss_id=")) {
+                uid = req.headers.cookie.split("rec_rss_id=")[1].split(";")[0]
+            }
+            code = code.split("yt2009_rss_button").join(
+                `http://${config.ip}:${config.port}/videos-rss?r=1&uid=${uid}`
+            )
             code = require("./yt2009loginsimulate")(req, code)
             code = doodles.applyDoodle(code)
             code = language.apply_lang_to_code(code, req)
@@ -119,6 +131,13 @@ module.exports = {
 
         let categoryNumber = req.query.c || "0"
         let categoryName = category_numbers_lang[categoryNumber]
+
+        // limit to 50 videos per page
+        if(req.query.max
+        && !isNaN(req.query.max)
+        && parseInt(req.query.max) > 50) {
+            req.query.max = 50
+        }
 
         // sorting option
         let sortByPopular = true;
@@ -273,8 +292,8 @@ module.exports = {
         let categoryNumber = req.query.c || "0"
         let pageNumber = parseInt(req.query.p) || 1
         let maxResults = parseInt(req.query.max) || 24
-        if(maxResults > 1000) {
-            maxResults = 1000
+        if(maxResults > 100) {
+            maxResults = 100
         }
         let startIndexOverride = parseInt(req.query.index)
         if(isNaN(pageNumber)) {
@@ -381,13 +400,110 @@ module.exports = {
         </item>`
         }
 
+        if(req.query.r == 1) {
+            let videos = []
+
+            let videoSuggestions = []
+            let processedVideos = 0;
+
+            if(req.query.uid && !uidVideos[req.query.uid]) {
+                let cookieParams = [
+                    `rec_rss_id=${utils.asciify(req.query.uid)}; `,
+                    `Path=/; `,
+                    `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+                ]
+                res.set("set-cookie", cookieParams.join(""))
+            }
+
+            if(req.query.uid && uidVideos[req.query.uid]) {
+                videos = uidVideos[req.query.uid]
+            } else if(req.query.sv) {
+                videos = req.query.sv.split(",").slice(0,3)
+                videos = videos.filter(v => v.length == 11)
+            }
+            if(videos.length == 0) {
+                videos = ["dQw4w9WgXcQ"]
+            }
+
+            let newRecommended = false;
+            if(req.query.nr) {
+                newRecommended = true;
+            }
+
+            function createSuggestionsResponse() {
+                videoSuggestions = videos.reverse()
+                videoSuggestions.forEach(v => {
+                    addVideo(v)
+                })
+                rssCode = rssCode.replace("<!--yt2009-videos-->", rssVideos)
+                res.send(rssCode)
+            }
+
+            yt2009html.bulk_get_videos(videos, () => {
+                videos.forEach(vid => {
+                    setTimeout(function() {
+                        // have video data, get related with exp_related
+                        let videoData = yt2009html.get_cache_video(vid)
+                        let lookup_keyword = ""
+                        if(!videoData.tags || !videoData.title) {
+                            processedVideos++;
+                            if(processedVideos == videos.length) {
+                                createSuggestionsResponse();
+                            }
+                            return;
+                        }
+
+                        lookup_keyword = utils.exp_related_keyword(
+                            videoData.tags, videoData.title
+                        )
+        
+                        // get!!
+                        search.related_from_keywords(
+                            lookup_keyword, vid, "", (html, rawData) => {
+                                rawData.forEach(video => {
+                                    videoSuggestions.push(video)
+                                })
+                                processedVideos++;
+                                if(processedVideos == videos.length) {
+                                    createSuggestionsResponse();
+                                    return;
+                                }
+                            }, req.protocol, newRecommended
+                        )
+                    }, Math.floor(Math.random() * 1000) + 300)
+                })  
+            })
+
+            return;
+        }
 
         let videos = this.internal_getVideos(req, "")
         videos.forEach(video => {
             addVideo(video)
         })
-
         rssCode = rssCode.replace("<!--yt2009-videos-->", rssVideos)
         res.send(rssCode)
+    },
+
+    "submitById": function(req, res) {
+        if(!req.headers.cookie
+        || !req.headers.cookie.includes("rec_rss_id=")
+        || !req.headers.source
+        || !req.headers.source.includes("v=")) {
+            res.sendStatus(400)
+            return;
+        }
+
+        let id = req.headers.source.split("v=")[1]
+                    .split("&")[0].split("#")[0]
+                    .substring(0, 11);
+        let uid = req.headers.cookie.split("rec_rss_id=")[1].split(";")[0]
+        
+        if(!uidVideos[uid]) {
+            uidVideos[uid] = []
+        }
+        uidVideos[uid].unshift(id)
+        uidVideos[uid] = uidVideos[uid].slice(0,3)
+        res.sendStatus(200)
     }
 }

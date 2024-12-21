@@ -38,6 +38,23 @@ if(window.localStorage
     }
 }
 
+// if video page append clientside data to rss button
+if(isVideosPage) {
+    var newPart = "&sv=" + videoIdString
+    if(document.cookie && document.cookie.indexOf("new_recommended") !== -1) {
+        newPart += "&nr=1"
+    }
+    
+    var ae = document.getElementsByTagName("*")
+    for(var e in ae) {
+        e = ae[e]
+        if(e.className && e.className == "rsslink") {
+            var href = e.getAttribute("href")
+            e.setAttribute("href", href + newPart)
+        }
+    }
+}
+
 // make request
 var r;
 if (window.XMLHttpRequest) {
@@ -55,8 +72,15 @@ try {
     r.onreadystatechange = function(e) {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
             // fill recommended with videos from server
-            document.getElementById("recommended-loading-sprite")
-                    .style.display = "none"
+            if(isVideosPage) {
+                setTimeout(function() {
+                    document.getElementById("recommended-loading-sprite")
+                            .style.display = "none"
+                }, 250)
+            } else {
+                document.getElementById("recommended-loading-sprite")
+                        .style.display = "none"
+            }
             document.getElementById(targetId).innerHTML = r.responseText
             if(r.responseText.indexOf("YT2009_NO_DATA") !== -1
             && !isVideosPage) {

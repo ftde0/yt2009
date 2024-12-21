@@ -1109,7 +1109,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>${favCode}
             <author>
                 <name>${author}</name>
-                <uri>http://gdata.youtube.com/feeds/api/users/${author}</uri>
+                <uri>http://${config.ip}:${config.port}/feeds/api/users/${author}</uri>
             </author>
             <gd:comments>
                 <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/${id}/comments' countHint='530'/>
@@ -2754,5 +2754,107 @@ term='channel'/>
             <link rel='edit' href='http://${config.ip}:${config.port}/edit'/>
             <yt:username>${fname}</yt:username>
         </entry>`
-    }
+    },
+
+    "baseFeed_feedStart": function(feedName, videoCount) {
+        return `<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:atom='http://www.w3.org/2005/Atom' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' version='2.0'>
+    <channel>
+        <description></description>
+        <atom:id>http://gdata.youtube.com/feeds/base/standardfeeds/most_popular</atom:id>
+        <lastBuildDate>${new Date().toString().split(" (")[0]}</lastBuildDate>
+        <category domain='http://schemas.google.com/g/2005#kind'>http://gdata.youtube.com/schemas/2007#video</category>
+        <title>${feedName}</title>
+        <image>
+            <url>http://www.youtube.com/img/pic_youtubelogo_123x63.gif</url>
+            <title>${feedName}</title>
+            <link>http://www.youtube.com/browse?s=bzb</link>
+        </image>
+        <link>http://www.youtube.com/browse?s=bzb</link>
+        <managingEditor>YouTube</managingEditor>
+        <generator>YouTube data API</generator>
+        <openSearch:totalResults>${videoCount}</openSearch:totalResults>
+        <openSearch:startIndex>1</openSearch:startIndex>
+        <openSearch:itemsPerPage>${videoCount}</openSearch:itemsPerPage>`
+    },
+
+    "baseFeed_feedVideo": function(video, categoryNumber, notFeed) {
+        function safeData(i, override) {
+            i = i.split(">").join(override ? override : "&amp;gt;")
+                 .split("<").join(override ? override : "&amp;lt;")
+            return i;
+        }
+
+        let fcount = Math.round(parseInt(video.viewCount) / 15)
+        if(parseInt(video.viewCount) > 100000) { 
+            fcount = Math.round(parseInt(video.viewCount) / 90)
+        }
+
+        let description = `<div style="color: #000000;font-family: Arial, Helvetica, sans-serif; font-size:12px; font-size: 12px; width: 555px;">
+            <table cellspacing="0" cellpadding="0" border="0">
+                <tbody>
+                    <tr>
+                        <td width="140" valign="top" rowspan="2">
+                            <div style="border: 1px solid #999999; margin: 0px 10px 5px 0px;"><a href="http://${config.ip}:${config.port}/watch?v=${video.id}"><img alt="" src="http://i.ytimg.com/vi/${video.id}/2.jpg"></a></div>
+                        </td>
+                        <td width="256" valign="top">
+                            <div style="font-size: 12px; font-weight: bold;"><a style="font-size: 15px; font-weight: bold; font-decoration: none;" href="http://${config.ip}:${config.port}/watch?v=${video.id}">${safeData(video.title, "")}</a><br>
+                            </div>
+                            <div style="font-size: 12px; margin: 3px 0px;"><span>${safeData(video.description, "")}</span></div>
+                        </td>
+                        <td style="font-size: 11px; line-height: 1.4em; padding-left: 20px; padding-top: 1px;" width="146" valign="top">
+                            <div><span style="color: #666666; font-size: 11px;">From:</span>
+                                <a href="http://${config.ip}:${config.port}/channel/${video.author_id}">${video.author_name}</a>
+                            </div>
+                            <div><span style="color: #666666; font-size: 11px;">Views:</span>${video.viewCount}</div>
+                            <div style="white-space: nowrap;text-align: left"><img style="border: 0px none; margin: 0px; padding: 0px; vertical-align: middle; font-size: 11px;" align="top" alt="" src="http://${config.ip}:${config.port}/assets/site-assets/icn_star_full_11x11.gif"> <img style="border: 0px none; margin: 0px; padding: 0px; vertical-align: middle; font-size: 11px;" align="top" alt="" src="http://${config.ip}:${config.port}/assets/site-assets/icn_star_full_11x11.gif"> <img style="border: 0px none; margin: 0px; padding: 0px; vertical-align: middle; font-size: 11px;" align="top" alt="" src="http://${config.ip}:${config.port}/assets/site-assets/icn_star_full_11x11.gif"> <img style="border: 0px none; margin: 0px; padding: 0px; vertical-align: middle; font-size: 11px;" align="top" alt="" src="http://${config.ip}:${config.port}/assets/site-assets/icn_star_full_11x11.gif"> <img style="border: 0px none; margin: 0px; padding: 0px; vertical-align: middle; font-size: 11px;" align="top" alt="" src="http://${config.ip}:${config.port}/assets/site-assets/icn_star_full_11x11.gif"></div>
+                            <div style="font-size: 11px;">${fcount}<span style="color: #666666; font-size: 11px;">ratings</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span style="color: #666666; font-size: 11px;">Time:</span>
+                            <span style="color: #000000; font-size: 11px; font-weight: bold;">${utils.seconds_to_time(video.length)}</span>
+                        </td>
+                        <td style="font-size: 11px; padding-left: 20px;"><span style="color: #666666; font-size: 11px;">More in</span>
+                            <a href="http://${config.ip}:${config.port}/videos?c=${categoryNumber}">${video.category}</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>`
+
+        if(notFeed) {
+            return `<?xml version='1.0' encoding='UTF-8'?>
+        <entry xmlns='http://www.w3.org/2005/Atom'>
+            <id>http://gdata.youtube.com/feeds/base/videos/--5psRI6Yx8</id>
+            <published>${video.upload}</published>
+            <updated>${video.upload}</updated>
+            <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#video' />
+            <title type='text'>${safeData(video.title)}</title>
+            <content type='html'>${utils.xss(description)}</content>
+            <link rel='alternate' type='text/html' href='http://${config.ip}:${config.port}/watch?v=${video.id}' />
+            <link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/base/videos/${video.id}' />
+            <author>
+                <name>${safeData(video.author_name)}</name>
+                <uri>http://gdata.youtube.com/feeds/base/users/${video.author_id}</uri>
+            </author>
+        </entry>`
+        }
+
+        return `<item>
+            <guid isPermaLink='false'>http://gdata.youtube.com/feeds/base/videos/F35L1dZtxjI</guid>
+            <pubDate>${new Date(video.upload).toString().split(" (")[0]}</pubDate>
+            <atom:updated>${video.upload}</atom:updated>
+            <category domain='http://schemas.google.com/g/2005#kind'>http://gdata.youtube.com/schemas/2007#video</category>
+            <title>${safeData(video.title)}</title>
+            <description>${safeData(description)}</description>
+            <link>http://${config.ip}:${config.port}/watch?v=${video.id}</link>
+            <author>${safeData(video.author_name)}</author>
+        </item>`
+    },
+
+    "baseFeed_feedEnd": `
+    </channel>
+</rss>`
 }

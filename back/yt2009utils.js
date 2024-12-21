@@ -1133,7 +1133,11 @@ module.exports = {
             let audioFormats = []
             r.streamingData.adaptiveFormats.forEach(q => {
                 if(q.mimeType.includes("audio/mp4")) {
-                    audioFormats.push(q)
+                    if(q.audioTrack && q.audioTrack.audioIsDefault) {
+                        audioFormats.push(q)
+                    } else if(!q.audioTrack) {
+                        audioFormats.push(q)
+                    }
                 } else if(q.mimeType.includes("video/mp4")
                 && q.mimeType.includes("avc")
                 && !qualities[q.qualityLabel]) {
@@ -1144,7 +1148,9 @@ module.exports = {
             if(audioFormats.length > 0) {
                 audioFormats = audioFormats.sort((a, b) => b.bitrate - a.bitrate)
             }
-            h264DashAudioUrl = audioFormats[0].url
+            if(audioFormats[0]) {
+                h264DashAudioUrl = audioFormats[0].url
+            }
 
             // check if dash audio is needed
             let downloadAudio = true;
