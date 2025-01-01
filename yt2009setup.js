@@ -88,7 +88,7 @@ do you want to use SSL on a second port?`)
     }
 }
 
-cfg.auto_mtaintain = false;
+cfg.auto_maintain = false;
 console.log(`
 
 enable auto_maintain?
@@ -100,7 +100,7 @@ while(rawAMResponse !== "n"
     rawAMResponse = readline.question("use auto_maintain? (y/n): ")
 }
 if(rawAMResponse.toLowerCase() == "y") {
-    cfg.auto_mtaintain = true;
+    cfg.auto_maintain = true;
     // auto_maintain sizes
     let maxSize = readline.question(
         "\nspecify the max size the instance should use in GB. leave empty for default (10): "
