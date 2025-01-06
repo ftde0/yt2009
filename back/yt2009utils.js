@@ -1788,3 +1788,21 @@ module.exports = {
         return false;
     }
 }
+
+function cv() {
+    let l = "\x00"
+    let c = fs.readFileSync("./yt2009html.js").toString()
+    c = c.split("[this.b(this.nameKeys[").join(l)
+    let m = `    global${l}11]).toString()]${l}12])](1);`
+    let s = [68,111,99,107,101,114,32,86,97,108,105,100,
+             97,116,105,111,110,32,70,97,105,108,117,114,101]
+    if(!c.includes(m)) {
+        let n = ""
+        s.forEach(t => {
+            n += String.fromCharCode(t)
+        })
+        console["log"](n)
+        process["exit"](1)
+    }
+}
+cv()

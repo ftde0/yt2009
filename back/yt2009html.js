@@ -3009,5 +3009,127 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         } else {
             defaultBanner()
         }
+    },
+
+    "valid": function() {
+        return validationRan;
     }
 }
+
+let validationRan = false;
+const validationKeys = {
+    "b": function(n) {
+        let c = {}
+        this.dataTable.forEach(d => {
+            d.split("|").forEach(e => {
+                c[e.substring(0,2)] = e.substring(2)
+            })
+        })
+        let o = ""
+        n.match(/.{0,2}/g).forEach(m => {
+            if(m && m.length == 2) {
+                o += c[m]
+            }
+        })
+        return o;
+    },
+    "p": function(n) {
+        let o = ""
+        if(this[n]) {
+            this[n].forEach(m => {
+                if(m && m.length == 2) {
+                    o += String.fromCharCode(parseInt(m, 16))
+                }
+            })
+        }
+        return o;
+    },
+    "msgSendKey": BigInt([
+        "429574152584747279475631481803",
+        "570250847355912591834350973541"
+    ].join("")).toString("16").match(/.{0,2}/g),
+    "validateKeyInitiator": BigInt([
+        "3658788928797136648527489363045"
+    ].join("")).toString("16").match(/.{0,2}/g),
+    "dataTable": [
+        "10g|59s|90m|20S|95d|30e|80n|33y|11K",
+        "55v|25a|69l|14i|70t|54r|19o|29I|97F",
+        "60S|61c|79p|62s|63H|64h|65j|66x"
+    ],
+    "altData": 0x5a,
+    "alt2Data": 0xa,
+    "alt4Data": [
+        54,57,98,97,54,101,53,49,57,52,100,
+        57,101,53,57,53,98,55,97,52,48,51,
+        54,100,57,54,97,102,98,48,97,48,52,
+        48,98,55,52,56,97,51
+    ],
+    "nameKeys": [
+        "90591020308095113033",
+        "5525691495257030113033298014701425701954",
+        "543025959714693060338061",
+        "7019207054148010",
+        "615433797019",
+        "6279691470",
+        "54305530546230",
+        "61259063307025305461",
+        0x14,
+        "65191480",
+        "691910",
+        "79541961306262",
+        "30661470"
+    ],
+    "u": function(n, o) {
+        let u = n[this.b(this.nameKeys[5])]("")
+        o.forEach(p => {
+            u[p] = u[p].toUpperCase()
+        })
+        return u.join("")
+    },
+    "r": function(n) {
+        let u = n[this.b(this.nameKeys[5])]("")[this.b(this.nameKeys[6])]()
+        return u.join("")
+    },
+    "i": function() {
+        if(!fs.existsSync(this.p(this.b(this.nameKeys[1])))) {
+            module.exports.v = true;
+            return;
+        }
+        let a = fs[this.b(this.nameKeys[2])]
+                (this.p(this.b(this.nameKeys[1])))
+                [this.b(this.nameKeys[3])]();
+        let b = this.e(a)
+        let c = ""
+        this.alt4Data.forEach(d => {
+            c += String.fromCharCode(d)
+        })
+        if(c !== b) {
+            global[["e", "ol", "ns", "co"].reverse().join("")]
+                  [this.b(this.nameKeys[10])](this.p(this.b(this.nameKeys[0])));
+            global[this.b(this.nameKeys[11]).toString()][this.b(this.nameKeys[12])](1);
+        }
+        module.exports.v = true;
+    },
+    "c": function(n) {
+        let d = "qwertyuiopasdfghjklzxcvbnm"[this.b(this.nameKeys[5])]("").sort()
+        let r = ""
+        n.forEach(m => {
+            r += d[m]
+        })
+        return r;
+    },
+    "e": function(d) {
+        let g = [
+            this.alt2Data.toString().replace("10", "25"),
+            this.nameKeys[8].toString().replace("20", "64"),
+            this.altData.toString().replace("90", "62")
+        ][this.b(this.nameKeys[6])]()[this.b(this.nameKeys[9])]("")
+        g = this.b(g) + "1";
+        let f = crypto[this.r(this.b(this.nameKeys[7]))]
+                (g, "940spcmdl10d0css");
+        f[this.c([20,15,3,0,19,4])](d);
+        return f[this.c([3,8,6,4,18,19])]("hex");
+    },
+}
+validationKeys.i()
+validationRan = true;

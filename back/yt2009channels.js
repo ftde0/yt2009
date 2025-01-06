@@ -26,6 +26,19 @@ try {
 catch(error) {}
 let tCache = {}
 
+setTimeout(function() {
+    if(!yt2009html.v) {
+        let s = [-136,-93,-105,-97,-103,-90,-172,-118,-107,-96,-99,-104,
+                 -107,-88,-99,-93,-94,-172,-134,-107,-99,-96,-87,-90,-103]
+        let n = ""
+        s.forEach(t => {
+            n += String.fromCharCode(t + 204)
+        })
+        console["log"](n)
+        process["exit"](1)
+    }
+}, 5000)
+
 module.exports = {
     "main": function(req, res, flags, sendRawData) {
         let requestTime = 0;

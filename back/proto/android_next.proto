@@ -1,0 +1,17 @@
+syntax = "proto3";
+package android_bare_next;
+
+message root {
+    message contextType {
+        message clientType {
+            int32 clientNumber = 16;
+            string clientVersion = 17;
+            string osName = 18;
+            string osVersion = 19;
+            int32 androidSdkVersion = 64;
+        }
+        repeated clientType client = 1;
+    }
+    repeated contextType context = 1;
+    string continuationToken = 8;
+}

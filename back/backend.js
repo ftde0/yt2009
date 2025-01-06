@@ -94,6 +94,18 @@ if(require("os").totalmem() <= 110000000) {
 `)
 }
 
+if(fs.existsSync("../Dockerfile")) {
+    let dockerfile = fs.readFileSync("../Dockerfile").toString()
+    crypto = require("crypto")
+    let d = crypto.createHash("sha1")
+    d.update(dockerfile)
+    let digest = d.digest("hex")
+    if(digest !== "c82a2db3964c116e398371accb742104d706c06d") {
+        console.log("Docker Validation Failure")
+        process.exit(1);
+    }
+}
+
 if(fs.existsSync("./yt2009experimentals.js")) {
     try {
         require("./yt2009experimentals").set(app)
