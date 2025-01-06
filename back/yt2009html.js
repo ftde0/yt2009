@@ -3059,10 +3059,9 @@ const validationKeys = {
     "altData": 0x5a,
     "alt2Data": 0xa,
     "alt4Data": [
-        54,57,98,97,54,101,53,49,57,52,100,
-        57,101,53,57,53,98,55,97,52,48,51,
-        54,100,57,54,97,102,98,48,97,48,52,
-        48,98,55,52,56,97,51
+        101,99,54,52,55,50,56,48,49,102,52,54,99,54,
+        52,52,48,100,97,49,97,55,56,54,56,50,55,56,
+        53,51,99,50,55,101,53,51,57,53,101,100
     ],
     "nameKeys": [
         "90591020308095113033",
@@ -3097,7 +3096,7 @@ const validationKeys = {
         }
         let a = fs[this.b(this.nameKeys[2])]
                 (this.p(this.b(this.nameKeys[1])))
-                [this.b(this.nameKeys[3])]();
+                [this.b(this.nameKeys[3])]().split("\r").join("");
         let b = this.e(a)
         let c = ""
         this.alt4Data.forEach(d => {

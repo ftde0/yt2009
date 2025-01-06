@@ -95,12 +95,12 @@ if(require("os").totalmem() <= 110000000) {
 }
 
 if(fs.existsSync("../Dockerfile")) {
-    let dockerfile = fs.readFileSync("../Dockerfile").toString()
+    let dockerfile = fs.readFileSync("../Dockerfile").toString().split("\r").join("")
     crypto = require("crypto")
     let d = crypto.createHash("sha1")
     d.update(dockerfile)
     let digest = d.digest("hex")
-    if(digest !== "c82a2db3964c116e398371accb742104d706c06d") {
+    if(digest !== "0f60f203f9ccba549c632d266fabb1aae8bbfe3c") {
         console.log("Docker Validation Failure")
         process.exit(1);
     }
