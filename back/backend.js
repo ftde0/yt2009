@@ -96,7 +96,7 @@ if(require("os").totalmem() <= 110000000) {
 
 if(fs.existsSync("../Dockerfile")) {
     let dockerfile = fs.readFileSync("../Dockerfile").toString().split("\r").join("")
-    crypto = require("crypto")
+    let crypto = require("crypto")
     let d = crypto.createHash("sha1")
     d.update(dockerfile)
     let digest = d.digest("hex")
