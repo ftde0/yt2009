@@ -358,7 +358,7 @@ module.exports = {
                             "views": viewCount,
                             "length": time,
                             "creatorName": creatorName,
-                            "creatorUrl": creatorUrl,
+                            "creatorUrl": "/channel/" + creatorUrl,
                             "uploaded": upload
                         })
                         return;
