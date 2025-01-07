@@ -313,6 +313,56 @@ module.exports = {
                     related = related[1].itemSectionRenderer.contents
                 }
                 related.forEach(video => {
+                    if(video.lockupViewModel
+                    && video.lockupViewModel.contentType == "LOCKUP_CONTENT_TYPE_VIDEO") {
+                        // viewmodel related videos
+                        video = video.lockupViewModel;
+                        let metadata = video.metadata.lockupMetadataViewModel;
+                        let id = video.contentId
+                        let title = metadata.title.content
+                        let viewCount = video.rendererContext
+                                        .accessibilityContext.label
+                                        .split(" views");
+                        viewCount = viewCount[viewCount.length - 2].split(" ");
+                        viewCount = viewCount[viewCount.length - 1] + " views";
+                        let creatorUrl = "UC" + JSON.stringify(video)
+                                                .split(`browseId":"UC`)[1]
+                                                .split(`"`)[0];
+                        let metadataParts = []
+                        let mrPath = metadata.metadata.contentMetadataViewModel
+                                             .metadataRows;
+                        mrPath.forEach(r => {
+                            if(r.metadataParts) {r.metadataParts.forEach(p => {
+                                try {metadataParts.push(p.text.content)}
+                                catch(error){}
+                            })}
+                        })
+                        let creatorName = metadataParts[0]
+                        let upload = metadataParts[2]
+                        let time = "1:00"
+                        try {
+                            video.contentImage.thumbnailViewModel
+                            .overlays.forEach(o => {
+                                if(o.thumbnailOverlayBadgeViewModel) {
+                                    time = o.thumbnailOverlayBadgeViewModel
+                                            .thumbnailBadges[0]
+                                            .thumbnailBadgeViewModel
+                                            .text;
+                                }
+                            })
+                        }
+                        catch(error){}
+                        data.related.push({
+                            "id": id,
+                            "title": title,
+                            "views": viewCount,
+                            "length": time,
+                            "creatorName": creatorName,
+                            "creatorUrl": creatorUrl,
+                            "uploaded": upload
+                        })
+                        return;
+                    }
                     if(!video.compactVideoRenderer && !video.richItemRenderer) return;
 
                     let gridResult = false;
