@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gsign</title>
+    <style>*{font-family: sans-serif;}body{text-align:center;}.g{color:#666;}.panel button{margin-top:10px;}.error{color: red;}.panel6 input{width: 200px;}.accounts-list{display:inline-block;width: 300px;height: 300px;overflow-x:hidden;text-align: left;border: 1px black solid;}.account{width: 280px;height: 30px;padding: 10px 10px;}.account.gray{background: #DDD;}h3{margin: 0px 0px;}.account span{font-size: 11px;display: block;}.account h3{margin-top:-3px}</style>
+</head>
+<body>
+    <h1 style="margin-top:50px;">gsign: account picker</h1>
+    <p>if you're seeing this page - congratulations!<br>
+    you've successfully added your google account to mobile yt2009.<br><br>
+    you should now see a list of your youtube accounts - pick one that you'd like<br>
+    to use with your yt2009 app.</p>
+    <div class="panel panel1">
+        <div class="accounts-list"></div>
+    </div>
+
+    <script>
+        var messages = {
+            "noDev": "please set your device id to fully use this page!"
+        }
+        var idIndexes = []
+        if(location.href.indexOf("device=") == -1) {
+            document.querySelector("p").innerHTML = messages.noDev
+            document.querySelector(".panel1").style.display = "none"
+        } else {
+            var device = location.href.split("device=")[1].split("&")[0].split("#")[0]
+            var accountsAdded = 0;
+            var r = new XMLHttpRequest();
+            r.open("GET", "/gsign_get_devices")
+            r.setRequestHeader("device", device)
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                if(r.status == 200) {
+                    var accounts = JSON.parse(r.responseText)
+                    accounts.forEach(function(a) {
+                        var ae = document.createElement("div")
+                        ae.className = "account"
+                        if(accountsAdded % 2 == 1) {
+                            ae.className += " gray"
+                        }
+                        accountsAdded++
+                        idIndexes.push(a.pageId)
+                        ae.addEventListener("click", function() {
+                            var xr = new XMLHttpRequest();
+                            xr.open("POST", "/gsign_set")
+                            xr.setRequestHeader("device", device)
+                            xr.setRequestHeader("uid", a.pageId)
+                            xr.setRequestHeader("username", a.name.substring(0,60))
+                            if(idIndexes.indexOf(a.pageId) <= 0) {
+                                xr.setRequestHeader("first", "1")
+                            }
+                            xr.send(null)
+                            xr.addEventListener("load", function(e) {
+                                location.reload();
+                            }, false)
+                        }, false)
+                        if(a.name.length > 23) {
+                            a.name = a.name.substring(0, 23) + "..."
+                        }
+                        ae.innerHTML = "<h3>"+ a.name +"</h3>"
+                        var spanC = ""
+                        if(a.selected) {
+                            spanC += "selected "
+                            if(a.handle) {
+                                spanC += "● "
+                            }
+                        }
+                        if(a.handle) {
+                            spanC += a.handle
+                        }
+                        ae.innerHTML += "<span>"+ spanC +"</span>"
+                        document.querySelector(".accounts-list").appendChild(ae)
+                    })
+                } else {
+                    alert("error pulling accounts! please report to instance hoster")
+                }
+            }, false)
+        }
+    </script>
+</body>
+</html>

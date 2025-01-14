@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gsign</title>
+    <style>*{font-family: sans-serif;}body{text-align:center;}.g{color:#666;}.panel button{margin-top:10px;}.error{color: red;}.panel6 input{width: 200px;}.sub{font-size: 12px;color: #666;margin-top: 50px;}</style>
+</head>
+<body>
+    <noscript>please enable javascript for this sign-in flow!</noscript>
+    <h1 style="margin-top:50px;">gsign</h1>
+    <h3>complete sign in to your youtube account on a yt2009 app.</h3>
+    <div class="panel panel1">
+        <p>enter your device code:</p>
+        <input type="text" class="devicecode"><br>
+        <p class="error" style="display: none;"></p>
+        <button>next &raquo;</button>
+    </div>
+    <div class="panel panel2" style="display: none;">
+        <p>gsign requires a number of steps to be followed carefully.<br>
+        please follow through to avoid issues.</p>
+        <h3>1. open the link below in a new incognito window.<br><b>don't sign in yet!</b></h3>
+        <a href="https://accounts.google.com/embedded/setup/v2/android?source=com.google.android.gms&xoauth_display_name=Android%20Phone&ph=%2B15555215554&imsi=310260000000000&lang=en&langCountry=en_us&hl=en-US&cc=us&multilogin=1&hide_status_bar=0&use_native_navigation=0&alignment=center" target="_blank">https://accounts.google.com/embedded/setup...</a><br>
+        <button>next &raquo;</button>
+        <p class="sub">yt2009 can't guarantee full reliability when linking an account.</p>
+    </div>
+    <div class="panel panel3" style="display: none;">
+        <p>right click on the sign in page, inspect element.</p>
+        <img src="/mobile/mobilehelper/s1.png"/>
+        <p>press next when done.</p>
+        <button>next &raquo;</button>
+    </div>
+    <div class="panel panel4" style="display: none;">
+        <p>on the inspect window, click on the Network tab.</p>
+        <img src="/mobile/mobilehelper/s2.png"/>
+        <p>press next when done.</p>
+        <button>next &raquo;</button>
+    </div>
+    <div class="panel panel5" style="display: none;">
+        <p>you can now sign in.</p>
+        <p>when you click an "I agree" button<br>(and may get a "Something went wrong" message afterwards)<br><br><b>click next.</b></p>
+        <button>next &raquo;</button>
+    </div>
+    <div class="panel panel6" style="display: none;">
+        <p>look through the last 3 "batchexecute" requests.<br>
+        you might need to scroll down.</p>
+        <p>click on the "Preview" or the "Response" tab<br>
+        and find an "oauth2_4" token.</p>
+        <img src="/mobile/mobilehelper/s3.png"/>
+        <p>copy the token and put it in here.</p>
+        oauth2_4/<input type="text" spellcheck="false" autocomplete="off" class="oauthtoken"><br>
+        email used: <input type="email" spellcheck="false" autocomplete="off" class="email"><br>
+        <button>next &raquo;</button>
+    </div>
+    <div class="panel panel7" style="display: none;">
+        <p>adding account..</p>
+        <p class="error" style="display: none;"></p>
+    </div>
+
+    <script>
+        function switchPanel(newPanel) {
+            document.querySelectorAll(".panel").forEach(function(panel) {
+                panel.style.display = "none"
+            })
+            document.querySelector("." + newPanel).style.display = "block"
+        }
+        var messages = {
+            "devNotFound": "device hasn't started a sign in process.",
+            "gsigninFail": "couldn't authorize with <b>google</b>.",
+            "ytsigninFail": "couldn't authorize with <b>youtube</b>.",
+            "alreadySigned": "this device already has a linked account!"
+        }
+        var device = ""
+        document.querySelector(".panel1 button").addEventListener("click", function() {
+            device = document.querySelector(".devicecode").value;
+            var r = new XMLHttpRequest();
+            r.open("GET", "/gsign_inited")
+            r.setRequestHeader("device", device)
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                if(r.responseText == "1") {
+                    switchPanel("panel2")
+                } else {
+                    var err = document.querySelector(".panel1 .error")
+                    err.style.display = "block"
+                    switch(r.responseText) {
+                        case "0": {
+                            err.innerHTML = messages.devNotFound;
+                            break;
+                        }
+                        case "2": {
+                            err.innerHTML = messages.alreadySigned;
+                            break;
+                        }
+                    }
+                }
+            }, false)
+        }, false)
+
+        document.querySelector(".panel2 button").addEventListener("click", function() {
+            switchPanel("panel3")
+        }, false)
+        document.querySelector(".panel3 button").addEventListener("click", function() {
+            switchPanel("panel4")
+        }, false)
+        document.querySelector(".panel4 button").addEventListener("click", function() {
+            switchPanel("panel5")
+        }, false)
+        document.querySelector(".panel5 button").addEventListener("click", function() {
+            switchPanel("panel6")
+        }, false)
+
+        document.querySelector(".panel6 button").addEventListener("click", function() {
+            switchPanel("panel7")
+            var token = document.querySelector(".oauthtoken").value;
+            token = token.replace("oauth2_4/", "")
+            token = token.split("\"")[0]
+            token = token.split("").reverse().join("")
+            token = "\x01" + token.substring(0,4) + "\x01" + token.substring(4)
+            var email = document.querySelector(".email").value;
+            var r = new XMLHttpRequest();
+            r.open("POST", "/gsign_submit")
+            r.setRequestHeader("device", device)
+            r.send(email + "\x00" + token)
+            r.addEventListener("load", function(e) {
+                if(r.status == 200) {
+                    window.location = "/mobile/mobilehelper/account_picker.html?device=" + device
+                } else {
+                    var message = ""
+                    switch(r.responseText) {
+                        case "1": {
+                            message = messages.gsigninFail
+                            break;
+                        }
+                        case "2": {
+                            message = messages.ytsigninFail;
+                            break;
+                        }
+                    }
+                    var err = document.querySelector(".panel7 .error")
+                    err.style.display = "block"
+                    err.innerHTML = message;
+                }
+            }, false)
+        }, false)
+    </script>
+</body>
+</html>

@@ -2160,6 +2160,9 @@ if(useMobileHelper) {
     app.post("/feeds/api/users/default/subscriptions", (req, res) => {
         mobileHelper.manageSubscription(req, res)
     })
+    app.get("/unlinkhelper", (req, res) => {
+        mobileHelper.unlink(req, res)
+    })
 }
 
 /*
