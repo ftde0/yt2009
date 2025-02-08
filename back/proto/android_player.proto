@@ -1,0 +1,133 @@
+syntax = "proto3";
+package android_player;
+
+message textRuns {
+    message textRun {
+        string text = 1;
+    }
+    repeated textRun run = 1;
+}
+message root {
+    message contextType {
+        string contextToken = 2;
+        message clientType {
+            int32 clientSmth = 1;
+            message clientParam {
+                string name = 1;
+                string value = 2;
+            }
+            repeated clientParam param = 2;
+        }
+        repeated clientType client = 6;
+        int32 hundredInt = 7;
+    }
+    repeated contextType context = 1;
+    message playbackInts {
+        optional int32 int1 = 1;
+        optional int32 int9 = 9;
+        string str31 = 31;
+    }
+    repeated playbackInts pInts = 2;
+    message playerFormats {
+        int32 someInt = 1;
+        message format {
+            int32 formatId = 1;
+            string url = 2;
+            string mimeType = 5;
+            int32 totalBitrate = 6;
+            int32 videoWidth = 7;
+            int32 videoHeight = 8;
+            int64 lastChanged = 11;
+            string videoQuality = 16;
+            int32 twentyFive = 25;
+            string qualityLabel = 26;
+            int32 audioBitrate = 44;
+            int32 audioSample = 45;
+            int32 twoInt = 46;
+        }
+        repeated format nondashFormat = 2;
+        repeated format dashFormat = 3;
+    }
+    repeated playerFormats formats = 4;
+    message statUrls {
+        message statUrl {
+            string url = 1;
+        }
+        repeated statUrl playback = 1;
+        repeated statUrl delayplay = 2;
+        repeated statUrl watchtime = 3;
+        repeated statUrl ptracking = 4;
+        repeated statUrl qoe = 5;
+        repeated statUrl apiStats = 13;
+    }
+    repeated statUrls stats = 9;
+    message captionTracks {
+        message contents {
+            message captionTrack {
+                string url = 1;
+                repeated textRuns name = 2;
+                string vssId = 3;
+                string languageCode = 4;
+                optional int32 isTranslatable = 7;
+                string trackName = 11;
+            }
+            repeated captionTrack track = 1;
+            message data {
+                optional int32 int2 = 2;
+                optional int32 int3 = 3;
+                optional int32 int5 = 5;
+                optional int32 int6 = 6;
+            }
+            repeated data pb2 = 2;
+            optional int32 int4 = 4;
+        }
+        repeated contents content = 51621377;
+    }
+    repeated captionTracks captions = 10;
+    message metadata {
+        string id = 1;
+        string title = 15;
+        int32 videoLength = 16;
+        string channelId = 19;
+        string description = 21;
+        message thumbList {
+            message thumb {
+                string url = 1;
+                int32 width = 2;
+                int32 height = 3;
+            }
+            repeated thumb thumbnail = 1;
+        }
+        repeated thumbList thumbnails = 25;
+        string viewCount = 32;
+        string authorName = 33;
+        optional int32 zero1 = 20;
+        optional int32 zero2 = 22;
+        optional int32 zero3 = 31;
+        optional int32 zero4 = 37;
+        optional int32 zero5 = 38;
+        optional int32 zero6 = 41;
+    }
+    repeated metadata videoMetadata = 11;
+    message storyboardData {
+        message sbContainer {
+            string sbLink = 1;
+            int32 c = 3;
+        }
+        repeated sbContainer sb = 55735497;
+    }
+    repeated storyboardData storyboard = 16;
+    message pbVarious21 {
+        optional int32 int1 = 1;
+        optional int32 int2 = 2;
+    }
+    repeated pbVarious21 pb21 = 21;
+    message pbVarious22 {
+        message pbVarious1 {
+            string data = 1;
+        }
+        repeated pbVarious1 pb1 = 59961494;
+    }
+    repeated pbVarious22 pb22 = 22;
+    string pbVarious69 = 69;
+}

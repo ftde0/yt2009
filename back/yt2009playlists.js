@@ -158,8 +158,7 @@ module.exports = {
                 videoList.lastUpdate = lastUpdate
                 videoList.videoCount = vidCount
 
-                // filmy
-
+                // vids
                 playlistArray.forEach(video => {
                     if(!video.playlistVideoRenderer) return;
                     video = video.playlistVideoRenderer
@@ -173,6 +172,9 @@ module.exports = {
                         "uploaderUrl": video.shortBylineText.runs[0]
                                             .navigationEndpoint.browseEndpoint
                                             .canonicalBaseUrl,
+                        "uploaderId": video.shortBylineText.runs[0]
+                                           .navigationEndpoint.browseEndpoint
+                                           .browseId,
                         "time": video.lengthText ?
                                 video.lengthText.simpleText : "",
                         "views": utils.approxSubcount(
@@ -198,6 +200,14 @@ module.exports = {
         let id = req.originalUrl.split("playlists/")[1].split("?")[0]
         let xmlResponse = ""
         this.parsePlaylist(id, (data) => {
+
+            if(req.query.alt == "json") {
+                require("./yt2009jsongdata").playlistVideos(
+                    data.videos, res, req.query.callback
+                )
+                return;
+            }
+
             xmlResponse += yt2009templates.cpbPlaylistsBegin(
                 data.name,
                 data.playlistId,

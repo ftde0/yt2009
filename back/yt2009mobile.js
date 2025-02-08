@@ -13,7 +13,6 @@ const mobileflags = require("./yt2009mobileflags")
 const yt2009_exports = require("./yt2009exports")
 const mobileauths = require("./yt2009mobileauths")
 const yt2009jsongdata = require("./yt2009jsongdata")
-const env = config.env
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 const ffmpeg_process_144 = [
     "ffmpeg",
@@ -536,6 +535,10 @@ module.exports = {
                            .split(">1<").join(`>${start}<`)
             let videosAdded = 0;
             let vids = yt2009html.featured().slice(start, start + max)
+            if(req.query.alt == "json") {
+                yt2009jsongdata.standardfeed(vids, res, req.query.callback)
+                return;
+            }
             vids.forEach(video => {
                 yt2009html.fetch_video_data(video.id, (data) => {
                     let authorName = utils.asciify(video.uploaderName)
@@ -579,6 +582,12 @@ module.exports = {
             if(yt2009html.featured().length > 70) {
                 indexes = [start + 25, start + 25 + max]
             }
+            if(req.query.alt == "json") {
+                yt2009jsongdata.standardfeed(
+                    yt2009html.featured().slice(indexes[0], indexes[1]), res
+                )
+                return;
+            }
             yt2009html.featured().slice(indexes[0], indexes[1]).forEach(video => {
                 yt2009html.fetch_video_data(video.id, (data) => {
                     if(utils.bareCount(video.views) > 100000) {
@@ -606,6 +615,10 @@ module.exports = {
             res.send(response)
         } else {
             // send empty video feeds on other requests
+            if(req.query.alt == "json") {
+                yt2009jsongdata.standardfeed([], res)
+                return;
+            }
             res.set("content-type", "application/atom+xml")
             res.send(
                 templates.gdata_feedStart.split(">25<").join(">0<")
@@ -617,6 +630,10 @@ module.exports = {
     // apk videos
     "videoData": function(req, res) {
         if(!mobileauths.isAuthorized(req, res, "single")) return;
+        if(req.query.alt == "json") {
+            yt2009jsongdata.video(req, res)
+            return;
+        }
         let id = req.originalUrl.split("/videos/")[1]
                                 .split("?")[0]
                                 .split("#")[0]
@@ -821,6 +838,12 @@ module.exports = {
         "headers": {"cookie": ""},
         "query": {"f": 0}}, 
         {"send": function(data) {
+
+            if(req.query.alt == "json") {
+                yt2009jsongdata.userData(data, res, req.query.callback)
+                return;
+            }
+
             let videoViewCount = 0;
             (data.videos || []).forEach(video => {
                 videoViewCount += utils.bareCount(video.views)
@@ -876,6 +899,12 @@ module.exports = {
         "headers": {"cookie": ""},
         "query": {"f": 0}}, 
         {"send": function(data) {
+
+            if(req.query.alt == "json") {
+                yt2009jsongdata.userVideos(data, res, req.query.callback)
+                return;
+            }
+
             let response = templates.gdata_feedStart;
 
             (data.videos || []).forEach(video => {
@@ -921,6 +950,16 @@ module.exports = {
                 channels.get_additional_sections(data, "", () => {
                     let response = templates.gdata_feedStart
                     let playlists = channels.get_cache.read("playlist")
+
+                    if(req.query.alt == "json") {
+                        yt2009jsongdata.userPlaylists(
+                            playlists[data.id] || [],
+                            res, req.query.callback,
+                            data.name, data.id
+                        )
+                        return;
+                    }
+
                     if(playlists[data.id]) {
                         playlists[data.id].forEach(playlist => {
                             response += templates.gdata_playlistEntry(
@@ -937,7 +976,7 @@ module.exports = {
                     res.send(response)
                 })
             }}, "", true)
-        }, 4000)
+        }, 1000)
     },
 
     // apk user favorites
@@ -964,6 +1003,14 @@ module.exports = {
                                 hasFavoritesPlaylist = true;
                                 yt2009playlists.parsePlaylist(playlist.id, (data => {
                                     // add videos (kinda limited data but workable)
+
+                                    if(req.query.alt == "json") {
+                                        yt2009jsongdata.playlistVideos(
+                                            data.videos, res, req.query.callback
+                                        )
+                                        return;
+                                    }
+
                                     data.videos.forEach(video => {
                                         let videoCache = yt2009html
                                                         .get_cache_video(video.id)
@@ -994,6 +1041,10 @@ module.exports = {
                     }
                     if(!hasFavoritesPlaylist) {
                         // no favorites playlist, send empty feed
+                        if(req.query.alt == "json") {
+                            yt2009jsongdata.sendEmptyFeed(res, req.query.callback)
+                            return;
+                        }
                         response += templates.gdata_feedEnd;
                         res.set("content-type", "application/atom+xml")
                         res.send(response)
@@ -1001,7 +1052,7 @@ module.exports = {
                     }
                 })
             }}, "", true)
-        }, 4000)
+        }, 1000)
     },
 
     // apk events
@@ -1055,6 +1106,14 @@ module.exports = {
         let playlistId = req.originalUrl.split("/playlists/")[1]
                                         .split("?")[0]
         require("./yt2009playlists").parsePlaylist(playlistId, (data) => {
+
+            if(req.query.alt == "json") {
+                yt2009jsongdata.playlistVideos(
+                    data.videos, res, req.query.callback
+                )
+                return;
+            }
+
             let response = templates.gdata_feedStart
             // playlist metadata
             response += templates.gdata_userPlaylistStart(
@@ -1116,6 +1175,10 @@ module.exports = {
                 "index": start
             }
         }, "")
+        if(req.query.alt == "json") {
+            yt2009jsongdata.standardfeed(videos, res)
+            return;
+        }
         let response = templates.gdata_feedStart
                        .split(">1<").join(`>${start}<`)
         let videosAdded = 0;

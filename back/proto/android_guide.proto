@@ -1,0 +1,41 @@
+syntax = "proto3";
+package android_guide;
+
+message textRuns {
+    message textRun {
+        string text = 1;
+    }
+    repeated textRun run = 1;
+}
+message browseNavigation {
+    message browseData {
+        string browseId = 2;
+        string params = 3;
+        string canonicalBaseUrl = 4;
+    }
+    repeated browseData data = 48687626;
+}
+message guideEntry {
+    repeated browseNavigation navigation = 1;
+    string title = 2;
+    repeated textRuns iconPath = 3;
+    message iconContainer {
+        int32 iconType = 1;
+    }
+    string subtext = 6;
+    repeated iconContainer icon = 7;
+    repeated textRuns name = 10;
+}
+message root {
+    message items {
+        message guideSectionRenderer {
+            message contents {
+                repeated guideEntry entry = 50982577;
+            }
+            repeated contents content = 3;
+            string header = 4;
+        }
+        repeated guideSectionRenderer guideSection = 46887524;
+    }
+    repeated items item = 4;
+}

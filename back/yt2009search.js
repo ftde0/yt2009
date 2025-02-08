@@ -28,7 +28,8 @@ module.exports = {
         let protoFinal = ""
         if(params.search_sort || params.uploaded || params.high_definition
         || params.closed_captions || params.search_type || params.page
-        || params.location) {
+        || params.location || params.search_duration || params.four_k
+        || params.three_d || params.threesixty || params.creative_commons) {
             useProto = true
         }
 
@@ -55,16 +56,24 @@ module.exports = {
         // don't work with those so improvise
         if(params.uploaded && !flags.includes("only_old")) {
             switch(params.uploaded) {
-                case "d": {
+                case "h": {
                     filtersMsg.setUploadDate(1)
                     break;
                 }
-                case "w": {
+                case "d": {
                     filtersMsg.setUploadDate(2)
                     break;
                 }
-                case "m": {
+                case "w": {
                     filtersMsg.setUploadDate(3)
+                    break;
+                }
+                case "m": {
+                    filtersMsg.setUploadDate(4)
+                    break;
+                }
+                case "y": {
+                    filtersMsg.setUploadDate(5)
                     break;
                 }
             }
@@ -107,6 +116,18 @@ module.exports = {
         if(params.high_definition) {
             filtersMsg.setHd(true)
         }
+        if(params.four_k) {
+            filtersMsg.setFourK(true)
+        }
+        if(params.three_d) {
+            filtersMsg.setThreeD(true)
+        }
+        if(params.threesixty) {
+            filtersMsg.setThreeSixtyDegrees(true)
+        }
+        if(params.creative_commons) {
+            filtersMsg.setCreativeCommons(true)
+        }
 
         // all/channel/playlists
         if(params.search_type) {
@@ -131,9 +152,9 @@ module.exports = {
         }
 
         if(params.search_duration) {
-            switch(params.serach_duration) {
+            switch(params.search_duration) {
                 case "short": {
-                    filtersMsg.setDuration(0)
+                    filtersMsg.setDuration(1)
                     break;
                 }
                 case "long": {

@@ -513,11 +513,12 @@ proto.com.youtube.innertube.request.SearchRequestParams.Filter.serializeBinaryTo
  * @enum {number}
  */
 proto.com.youtube.innertube.request.SearchRequestParams.Filter.UploadDate = {
-  HOUR: 0,
-  DAY: 1,
-  WEEK: 2,
-  MONTH: 3,
-  YEAR: 4
+  ZERO: 0,
+  HOUR: 1,
+  DAY: 2,
+  WEEK: 3,
+  MONTH: 4,
+  YEAR: 5
 };
 
 /**
@@ -535,9 +536,10 @@ proto.com.youtube.innertube.request.SearchRequestParams.Filter.Type = {
  * @enum {number}
  */
 proto.com.youtube.innertube.request.SearchRequestParams.Filter.Duration = {
-  SHORT: 0,
-  MEDIUM: 2,
-  LONG: 1
+  NONE: 0,
+  SHORT: 1,
+  MEDIUM: 3,
+  LONG: 2
 };
 
 /**

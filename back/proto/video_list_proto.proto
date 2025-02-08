@@ -1,0 +1,350 @@
+syntax = "proto3";
+package browse_proto;
+
+message nextRequest {
+    int32 int1 = 1;
+    message continuationData {
+        string token = 1;
+        int32 int2 = 2;
+    }
+    repeated continuationData continuation = 52047593;
+}
+message textRuns {
+    message textRun {
+        string text = 1;
+    }
+    repeated textRun run = 1;
+}
+message subscribeButtonData {
+    message subContents {
+        repeated textRuns subscribeButton = 1;
+        optional int32 int3 = 3;
+        optional int32 int4 = 4;
+        optional int32 int6 = 6;
+        string channelId = 7;
+        optional int32 int8 = 8;
+        repeated textRuns subscribedLabel = 12;
+        repeated textRuns subscribeLabel = 13;
+        repeated textRuns unsubscribeLabel = 16;
+        message subAction {
+            message sub1 {
+                string id = 1;
+                string params = 3;
+            }
+            repeated sub1 subscr1 = 68997349;
+            message sub2 {
+                string id = 1;
+                string params = 4;
+            }
+            repeated sub2 subscr2 = 68997401;
+        }
+        repeated subAction action = 18;
+        string identifier = 31;
+    }
+    repeated subContents content = 55419609;
+}
+message thumbnails {
+    message thumbnail {
+        string url = 1;
+        int32 width = 2;
+        int32 height = 3;
+    }
+    repeated thumbnail thumb = 1;
+}
+message browseNavigation {
+    message browseData {
+        string browseId = 2;
+        string params = 3;
+        string canonicalBaseUrl = 4;
+    }
+    repeated browseData data = 48687626;
+}
+message compactVideoRenderer {
+    string videoId = 1;
+    repeated thumbnails thumblist = 2;
+    repeated textRuns titleData = 3;
+    message authorData {
+        message authorDataContent {
+            string authorDisplayName = 1;
+            message authorNavigationData {
+                message navigationEndpoint {
+                    string browseId = 2;
+                    string canonicalBaseUrl = 4;
+                }
+                repeated navigationEndpoint authorEndpoint = 48687626;
+            }
+            repeated authorNavigationData navigation = 5;
+        }
+        repeated authorDataContent ac = 1;
+    }
+    repeated authorData author = 4;
+    repeated textRuns publishedTimeText = 5;
+    repeated textRuns viewCountText = 6;
+    repeated textRuns lengthText = 7;
+    message navigationData {
+        message navType {
+            int32 i1 = 1;
+            int32 i2 = 2;
+            int32 i3 = 3;
+            string source = 11;
+            message navExtraType {
+                int32 i2 = 2;
+                int32 i3 = 3;
+            }
+            repeated navExtraType navExtra = 19;
+        }
+        repeated navType nav = 1;
+        message navData {
+            string navId = 1;
+        }
+        repeated navData navProperties = 48687757;
+    }
+    repeated navigationData navData = 8;
+    message longAuthorData {
+        message laDataContainer {
+            string displayName = 1;
+            message navigation {
+                message navigationEndpoint {
+                    string browseId = 2;
+                    string canonicalBaseUrl = 4;
+                }
+                repeated navigationEndpoint laNaviEndpoint = 48687626;
+            }
+            repeated navigation laNavi = 5;
+        }
+        repeated laDataContainer laDataContent = 1;
+    }
+    repeated longAuthorData laData = 10;
+    message authorAvatarType {
+        message aaContain {
+            string url = 1;
+            int32 width = 2;
+            int32 height = 3;
+        }
+        repeated aaContain aaData = 1;
+    }
+    repeated authorAvatarType authorAvatar = 14;
+    repeated textRuns shortViewCounts = 23;
+}
+message ownerData {
+    message ownerContainer {
+        string ownerName = 1;
+        repeated browseNavigation navigation = 5;
+    }
+    repeated ownerContainer content = 1;
+}
+message playlistRenderer {
+    string id = 1;
+    repeated thumbnails thumbnail = 2;
+    repeated textRuns playlistName = 3;
+    repeated ownerData owner = 4;
+    repeated textRuns videoCount = 5;
+    repeated browseNavigation playlistBrowse = 6;
+    repeated textRuns bareVideoCount = 9;
+    repeated thumbnails separatedThumbnail = 13;
+    repeated textRuns videoCount2 = 15;
+    string webUrl = 19;
+    repeated ownerData owner2 = 21;
+}
+message aboutRenderer {
+    repeated textRuns channelDescription = 1;
+    message externalSite {
+        repeated textRuns link = 1;
+        repeated textRuns name = 3;
+    }
+    repeated externalSite site = 2;
+    repeated textRuns totalViews = 5;
+    repeated textRuns joinDate = 6;
+    string webUrl = 13;
+    optional int32 int15 = 15;
+    repeated textRuns channelName = 19;
+    repeated thumbnails avatar = 20;
+    repeated textRuns country = 21;
+    optional int32 int23 = 23;
+}
+message channelRenderer {
+    string id = 1;
+    repeated thumbnails avatar = 2;
+    repeated textRuns name = 3;
+    repeated textRuns subCount = 4;
+    repeated textRuns handle = 5;
+    repeated browseNavigation navigation = 6;
+    repeated textRuns name2 = 9;
+    repeated thumbnails avatar2 = 16;
+}
+message shelfRenderer {
+    message shelfHeader {
+        message contents {
+            string shelfName = 1;
+            repeated browseNavigation navigation = 5;
+        }
+        repeated contents content = 1;
+    }
+    repeated shelfHeader header = 1;
+    repeated browseNavigation navigation = 3;
+    message contents {
+        message shelfContents {
+            message contents {
+                repeated compactVideoRenderer video = 50630979;
+                repeated playlistRenderer playlist = 50742631;
+                repeated channelRenderer channel = 50794305;
+            }
+            repeated contents content = 1;
+        }
+        repeated shelfContents shelfContent = 57988071;
+    }
+    repeated contents content = 5;
+}
+message playlistData {
+    message playlistVideo {
+        message contents {
+            string id = 1;
+            repeated thumbnails thumbnail = 2;
+            repeated textRuns title = 3;
+            repeated textRuns index = 4;
+            repeated ownerData owner = 5;
+            repeated textRuns length = 6;
+            message endpointData {
+                message contents {
+                    string id = 1;
+                    string playlistId = 2;
+                }
+                repeated contents content = 48687757;
+            }
+            repeated endpointData endpoint = 7;
+            int32 int11 = 11;
+        }
+        repeated contents content = 53330184;
+    }
+    repeated playlistVideo video = 1;
+    string id = 2;
+}
+message accountTabLink {
+    message icon {
+        int32 iconType = 1;
+    }
+    repeated icon iconData = 1;
+    repeated thumbnails image = 2;
+    repeated textRuns text = 3;
+    repeated browseNavigation navigation = 4;
+}
+message itemSectionRenderer {
+    message icsContents {
+        repeated compactVideoRenderer video = 50630979;
+        repeated playlistRenderer playlist = 50742631;
+        repeated aboutRenderer about = 52191200;
+        repeated channelRenderer channel = 50794305;
+        repeated accountTabLink accountLink = 79129962;
+        // 53170873 - radio (mix) renderer
+        // 55641975 - caption with a link next to it
+        // 58485276 - link ad
+        // 58508690 - button with label in middle (comments load more?)
+        // 62539050 - minimal user (1 - avatar thumbs, 2 - text, 3 - subtext)
+        // 62887855 - grid video ad
+        // 62971408 - another kind of author header? (shows up to 3 texts and avatar)
+    }
+    repeated icsContents icsContent = 1;
+    repeated nextRequest next = 2;
+}
+
+message root {
+    message contextType {
+        string contextToken = 2;
+        message clientType {
+            int32 clientSmth = 1;
+            message clientParam {
+                string name = 1;
+                string value = 2;
+            }
+            repeated clientParam param = 2;
+        }
+        repeated clientType client = 6;
+        int32 hundredInt = 7;
+    }
+    repeated contextType context = 1;
+    message responseBody {
+        message singleColumnBrowseResultsRenderer {
+            message tabs {
+                message tabRenderer {
+                    repeated browseNavigation navigationData = 1;
+                    string tabTitle = 2;
+                    int32 selected = 3;
+                    message contentEntry {
+                        message contentData {
+                            message contentActualData {
+                                repeated itemSectionRenderer section = 50195462;
+                                repeated shelfRenderer shelf = 51845067;
+                                repeated playlistData playlist = 54681060;
+                            }
+                            repeated contentActualData c = 1;
+                            message loadData {
+                                message contents {
+                                    string id = 1;
+                                }
+                                repeated contents content = 60487319;
+                            }
+                            repeated loadData loadCommand = 2;
+                        }
+                        repeated contentData contentArray = 49399797;
+                    }
+                    repeated contentEntry contentsEntry = 4;
+                    message icon {
+                        int32 iconType = 1;
+                    }
+                    repeated icon iconData = 6;
+                    string tabIdentifier = 11;
+                }
+                repeated tabRenderer tabRender = 58174010;
+            }
+            repeated tabs tab = 1;
+        }
+        repeated singleColumnBrowseResultsRenderer browseData = 58173949;
+    }
+    repeated responseBody contents = 9;
+    message headerRender {
+        message headerContent {
+            repeated textRuns text = 1;
+        }
+        repeated headerContent content = 50236216;
+        message c4Header {
+            string channelId = 5;
+            string channelName = 6;
+            repeated browseNavigation navigationData = 7;
+            repeated thumbnails avatars = 9;
+            repeated thumbnails banners = 10;
+            repeated subscribeButtonData subscribeButton = 18;
+            repeated textRuns subscribeCount = 22;
+            repeated thumbnails fullresBanners = 24;
+            repeated thumbnails mobileBanners = 25;
+            repeated textRuns channelHandle = 59;
+            int32 renderStyle = 60; // 2 usually sent in this field
+        }
+        repeated c4Header channelHeader = 46407682;
+        message vlHeader {
+            string id = 1;
+            repeated textRuns name = 3;
+            repeated textRuns videoCount = 5;
+            repeated textRuns description = 6;
+            repeated ownerData owner = 7;
+            repeated textRuns viewCount = 8;
+            message pb11 {
+                optional int32 int1 = 1;
+            }
+            repeated pb11 unk11 = 11;
+            optional int32 int12 = 12;
+            optional int32 public = 16;
+            repeated browseNavigation navigationData = 17;
+            /*message refData {
+                message contents {
+                    message con
+                }
+                repeated contents content = 60666189;
+            }
+            repeated refData ref = 24;*/
+            repeated textRuns inlineProperty = 32;
+            repeated textRuns inlineProperty2 = 33;
+        }
+        repeated vlHeader playlistHeader = 53272665;
+    }
+    repeated headerRender header = 13;
+}

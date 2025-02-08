@@ -1,0 +1,145 @@
+syntax = "proto3";
+package android_search;
+
+message textRuns {
+    message textRun {
+        string text = 1;
+    }
+    repeated textRun run = 1;
+}
+message simpleText {
+    string text = 4;
+}
+message thumbnails {
+    message thumbnail {
+        string url = 1;
+        int32 width = 2;
+        int32 height = 3;
+    }
+    repeated thumbnail thumb = 1;
+}
+message browseNavigation {
+    message browseData {
+        string browseId = 2;
+        string params = 3;
+        string canonicalBaseUrl = 4;
+    }
+    repeated browseData data = 48687626;
+}
+message compactVideoRenderer {
+    string videoId = 1;
+    repeated thumbnails thumblist = 2;
+    repeated textRuns titleData = 3;
+    message authorData {
+        message authorDataContent {
+            string authorDisplayName = 1;
+            message authorNavigationData {
+                message navigationEndpoint {
+                    string browseId = 2;
+                    string canonicalBaseUrl = 4;
+                }
+                repeated navigationEndpoint authorEndpoint = 48687626;
+            }
+            repeated authorNavigationData navigation = 5;
+        }
+        repeated authorDataContent ac = 1;
+    }
+    repeated authorData author = 4;
+    repeated textRuns publishedTimeText = 5;
+    repeated textRuns viewCountText = 6;
+    repeated textRuns lengthText = 7;
+    message navigationData {
+        message navType {
+            int32 i1 = 1;
+            int32 i2 = 2;
+            int32 i3 = 3;
+            string source = 11;
+            message navExtraType {
+                int32 i2 = 2;
+                int32 i3 = 3;
+            }
+            repeated navExtraType navExtra = 19;
+        }
+        repeated navType nav = 1;
+        message navData {
+            string navId = 1;
+        }
+        repeated navData navProperties = 48687757;
+    }
+    repeated navigationData navData = 8;
+    message longAuthorData {
+        message laDataContainer {
+            string displayName = 1;
+            message navigation {
+                message navigationEndpoint {
+                    string browseId = 2;
+                    string canonicalBaseUrl = 4;
+                }
+                repeated navigationEndpoint laNaviEndpoint = 48687626;
+            }
+            repeated navigation laNavi = 5;
+        }
+        repeated laDataContainer laDataContent = 1;
+    }
+    repeated longAuthorData laData = 10;
+    message authorAvatarType {
+        message aaContain {
+            string url = 1;
+            int32 width = 2;
+            int32 height = 3;
+        }
+        repeated aaContain aaData = 1;
+    }
+    repeated authorAvatarType authorAvatar = 14;
+    repeated textRuns shortViewCounts = 23;
+}
+message ownerData {
+    message ownerContainer {
+        string ownerName = 1;
+        repeated browseNavigation navigation = 5;
+    }
+    repeated ownerContainer content = 1;
+}
+message playlistRenderer {
+    string id = 1;
+    repeated thumbnails thumbnail = 2;
+    repeated textRuns playlistName = 3;
+    repeated ownerData owner = 4;
+    repeated textRuns videoCount = 5;
+    repeated browseNavigation playlistBrowse = 6;
+    repeated textRuns bareVideoCount = 9;
+    repeated thumbnails separatedThumbnail = 13;
+    repeated textRuns videoCount2 = 15;
+    string webUrl = 19;
+    repeated ownerData owner2 = 21;
+}
+message channelRenderer {
+    string id = 1;
+    repeated thumbnails avatar = 2;
+    repeated textRuns name = 3;
+    repeated textRuns subCount = 4;
+    repeated textRuns handle = 5;
+    repeated browseNavigation navigation = 6;
+    repeated textRuns name2 = 9;
+    repeated thumbnails avatar2 = 16;
+}
+message root {
+    message contents {
+        message searchResults {
+            message contents {
+                message itemSectionRender {
+                    message contents {
+                        repeated compactVideoRenderer video = 50630979;
+                        repeated playlistRenderer playlist = 50742631;
+                        repeated channelRenderer channel = 50794305;
+                    }
+                    repeated contents content = 1;
+                }
+                repeated itemSectionRender section = 50195462;
+            }
+            repeated contents content = 1;
+        }
+        repeated searchResults resultsContainer = 49399797;
+    }
+    repeated contents content = 4;
+}

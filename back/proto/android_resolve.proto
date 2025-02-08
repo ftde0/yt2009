@@ -1,0 +1,21 @@
+syntax = "proto3";
+package android_resolve;
+
+message browseNavigation {
+    string browseId = 2;
+    string params = 3;
+}
+message videoNavigation {
+    string id = 1;
+}
+message searchNavigation {
+    string query = 1;
+}
+message root {
+    message contents {
+        repeated browseNavigation browse = 48687626; // /browse, channels
+        repeated videoNavigation video = 48687757;
+        repeated searchNavigation search = 	48687709;
+    }
+    repeated contents content = 2;
+}

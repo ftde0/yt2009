@@ -1329,6 +1329,40 @@ module.exports = {
         })})
     },
 
+    "pullBarePlayer": function(id, callback) {
+        let rHeaders = JSON.parse(JSON.stringify(constants.headers))
+        rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+        if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
+            let d = yt2009signin.getData().yAuth
+            rHeaders.Authorization = `Bearer ${d}`
+        }
+        fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
+            "headers": rHeaders,
+            "referrer": "https://www.youtube.com/watch?v=" + id,
+            "referrerPolicy": "origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": {
+                "client": {
+                    "hl": "en",
+                    "clientName": "ANDROID",
+                    "clientVersion": "19.02.39",
+                    "androidSdkVersion": 34,
+                    "mainAppWebInfo": {
+                        "graftUrl": "/watch?v=" + id
+                    }
+                }
+                },
+                "videoId": id,
+                "racyCheckOk": true,
+                "contentCheckOk": true
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            callback(r);
+        })})
+    },
+
     "downloadInParts_file": function(url, out, callback) {
         const partSize = 9 * 1000 * 1000; //9MB
         const stream = fs.createWriteStream(out, { flags: 'a' });

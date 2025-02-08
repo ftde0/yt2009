@@ -1,16 +1,11 @@
 const yt2009main = require("./yt2009html")
 const yt2009search = require("./yt2009search")
-const yt2009wayback = require("./cache_dir/wayback_watchpage")
 const yt2009templates = require("./yt2009templates")
 const yt2009exports = require("./yt2009exports")
-const video_exists = require("./cache_dir/video_exists_cache_mgr")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const fs = require("fs")
-const fetch = require("node-fetch")
-const constants = require("./yt2009constants.json")
 const utils = require("./yt2009utils")
 const child_process = require("child_process")
-const ytdl = require("ytdl-core")
 const config = require("./config.json")
 let flvProcessingVideos = []
 

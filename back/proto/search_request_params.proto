@@ -12,11 +12,12 @@ message SearchRequestParams {
 
   message Filter {
     enum UploadDate {
-      HOUR = 0;
-      DAY = 1;
-      WEEK = 2;
-      MONTH = 3;
-      YEAR = 4;
+      ZERO = 0;
+      HOUR = 1;
+      DAY = 2;
+      WEEK = 3;
+      MONTH = 4;
+      YEAR = 5;
     }
   
     enum Type {
@@ -28,9 +29,10 @@ message SearchRequestParams {
     }
   
     enum Duration {
-      SHORT = 0;
-      MEDIUM = 2;
-      LONG = 1;
+      NONE = 0;
+      SHORT = 1;
+      MEDIUM = 3;
+      LONG = 2;
     }
 
     optional UploadDate upload_date = 1;

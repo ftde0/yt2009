@@ -34,6 +34,11 @@ module.exports = {
                                .split("device-id=\"")[1]
                                .split("\"")[0];
         }
+        if(req.headers["x-goog-device-auth"]
+        && req.headers["x-goog-device-auth"].includes("device_id=")) {
+            deviceId = req.headers["x-goog-device-auth"]
+                          .split("device_id=")[1].split(",")[0]
+        }
 
         // or get auth token
         if(!deviceId && req.query.token) {
@@ -116,6 +121,18 @@ module.exports = {
             res.sendStatus(400)
             return;
         }
+
+        if(req.query.device.length > 9) {
+            res.send(`<!DOCTYPE html><html lang="en"><head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head><body>
+            possibly an invalid device id was sent!<br>
+            clear the app data to generate a new one and try again.
+        </body></html>`)
+            return;
+        }
+
         req.query.device = req.query.device
                            .replace(/[^a-zA-Z0-9]/g, "")
                            .substring(0, 9)
@@ -185,7 +202,12 @@ module.exports = {
 
         // token valid - enter in
         gdataAuths[device] = token;
-        res.send("OK - reopen mobile app!")
+        res.send(`<!DOCTYPE html><html lang="en"><head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head><body>
+            OK - reopen mobile app!
+        </body></html>`)
         //res.redirect("/mobile/gdata_gen_auth_page?device=" + device + "&c=3")
     }
 }

@@ -3,6 +3,7 @@ const utils = require("./yt2009utils")
 const search = require("./yt2009search")
 const html = require("./yt2009html")
 const cfg = require("./config.json")
+const base = "http://" + cfg.ip + ":" + cfg.port
 const feedBase = {
     "version": "1.0",
     "encoding": "UTF-8",
@@ -35,9 +36,73 @@ const feedBase = {
         "xmlns$yt": "http://gdata.youtube.com/schemas/2007"
     }
 }
+const bareBase = {
+    "version": "1.0",
+    "encoding": "UTF-8"
+}
+function jsonUser(u) {
+    let avatar = u.avatar;
+    if(!avatar.startsWith("http")) {
+        avatar = `${base}${avatar}`
+    }
+    let e = {
+        "author": [{
+            "name": {"$t": u.name},
+            "url": {"$t": `${base}/feeds/api/users/${u.id}`},
+            "yt$userId": {"$t": u.id.replace("UC", "")}
+        }],
+        "category": [{
+            "scheme": "http://schemas.google.com/g/2005#kind",
+            "term": "http://gdata.youtube.com/schemas/2007#userProfile"
+        }],
+        "gd$feedLink": [
+            {
+                "href": `${base}/feeds/api/users/${u.id}/favorites`,
+                "rel": "http://gdata.youtube.com/schemas/2007#user.favorites"
+            },
+            {
+                "href": `${base}/feeds/api/users/${u.id}/playlists`,
+                "rel": "http://gdata.youtube.com/schemas/2007#user.playlists"
+            },
+            {
+                "href": `${base}/feeds/api/users/${u.id}/uploads`,
+                "rel": "http://gdata.youtube.com/schemas/2007#user.uploads"
+            }
+        ],
+        "id": {"$t": "tag:youtube.com,2008:user:" + u.id.replace("UC", "")},
+        "link": [{
+            "href": `${base}/channel/${u.id}`,
+            "ref": "alternate",
+            "type": "text/html"
+        }],
+        "media$thumbnail": {"url": avatar},
+        "published": {"$t": "1970-01-01T00:00:00.000Z"},
+        "summary": {"$t": u.properties.description || ""},
+        "title": {"$t": u.name},
+        "updated": {"$t": "1970-01-01T00:00:00.000Z"},
+        "xmlns": "http://www.w3.org/2005/Atom",
+        "xmlns$gd": "http://schemas.google.com/g/2005",
+        "xmlns$media": "http://search.yahoo.com/mrss/",
+        "xmlns$yt": "http://gdata.youtube.com/schemas/2007",
+        "yt$channelId": {"$t": u.id},
+        "yt$firstName": {"$t": u.name},
+        "yt$googlePlusUserId": {"$t": "0"},
+        "yt$location": {"$t": "US"},
+        "yt$statistics": {
+            "lastWebAccess": "1970-01-01T00:00:00.000Z",
+            "subscriberCount": utils.approxSubcount(u.properties.subscribers || "0"),
+            "totalUploadViews": "0",
+            "videoWatchCount": 0,
+            "viewCount": "0"
+        },
+        "yt$userId": {"$t": u.id.replace("UC", "")},
+        "yt$username": {"$t": u.handle || u.name, "display": u.name}
+    }
+    return e;
+}
 function jsonVideo(v) {
-    let author = (v.author_handle || v.author_name)
-    let base = "http://" + cfg.ip + ":" + cfg.port
+    let author = (v.author_handle || v.author_name
+                || v.uploaderHandle || v.uploaderName)
     let e = {
         "author": {
             "name": {"$t": author},
@@ -98,7 +163,7 @@ function jsonVideo(v) {
                 "scheme": "urn:youtube",
                 "yt$display": author
             }],
-            "media$description": {"$t": v.description},
+            "media$description": {"$t": v.description || "-"},
             "media$keywords": {},
             "media$license": {
                 "$t": "youtube",
@@ -124,30 +189,93 @@ function jsonVideo(v) {
             ],
             "media$title": {"$t": v.title, "type": "plain"},
             "yt$duration": {"seconds": v.length || "999"},
-            "yt$uploaded": {"$t": new Date(
+            "yt$uploaded": {"$t": v.upload ? (new Date(
                 utils.relativeToAbsoluteApprox(v.upload)
-            ).toISOString()},
+            ).toISOString()) : "1970-01-01T00:00:00.000Z"},
             "yt$videoid": {"$t": v.id}
         },
-        "published": {"$t": new Date(
+        "published": {"$t": v.upload ? (new Date(
             utils.relativeToAbsoluteApprox(v.upload)
-        ).toISOString()},
-        "updated": {"$t": new Date(
+        ).toISOString()) : "1970-01-01T00:00:00.000Z"},
+        "updated": {"$t": v.upload ? (new Date(
             utils.relativeToAbsoluteApprox(v.upload)
-        ).toISOString()},
+        ).toISOString()) : "1970-01-01T00:00:00.000Z"},
         "y9$rupload": v.upload,
         "title": {"$t": v.title},
         "yt$hd": {}
     }
-    if(v.author_url.includes("/channel/")) {
-        e.author["yt$userId"] = {"$t": v.author_url.replace("/channel/UC", "")}
-        e.media$group.yt$uploaderId = {"$t": v.author_url.replace("/channel/UC", "")}
+    let authorUrl = v.author_url || v.uploaderUrl || ""
+    if(authorUrl.includes("/channel/")) {
+        e.author["yt$userId"] = {"$t": authorUrl.replace("/channel/UC", "")}
+        e.media$group.yt$uploaderId = {"$t": authorUrl.replace("/channel/UC", "")}
     }
     if(v.upload && v.upload.includes("-") && v.upload.includes("T")) {
         e.media$group.yt$uploaded.$t = v.upload
         e.published = v.upload
         e.updated = v.upload
         delete e.y9$rupload;
+    }
+    return e;
+}
+function jsonPlaylist(p, authorName, authorId) {
+    let e = {
+        "author": [{
+            "name": {"$t": authorName},
+            "uri": {"$t": `${base}/feeds/api/users/${authorId}`},
+            "yt$userId": {"$t": authorId.replace("UC", "")}
+        }],
+        "category": [{
+            "scheme": "http://schemas.google.com/g/2005#kind",
+            "term": "http://gdata.youtube.com/schemas/2007#playlistLink"
+        }],
+        "content": {
+            "src": `${base}/feeds/api/playlists/${p.id}`,
+            "type": "application/atom+xml;type=feed"
+        },
+        "id": {"$t": `tag:youtube.com,2008:user:${authorId}:playlist:${p.id}`},
+        "link": [
+            {
+                "href": `${base}/feeds/api/users/${authorId}`,
+                "rel": "related",
+                "type": "application/atom+xml"
+            },
+            {
+                "href": `${base}/playlist?list=${p.id}`,
+                "rel": "alternate",
+                "type": "text/html"
+            },
+            {
+                "href": `${base}/feeds/api/users/${authorId}/playlists/${p.id}`,
+                "rel": "self",
+                "type": "application/atom+xml"
+            }
+        ],
+        "media$group": {
+            "media$thumbnail": [
+                {
+                    "width": 120,
+                    "height": 90,
+                    "url": `http:${p.thumbnail.replace("hqdefault", "default")}`
+                },
+                {
+                    "width": 320,
+                    "height": 180,
+                    "url": `http:${p.thumbnail.replace("hqdefault", "mqdefault")}`
+                },
+                {
+                    "width": 480,
+                    "height": 360,
+                    "url": `http:${p.thumbnail}`
+                }
+            ],
+            "yt$duration": {"seconds": "0"}
+        },
+        "published": {"$t": "1970-01-01T00:00:00.000Z"},
+        "summary": {"$t": ""},
+        "title": {"$t": p.name},
+        "updated": {"$t": "1970-01-01T00:00:00.000Z"},
+        "yt$countHint": {"$t": p.videos},
+        "yt$playlistId": {"$t": p.id}
     }
     return e;
 }
@@ -164,12 +292,10 @@ module.exports = {
             res.sendStatus(400);
             return;
         }
-        let results = 20
         let addedResults = 0;
         if(req.query["max-results"] && !isNaN(parseInt(req.query["max-results"]))) {
             results = parseInt(req.query["max-results"])
         }
-        let order = "relevance"
         let page = ((req.query["start-index"] || 0) / 20)
 
         function addVideosToResponse(videos) {
@@ -209,5 +335,124 @@ module.exports = {
             }),
             utils.get_used_token(req) + "-jsongdata", false
         )
-    }
+    },
+
+    "video": function(req, res) {
+        res.set("content-type", "text/plain")
+        let data = JSON.parse(JSON.stringify(bareBase))
+        let callback = false;
+        if(req.query.callback) {
+            callback = req.query.callback;
+        }
+        let id = req.originalUrl.split("videos/")[1]
+                    .split("/")[0].split("?")[0].split("#")[0]
+        if(!id) {
+            res.sendStatus(400);
+            return;
+        }
+        html.fetch_video_data(id, (v) => {
+            data.entry = jsonVideo(v)
+            if(callback) {
+                res.send(callback + "(" + JSON.stringify(data) + ")")
+            } else {
+                res.send(JSON.stringify(data))
+            }
+        }, "",
+        utils.get_used_token(req) + "-jsongdata", false, false, true)
+    },
+
+    "standardfeed": function(videos, res, callbackName) {
+        res.set("content-type", "text/plain")
+        let data = JSON.parse(JSON.stringify(feedBase))
+        let callback = false;
+        if(callbackName) {
+            callback = callbackName;
+        }
+        videos.forEach(v => {
+            data.feed.entry.push(jsonVideo(v))
+        })
+        if(callback) {
+            res.send(callback + "(" + JSON.stringify(data) + ")")
+        } else {
+            res.send(JSON.stringify(data))
+        }
+    },
+
+    "userData": function(userData, res, callbackName) {
+        res.set("content-type", "text/plain")
+        let data = JSON.parse(JSON.stringify(bareBase))
+        let callback = false;
+        if(callbackName) {
+            callback = callbackName;
+        }
+        data.entry = jsonUser(userData);
+        if(callback) {
+            res.send(callback + "(" + JSON.stringify(data) + ")")
+        } else {
+            res.send(JSON.stringify(data))
+        }
+    },
+
+    "userVideos": function(userData, res, callbackName) {
+        res.set("content-type", "text/plain")
+        let data = JSON.parse(JSON.stringify(feedBase))
+        let callback = false;
+        if(callbackName) {
+            callback = callbackName;
+        }
+        userData.videos.forEach(v => {
+            v = JSON.parse(JSON.stringify(v))
+            v.author_name = userData.name;
+            data.feed.entry.push(jsonVideo(v))
+        })
+        if(callback) {
+            res.send(callback + "(" + JSON.stringify(data) + ")")
+        } else {
+            res.send(JSON.stringify(data))
+        }
+    },
+
+    "userPlaylists": function(playlists, res, callbackName, authorName, authorId) {
+        res.set("content-type", "text/plain")
+        let data = JSON.parse(JSON.stringify(feedBase))
+        let callback = false;
+        if(callbackName) {
+            callback = callbackName;
+        }
+        playlists.forEach(v => {
+            data.feed.entry.push(jsonPlaylist(v, authorName, authorId))
+        })
+        if(callback) {
+            res.send(callback + "(" + JSON.stringify(data) + ")")
+        } else {
+            res.send(JSON.stringify(data))
+        }
+    },
+
+    "sendEmptyFeed": function(res, callbackName) {
+        res.set("content-type", "text/plain")
+        let data = JSON.parse(JSON.stringify(feedBase))
+        if(callbackName) {
+            res.send(callbackName + "(" + JSON.stringify(data) + ")")
+        } else {
+            res.send(JSON.stringify(data))
+        }
+    },
+
+    "playlistVideos": function(videos, res, callbackName) {
+        res.set("content-type", "text/plain")
+        let data = JSON.parse(JSON.stringify(feedBase))
+        let callback = false;
+        if(callbackName) {
+            callback = callbackName;
+        }
+        videos.forEach(v => {
+            data.feed.entry.push(jsonVideo(v))
+        })
+        if(callback) {
+            res.send(callback + "(" + JSON.stringify(data) + ")")
+        } else {
+            res.send(JSON.stringify(data))
+        }
+    },
 }

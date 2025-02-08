@@ -1,13 +1,9 @@
-const ytdl = require("ytdl-core");
 const fs = require("fs");
 const child_process = require("child_process")
 const embed_code = fs.readFileSync("../embedded-player.html").toString()
-const wayback = require("./cache_dir/wayback_watchpage")
-const videoExists = require("./cache_dir/video_exists_cache_mgr")
 const templates = require("./yt2009templates")
 const utils = require("./yt2009utils")
 const config = require("./config.json")
-const yt2009exports = require("./yt2009exports")
 
 let ip_request_count = {}
 

@@ -1,6 +1,5 @@
 const fs = require("fs");
 const fetch = require("node-fetch");
-const ytdl = require("ytdl-core")
 const child_process = require("child_process");
 
 const yt2009utils = require("./yt2009utils")

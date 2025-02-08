@@ -128,6 +128,8 @@ proto.android_bare_next.root.toObject = function(includeInstance, msg) {
   var f, obj = {
     contextList: jspb.Message.toObjectList(msg.getContextList(),
     proto.android_bare_next.root.contextType.toObject, includeInstance),
+    browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    params: jspb.Message.getFieldWithDefault(msg, 3, ""),
     continuationtoken: jspb.Message.getFieldWithDefault(msg, 8, "")
   };
 
@@ -170,6 +172,14 @@ proto.android_bare_next.root.deserializeBinaryFromReader = function(msg, reader)
       reader.readMessage(value,proto.android_bare_next.root.contextType.deserializeBinaryFromReader);
       msg.addContext(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBrowseid(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setParams(value);
+      break;
     case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setContinuationtoken(value);
@@ -209,6 +219,20 @@ proto.android_bare_next.root.serializeBinaryToWriter = function(message, writer)
       1,
       f,
       proto.android_bare_next.root.contextType.serializeBinaryToWriter
+    );
+  }
+  f = message.getBrowseid();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getParams();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
     );
   }
   f = message.getContinuationtoken();
@@ -666,6 +690,42 @@ proto.android_bare_next.root.prototype.addContext = function(opt_value, opt_inde
  */
 proto.android_bare_next.root.prototype.clearContextList = function() {
   return this.setContextList([]);
+};
+
+
+/**
+ * optional string browseId = 2;
+ * @return {string}
+ */
+proto.android_bare_next.root.prototype.getBrowseid = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_bare_next.root} returns this
+ */
+proto.android_bare_next.root.prototype.setBrowseid = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string params = 3;
+ * @return {string}
+ */
+proto.android_bare_next.root.prototype.getParams = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_bare_next.root} returns this
+ */
+proto.android_bare_next.root.prototype.setParams = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 

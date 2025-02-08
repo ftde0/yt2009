@@ -13,5 +13,7 @@ message root {
         repeated clientType client = 1;
     }
     repeated contextType context = 1;
+    string browseId = 2;
+    string params = 3;
     string continuationToken = 8;
 }
