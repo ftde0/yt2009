@@ -2047,6 +2047,24 @@ app.post("/youtube/accounts/registerDevice", (req, res) => {
     res.send(`DeviceId=${deviceId}
 DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=`)
 })
+//using GET this time
+app.get("/youtube/accounts/registerDevice", (req, res) => {
+    let deviceId = ""
+    while(deviceId.length !== 7) {
+        deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
+                    [Math.floor(Math.random() * 36)]
+    }
+    while(useMobileHelper && mobileHelper.hasLogin(deviceId)) {
+        deviceId = ""
+        while(deviceId.length !== 7) {
+            deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
+                        [Math.floor(Math.random() * 36)]
+        }
+    } 
+    res.send(`DeviceId=${deviceId}
+DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=`)
+})
+
 app.get("/feeds/api/standardfeeds/*", (req, res) => {
     yt2009_mobile.feeds(req, res)
 })
