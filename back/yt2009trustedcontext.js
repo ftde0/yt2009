@@ -80,7 +80,8 @@ module.exports = {
         }
 
         if(!config.trusted_context) return true;
-        if(req.query.override_key == config.tc_override_key) return true;
+        if(config.tc_override_key
+        && req.query.override_key == config.tc_override_key) return true;
 
         let id = req.query.video_id || req.query.id || req.query.v || ""
         id = id.split("/")[0]
