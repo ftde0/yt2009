@@ -1,7 +1,7 @@
-const fetch = require("node-fetch")
 const utils = require("./yt2009utils")
 const search = require("./yt2009search")
 const html = require("./yt2009html")
+const trusted = require("./yt2009trustedcontext")
 const cfg = require("./config.json")
 const base = "http://" + cfg.ip + ":" + cfg.port
 const feedBase = {
@@ -103,6 +103,8 @@ function jsonUser(u) {
 function jsonVideo(v) {
     let author = (v.author_handle || v.author_name
                 || v.uploaderHandle || v.uploaderName)
+    let mp4Url = base + "/get_video?video_id=" + v.id + "/mp4"
+    mp4Url += trusted.urlContext(v.id, "PLAYBACK_STD", (v.length >= (60 * 30)))
     let e = {
         "author": {
             "name": {"$t": author},
@@ -155,7 +157,7 @@ function jsonVideo(v) {
                 "duration": v.length || 2,
                 "medium": "video",
                 "yt$format": 5,
-                "url": base + "/get_video?video_id=" + v.id + "/mp4"
+                "url": mp4Url
             }],
             "media$credit": [{
                 "$t": author,

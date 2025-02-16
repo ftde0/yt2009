@@ -3,6 +3,7 @@ const yt2009channels = require("./yt2009channels")
 const yt2009playlists = require("./yt2009playlists")
 const yt2009search = require("./yt2009search")
 const yt2009videos = require("./yt2009videos")
+const yt2009trusted = require("./yt2009trustedcontext")
 const mobileauths = require("./yt2009mobileauths")
 const constants = require("./yt2009constants.json")
 const utils = require("./yt2009utils")
@@ -250,40 +251,40 @@ module.exports = {
                     switch(f) {
                         case "360p": {
                             f18Added = true;
-                            let f = addFormat(
-                                18,
-                                `${baseUrl}/get_video?video_id=${id}/mp4`,
-                                "360p", p
+                            let url = `${baseUrl}/get_video?video_id=${id}/mp4`
+                            url += yt2009trusted.urlContext(
+                                id, "PLAYBACK_STD", (data.length >= 60 * 30)
                             )
+                            let f = addFormat(18, url, "360p", p)
                             formats.addNondashformat(f)
                             break;
                         }
                         case "480p": {
-                            let f = addFormat(
-                                59,
-                                `${baseUrl}/get_480?video_id=${id}`,
-                                "480p", p
+                            let url = `${baseUrl}/get_480?video_id=${id}`
+                            url += yt2009trusted.urlContext(
+                                id, "PLAYBACK_HQ", (data.length >= 60 * 30)
                             )
+                            let f = addFormat(59, url, "480p", p)
                             formats.addNondashformat(f)
                             break;
                         }
                         case "720p": {
-                            let f = addFormat(
-                                22,
-                                `${baseUrl}/exp_hd?video_id=${id}`,
-                                "720p", p
+                            let url = `${baseUrl}/exp_hd?video_id=${id}`
+                            url += yt2009trusted.urlContext(
+                                id, "PLAYBACK_HD", (data.length >= 60 * 30)
                             )
+                            let f = addFormat(22, url, "720p", p)
                             formats.addNondashformat(f)
                             break;
                         }
                     }
                 })
                 if(!f18Added) {
-                    let f = addFormat(
-                        18,
-                        `${baseUrl}/get_video?video_id=${id}/mp4`,
-                        "360p", p
+                    let url = `${baseUrl}/get_video?video_id=${id}/mp4`
+                    url += yt2009trusted.urlContext(
+                        id, "PLAYBACK_STD", (data.length >= 60 * 30)
                     )
+                    let f = addFormat(18, url, "360p", p)
                     formats.addNondashformat(f)
                 }
                 root.addFormats(formats)

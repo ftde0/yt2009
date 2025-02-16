@@ -877,13 +877,19 @@ module.exports = {
     s.innerHTML = "video:not(.showing-endscreen) {height: calc(100% - 25px) !important;}#watch-player-div {background: black !important;}"
     document.body.appendChild(s)`,
     "embedVideoSources": function(id) {
-        //let mp4Path = `/assets/${id}.mp4`
         let mp4Path = `/get_video?video_id=${id}/mp4`
         let ogvPath = `/assets/${id}.ogg`
         if(id.includes("googlevideo")) {
             mp4Path = id;
             ogvPath = id;
         }
+
+        if(config.trusted_context) {
+            mp4Path += "&" + require("./yt2009trustedcontext").generateContext(
+                id, "PLAYBACK_STD", false
+            )
+        }
+
         return `<source src="${mp4Path}" type="video/mp4"></source>
         <source src="${ogvPath}" type="video/ogg"></source>`
     },
@@ -907,7 +913,13 @@ module.exports = {
     }
     </style>
     `,
-    "playerHDBtnJS": function(id, use720p, autoHQ) {
+    "playerHDBtnJS": function(id, use720p, autoHQ, trustedContextData) {
+        let stdUrl = `/get_video?video_id=${id}/mp4`
+        let hqUrl = `/${use720p ? "exp_hd" : "get_480"}?video_id=${id}`
+        if(trustedContextData) {
+            stdUrl += "&" + trustedContextData.sd;
+            hqUrl += "&" + trustedContextData.hq;
+        }
         return `
         //exp_hq
         seekbarRemoveWidth = 245;
@@ -922,7 +934,7 @@ module.exports = {
                 hqPlaying = true;
                 $("video").innerHTML = "";
                 var length = seconds_to_time(Math.floor(video.duration || 0))
-                $("video").src = "/${use720p ? "exp_hd" : "get_480"}?video_id=${id}"
+                $("video").src = "${hqUrl}"
                 setTimeout(function() {
                     $(".video_controls .timer").innerHTML = "0:00 / " + length;
                     showLoadingSprite();
@@ -930,7 +942,7 @@ module.exports = {
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
                 video_play()
             } else {
-                $("video").src = "/get_video?video_id=${id}/mp4";
+                $("video").src = "${stdUrl}";
                 hqPlaying = false;
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
             }
@@ -939,7 +951,7 @@ module.exports = {
         // fallback do 360p
         $("video").addEventListener("error", function() {
             if(hqPlaying) {
-                $("video").src = "/get_video?video_id=${id}/mp4";
+                $("video").src = "${stdUrl}";
                 hqPlaying = false;
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
             }
@@ -1078,20 +1090,47 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         }
 
         // qualities
+        let trustedContexts = false;
+        const yt2009trusted = require("./yt2009trustedcontext")
+        let long = length >= (60 * 30)
+        let streamHQ = `http://${config.ip}:${config.port}/get_480?video_id=${id}`
+        let streamHD = `http://${config.ip}:${config.port}/exp_hd?video_id=${id}`
+        let streamStd = `http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}`
+        if(config.trusted_context) {
+            trustedContexts = {
+                "sd": yt2009trusted.generateContext(id, "PLAYBACK_STD", long)
+            }
+            if(qualities.includes("480p")) {
+                trustedContexts.hq = yt2009trusted.generateContext(
+                    id, "PLAYBACK_HQ", long
+                )
+            }
+            if(qualities.includes("720p")) {
+                trustedContexts.hd = yt2009trusted.generateContext(
+                    id, "PLAYBACK_HD", long
+                )
+            }
+
+            streamStd += "&" + trustedContexts.sd
+            streamHQ += "&" + trustedContexts.hq
+            streamHD += "&" + trustedContexts.hd
+        }
+
         let qualityCode = ""
         if(qualities) {
             if(qualities.includes("480p")) {
-                qualityCode += `<media:content url='http://${config.ip}:${config.port}/get_480?video_id=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='14'/>`
+                qualityCode += `<media:content url='${streamHQ}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='14'/>`
             }
             if(qualities.includes("720p")) {
-                qualityCode += `<media:content url='http://${config.ip}:${config.port}/exp_hd?video_id=${id}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='8'/>`
+                qualityCode += `<media:content url='${streamHD}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='8'/>`
             }
         }
 
         // auto-try hd
-        let videoUrl = `http://${config.ip}:${config.port}/channel_fh264_getvideo?v=${id}`
+        let videoUrl = streamStd
         if(flags && flags.includes("better-hd")) {
             videoUrl = `http://${config.ip}:${config.port}/exp_hd?video_id=${id}/lower`
+            videoUrl += "&" + yt2009trusted.generateContext(id, "UNIV", long)
             qualityCode = ""
         }
 
@@ -1481,6 +1520,12 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     </tr>`
     },
     "blazer_bareVideo": function(id, title, length, views, author, tags) {
+        let stream_url = "/get_video?video_id=" + id + "/mp4";
+        if(config.trusted_context) {
+            stream_url += "&" + require("./yt2009trustedcontext").generateContext(
+                id, "PLAYBACK_STD", false
+            )
+        }
         return {
             "id": id,
             "video_id": id,
@@ -1491,7 +1536,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             "username": author,
             "watch_link": "/watch?v=" + id,
             "thumbnail_for_list": "<img src=\"http://i.ytimg.com/vi/" + id + "/default.jpg\"/>",
-            "stream_url": "/get_video?video_id=" + id + "/mp4",
+            "stream_url": stream_url,
             "landscape": true,
             "stitched_thumbnail_large": {
                 "url": "http://i.ytimg.com/vi/" + id + "/hqdefault.jpg",

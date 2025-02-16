@@ -11,6 +11,7 @@ const channels = require("./yt2009channels")
 const templates = require("./yt2009templates")
 const videostab = require("./yt2009videos")
 const subfeed = require("./yt2009subscriptions")
+const trusted = require("./yt2009trustedcontext")
 
 module.exports = {
     // get homepage
@@ -80,6 +81,10 @@ module.exports = {
         }
 
         // static response stuff
+
+        let videoUrl = "/get_video?video_id=" + id + "/mp4"
+        videoUrl += trusted.urlContext(id, "PLAYBACK_STD", true)
+
         let response = {
             "result": "ok",
             "content": {
@@ -92,7 +97,7 @@ module.exports = {
                         "posy": 25
                     },
                     "id": id,
-                    "stream_url": "/get_video?video_id=" + id + "/mp4",
+                    "stream_url": videoUrl,
                     "is_playable": true
                 }
             }
@@ -140,8 +145,14 @@ module.exports = {
             || data.qualities.includes("720p60")
             || data.qualities.includes("720p50")) {
                 hq_stream_url = "/exp_hd?video_id=" + id
+                hq_stream_url += trusted.urlContext(
+                    id, "PLAYBACK_HD", (data.length >= 60 * 15)
+                )
             } else if(data.qualities.includes("480p")) {
                 hq_stream_url = "/get_480?video_id=" + id
+                hq_stream_url += trusted.urlContext(
+                    id, "PLAYBACK_HQ", (data.length >= 60 * 15)
+                )
             }
 
             if(hq_stream_url) {
@@ -164,6 +175,9 @@ module.exports = {
                         yt2009html.get_qualities(id, (qualities) => {
                             if(qualities.includes("480p")) {
                                 let url = "/get_480?video_id=" + id
+                                url += trusted.urlContext(
+                                    id, "PLAYBACK_HQ", false
+                                )
                                 response.content.video.hq_stream_url = url;
                             }
                             res.send(response)

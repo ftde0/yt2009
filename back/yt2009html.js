@@ -12,6 +12,7 @@ const yt2009templates = require("./yt2009templates");
 const yt2009languages = require("./language_data/language_engine")
 const yt2009exports = require("./yt2009exports")
 const yt2009signin = require("./yt2009androidsignin")
+const yt2009trusted = require("./yt2009trustedcontext")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
 const userid = require("./cache_dir/userid_cache")
@@ -631,6 +632,9 @@ module.exports = {
             let startQuality = false;
             if(data.qualities.includes("480p")) {
                 autoHQ = "/get_480?video_id=" + data.id
+                autoHQ += yt2009trusted.urlContext(
+                    data.id, "PLAYBACK_HQ", (data.length >= 60 * 30)
+                )
                 if(!data.qualities.includes("720p")) {
                     code = code.replace(
                         `<!--yt2009_hq_btn-->`,
@@ -641,6 +645,9 @@ module.exports = {
             }
             if(data.qualities.includes("720p")) {
                 autoHQ = "/exp_hd?video_id=" + data.id
+                autoHQ += yt2009trusted.urlContext(
+                    data.id, "PLAYBACK_HD", (data.length >= 60 * 30)
+                )
                 code = code.replace(
                     `<!--yt2009_hq_btn-->`,
                     `<span class="hq hd enabled"></span>`
@@ -1284,7 +1291,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
         let flash_url = `${swfFilePath}?${swfArgPath}=${data.id}`
         if((req.headers["cookie"] || "").includes("f_h264")) {
-            flash_url += "%2Fmp4"
+            flash_url += "%2Fmp4" + yt2009trusted.urlShortContext(data.id)
         }
         let flashCompat = ""
         if(req.headers.cookie
@@ -1372,9 +1379,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.replace("upload_date", uploadDate)
         code = code.replace("yt2009_ratings_count", ratings)
         if(!useFlash) {
+            let tcData = ""
+            if(config.trusted_context) {
+                tcData = "&" + yt2009trusted.generateContext(
+                    data.id, "PLAYBACK_STD", (data.length >= 60 * 30)
+                )
+            }
             code = code.replace(
                 "mp4_files", 
-                `<source src="${autoHQ || "/get_video?video_id=" + data.id + "/mp4"}" type="video/mp4"></source>
+                `<source src="${autoHQ || "/get_video?video_id=" + data.id + "/mp4" + tcData}" type="video/mp4"></source>
                 <source src="${data.mp4}.ogg" type="video/ogg"></source>`
             )
             if(data.pMp4) {
@@ -2135,9 +2148,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     if(qualityList.includes("720p")) {
                         fmtMap += "22/2000000/9/0/115"
                         fmtUrls += `22|http://${config.ip}:${config.port}/exp_hd?video_id=${data.id}`
+                        fmtUrls += yt2009trusted.urlContext(
+                            data.id, "PLAYBACK_HD", (data.length >= 60 * 30)
+                        )
                     } else if(qualityList.includes("480p")) {
                         fmtMap += `35/0/9/0/115`
                         fmtUrls += `35|http://${config.ip}:${config.port}/get_480?video_id=${data.id}`
+                        fmtUrls += yt2009trusted.urlContext(
+                            data.id, "PLAYBACK_HQ", (data.length >= 60 * 30)
+                        )
                     }
                     if(fmtMap.length > 0) {
                         fmtMap += ","
@@ -2145,6 +2164,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     }
                     fmtMap += "5/0/7/0/0"
                     fmtUrls += `5|http://${config.ip}:${config.port}/get_video?video_id=${data.id}/mp4`
+                    fmtUrls += yt2009trusted.urlContext(
+                        data.id, "PLAYBACK_STD", (data.length >= 60 * 30)
+                    )
                     flash_url += "&fmt_map=" + encodeURIComponent(fmtMap)
                     flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
                 }
@@ -2269,9 +2291,25 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `<!--yt2009_style_hq_button-->`,
                 yt2009templates.playerCssHDBtn   
             )
+
+            let trustedContextData = false;
+            if(config.trusted_context) {
+                let hqContext = use720p ? "PLAYBACK_HD" : "PLAYBACK_HQ"
+                trustedContextData = {
+                    "sd": yt2009trusted.generateContext(
+                        data.id, "PLAYBACK_STD", (data.length >= 60 * 30)
+                    ),
+                    "hq": yt2009trusted.generateContext(
+                        data.id, hqContext, (data.length >= 60 * 30)
+                    ),
+                }
+            }
+
             code = code.replace(
                 `//yt2009-exp-hq-btn`,
-                yt2009templates.playerHDBtnJS(data.id, use720p, autoHQ)
+                yt2009templates.playerHDBtnJS(
+                    data.id, use720p, autoHQ, trustedContextData
+                )
                 + enableConnCheck
             )
 

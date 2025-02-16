@@ -7,6 +7,7 @@ const yt2009constants = require("./yt2009constants.json")
 const yt2009search = require("./yt2009search")
 const yt2009languages = require("./language_data/language_engine")
 const yt2009doodles = require("./yt2009doodles")
+const yt2009trusted = require("./yt2009trustedcontext")
 const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
 const wayback_channel = require("./cache_dir/wayback_channel")
@@ -821,6 +822,12 @@ module.exports = {
                     )
                 } else {
                     // fmode~!!
+                    if(config.trusted_context) {
+                        code = code.replace(
+                            "//yt2009-f-context",
+                            `var gcon = "${yt2009trusted.urlShortContext(video.id, true)}"`
+                        )
+                    }
                     if(req.headers.cookie.includes("alt_swf_path=")) {
                         watch_url = decodeURIComponent(
                             req.headers.cookie.split("alt_swf_path=")[1]
@@ -836,7 +843,7 @@ module.exports = {
                     
                     let flashUrl = `${watch_url}?${watch_arg}=${video.id}`
                     if(req.headers.cookie.includes("f_h264=on")) {
-                        flashUrl += "%2Fmp4"
+                        flashUrl += "%2Fmp4" + yt2009trusted.urlShortContext(video.id)
                     }
                     if(req.headers.cookie.includes("f_h264=on")
                     && watch_url == "/watch.swf") {
@@ -844,6 +851,9 @@ module.exports = {
                         let fmtUrls = `5|http://${config.ip}:${
                             config.port
                         }/channel_fh264_getvideo?v=${video.id}`
+                        fmtUrls += yt2009trusted.urlContext(
+                            video.id, "PLAYBACK_STD", false
+                        )
                         flashUrl += `&fmt_map=${encodeURIComponent(fmtMap)}`
                         flashUrl += `&fmt_url_map=${encodeURIComponent(fmtUrls)}`
                     }

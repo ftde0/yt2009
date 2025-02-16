@@ -4,6 +4,7 @@ const embed_code = fs.readFileSync("../embedded-player.html").toString()
 const templates = require("./yt2009templates")
 const utils = require("./yt2009utils")
 const config = require("./config.json")
+const trusted = require("./yt2009trustedcontext")
 
 let ip_request_count = {}
 
@@ -267,9 +268,18 @@ module.exports = function(req, res) {
             `<!--yt2009_style_hq_button-->`,
             templates.playerCssHDBtn.replace("98px", "99px")
         )
+        let tcData = false;
+        if(config.trusted_context) {
+            tcData = {
+                "sd": trusted.generateContext(id, "PLAYBACK_STD", true),
+                "hq": trusted.generateContext(
+                    id, use720p ? "PLAYBACK_HD" : "PLAYBACK_HQ", true
+                )
+            }
+        }
         code = code.replace(
             `//yt2009-exp-hq-btn`,
-            templates.playerHDBtnJS(id, use720p)
+            templates.playerHDBtnJS(id, use720p, false, tcData)
         )
         // 720p
         if(use720p) {
@@ -302,9 +312,7 @@ module.exports = function(req, res) {
         // ogg wymagane
         child_process.exec(templates.createFffmpegOgg(id),
         (error, stdout, stderr) => {
-            res.send(code.replace("mp4_files", `
-            <source src="/assets/${id}.mp4" type="video/mp4"></source>
-            <source src="/assets/${id}.ogg" type="video/ogg"></source>`))
+            res.send(code.replace("mp4_files", templates.embedVideoSources(id)))
         })
     }
     if(!fs.existsSync(`../assets/${id}.mp4`)) {

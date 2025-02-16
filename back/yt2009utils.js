@@ -1364,13 +1364,36 @@ module.exports = {
     },
 
     "downloadInParts_file": function(url, out, callback) {
-        const partSize = 9 * 1000 * 1000; //9MB
+        let partSize = 0;
+        let partNumber = 0;
+        let startB = 0;
+        function adjustPartsize() {
+            switch(partNumber) {
+                case 0: {
+                    partSize = 65535 + Math.floor(Math.random() * 20000)
+                }
+                case 1: {
+                    partSize = 90000 + Math.floor(Math.random() * 40000)
+                }
+                case 2: {
+                    partSize = 300000 + Math.floor(Math.random() * 100000)
+                }
+                case 3: {
+                    partSize = 700000 + Math.floor(Math.random() * 200000)
+                }
+                case 4: {
+                    partSize = 1000000 + Math.floor(Math.random() * 300000)
+                }
+                default: {
+                    partSize = 1600000 + Math.floor(Math.random() * 500000)
+                }
+            }
+        }
         const stream = fs.createWriteStream(out, { flags: 'a' });
-        function fetchNextPart(partNumber) {
-            let partStartB = partNumber * partSize;
-            if(partNumber !== 0) {partStartB += partNumber}
+        function fetchNextPart() {
+            adjustPartsize()
             const newHeaders = { ...androidHeaders };
-            newHeaders.headers.range = `bytes=${partStartB}-${partStartB + partSize}`;
+            newHeaders.headers.range = `bytes=${startB}-${startB + partSize}`;
             fetch(url, newHeaders).then(r => {
                 if (r.headers.get('Content-Length') === '0') {
                     stream.end();
@@ -1378,11 +1401,13 @@ module.exports = {
                 }
                 r.body.pipe(stream, { end: false });
                 r.body.on('end', () => {
-                    fetchNextPart(partNumber + 1);
+                    startB += partSize + 1
+                    partNumber++
+                    fetchNextPart();
                 });
             })
         }
-        fetchNextPart(0);
+        fetchNextPart();
     },
 
     "relativeTimeCreate": function(baseString, language) {
@@ -1777,8 +1802,7 @@ module.exports = {
         return fullUrl;
     },
 
-    "isRatelimited": function(req, res) {
-        if(!config.ratelimit || isNaN(config.ratelimit)) return false;
+    "getIP": function(req) {
         let ip = req.ip;
         
         if(!ip.includes(".")) {
@@ -1801,6 +1825,13 @@ module.exports = {
             // ipv4
             ip = ip.replace("::ffff:", "")
         }
+
+        return ip;
+    },
+
+    "isRatelimited": function(req, res) {
+        if(!config.ratelimit || isNaN(config.ratelimit)) return false;
+        let ip = this.getIP(req)
 
         if(!ratelimitData[ip]) {
             ratelimitData[ip] = 0;

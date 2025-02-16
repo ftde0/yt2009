@@ -36,6 +36,8 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_RATELIMIT` sets a number of web fetch (watch, search etc) requests one ipv4 address/one ipv6 block can make in a minute
 - `YT2009_GDATA_AUTH` allows you to enable token-based authorization for the gdata api (e.g. mobile apps) (default: `false`)
 - `YT2009_REENCODE_DEVS` sets a list of user-agent parts to reencode mp4 videos to h264 baseline (more compatibility with older devices). comma-separaed. don't enter to disable.
+- `YT2009_TRUSTEDCONTEXT` sets whether to require additional "context" data in mp4 video links to download them. true/false (default: `false`)
+- `YT2009_TCOVERRIDE` sets a key that can be used to override trusted context. more info in yt2009trustedcontext.js. don't enter to not use a key.
 
 ## troubleshooting
 #### reading auth tokens from a running container

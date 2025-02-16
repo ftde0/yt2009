@@ -2,12 +2,14 @@ const yt2009main = require("./yt2009html")
 const yt2009search = require("./yt2009search")
 const yt2009templates = require("./yt2009templates")
 const yt2009exports = require("./yt2009exports")
+const yt2009trusted = require("./yt2009trustedcontext");
 const ryd = require("./cache_dir/ryd_cache_manager")
 const fs = require("fs")
 const utils = require("./yt2009utils")
 const child_process = require("child_process")
 const config = require("./config.json")
 let flvProcessingVideos = []
+let tcRatelimits = {}
 
 module.exports = {
     "get_video": function(req, res) {
@@ -17,7 +19,7 @@ module.exports = {
             return;
         }
 
-        let video = req.query.video_id.replace("/mp4", "")
+        let video = req.query.video_id.split("/mp4")[0]
 
         if(config.env == "dev") {
             console.log(`(${utils.get_used_token(req) + "_warp_swf"}) warp init (${Date.now()})`)
@@ -59,7 +61,7 @@ module.exports = {
             return;
         }
 
-        let video = req.query.video_id.replace("/mp4", "")
+        let video = req.query.video_id.split("/mp4")[0]
 
         if(config.env == "dev") {
             console.log(`(${
@@ -115,7 +117,12 @@ module.exports = {
         || req.query.video_id.includes("/mp4")
         || (req.headers.referer || "").includes("/mp4")
         || req.query.t == "amogus") {
-            req.query.video_id = req.query.video_id.replace("/mp4", "")
+            if(req.query.video_id.includes("/mp4,")) {
+                if(!yt2009trusted.validateShortContext(req, res)) return;
+            } else {
+                if(!yt2009trusted.isValid(req, res)) return;
+            }
+            req.query.video_id = req.query.video_id.split("/mp4")[0]
             if(avoidRedirect) {
                 let v = req.query.video_id;
                 let d = __dirname.split("back")
@@ -136,11 +143,15 @@ module.exports = {
                     res.sendFile(f)
                 }
             } else {
-                res.redirect("/channel_fh264_getvideo?v=" + req.query.video_id)
+                let extraData = yt2009trusted.urlContext(
+                    req.query.video_id, "PLAYBACK_STD", false
+                )
+                res.redirect(
+                    "/channel_fh264_getvideo?v=" + req.query.video_id + extraData
+                )
             }
             return;
         }
-        let v = req.query.video_id.replace("/mp4", "")
         if(req.query.noflv == 1) {
             res.send("")
             return;
@@ -158,6 +169,18 @@ module.exports = {
                 res.redirect("/get_480?video_id=" + req.query.video_id)
                 return;
             }
+        }
+        let ip = utils.getIP(req)
+        if(!tcRatelimits[ip]) {
+            tcRatelimits[ip] = 0;
+            setTimeout(() => {
+                tcRatelimits[ip] = 0;
+            }, 60000)
+        }
+        tcRatelimits[ip]++
+        if(tcRatelimits[ip] >= 10) {
+            res.sendStatus(429);
+            return;
         }
         this.vid_flv(req.query.video_id, () => {
             try {

@@ -238,34 +238,45 @@ var r = new XMLHttpRequest();
 var hqEnabled = false;
 r.open("GET", "/get_video_info?video_id=" + id)
 r.send(null)
+var formatMaps = {}
+var stdUrl = ""
+var hqUrl = false
 r.addEventListener("load", function(e) {
-    if(r.responseText.indexOf("exp_hd") !== -1) {
-        // hd
-        document.querySelector(".yt2009-hd")
-        .addEventListener("click", function() {
+    var fmtUrls = decodeURIComponent(
+        r.responseText.split("fmt_url_map=")[1].split("&")[0]
+    ).split(",")
+    for(var fmt in fmtUrls) {
+        fmt = fmtUrls[fmt]
+        formatMaps[fmt.split("|")[0]] = fmt.split("|")[1]
+    }
+    function hqExists() {
+        document.querySelector(".yt2009-hd").addEventListener("click", function() {
             toggleQuality("exp_hd")
         }, false)
         document.querySelector(".yt2009-hd").className = "btn hq-btn hd"
         document.body.className = "has-quality"
-    } else if(r.responseText.indexOf("get_480") !== -1) {
-        // hq
-        document.querySelector(".yt2009-hd")
-        .addEventListener("click", function() {
-            toggleQuality("get_480")
-        }, false)
-        document.querySelector(".yt2009-hd").className = "btn hq-btn"
-        document.body.className = "has-quality"
+    }
+    function addHq(url) {
+        if(!url) return;
+        hqUrl = url;
+    }
+    addHq(formatMaps["35"])
+    addHq(formatMaps["22"])
+    //addHq(formatMaps["37"])
+    stdUrl = formatMaps["5"]
+    if(hqUrl) {
+        hqExists()
     }
 }, false)
-function toggleQuality(endpoint) {
+function toggleQuality() {
     showLoadingSprite()
     if(!hqEnabled) {
-        v.src = "/" + endpoint + "?video_id=" + id;
+        v.src = hqUrl;
         document.querySelector(".hq-btn").className += " active"
         hqEnabled = true
         v.play()
     } else {
-        v.src = "/get_video?video_id=" + id + "/mp4";
+        v.src = stdUrl;
         var c = document.querySelector(".hq-btn").className
         document.querySelector(".hq-btn").className = c.split("active").join("")
         hqEnabled = false

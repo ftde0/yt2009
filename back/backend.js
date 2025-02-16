@@ -39,6 +39,7 @@ const yt2009charts = require("./yt2009charts")
 const yt2009gdataauths = require("./yt2009mobileauths")
 const yt2009basefeeds = require("./yt2009basefeeds")
 const yt2009m = require("./yt2009m")
+const yt2009trusted = require("./yt2009trustedcontext")
 let devTimings = false;
 const package = require("../package.json")
 const version = package.version;
@@ -818,6 +819,15 @@ app.get("/swf/apiplayer.swf", (req, res) => {
 })
 
 app.get("/get_video_info", (req, res) => {
+    if(!yt2009trusted.get_video_info_eligible(req)) {
+        res.send([
+            "status=fail",
+            "errorcode=100",
+            "suberrorcode=8",
+            "reason=ratelimited."
+        ].join("&"))
+        return;
+    }
     if(req.query.el == "leanback") {
         // add to history if leanback
         let history = ""
@@ -830,7 +840,7 @@ app.get("/get_video_info", (req, res) => {
         if(history.length >= 3) {
             history.pop()
         }
-        history.unshift(req.query.video_id.replace("/mp4", ""))
+        history.unshift(req.query.video_id.split("/mp4")[0])
         let cookieParams = [
             `leanback_history=${history.join(":")}; `,
             `Path=/; `,
@@ -838,8 +848,9 @@ app.get("/get_video_info", (req, res) => {
         ]
         res.set("set-cookie", cookieParams.join(""))
     }
-    req.query.video_id = req.query.video_id.replace("/mp4", "")
+    req.query.video_id = req.query.video_id.split("/mp4")[0]
     yt2009.fetch_video_data(req.query.video_id, (data => {
+        let longVid = (data.length >= 60 * 30)
         yt2009.get_qualities(req.query.video_id, (qualities => {
             if((!qualities || qualities.length == 0) && data.qualities) {
                 qualities = data.qualities
@@ -860,18 +871,21 @@ app.get("/get_video_info", (req, res) => {
             qualities.forEach(quality => {
                 switch(quality) {
                     case "1080p": {
+                        let fmtUrl = [
+                            `http://${config.ip}:${config.port}`,
+                            `/exp_hd?video_id=${req.query.video_id}&fhd=1`,
+                            `${yt2009trusted.urlContext(
+                                req.query.video_id, "PLAYBACK_FHD", longVid
+                            )}`
+                         ].join("")
                         fmt_list += "37/1920x1080/9/0/115,"
                         fmt_map += "37/3000000/9/0/115,"
-                        fmt_stream_map += `37|http://${config.ip}:${
-                            config.port
-                        }/exp_hd?video_id=${req.query.video_id}&fhd=1&,`
+                        fmt_stream_map += `37|${fmtUrl}&,`
                         if(addUrlEncoded && !waitForDash) {
                             let fmtData = [
                                 "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
                                 "itag=37",
-                                `url=${encodeURIComponent(`http://${config.ip}:${
-                                    config.port
-                                }/exp_hd?video_id=${req.query.video_id}&fhd=1`)}`,
+                                `url=${encodeURIComponent(fmtUrl)}`,
                                 "quality=hd1080"
                             ].join("&")
                             url_encoded_fmt_stream_map.push(fmtData)
@@ -879,18 +893,21 @@ app.get("/get_video_info", (req, res) => {
                         break;
                     }
                     case "720p": {
+                        let fmtUrl = [
+                            `http://${config.ip}:${config.port}`,
+                            `/exp_hd?video_id=${req.query.video_id}`,
+                            `${yt2009trusted.urlContext(
+                                req.query.video_id, "PLAYBACK_HD", longVid
+                            )}`
+                         ].join("")
                         fmt_list += "22/1280x720/9/0/115,"
                         fmt_map += "22/2000000/9/0/115,"
-                        fmt_stream_map += `22|http://${config.ip}:${
-                            config.port
-                        }/exp_hd?video_id=${req.query.video_id}&,`
+                        fmt_stream_map += `22|${fmtUrl}&,`
                         if(addUrlEncoded && !waitForDash) {
                             let fmtData = [
                                 "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
                                 "itag=22",
-                                `url=${encodeURIComponent(`http://${config.ip}:${
-                                    config.port
-                                }/exp_hd?video_id=${req.query.video_id}`)}`,
+                                `url=${encodeURIComponent(fmtUrl)}`,
                                 "quality=hd720"
                             ].join("&")
                             url_encoded_fmt_stream_map.push(fmtData)
@@ -898,18 +915,21 @@ app.get("/get_video_info", (req, res) => {
                         break;
                     }
                     case "480p": {
+                        let fmtUrl = [
+                            `http://${config.ip}:${config.port}`,
+                            `/get_480?video_id=${req.query.video_id}`,
+                            `${yt2009trusted.urlContext(
+                                req.query.video_id, "PLAYBACK_HQ", longVid
+                            )}`
+                         ].join("")
                         fmt_list += "35/854x480/9/0/115,"
                         fmt_map += "35/0/9/0/115,"
-                        fmt_stream_map +=  `35|http://${config.ip}:${
-                            config.port
-                        }/get_480?video_id=${req.query.video_id}&,`
+                        fmt_stream_map +=  `35|${fmtUrl}&,`
                         if(addUrlEncoded && !waitForDash) {
                             let fmtData = [
                                 "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
                                 "itag=35",
-                                `url=${encodeURIComponent(`http://${config.ip}:${
-                                    config.port
-                                }/get_480?video_id=${req.query.video_id}`)}`,
+                                `url=${encodeURIComponent(fmtUrl)}`,
                                 "quality=large"
                             ].join("&")
                             url_encoded_fmt_stream_map.push(fmtData)
@@ -918,18 +938,21 @@ app.get("/get_video_info", (req, res) => {
                     }
                 }
             })
+            let fmtUrl = [
+                `http://${config.ip}:${config.port}`,
+                `/get_video?video_id=${req.query.video_id}/mp4`,
+                `${yt2009trusted.urlContext(
+                     req.query.video_id, "PLAYBACK_STD", longVid
+                 )}`
+             ].join("")
             fmt_list += "5/640x360/9/0/115"
             fmt_map += "5/0/7/0/0"
-            fmt_stream_map += `5|http://${config.ip}:${
-                config.port
-            }/get_video?video_id=${data.id}/mp4`
+            fmt_stream_map += `5|${fmtUrl}`
             if(addUrlEncoded && url_encoded_fmt_stream_map.length == 0) {
                 let fmtData = [
                     "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
                     "itag=5",
-                    `url=${encodeURIComponent(`http://${config.ip}:${
-                        config.port
-                    }/get_video?video_id=${req.query.video_id}/mp4`)}`,
+                    `url=${encodeURIComponent(fmtUrl)}`,
                     "quality=medium"
                 ].join("&")
                 url_encoded_fmt_stream_map.push(fmtData)
@@ -1071,9 +1094,11 @@ app.get("/gvf", (req, res) => {
         "method": "GET"
     }).then(r => {
         let mime = decodeURIComponent(url.split("&mime=")[1].split("&")[0])
+        res.status(r.status)
         res.set("content-type", mime)
         res.set("range", r.headers.get("range"))
         r.buffer().then(b => {
+            //console.log(url, r.status)
             res.send(b)
             cachedResponses[url] = b;
         })
@@ -1085,7 +1110,7 @@ app.get("/get_video_metadata", (req, res) => {
         res.sendStatus(400)
         return;
     }
-    req.query.video_id = req.query.video_id.replace("/mp4", "")
+    req.query.video_id = req.query.video_id.split("/mp4")[0]
     yt2009.fetch_video_data(req.query.video_id, (data) => {
         let channelRequest = {
             "path": "/channel/" + data.author_id,
@@ -1398,6 +1423,8 @@ function checkBaseline(req, res) {
 }
 
 app.get("/channel_fh264_getvideo", (req, res) => {
+    if(!yt2009trusted.isValid(req, res)
+    && !yt2009trusted.validateShortContext(req, res)) return;
     if(checkBaseline(req, res)) return;
 
     req.query.v = req.query.v.replace(/[^a-zA-Z0-9+\-+_]/g, "").substring(0, 11)
@@ -1777,7 +1804,8 @@ let static_sites = {
     "/warp_speed_en": "warp_speed_en.html",
     "/t/new_viewing_experience": "new_viewing_experience.html",
     "/cbackground": "cbackground.html",
-    "/wariolandshakeit2008": "wariolandshakeit2008.html"
+    "/wariolandshakeit2008": "wariolandshakeit2008.html",
+    "/mh_pc_intro": "mh_pc_intro.html"
 }
 for(let site in static_sites) {
     app.get(site, (req, res) => {
@@ -1918,6 +1946,7 @@ app.get("/test_only_legacy_cookie_auth", (req, res) => {
 ======
 */
 app.get("/exp_hd", (req, res) => {
+    if(!yt2009trusted.isValid(req, res)) return;
     let lower = req.query.video_id.includes("/lower")
     let id = req.query.video_id.substring(0, 11)
     let quality = "720p"
@@ -1944,7 +1973,11 @@ app.get("/exp_hd", (req, res) => {
                 res.redirect("/assets/" + success)
             } else {
                 if(lower) {
-                    res.redirect("/get_480?video_id=" + id + "/lower")
+                    let url = "/get_480?video_id=" + id + "/lower"
+                    if(config.trusted_context) {
+                        url += "&" + yt2009trusted.getContext(req)
+                    }
+                    res.redirect(url)
                 } else {
                     res.sendStatus(404)
                 }
@@ -1959,6 +1992,7 @@ app.get("/exp_hd", (req, res) => {
 ======
 */
 app.get("/get_480", (req, res) => {
+    if(!yt2009trusted.isValid(req, res)) return;
     let lower = req.query.video_id.includes("/lower")
     let id = req.query.video_id.substring(0, 11)
     let quality = "480p"
@@ -1971,7 +2005,11 @@ app.get("/get_480", (req, res) => {
                 res.redirect("/assets/" + success)
             } else {
                 if(lower) {
-                    res.redirect("/channel_fh264_getvideo?v=" + id)
+                    let url = "/channel_fh264_getvideo?v=" + id
+                    if(config.trusted_context) {
+                        url += "&" + yt2009trusted.getContext(req)
+                    }
+                    res.redirect(url)
                 } else {
                     res.sendStatus(404)
                 }

@@ -105,7 +105,7 @@ module.exports = {
     },
 
     "getFmode": function(id, token, callback) {
-        id = id.replace("/mp4", "")
+        id = id.split("/mp4")[0]
         this.get({
             "headers": {
                 "source": "watch?v=" + id,

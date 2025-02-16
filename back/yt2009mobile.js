@@ -398,6 +398,11 @@ module.exports = {
 
         if(linkLookup[playback]) {
             link = linkLookup[playback]
+            if(playback == "http_mp4" && config.trusted_context) {
+                link += "&" + require("./yt2009trustedcontext").generateContext(
+                    id, "PLAYBACK_STD", false
+                )
+            }
         }
 
         return link;
@@ -1176,7 +1181,7 @@ module.exports = {
             }
         }, "")
         if(req.query.alt == "json") {
-            yt2009jsongdata.standardfeed(videos, res)
+            yt2009jsongdata.standardfeed(videos, res, req.query.callback)
             return;
         }
         let response = templates.gdata_feedStart

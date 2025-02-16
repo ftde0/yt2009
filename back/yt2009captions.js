@@ -7,7 +7,7 @@ const templates = require("./yt2009templates")
 module.exports = {
     "main": function(req, res) {
         let id = req.query.v;
-        id = id.replace("/mp4", "")
+        id = id.split("/mp4")[0]
         let type = req.query.type;
         let useJson = false;
         if(req.query.json) {
@@ -72,7 +72,7 @@ module.exports = {
             <text start="0" dur="0.1"> </text>
             </transcript>`
         ]
-        id = id.replace("/mp4", "")
+        id = id.split("/mp4")[0]
         let getLanguages = this.getLanguages;
         let retryCount = 0;
         function getFile(resetCache) {

@@ -121,6 +121,23 @@ if(process.env.YT2009_REENCODE_DEVS) {
     cfg.reencode_devs = process.env.YT2009_REENCODE_DEVS;
 }
 
+// set trustedcontext
+switch (process.env.YT2009_TRUSTEDCONTEXT) {
+    case 'true':
+        cfg.trusted_context = true;
+        break;
+    case 'false':
+        cfg.trusted_context = false;
+        break;
+    default:
+        throw new Error('invalid YT2009_TRUSTEDCONTEXT')
+}
+
+// set trustedcontext override
+if(process.env.YT2009_TCOVERRIDE) {
+    cfg.tc_override_key = process.env.YT2009_TCOVERRIDE;
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

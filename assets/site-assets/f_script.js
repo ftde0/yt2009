@@ -1233,6 +1233,10 @@ function switchVideo(video) {
         var fmtMap = "5/0/7/0/0"
         var fmtUrls = "5|http://" + location.host
                       + "/channel_fh264_getvideo?v=" + id
+        if(gcon) {
+            videoUrl += gcon
+            fmtUrls += decodeURIComponent(gcon).replace(",", "&gcon=")
+        }
         videoUrl += "&fmt_map=" + encodeURIComponent(fmtMap)
         videoUrl += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
     }

@@ -28,3 +28,5 @@ other params you can set:
 - `ratelimit` - a number of web fetch requests one ipv4 address/one ipv6 block can make in 1 minute.
 - `gdata_auth` - require token-based authorization for gdata api (e.g. mobile apps). `true/false`
 - `reencode_devs` - a list of user agent parts to reencode mp4s to a more compatible codec. comma-separated.
+- `trusted_context` - require additional "context" data to start download of mp4 videos. `true/false`
+- `tc_override_key` - a key for mp4 requests to bypass trusted context. more in yt2009trustedcontext.js.
