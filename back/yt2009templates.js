@@ -294,6 +294,9 @@ module.exports = {
         </div>`
     },
     "warpVideo": function(id, title, length, creatorName, video_index, description, views, rating, uploaded) {
+        if(typeof(views) == "string") {
+            views = utils.bareCount(views || "1 views")
+        }
         return `
     <video>
         <author>${creatorName}</author>
@@ -302,11 +305,11 @@ module.exports = {
         <length_seconds>${utils.time_to_seconds(length)}</length_seconds>
         <run_time>${length}</run_time>
         <rating_avg>${rating}</rating_avg>
-        <rating_count>${Math.floor(utils.bareCount(views || "1 views") / 150)}</rating_count>
+        <rating_count>${Math.floor(views / 150)}</rating_count>
         <description>${description || "."}</description>
-        <view_count>${utils.bareCount(views || 1)}</view_count>
+        <view_count>${views}</view_count>
         <upload_time>${utils.relativeToAbsoluteApprox(uploaded || "1 day ago")}</upload_time>
-        <comment_count>${Math.floor(utils.bareCount(views || "1 views") / 170)}</comment_count>
+        <comment_count>${Math.floor(views / 170)}</comment_count>
         <tags> </tags>
         <url>http://www.youtube.com/watch?v=${id}</url>
         <thumbnail_url>http://i.ytimg.com/vi/${id}/default.jpg</thumbnail_url>
@@ -748,57 +751,65 @@ module.exports = {
             </div>`
     },
     "cpbPlaylistsBegin": function(title, id, authorName) {
+        function sd(i) {
+            return i.split("<").join("").split(">").join("").split("&").join("")
+        }
         return `<?xml version='1.0' encoding='UTF-8'?>
-<feed
-    xmlns='http://www.w3.org/2005/Atom'
-    xmlns:app='http://www.w3.org/2007/app'
-    xmlns:media='http://search.yahoo.com/mrss/'
-    xmlns:openSearch='http://a9.com/-/spec/opensearch/1.1/'
-    xmlns:gd='http://schemas.google.com/g/2005'
-    xmlns:yt='http://gdata.youtube.com/schemas/2007' gd:etag='W/&quot;A0EMSX47eCp7ImA9WxJWFkQ.&quot;'>
-    <id>yt2009playlist</id>
+<feed xmlns='http://www.w3.org/2005/Atom' xmlns:app='http://purl.org/atom/app#' xmlns:media='http://search.yahoo.com/mrss/' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' xmlns:gd='http://schemas.google.com/g/2005' xmlns:yt='http://gdata.youtube.com/schemas/2007'>
+    <id>http://${config.ip}:${config.port}/feeds/api/playlists/${id}</id>
     <updated>2009-06-22T19:41:28.000Z</updated>
     <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#playlist'/>
-    <title>${title}</title>
-    <subtitle>${title.toLowerCase()}</subtitle>
+    <title type='text'>${sd(title)}</title>
+    <subtitle type='text' />
     <logo>http://www.youtube.com/img/pic_youtubelogo_123x63.gif</logo>
     <link rel='alternate' type='text/html' href='http://www.youtube.com/view_play_list?p=${id}'/>
-    <link rel='http://schemas.google.com/g/2005#feed' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}?v=2'/>
-    <link rel='http://schemas.google.com/g/2005#batch' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}/batch?v=2'/>
-    <link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}?start-index=1&amp;max-results=25&amp;v=2'/>
-    <link rel='service' type='application/atomsvc+xml' href='http://gdata.youtube.com/feeds/api/playlists/${id}?alt=atom-service&amp;v=2'/>
+    <link rel='http://schemas.google.com/g/2005#feed' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/playlists/${id}?r=2'/>
+    <link rel='http://schemas.google.com/g/2005#batch' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/playlists/${id}/batch'/>
+    <link rel='self' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/playlists/${id}?r=2'/>
     <author>
-        <name>${authorName}</name>
-        <uri>http://gdata.youtube.com/feeds/api/users/${authorName}</uri>
+        <name>${sd(authorName)}</name>
+        <uri>http://${config.ip}:${config.port}/feeds/api/users/${authorName}</uri>
     </author>
     <generator version='2.0' uri='http://gdata.youtube.com/'>YouTube data API</generator>`
     },
     "cpbPlaylistsCounts": function(results, id, title, description) {
+        function sd(i) {
+            return i.split("<").join("").split(">").join("").split("&").join("")
+        }
         return `
     <openSearch:totalResults>${results}</openSearch:totalResults>
     <openSearch:startIndex>1</openSearch:startIndex>
     <openSearch:itemsPerPage>${results}</openSearch:itemsPerPage>
     <media:group>
         <media:content url='http://www.youtube.com/ep.swf?id=${id}' type='application/x-shockwave-flash' yt:format='5'/>
-        <media:description type='plain'>${description}</media:description>
-        <media:title type='plain'>${title}</media:title>
+        <media:description type='plain'>${sd(description)}</media:description>
+        <media:title type='plain'>${sd(title)}</media:title>
     </media:group>
     <yt:playlistId>${id}</yt:playlistId>`
     },
     "cpbVideo": function(video, index) {
+        let videoUrl = `http://${config.ip}:${config.port}/get_video?video_id=${video.id}/mp4`
+        if(config.trusted_context) {
+            videoUrl += require("./yt2009trustedcontext").urlContext(
+                video.id, "PLAYBACK_STD", false
+            ).split("&").join("&amp;")
+        }
+        function sd(i) {
+            return i.split("<").join("").split(">").join("").split("&").join("")
+        }
         return `
-    <entry gd:etag='W/&quot;DUUMQnYzeCp7ImA9WxFUGU4.&quot;'>
+    <entry>
         <id>${video.id}</id>
         <updated>2010-06-30T22:34:43.880Z</updated>
-        <title>${video.title}</title>
-        <link rel='alternate' type='text/html' href='http://www.youtube.com/watch?v=rInvb982mYU&amp;feature=youtube_gdata'/>
-        <link rel='http://gdata.youtube.com/schemas/2007#video.responses' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/rInvb982mYU/responses?v=2'/>
-        <link rel='http://gdata.youtube.com/schemas/2007#video.related' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/rInvb982mYU/related?v=2'/>
-        <link rel='related' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/rInvb982mYU?v=2'/>
+        <title>${sd(video.title)}</title>
+        <link rel='alternate' type='text/html' href='http://www.youtube.com/watch?v=${video.id}&amp;feature=youtube_gdata'/>
+        <link rel='http://gdata.youtube.com/schemas/2007#video.responses' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}/responses?v=2'/>
+        <link rel='http://gdata.youtube.com/schemas/2007#video.related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}/related?v=2'/>
+        <link rel='related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}?v=2'/>
         <link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/0A7ED544A0D9877D/00A37F607671690E?v=2'/>
         <author>
-            <name>${video.uploaderName}</name>
-            <uri>http://gdata.youtube.com/feeds/api/users/degumusic</uri>
+            <name>${sd(video.uploaderName)}</name>
+            <uri>http://gdata.youtube.com/feeds/api/users/${video.uploaderId}</uri>
         </author>
         <yt:accessControl action='comment' permission='allowed'/>
         <yt:accessControl action='commentVote' permission='allowed'/>
@@ -811,15 +822,15 @@ module.exports = {
             <gd:feedLink href='http://gdata.youtube.com/feeds/api/videos/${video.id}/comments?v=2' countHint='1'/>
         </gd:comments>
         <media:group>
-            <media:content url='http://www.youtube.com/v/${video.id}?f=playlists&amp;app=youtube_gdata' type='application/x-shockwave-flash' medium='video' isDefault='true' expression='full' duration='583' yt:format='5'/>
-            <media:credit role='uploader' scheme='urn:youtube' yt:type='partner'>sltrib</media:credit>
-            <media:description type='plain'>${video.description || ""}</media:description>
-            <media:keywords>salt, lake, tribune, utah, tourist, business</media:keywords>
-            <media:player url='http://www.youtube.com/watch?v=rInvb982mYU&amp;feature=youtube_gdata'/>
-            <media:thumbnail url='http://i.ytimg.com/vi/${video.id}/default.jpg' height='90' width='120' time='00:00:00.500'/>
-            <media:thumbnail url='http://i.ytimg.com/vi/rInvb982mYU/hqdefault.jpg' height='360' width='480'/>
-            <media:title type='plain'>${video.title}</media:title>
-            <yt:aspectRatio>widescreen</yt:aspectRatio>
+            <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>
+            <media:credit role='uploader' scheme='urn:youtube' yt:type='partner'>${video.uploaderName}</media:credit>
+            <media:description type='plain'>${sd(video.description || "")}</media:description>
+            <media:keywords>-</media:keywords>
+            <media:player url='http://www.youtube.com/watch?v=${video.id}&amp;feature=youtube_gdata'/>
+            <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/${video.id}/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
+            <media:thumbnail yt:name='poster' url='http://i.ytimg.com/vi/${video.id}/0.jpg' height='240' width='320' time='00:00:00'/>
+            <media:thumbnail yt:name='default' url='http://i.ytimg.com/vi/${video.id}/0.jpg' height='240' width='320' time='00:00:00'/>
+            <media:title type='plain'>${sd(video.title)}</media:title>
             <yt:duration seconds='${video.time ? utils.time_to_seconds(video.time) : "1"}'/>
             <yt:uploaded>2009-03-02T21:47:27.000Z</yt:uploaded>
             <yt:videoid>${video.id}</yt:videoid>
@@ -1100,20 +1111,21 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             trustedContexts = {
                 "sd": yt2009trusted.generateContext(id, "PLAYBACK_STD", long)
             }
+            if(!qualities) {qualities = []}
             if(qualities.includes("480p")) {
                 trustedContexts.hq = yt2009trusted.generateContext(
                     id, "PLAYBACK_HQ", long
-                )
+                ).split("&").join("&amp;")
             }
             if(qualities.includes("720p")) {
                 trustedContexts.hd = yt2009trusted.generateContext(
                     id, "PLAYBACK_HD", long
-                )
+                ).split("&").join("&amp;")
             }
 
-            streamStd += "&" + trustedContexts.sd
-            streamHQ += "&" + trustedContexts.hq
-            streamHD += "&" + trustedContexts.hd
+            streamStd += "&amp;" + trustedContexts.sd.split("&").join("&amp;")
+            streamHQ += "&amp;" + trustedContexts.hq
+            streamHD += "&amp;" + trustedContexts.hd
         }
 
         let qualityCode = ""
@@ -1261,7 +1273,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 			<uri>http://${config.ip}:${config.port}/feeds/api/users/${author}</uri>
 		</author>
 		<gd:feedLink rel='http://gdata.youtube.com/schemas/2007#playlist' href='http://${config.ip}:${config.port}/feeds/api/playlists/${playlistId}' countHint='${vidCount}'/>
-		<yt:description>None</yt:description> 
+		<yt:description>None</yt:description>
+        <yt:countHint>${vidCount}</yt:countHint>
 		<summary>${summary}</summary>
 	</entry>`
     },

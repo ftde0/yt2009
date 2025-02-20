@@ -1714,7 +1714,16 @@ warp! (swf)
 ======
 */
 app.get("/api2_rest", (req, res) => {
-    yt2009_warp_swf.get_video(req, res)
+    switch(req.query.method) {
+        case "youtube.videos.list_by_playlist": {
+            yt2009_playlists.apiV1_playlist(req, res)
+            break;
+        }
+        default: {
+            yt2009_warp_swf.get_video(req, res)
+            break;
+        }
+    }
 })
 app.get("/get_awesome", (req, res) => {
     yt2009_warp_swf.get_related(req, res)

@@ -113,6 +113,10 @@ module.exports = {
                 "playlistId": playlistId
             }
             this.innertube_get_data(playlistId, (r) => {
+                if(!r.contents) {
+                    callback(false)
+                    return;
+                }
                 let playlistArray = r.contents.twoColumnBrowseResultsRenderer
                                      .tabs[0].tabRenderer.content
                                      .sectionListRenderer.contents[0]
@@ -190,6 +194,7 @@ module.exports = {
     },
 
     "create_cpb_xml": function(req, res) {
+        res.set("content-type", "application/atom+xml")
         let compatAuth = false;
         if((req.headers.referer && req.headers.referer.includes(".swf"))
         || (req.headers["user-agent"]
@@ -199,7 +204,15 @@ module.exports = {
         if(!compatAuth && !mobileauths.isAuthorized(req, res, "feed")) return;
         let id = req.originalUrl.split("playlists/")[1].split("?")[0]
         let xmlResponse = ""
+        if(id.length >= 10 && !id.startsWith("PL") && !id.startsWith("OL")) {
+            id = "PL" + id
+        }
         this.parsePlaylist(id, (data) => {
+
+            if(!data) {
+                res.sendStatus(404)
+                return;
+            }
 
             if(req.query.alt == "json") {
                 require("./yt2009jsongdata").playlistVideos(
@@ -220,7 +233,7 @@ module.exports = {
                 data.description
             )
             let videoIndex = 1;
-            data.videos.forEach(video => {
+            (data.videos || []).forEach(video => {
                 xmlResponse += yt2009templates.cpbVideo(video, videoIndex)
                 videoIndex += 1
             })
@@ -229,6 +242,37 @@ module.exports = {
 
             res.set("content-type", "application/atom+xml")
             res.send(xmlResponse)
+        })
+    },
+
+    "apiV1_playlist": function(req, res) {
+        let id = req.query.id;
+        if(id.length >= 10 && !id.startsWith("PL") && !id.startsWith("OL")) {
+            id = "PL" + id
+        }
+        this.parsePlaylist(id, (data) => {
+            if(!data) {
+                res.sendStatus(404)
+                return;
+            }
+
+            let videos_xml = `<?xml version="1.0" encoding="utf-8"?>
+<ut_response status="ok">
+<video_list>`
+            let video_index = 1;
+            data.videos.forEach(v => {
+                videos_xml += yt2009templates.warpVideo(
+                    v.id, v.title, v.time, v.uploaderName,
+                    video_index, "", v.views, 5
+                )
+            
+                video_index++
+            })
+
+            videos_xml += `
+</video_list>
+</ut_response>`
+            res.send(videos_xml)
         })
     }
 }
