@@ -129,8 +129,6 @@ switch (process.env.YT2009_TRUSTEDCONTEXT) {
     case 'false':
         cfg.trusted_context = false;
         break;
-    default:
-        throw new Error('invalid YT2009_TRUSTEDCONTEXT')
 }
 
 // set trustedcontext override

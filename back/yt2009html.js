@@ -99,13 +99,28 @@ module.exports = {
             }
         })})
 
-        //rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+        let useAndroidPlayer = true;
+        let playerContext = JSON.parse(JSON.stringify(innertube_context))
+        if(useAndroidPlayer) {
+            playerContext = {
+                "client": {
+                    "hl": "en",
+                    "clientName": "ANDROID",
+                    "clientVersion": "19.02.39",
+                    "androidSdkVersion": 34,
+                    "mainAppWebInfo": {
+                        "graftUrl": "/watch?v=" + id
+                    }
+                }
+            }
+        }
+        rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
         fetch(`https://www.youtube.com/youtubei/v1/player?key=${api_key}`, {
             "headers": rHeaders,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
             "body": JSON.stringify({
-                "context": innertube_context,
+                "context": playerContext,
                 "playbackContext": {"vis": 0, "lactMilliseconds": "1"},
                 "videoId": id,
                 "racyCheckOk": true,
@@ -114,9 +129,13 @@ module.exports = {
             "method": "POST",
             "mode": "cors"
         }).then(r => {r.json().then(r => {
-            /*if(r.streamingData) {
-                yt2009exports.extendWrite("players", id, r)
-            }*/
+            if(useAndroidPlayer) {
+                if(r.streamingData) {
+                    yt2009exports.extendWrite("players", id, r)
+                }
+                combinedResponse.freezeSync = true;
+                combinedResponse.usedAndroid = true;
+            }
             for(let i in r) {
                 combinedResponse[i] = r[i]
             }
@@ -260,19 +279,22 @@ module.exports = {
                 catch(error) {
                     data.author_img = "default"
                 }
-                data.upload = videoData.microformat.playerMicroformatRenderer
-                              .uploadDate
-                /*try {
-                    data.upload = videoData.contents.twoColumnWatchNextResults
-                                  .results.results.contents[0]
-                                  .videoPrimaryInfoRenderer.dateText.simpleText
-                    if(data.upload.includes(" on ")) {
-                        data.upload = data.upload.split(" on ")[1]
+                if(videoData.microformat) {
+                    data.upload = videoData.microformat.playerMicroformatRenderer
+                                           .uploadDate
+                } else {
+                    try {
+                        data.upload = videoData.contents.twoColumnWatchNextResults
+                                      .results.results.contents[0]
+                                      .videoPrimaryInfoRenderer.dateText.simpleText
+                        if(data.upload.includes(" on ")) {
+                            data.upload = data.upload.split(" on ")[1]
+                        }
+                    }
+                    catch(error) {
+                        data.upload = new Date().toISOString()
                     }
                 }
-                catch(error) {
-                    data.upload = new Date().toISOString()
-                }*/
                 data.tags = videoData.videoDetails.keywords || [];
                 data.related = []
                 data.length = parseInt(videoData.videoDetails.lengthSeconds)
@@ -287,6 +309,10 @@ module.exports = {
                 if(videoData.playabilityStatus
                 && videoData.playabilityStatus.status == "LOGIN_REQUIRED") {
                     data.restricted = true
+                }
+
+                if(videoData.freezeSync) {
+                    data.freezeSync = true;
                 }
 
                 // "related" videos
@@ -1114,7 +1140,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }, 500)
         }
         if(flags.includes("homepage_contribute")
-        && uploadJS.getFullYear() <= 2010) {
+        && uploadJS.getFullYear() <= 2010
+        && !data.freezeSync) {
             // add to "videos being watched now" and /videos
             let go = true;
             featured_videos.slice(0, 23).forEach(vid => {

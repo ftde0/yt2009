@@ -1,0 +1,131 @@
+<style>
+    .highlighted-a {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 30px;
+        display: block;
+    }
+    .i {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    #account-list {
+        width: 400px;
+        margin-left: 280px;
+        border: 3px #ccc solid;
+        border-radius: 3px;
+    }
+    .account {
+        height: 50px;
+        border-bottom: 3px #ccc solid;
+    }
+    .selector {
+        text-align: right;
+        padding-right: 15px;
+    }
+    .selected-label {
+        margin-right: 3px;
+    }
+    .account img {
+        margin-top: 2px;
+        margin-left: 5px;
+        width: 40px;
+        height: 40px;
+    }
+    #account-name {
+        margin-left: 5px;
+        position: relative;
+        top: -15px;
+        font-size: 16px;
+    }
+    #unfinished {
+        background: rgb(255, 190, 68);
+        padding: 10px 10px;
+    }
+</style>
+<div class="panel" id="panel1">
+    <h1 id="unfinished">UNFINISHED ZONE AHEAD</h1>
+    <h1>Account Picker</h1>
+</div>
+<!--<hr>
+<div class="panel" id="panel2">
+    <h1>Settings</h1>
+    <input type="checkbox" id="pchelper-comments-add-youtube" title="komentarze dodawaj na youtube zamiast na serwerze sync yt2009.">
+    <label for="pchelper-comments-add-youtube">comments_add_youtube</label><br>
+    <input type="checkbox" id="pchelper-commit-ratings" title="oceny gwiazdkowe zostawiane przez yt2009 będą zostawiane na youtube">
+    <label for="pchelper-commit-ratings">commit_ratings</label>
+    <input type="checkbox" id="pchelper-playlists-sync" title="playlisty z konta youtube będą przeniesione do yt2009.">
+    <label for="pchelper-playlists-sync">playlists_sync</label>
+    <input type="checkbox" id="pchelper-default-w2w" title="polecane filmy na stronie głównej będą używać algorytmu youtube.">
+    <label for="pchelper-default-w2w">default_w2w</label>
+    <input type="checkbox" id="pchelper-subscriptions-sync" title="subskrypcje z konta youtube będą przeniesione do yt2009.">
+    <label for="pchelper-subscriptions-sync">subscriptions_sync</label>
+</div>-->
+<script>
+    var device = ""
+    if(document.cookie.indexOf("pchelper_user=") !== -1) {
+        device = document.cookie.split("pchelper_user=")[1].split(";")[0]
+    } else {
+        alert("no pchelper account! this panel will not work")
+    }
+
+
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/gsign_get_devices")
+    r.setRequestHeader("mode", "pchelper")
+    r.setRequestHeader("device", device)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.status !== 200) {
+                document.getElementById("panel1").innerHTML += "<br>no valid login?"
+            } else {
+                document.getElementById("panel1").innerHTML += r.responseText
+            }
+        }
+    }
+
+
+    function login_change(pageid, name, first) {
+        var xr = new XMLHttpRequest();
+        xr.open("POST", "/gsign_set")
+        xr.setRequestHeader("device", device)
+        xr.setRequestHeader("uid", pageid)
+        xr.setRequestHeader("username", name.substring(0,60))
+        xr.setRequestHeader("mode", "pchelper")
+        if(first) {
+            xr.setRequestHeader("first", "1")
+        }
+        xr.send(null)
+        xr.addEventListener("load", function(e) {
+            location.reload();
+        }, false)
+    }
+
+
+    function updateDescriptions() {
+		// show flag descriptions on labels
+		var labels = document.getElementsByTagName("input")
+		for(var label in labels) {
+			label = labels[label]
+			if(label.id && label.getAttribute("type") == "checkbox") {
+				var target = document.getElementsByTagName("label")
+				for(var p in target) {
+					if(target[p]
+					&& target[p].tagName
+					&& target[p].getAttribute("for") == label.id) {
+						target = target[p]
+					}
+				}
+				var labelText = label.getAttribute("title")
+				target.setAttribute("title", labelText)
+			}
+		}
+	}
+	updateDescriptions()
+
+</script>

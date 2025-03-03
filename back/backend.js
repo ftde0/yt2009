@@ -95,6 +95,17 @@ if(require("os").totalmem() <= 110000000) {
     
 `)
 }
+if(config.ip == "127.0.0.1" || config.ip == "localhost") {
+    console.log(`
+        
+        
+    config.ip set to "${config.ip}"!
+    for anything other than quick testing, things WILL break!
+    set yt2009's config correctly if planning on actual usage.
+    
+
+`)
+}
 
 if(fs.existsSync("../Dockerfile")) {
     let dockerfile = fs.readFileSync("../Dockerfile").toString().split("\r").join("")
@@ -1814,7 +1825,8 @@ let static_sites = {
     "/t/new_viewing_experience": "new_viewing_experience.html",
     "/cbackground": "cbackground.html",
     "/wariolandshakeit2008": "wariolandshakeit2008.html",
-    "/mh_pc_intro": "mh_pc_intro.html"
+    "/mh_pc_intro": "mh_pc_intro.html",
+    "/mh_pc_manage": "mh_pc_manage.html"
 }
 for(let site in static_sites) {
     app.get(site, (req, res) => {
@@ -3705,14 +3717,20 @@ app.get("/nearyou", (req, res) => {
     if(!ipDb) {
         region = "US"
     }
+    let location = false;
     let ip = req.ip.replace("::ffff:", "")
     let ipData;
     try {
         ipData = ipDb.getGeoDataSync(ip)
         region = ipData.country.iso_code
+        location = ipData.country.location
     }
     catch(error) {
         region = "US"
+        location = { // mountain view generic coords
+            "latitude": 37.411,
+            "longitude": -122.122
+        }
     }
     let initialRegion = JSON.parse(JSON.stringify(region))
     /*if(ipData && ipData.city) {

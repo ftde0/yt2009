@@ -1,2 +1,197 @@
-<!--<h1>looking to use an actual youtube account with yt2009?</h1>
-<p>///UNDER CONSTRUCTION///</p>-->
+<style>
+    .highlighted-a {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 30px;
+        display: block;
+    }
+    .i {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    #unfinished {
+        background: rgb(255, 190, 68);
+        padding: 10px 10px;
+    }
+</style>
+<div class="panel" id="panel1">
+    <h1>looking to use an actual youtube account with yt2009?</h1>
+    <h1 id="unfinished">UNFINISHED ZONE AHEAD</h1>
+    <p>you will need to connect your youtube account with yt2009.<br><br>
+    the process will take a few minutes and requires you to use a PC with a relatively modern browser.<br>
+    you will also need to <b>carefully</b> read through the instructions given.<br><br>
+    if you've signed into mobile apps with yt2009, this process will be familiar.</p>
+    <p style="margin-top: 30px;">having trouble using an older browser? sign in through a new one and copy the <code>pchelper_user</code> cookie.</p>
+    <a href="#" class="highlighted-a" onclick="switchPanel(2);genConnData()">start connection</a>
+</div>
+<div class="panel" id="panel2" style="display: none;">
+    <p id="load-text">loading..</p>
+    <div id="panel2-sub" style="display: none;">
+        <b>=== yt2009 pchelper ===</b><br><br>
+        <p>please check info below and ensure all sounds alright.</p><br><br>
+        <p>current instance: <span id="current-instance">?</span></p><br>
+        <p><b>make sure you trust the instance!</b></p><br><br>
+        <p class="i">yt2009 cannot guarantee nothing will happen with your account when using pchelper.<br>
+        by continuing, you agree that you will not abuse this functionality,<br>
+        and that you won't blame anyone involved in providing this service to you, should any account bans happen.</p>
+        <a href="#" class="highlighted-a" onclick="switchPanel(3)">agree and continue</a>
+    </div>
+</div>
+<div class="panel" id="panel3" style="display: none;">
+    <h1>1. open the link below in a new incognito window.</h1>
+    <h2>don't sign in yet!</h2>
+    <a class="highlighted-a" href="https://accounts.google.com/embedded/setup/v2/android?source=com.google.android.gms&xoauth_display_name=Android%20Phone&ph=%2B15555215554&imsi=310260000000000&lang=en&langCountry=en_us&hl=en-US&cc=us&multilogin=1&hide_status_bar=0&use_native_navigation=0&alignment=center" target="_blank">https://accounts.google.com/embedded/setup...</a><br>
+    <a href="#" class="highlighted-a" onclick="switchPanel(4)">done</a>
+</div>
+<div class="panel" id="panel4" style="display: none;">
+    <h1>2. right click on the sign in page, inspect element.</h1>
+    <img src="/mobile/mobilehelper/s1.png"/>
+    <a href="#" class="highlighted-a" onclick="switchPanel(5)">done</a>
+</div>
+<div class="panel" id="panel5" style="display: none;">
+    <h1>3. on the inspect window, click on the Network tab.</h1>
+    <img src="/mobile/mobilehelper/s2.png"/>
+    <a href="#" class="highlighted-a" onclick="switchPanel(6)">done</a>
+</div>
+<div class="panel" id="panel6" style="display: none;">
+    <h1>4. you can now sign in.</h1>
+    <p><b>that's not it yet!</b> once "I agree" is clicked on the page, click "done" for futher instructions.</p>
+    <a href="#" class="highlighted-a" onclick="switchPanel(7)">done</a>
+</div>
+<div class="panel" id="panel7" style="display: none;">
+    <h1>5. provide auth data to yt2009</h1>
+    <p>look through the last 3 "batchexecute" requests.<br>
+    you might need to scroll down.</p>
+    <p>click on the "Preview" or the "Response" tab<br>
+    and find an "oauth2_4" token.</p>
+    <img src="/mobile/mobilehelper/s3.png"/>
+    <p>copy the token and put it in here.</p>
+    oauth2_4/<input type="text" spellcheck="false" autocomplete="off" id="oauthtoken"><br>
+    email used: <input type="email" spellcheck="false" autocomplete="off" id="email"><br>
+    <a href="#" class="highlighted-a" onclick="switchPanel(8);putAuth();">done</a>
+</div>
+<div class="panel" id="panel8" style="display: none;">
+    <p class="i">adding account, please wait..</p>
+    <p id="panel8-error" style="display: none;"></p>
+</div>
+<script>
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/pull_pchelper")
+    try {
+        r.send(null)
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r.status == 200) {
+                    location.href = "/mh_pc_manage"
+                }
+            }
+        }
+    }
+    catch(error) {}
+    var messages = {
+        "gsigninFail": "couldn't authorize with <b>google</b>.",
+        "ytsigninFail": "couldn't authorize with <b>youtube</b>.",
+    }
+    var panels = [
+        "panel1", "panel2", "panel3", "panel4", "panel5", "panel6",
+        "panel7", "panel8"
+    ]
+    function switchPanel(panelNumber) {
+        for(var p in panels) {
+            if(panels[p]
+            && document.getElementById(panels[p])
+            && document.getElementById(panels[p]).tagName) {
+                document.getElementById(panels[p]).style.display = "none"
+            }
+        }
+        document.getElementById("panel" + panelNumber).style.display = "block"
+    }
+    var initialConnectResp = {}
+    function genConnData() {
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        r.open("POST", "/create_pchelper")
+        try {
+            r.send(null)
+            r.onreadystatechange = function(e) {
+                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                    var tempR = r.responseText.split("&")
+                    for(let i in tempR) {if(tempR[i]) {
+                        var key = tempR[i].split("=")[0]
+                        var value = decodeURIComponent(
+                            tempR[i].split("=")[1]
+                        )
+                        initialConnectResp[key] = value;
+                    }}
+                    onInitialReceived()
+                }
+            }
+        }
+        catch(error) {}
+    }
+    function onInitialReceived() {
+        if(initialConnectResp.ok && initialConnectResp.ok == "true"
+        && initialConnectResp.pchelper_user && initialConnectResp.instance) {
+            document.cookie = "pchelper_user="+initialConnectResp.pchelper_user
+                            +"; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT";
+            document.getElementById("load-text").innerHTML = ""
+            document.getElementById("panel2-sub").style.display = "block"
+            document.getElementById("current-instance").innerHTML = initialConnectResp.instance;
+        } else {
+            document.getElementById("panel2").innerHTML = "\
+            something went wrong while initiating a connection session.<br>\
+            try again later."
+        }
+    }
+    function putAuth() {
+        var device = initialConnectResp.pchelper_user
+        var token = document.getElementById("oauthtoken").value;
+        token = token.replace("oauth2_4/", "")
+        token = token.split("\"")[0]
+        token = token.split("").reverse().join("")
+        token = "\x01" + token.substring(0,4) + "\x01" + token.substring(4)
+        var email = document.getElementById("email").value;
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        r.open("POST", "/gsign_submit")
+        r.setRequestHeader("device", device)
+        r.setRequestHeader("use_pc_seps", "true")
+        r.send(email + "\x00" + token)
+        try {
+            r.onreadystatechange = function(e) {
+                if(r.status == 200) {
+                    window.location = "/mh_pc_manage"
+                } else {
+                    var message = ""
+                    switch(r.responseText) {
+                        case "1": {
+                            message = messages.gsigninFail
+                            break;
+                        }
+                        case "2": {
+                            message = messages.ytsigninFail;
+                            break;
+                        }
+                    }
+                    var err = document.getElementById("panel8-error")
+                    err.style.display = "block"
+                    err.innerHTML = message;
+                }
+            }
+        }
+        catch(error) {}
+    }
+</script>

@@ -199,7 +199,7 @@ module.exports = {
         }
 
         if(saved_subscription_data[url]
-        && Math.floor(Date.now() / 1000) - saved_subscription_data[url].time <= 86400) {
+        && Math.floor(Date.now() / 1000) - saved_subscription_data[url].time <= 600) {
             if(sendRawData) {
                 res.send(
                     JSON.parse(JSON.stringify(saved_subscription_data[url]))

@@ -2914,5 +2914,28 @@ term='channel'/>
 
     "baseFeed_feedEnd": `
     </channel>
-</rss>`
+</rss>`,
+
+    "pchelper_accounts": function(accounts) {
+        let html = `<table id="account-list">`
+        let firstMarked = false;
+        accounts.forEach(a => {
+            let name = a.name;
+            if(name.length > 26) {
+                name = name.substring(0, 26) + "..."
+            }
+            html += `<tr class="account" data-pageid="${a.pageId}">
+            <td><img src="/assets/site-assets/default.png"/><span id="account-name">${name}</span></td>
+            <td class="selector">${a.selected
+            ? `<span class="selected-label">Selected</span>`
+            : `<a class="yt-button yt-button-primary"
+				href="#" onclick="login_change('${a.pageId}','${name.split("'").join("\"")}',${firstMarked ? "true" : "false"})">
+				<span>Select</span>
+			</a>`}</td>
+        </tr>`
+            firstMarked = true;
+        })
+        html += "</table>"
+        return html;
+    }
 }

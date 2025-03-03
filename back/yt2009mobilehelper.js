@@ -179,6 +179,12 @@ module.exports = {
 
             refreshTube(device, () => {
                 pullAllYouTubeAccounts(userdata[device], (data) => {
+                    if(req.headers.mode == "pchelper") {
+                        console.log(data)
+                        let t = templates.pchelper_accounts(data)
+                        res.send(t)
+                        return;
+                    }
                     res.send(data)
                 })
             })
@@ -209,6 +215,35 @@ module.exports = {
             fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
 
             res.send("")
+        })
+
+        app.post("/create_pchelper", (req, res) => {
+            let devId = ""
+            function createDevId() {
+                devId = ""
+                while(devId.length !== 7) {
+                    devId += uida[Math.floor(Math.random() * uida.length)]
+                }
+            }
+            createDevId()
+            while(initedSessions.includes(devId)
+            || this.hasLogin(devId)) {
+                createDevId()
+            }
+
+            res.send([
+                "ok=true",
+                "pchelper_user=" + devId,
+                "instance=" + config.ip
+            ].join("&"))
+        })
+
+        app.get("/pull_pchelper", (req, res) => {
+            if(pullDeviceId(req) && this.hasLogin(req)) {
+                res.sendStatus(200)
+                return;
+            }
+            res.sendStatus(401);
         })
     },
 
@@ -1370,6 +1405,9 @@ function pullDeviceId(req) {
         deviceId = req.headers["x-gdata-device"]
                     .split("device-id=\"")[1]
                     .split("\"")[0];
+    } else if(req.headers.cookie
+    && req.headers.cookie.includes("pchelper_user=")) {
+        deviceId = req.headers.cookie.split("pchelper_user=")[1].split(";")[0]
     }
     return deviceId
 }
