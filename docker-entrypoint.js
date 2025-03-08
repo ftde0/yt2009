@@ -136,6 +136,11 @@ if(process.env.YT2009_TCOVERRIDE) {
     cfg.tc_override_key = process.env.YT2009_TCOVERRIDE;
 }
 
+// set data api key
+if(process.env.YT2009_DATA_API_KEY) {
+    cfg.data_api_key = process.env.YT2009_DATA_API_KEY;
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

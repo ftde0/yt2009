@@ -30,3 +30,4 @@ other params you can set:
 - `reencode_devs` - a list of user agent parts to reencode mp4s to a more compatible codec. comma-separated.
 - `trusted_context` - require additional "context" data to start download of mp4 videos. `true/false`
 - `tc_override_key` - a key for mp4 requests to bypass trusted context. more in yt2009trustedcontext.js.
+- `data_api_key` - accepts a google data api v3 for proper categories to show in video descriptions.

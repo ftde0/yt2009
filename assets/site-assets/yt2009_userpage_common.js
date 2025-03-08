@@ -2,6 +2,8 @@
 // minor changes for now
 // 2023-07-21
 
+// one day.. 2025-03-08
+
 // zmiana strony
 // 2009 style
 function switchPage(num) {
@@ -134,10 +136,17 @@ if(window.localStorage) {
     switch(path) {
         case "/my_favorites": {
             storageObject = JSON.parse(localStorage.favorites)
+            if(storageObject[0] !== "PCHELPER_MANAGED") {
+                buildList()
+            } else {
+                storageObject = []
+                buildList()
+            }
             break;
         }
         case "/my_history": {
             storageObject = JSON.parse(localStorage.watch_history)
+            buildList()
             break;
         }
         case "/watch_queue":
@@ -151,54 +160,57 @@ if(window.localStorage) {
                 var nv = document.getElementById("novids-template")
                 nv.parentNode.removeChild(nv)
             }
+            buildList()
             break;
         }
     }
 
     // add html
-    if(!document.querySelector(".videos-page-0")) {
-        prepNewPage();
-    }
-
-    var viewPrefix = "Views: "
-    if(window["lsViewStringPrefix"]) {
-        viewPrefix = lsViewStringPrefix
-    }
-
-    storageObject.reverse().forEach(function(video) {
-        if(!video.id) return;
-        if(current_page_item_count >= current_page_items_max) {
-            // create new pages
-            current_page_items_max = 20;
-            current_page_item_count = 0;
+    function buildList() {
+        if(!document.querySelector(".videos-page-0")) {
             prepNewPage();
         }
-        var fullThumbUrl = location.protocol + '//i.ytimg.com/vi/'
-                        + video.id + '/' + thumbUrl
-        if(document.cookie.indexOf("thumbnail_proxy") !== -1) {
-            fullThumbUrl = "/thumb_proxy?v=" + video.id
+    
+        var viewPrefix = "Views: "
+        if(window["lsViewStringPrefix"]) {
+            viewPrefix = lsViewStringPrefix
         }
-
-        document.querySelector(".videos-page-0 td").innerHTML = '\
-    <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">\
-        <div style="float: left;">\
+    
+        storageObject.reverse().forEach(function(video) {
+            if(!video.id) return;
+            if(current_page_item_count >= current_page_items_max) {
+                // create new pages
+                current_page_items_max = 20;
+                current_page_item_count = 0;
+                prepNewPage();
+            }
+            var fullThumbUrl = location.protocol + '//i.ytimg.com/vi/'
+                            + video.id + '/' + thumbUrl
+            if(document.cookie.indexOf("thumbnail_proxy") !== -1) {
+                fullThumbUrl = "/thumb_proxy?v=" + video.id
+            }
+    
+            document.querySelector(".videos-page-0 td").innerHTML = '\
+        <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">\
             <div style="float: left;">\
-                <input type="checkbox" class="checkbox" value="' + video.id + '" />\
+                <div style="float: left;">\
+                    <input type="checkbox" class="checkbox" value="' + video.id + '" />\
+                </div>\
             </div>\
-        </div>\
-        <div style="float: left; width: 120px;">\
-            <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + fullThumbUrl + '"/></a>\
-            <a href="/watch?v=' + video.id + '" class="title" style="display: block; color: #03c;">' + video.title + '</a>\
-            <div class="video-stats">\
-                <div class="video-stat' + (path == "/watch_queue" ? " hid" : "") + '"><span class="stat-views">' + viewPrefix + video.views + '</span></div>\
-                <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>\
+            <div style="float: left; width: 120px;">\
+                <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + fullThumbUrl + '"/></a>\
+                <a href="/watch?v=' + video.id + '" class="title" style="display: block; color: #03c;">' + video.title + '</a>\
+                <div class="video-stats">\
+                    ' + (video.views ? '<div class="video-stat' + (path == "/watch_queue" ? " hid" : "") + '"><span class="stat-views">' + viewPrefix + video.views + '</span></div>' : '') + '\
+                    <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>\
+                </div>\
             </div>\
-        </div>\
-    </div>' + document.querySelector(".videos-page-0 td").innerHTML
-        current_page_item_count++;
-    })
-
-    localStoragePagingPatch()
+        </div>' + document.querySelector(".videos-page-0 td").innerHTML
+            current_page_item_count++;
+        })
+    
+        localStoragePagingPatch()
+    }
 }
 
 // new page
@@ -358,67 +370,103 @@ function show_playlist_localstorage(playlist) {
 
     // render videos
     var playlistId = playlist.getAttribute("data-id")
-    var playlistVideos = JSON.parse(localStorage["playlist-" + playlistId])
-    var playlistVideosHTML = ""
-    var playlistVideoIndex = 0;
-
-    var thumbUrl = "hqdefault.jpg"
-    if(document.cookie.indexOf("autogen_thumbnail") !== -1) {
-        thumbUrl = "1.jpg"
+    var playlistVideos = []
+    if(!localStorage["playlist-" + playlistId]) {
+        // most likely youtube playlist, need fetch
+        if(document.cookie
+        && document.cookie.indexOf("pchelper_user") !== -1
+        && document.cookie.indexOf("playlists_sync") !== -1) {
+            // pull playlist as pchelper user in case its privat or smth
+            var r = new XMLHttpRequest();
+            r.open(
+                "GET", 
+                "/pchelper_playlist?playlist=" + playlistId + "&format=modern"
+            )
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                playlistVideos = JSON.parse(r.responseText)
+                onVideosReady()
+            }, false)
+        } else {
+            // this shouldn't ever trigger but it might
+            var r = new XMLHttpRequest();
+            r.open(
+                "GET", 
+                "/nonpch_playlist?playlist=" + playlistId + "&format=modern"
+            )
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                playlistVideos = JSON.parse(r.responseText)
+                onVideosReady()
+            }, false)
+        }
+    } else {
+        playlistVideos = JSON.parse(localStorage["playlist-" + playlistId])
+        onVideosReady()
     }
+    
+    function onVideosReady() {
+        var playlistVideosHTML = ""
+        var playlistVideoIndex = 0;
 
-    playlistVideos.forEach(function(video) {
-        if(yt2009_used_lang !== "English") {
-            try {
-                var temp = new Date(video.date)
-                var y = temp.getFullYear()
-                var m = temp.getMonth() + 1
-                if(m < 10) {
-                    m = "0" + m
+        var thumbUrl = "hqdefault.jpg"
+        if(document.cookie.indexOf("autogen_thumbnail") !== -1) {
+            thumbUrl = "1.jpg"
+        }
+
+        playlistVideos.forEach(function(video) {
+            if(yt2009_used_lang !== "English") {
+                try {
+                    var temp = new Date(video.date)
+                    var y = temp.getFullYear()
+                    var m = temp.getMonth() + 1
+                    if(m < 10) {
+                        m = "0" + m
+                    }
+                    var d = temp.getDate()
+                    if(d < 10) {
+                        d = "0" + d
+                    }
+                    video.date = y + "-" + m + "-" + d
                 }
-                var d = temp.getDate()
-                if(d < 10) {
-                    d = "0" + d
-                }
-                video.date = y + "-" + m + "-" + d
+                catch(error) {}
             }
-            catch(error) {}
-        }
-        var fullThumbUrl = location.protocol + '//i.ytimg.com/vi/'
-                            + video.id + '/' + thumbUrl
-        if(document.cookie.indexOf("thumbnail_proxy") !== -1) {
-            fullThumbUrl = "/thumb_proxy?v=" + video.id
-        }
-        playlistVideosHTML += '\
-        <tr class="video ' + (playlistVideoIndex % 2 == 0 ? "even" : "odd") + '" data-videoid="' + video.id + '">\
-            <td id="heading-check" class="first heading">\
-                <div><input id="all-items-checkbox" type="checkbox" onclick="" data-videoid="' + video.id + '"/></div>\
-            </td>\
-            <td id="heading-position" class="heading">\
-                <div style="text-align: center;"><a href="#" style="text-align: center;font-size: 14px;"><b>' + (playlistVideoIndex + 1) + '</b></a></div>\
-            </td>\
-            <td id="heading-title" class="heading">\
-                <button title="" class="master-sprite"></button>\
-                <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="' + fullThumbUrl + '"></a>\
-                <a href="/watch?v=' + video.id + '" class="video-title">' + video.title + '</a>\
-            </td>\
-            <td id="heading-time" class="heading">\
-                <div>' + video.time + '</div>\
-            </td>\
-            <td id="heading-date" class="heading">\
-                <div>' + video.date + '</div>\
-            </td>\
-            <td id="heading-views" class="heading">\
-                <div>' + video.viewCount + '</div>\
-            </td>\
-            <td id="heading-rating" class="heading">\
-                <div><div class="video-stat"><span class="stat-rating"><img class="yt-rating-' + video.rating + '" src="/assets/site-assets/pixel-vfl73.gif" alt="' + video.rating + '" /></span></div></div>\
-            </td>\
-        </tr>'
-        playlistVideoIndex++;
-    })
+            var fullThumbUrl = location.protocol + '//i.ytimg.com/vi/'
+                                + video.id + '/' + thumbUrl
+            if(document.cookie.indexOf("thumbnail_proxy") !== -1) {
+                fullThumbUrl = "/thumb_proxy?v=" + video.id
+            }
+            playlistVideosHTML += '\
+            <tr class="video ' + (playlistVideoIndex % 2 == 0 ? "even" : "odd") + '" data-videoid="' + video.id + '">\
+                <td id="heading-check" class="first heading">\
+                    <div><input id="all-items-checkbox" type="checkbox" onclick="" data-videoid="' + video.id + '"/></div>\
+                </td>\
+                <td id="heading-position" class="heading">\
+                    <div style="text-align: center;"><a href="#" style="text-align: center;font-size: 14px;"><b>' + (playlistVideoIndex + 1) + '</b></a></div>\
+                </td>\
+                <td id="heading-title" class="heading">\
+                    <button title="" class="master-sprite"></button>\
+                    <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="' + fullThumbUrl + '"></a>\
+                    <a href="/watch?v=' + video.id + '" class="video-title">' + video.title + '</a>\
+                </td>\
+                <td id="heading-time" class="heading">\
+                    <div>' + video.time + '</div>\
+                </td>\
+                <td id="heading-date" class="heading">\
+                    <div>' + video.date + '</div>\
+                </td>\
+                <td id="heading-views" class="heading">\
+                    <div>' + video.viewCount + '</div>\
+                </td>\
+                <td id="heading-rating" class="heading">\
+                    <div><div class="video-stat"><span class="stat-rating"><img class="yt-rating-' + video.rating + '" src="/assets/site-assets/pixel-vfl73.gif" alt="' + video.rating + '" /></span></div></div>\
+                </td>\
+            </tr>'
+            playlistVideoIndex++;
+        })
 
-    document.querySelector(".yt2009-videos-insert").innerHTML = playlistVideosHTML
+        document.querySelector(".yt2009-videos-insert").innerHTML = playlistVideosHTML
+    }
 }
 
 // play all

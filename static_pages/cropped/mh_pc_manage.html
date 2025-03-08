@@ -42,25 +42,34 @@
         background: rgb(255, 190, 68);
         padding: 10px 10px;
     }
+    #login-simulate-autopicker {
+        margin-top: 20px;
+        text-align: center;
+    }
 </style>
 <div class="panel" id="panel1">
-    <h1 id="unfinished">UNFINISHED ZONE AHEAD</h1>
+    <!--<h1 id="unfinished">UNFINISHED ZONE AHEAD</h1>-->
     <h1>Account Picker</h1>
 </div>
-<!--<hr>
-<div class="panel" id="panel2">
+<hr>
+<div class="panel" id="panel2" style="display: none;">
     <h1>Settings</h1>
-    <input type="checkbox" id="pchelper-comments-add-youtube" title="komentarze dodawaj na youtube zamiast na serwerze sync yt2009.">
+    <input type="checkbox" id="pchelper-comments-add-youtube" title="comments will be added to youtube instead of yt2009 sync.">
     <label for="pchelper-comments-add-youtube">comments_add_youtube</label><br>
-    <input type="checkbox" id="pchelper-commit-ratings" title="oceny gwiazdkowe zostawiane przez yt2009 będą zostawiane na youtube">
-    <label for="pchelper-commit-ratings">commit_ratings</label>
-    <input type="checkbox" id="pchelper-playlists-sync" title="playlisty z konta youtube będą przeniesione do yt2009.">
-    <label for="pchelper-playlists-sync">playlists_sync</label>
-    <input type="checkbox" id="pchelper-default-w2w" title="polecane filmy na stronie głównej będą używać algorytmu youtube.">
-    <label for="pchelper-default-w2w">default_w2w</label>
-    <input type="checkbox" id="pchelper-subscriptions-sync" title="subskrypcje z konta youtube będą przeniesione do yt2009.">
-    <label for="pchelper-subscriptions-sync">subscriptions_sync</label>
-</div>-->
+    <input type="checkbox" id="pchelper-commit-ratings" title="star ratings will be submitted as like/dislike ratings on your youtube account.">
+    <label for="pchelper-commit-ratings">commit_ratings</label><br>
+    <input type="checkbox" id="pchelper-default-w2w" title="recommended section will use your youtube recommendations.">
+    <label for="pchelper-default-w2w">default_w2w</label><br>
+    <input type="checkbox" id="pchelper-playlists-sync" title="playlists will be brought over to yt2009.">
+    <label for="pchelper-playlists-sync">playlists_sync</label><br>
+    <input type="checkbox" id="pchelper-subscriptions-sync" title="subscriptions will be brought over to yt2009.">
+    <label for="pchelper-subscriptions-sync">subscriptions_sync</label><br>
+    <input type="checkbox" id="pchelper-user-related" title="show personal related videos on the top of related section on watchpage.">
+    <label for="pchelper-user-related">user_related</label><br>
+    <a class="yt-button yt-button-primary" href="#" onclick="save_settings()">
+        <span>save</span>
+    </a>
+</div>
 <script>
     var device = ""
     if(document.cookie.indexOf("pchelper_user=") !== -1) {
@@ -82,9 +91,11 @@
     r.onreadystatechange = function(e) {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
             if(r.status !== 200) {
-                document.getElementById("panel1").innerHTML += "<br>no valid login?"
+                document.getElementById("panel1").innerHTML += "<br>no valid login?\
+                <br><a href=\"/mh_pc_intro\">sign in to pchelper</a>"
             } else {
                 document.getElementById("panel1").innerHTML += r.responseText
+                document.getElementById("panel2").style.display = "block"
             }
         }
     }
@@ -128,4 +139,172 @@
 	}
 	updateDescriptions()
 
+    if(document.cookie && document.cookie.indexOf("pchelper_flags=") !== -1) {
+        var flags = document.cookie.split("pchelper_flags=")[1].split(";")[0]
+        flags = flags.split(":")
+        for(var flag in flags) {if(typeof(flags[flag]) == "string") {
+            flag = "pchelper-" + flags[flag].split("_").join("-")
+            document.getElementById(flag).checked = true;
+        }}
+    }
+
+    var expiry = " expires=Fri, 31 Dec 2066 23:59:59 GMT"
+
+    function login_sim_change(name) {
+        var c = ""
+        var cookies = (document.cookie || "").split(";")
+        for(var cookie in cookies) {
+            cookie = cookies[cookie]
+            if(cookie.indexOf("global_flags=") !== -1) {
+                c = cookie.split("global_flags=")[1].replace(";", "")
+            }
+        }
+
+        // got global_flags cookie, remove old login_simulate
+        // and add new one
+        if(c.indexOf("login_simulate") !== -1) {
+            var lsName = c.split("login_simulate")[1].split(":")[0]
+            c = c.replace("login_simulate" + lsName + ":", "")
+            c = c.replace("login_simulate" + lsName, "")
+        }
+        c += "login_simulate" + name + ":"
+        document.cookie = "global_flags=" + c
+                        + "; Path=/;" + expiry;
+        alert("login_simulate name updated to " + name + "!")
+        location.reload()
+    }
+
+    function save_settings() {
+        var s = []
+        var inputs = document.getElementsByTagName("input")
+        for(var input in inputs) {
+			input = inputs[input]
+			if(input.id && input.getAttribute("type") == "checkbox"
+            && input.checked) {
+				s.push(input.id.replace("pchelper-", "").split("-").join("_"))
+			}
+		}
+        s = s.join(":")
+        if(s.indexOf("playlists_sync") !== -1
+        || s.indexOf("subscriptions_sync") !== -1) {
+            var r = confirm("using \"_sync\" flags, it is highly recommended\n\
+to clear playlist and subscription data to avoid conflicts.\n\
+all the data will be backed up in your browser for future use.\n\
+should we do so?");
+            if(r) {
+                if(localStorage) {
+                    var subs = localStorage.subscriptions;
+                    if(subs) {
+                        localStorage.backup_subscriptions = subs;
+                        localStorage.subscriptions = "[]"
+                    }
+                    var playlists = localStorage.playlistsIndex;
+                    if(playlists) {
+                        localStorage.backup_playlistsIndex = playlists;
+                        localStorage.playlistsIndex = "[]"
+                    }
+                    var favs = localStorage.favorites;
+                    if(favs) {
+                        localStorage.backup_favorites = favs;
+                        localStorage.favorites = "[\"PCHELPER_MANAGED\"]"
+                    }
+                }
+                if(document.cookie.indexOf("favorites=") !== -1) {
+                    var favs = document.cookie.split("favorites=")[1].split(";")[0]
+                    document.cookie = "favorites=PCHELPER_MANAGED" + "; Path=/;" + expiry;
+                    document.cookie = "favorites_backup=" + favs
+                                    + "; Path=/;" + expiry;
+                }
+                if(document.cookie.indexOf("playlist_index=") !== -1) {
+                    var favs = document.cookie.split("playlist_index=")[1].split(";")[0]
+                    document.cookie = "playlist_index=" + "; Path=/;" + expiry;
+                    document.cookie = "backup_pindex=" + favs
+                                    + "; Path=/;" + expiry;
+                }
+                /*if(document.cookie.indexOf("watch_history=") !== -1) {
+                    var favs = document.cookie.split("watch_history=")[1].split(";")[0]
+                    document.cookie = "watch_history=" + "; Path=/;" + expiry;
+                    document.cookie = "watch_history_backup=" + favs
+                                    + "; Path=/;" + expiry;
+                }*/
+                if(document.cookie.indexOf("sublist=") !== -1) {
+                    var favs = document.cookie.split("sublist=")[1].split(";")[0]
+                    document.cookie = "sublist=" + "; Path=/;" + expiry;
+                    document.cookie = "sublist_backup=" + favs
+                                    + "; Path=/;" + expiry;
+                }
+            }
+
+            var dataFormat = "cookie"
+            if(window.localStorage && window.JSON) {
+                dataFormat = "localstorage"
+            }
+
+            var r;
+            if (window.XMLHttpRequest) {
+                r = new XMLHttpRequest()
+            } else {
+                r = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            r.open("GET", "/pchelper_subs?format=" + dataFormat)
+            r.send(null)
+            r.onreadystatechange = function(e) {
+                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                    if(r.status == 200) {
+                        if(dataFormat == "cookie") {
+                            document.cookie = "sublist=" + r.responseText
+                                            + "; Path=/;" + expiry;
+                        } else if(dataFormat == "localstorage" && JSON) {
+                            var a = JSON.parse(r.responseText)
+                            var existing = JSON.parse(
+                                localStorage.subscriptions || "[]"
+                            )
+                            a.forEach(function(s) {
+                                existing.push(s)
+                            })
+                            localStorage.subscriptions = JSON.stringify(existing);
+                        }
+                    }
+                }
+            }
+
+            var r2;
+            if (window.XMLHttpRequest) {
+                r2 = new XMLHttpRequest()
+            } else {
+                r2 = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            r2.open("GET", "/pchelper_playlists?format=" + dataFormat)
+            r2.send(null)
+            r2.onreadystatechange = function(e) {
+                if(r2.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                    if(r2.status == 200) {
+                        if(dataFormat == "cookie") {
+                            document.cookie = "playlist_index=" + r2.responseText
+                                            + "; Path=/;" + expiry;
+                        } else if(dataFormat == "localstorage" && JSON) {
+                            var a = JSON.parse(r2.responseText)
+                            var existing = JSON.parse(
+                                localStorage.playlist_index || "[]"
+                            )
+                            a.forEach(function(s) {
+                                existing.push(s)
+                            })
+                            localStorage.playlistsIndex = JSON.stringify(existing);
+                        }
+                    }
+                }
+            }
+
+
+        
+            //fillSync("pchelper_subs", "sublist", "subscriptions")
+            //fillSync("pchelper_playlists", "playlist_index", "playlistsIndex")
+            //fillSync("pchelper_favorites", "favorites", "favorites")
+
+        }
+        document.cookie = "pchelper_flags=" + s
+                        + "; Path=/;" + expiry;
+        alert("ok")
+    }
 </script>

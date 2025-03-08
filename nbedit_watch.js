@@ -296,6 +296,15 @@ $("#subscribeDiv").addEventListener("click", function() {
                         + sub
                         + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
+
+
+    if(document.cookie && document.cookie.indexOf("subscriptions_sync") !== -1) {
+        var reqUser = $(".yt2009-channel-link").href.split("/")
+        reqUser = reqUser[reqUser.length - 1]
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_subs")
+        r.send("user=" + reqUser)
+    }
 }, false)
 
 // UNSUBSCRIBE
@@ -349,6 +358,14 @@ $("#unsubscribeDiv").addEventListener("click", function() {
         document.cookie = "sublist="
                         + sub
                         + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    }
+
+    if(document.cookie && document.cookie.indexOf("subscriptions_sync") !== -1) {
+        var reqUser = $(".yt2009-channel-link").href.split("/")
+        reqUser = reqUser[reqUser.length - 1]
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_subs")
+        r.send("user=" + reqUser + "&state=unsubscribe")
     }
 }, false)
 
@@ -620,13 +637,20 @@ favoriting videos
 // kod taktycznie z kanałów zabrany
 // adding
 function favorite_video() {
-    try {
-        relayFavorite()
-    }
-    catch(error) {}
-
-
     var currentId = $(".email-video-url").value.split("?v=")[1]
+    if((localStorage && localStorage.favorites
+    && localStorage.favorites.indexOf("PCHELPER_MANAGED") !== -1)
+    || (document.cookie
+    && document.cookie.indexOf("favorites=PCHELPER_MANAGED") !== -1)) {
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_favorites")
+        r.send("video_id=" + currentId)
+        r.addEventListener("load", function(e) {
+            $("#watch-add-faves").className += " hid"
+            $("#watch-remove-faves").className = "watch-action-result"
+        }, false)
+        return;
+    }
     var favorites = ""
     if(useLocalStorage) {
         // localstorage
@@ -893,18 +917,26 @@ function addPlaylistVideo(playlistId) {
         "time": $(".timer").innerHTML.split("/ ")[1]
     }
 
-    // relay if used
-    relayPlaylistAdd(playlistId)
-    
+    if(document.cookie && document.cookie.indexOf("playlists_sync") !== -1) {
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_playlists")
+        var params = [
+            "method=add_existing",
+            "playlist_id=" + playlistId,
+            "video=" + currentId
+        ].join("&")
+        r.send(params)
+    } else {
+        var playlist = JSON.parse(localStorage["playlist-" + playlistId])
+        if(JSON.stringify(playlist).indexOf(currentId) == -1) {
+            playlist.unshift(videoData)
+        }
+        localStorage["playlist-" + playlistId] = JSON.stringify(playlist)
+    }
+
     // show success tick
     $("#addToPlaylistResult").style.display = "block"
     $("#addToPlaylistDiv").style.display = "none"
-
-    var playlist = JSON.parse(localStorage["playlist-" + playlistId])
-    if(JSON.stringify(playlist).indexOf(currentId) == -1) {
-        playlist.unshift(videoData)
-    }
-    localStorage["playlist-" + playlistId] = JSON.stringify(playlist)
 }
 
 // pokaż z powrotem kartę dodawania do playlisty
@@ -924,18 +956,50 @@ $("#playlist-add-btn").addEventListener("click", function() {
 // add button on a new playlist
 $("#playlist-create-btn").addEventListener("click", function() {
     var playlistId = Math.floor(Date.now() / 1000)
-    localStorage["playlist-" + playlistId] = "[]"
-    addPlaylistVideo(playlistId)
+    var name = $(".playlist-name-input").value
+    var pchelperUsed = false;
 
-    var index = JSON.parse(localStorage.playlistsIndex);
-    index.unshift({"id": playlistId, "name": $(".playlist-name-input").value})
-    localStorage.playlistsIndex = JSON.stringify(index)
+    if(document.cookie && document.cookie.indexOf("playlists_sync") !== -1) {
+        pchelperUsed = true;
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_playlists")
+        var params = [
+            "method=create_new",
+            "playlist_name=" + name,
+            "video=" + currentId
+        ].join("&")
+        r.send(params)
+        r.addEventListener("load", function(e) {
+            if(r.status == 200) {
+                playlistId = r.responseText
+                commit();
+            }
+        })
+    }
 
-    // update playlists dropdown to show our new playlist
-    updatePlaylists();
-    $(".playlist-create").style.display = "none"
-    $(".playlist-add").style.display = ""
-    selectedOption = plDropdown.querySelectorAll("option")[0]
+    function commit() {
+        localStorage["playlist-" + playlistId] = "[]"
+        if(!pchelperUsed) {
+            addPlaylistVideo(playlistId);
+        } else {
+            $("#addToPlaylistResult").style.display = "block"
+            $("#addToPlaylistDiv").style.display = "none"
+        }
+
+        var index = JSON.parse(localStorage.playlistsIndex);
+        index.unshift({"id": playlistId, "name": $(".playlist-name-input").value})
+        localStorage.playlistsIndex = JSON.stringify(index)
+
+        // update playlists dropdown to show our new playlist
+        updatePlaylists();
+        $(".playlist-create").style.display = "none"
+        $(".playlist-add").style.display = ""
+        selectedOption = plDropdown.querySelectorAll("option")[0]
+    }
+
+    if(!pchelperUsed) {
+        commit();
+    }
 }, false)
 
 
@@ -1220,70 +1284,6 @@ function commentSend() {
             eBox.appendChild(a)
             mc.appendChild(eBox)
         }
-    }, false)
-}
-
-/*
-======
-favoriting with relay
-======
-*/
-function relayFavorite() {
-    var r = new XMLHttpRequest();
-    r.open("POST", relay_address + "favorite_video")
-    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
-    r.setRequestHeader("source", location.href)
-    r.send(null)
-    r.addEventListener("load", function(e) {
-        var res = JSON.parse(r.responseText)
-        // resync required to track the new favorites playlist
-        // that may have been created
-        if(res.relayCommand == "resync") {
-            setTimeout(function() {
-                relayResync()
-            }, 1024)
-        }
-    }, false)
-}
-
-/*
-======
-relay resync
-======
-*/
-function relayResync() {
-    var settings;
-    var r = new XMLHttpRequest();
-    r.open("GET", relay_address + "relay_settings")
-    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
-    r.send(null)
-    r.addEventListener("load", function(e) {
-        settings = JSON.parse(r.responseText)
-        r = new XMLHttpRequest();
-        r.open("POST", relay_address + "apply_relay_settings")
-        r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
-        r.send(JSON.stringify({
-            "settings": settings
-        }))
-        r.addEventListener("load", function(e) {}, false)
-    }, false)
-}
-
-/*
-======
-playlists with relay
-======
-*/
-function relayPlaylistAdd(playlistId) {
-    var r = new XMLHttpRequest();
-    r.open("POST", relay_address + "playlist_add")
-    r.setRequestHeader("auth", $("[name=\"relay_key\"]").value)
-    r.setRequestHeader("source", location.href)
-    r.send(JSON.stringify({
-        "playlistId": playlistId
-    }))
-    r.addEventListener("load", function(e) {
-        
     }, false)
 }
 

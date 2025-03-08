@@ -180,7 +180,6 @@ module.exports = {
             refreshTube(device, () => {
                 pullAllYouTubeAccounts(userdata[device], (data) => {
                     if(req.headers.mode == "pchelper") {
-                        console.log(data)
                         let t = templates.pchelper_accounts(data)
                         res.send(t)
                         return;
@@ -248,14 +247,7 @@ module.exports = {
     },
 
     "handle_recommendations": function(req, res) {
-        let deviceId = false;
-        if(req.headers["x-gdata-device"]
-        && req.headers["x-gdata-device"].includes("device-id=\"")) {
-            deviceId = req.headers["x-gdata-device"]
-                          .split("device-id=\"")[1]
-                          .split("\"")[0];
-        }
-
+        let deviceId = pullDeviceId(req)
         if(deviceId && !userdata[deviceId]) {
             let r = templates.gdata_feedStart;
             
@@ -399,9 +391,15 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     "browseId": "FEchannels"
                 })
             }).then(r => {r.json().then(r => {
+                fs.writeFileSync("./test.json", JSON.stringify(r))
                 r = r.contents.singleColumnBrowseResultsRenderer
                      .tabs[0].tabRenderer.content.sectionListRenderer
-                     .contents[0].itemSectionRenderer.contents;
+                     .contents[0];
+                if(r.itemSectionRenderer && r.itemSectionRenderer.contents) {
+                    r = r.itemSectionRenderer.contents
+                } else if(r.shelfRenderer) {
+                    r = r.shelfRenderer.content.verticalListRenderer.items
+                }
                 if(!r) {
                     res.send(templates.gdata_emptyfeed)
                     return;
@@ -624,7 +622,9 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         let author = v.authorHandle || v.authorId || ""
                         fullRes += templates.gdata_feedVideo(
                             v.id, v.title, author, v.views, v.length, "-",
-                            v.upload, "-", "-", mobileflags.get_flags(req).watch
+                            v.upload, "-", "-", mobileflags.get_flags(req).watch,
+                            null, {"authorFull": v.authorFull,
+                            "authorId": v.authorId}
                         )
                     })
                     fullRes += templates.gdata_feedEnd;
@@ -814,6 +814,12 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         if(!userdata[deviceId]) return;
         let body = req.body.toString()
         let name = body.split(`<title type='text'>`)[1].split("</title>")[0]
+        let addVideos = []
+        if(body.includes("<yt:videoid>")) {
+            addVideos.push(
+                body.split(`<yt:videoid>`)[1].split(`</yt:videoid>`)[0]
+            )
+        }
         let private = body.includes("<yt:private")
         setupYouTube(deviceId, (h) => {
             fetch("https://www.youtube.com/youtubei/v1/playlist/create", {
@@ -823,7 +829,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     "context": androidContext,
                     "privacyStatus": private ? "PRIVATE" : "PUBLIC",
                     "title": name,
-                    "videoIds": []
+                    "videoIds": addVideos
                 })
             }).then(r => {r.json().then(r => {
                 let p = r.playlistId;
@@ -1000,6 +1006,9 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             res.sendStatus(400);
             return;
         }
+        if(req.body.toString().includes("<yt:unsubscribe/>")) {
+            state = "unsubscribe"
+        }
         user = req.body.toString().split("<yt:username>")[1].split("</yt")[0]
         setupYouTube(device, (h) => {
             function onceIdPull(id) {
@@ -1065,6 +1074,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 
                 let views = v.split(" views")[0]
                 views = views.split(" ")[views.split(" ").length - 1]
+                if(isNaN(parseInt(views))) return;
 
                 let title = v.split("/watch?v=" + id)[1].split(" - Go to channel")[0]
                 title = title.split(" - ").slice(
@@ -1075,6 +1085,9 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 } else {
                     title = title.substring(2)
                 }
+
+                if(title.length >= 300 || title.includes("\x00")
+                || title.includes("\x01") || title.includes("\x02")) return;
 
                 let authorHandle = false
                 if(v.includes("/@")) {
@@ -1092,7 +1105,19 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                     })
                 }
 
-                let length = v.split(" seconds")[0]
+                let authorFull = ""
+                try {
+                    authorFull = v.split(" · ")[0].split("\u001a")
+                    authorFull = authorFull[authorFull.length - 1].substring(1)
+                }
+                catch(error) {
+                    //console.log(error)
+                }
+
+                let length = v.split(" second")[0]
+                if(!v.includes(" second") && v.includes(" minute")) {
+                    length = v.split(" minute")[0]
+                }
                 length = length.split("(")[length.split("(").length - 1]
                                .split(" ")[0]
                 length = length.replace(/[^0-9+\:]/g, "")
@@ -1106,6 +1131,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 videos.push({
                     "id": id,
                     "title": title,
+                    "authorFull": authorFull,
                     "authorHandle": authorHandle,
                     "authorId": authorId,
                     "length": utils.time_to_seconds(length),

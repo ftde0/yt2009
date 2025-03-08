@@ -225,6 +225,11 @@ module.exports = {
                 videos.forEach(video => {
                     if(video.richItemRenderer) {
                         video = video.richItemRenderer.content.videoRenderer
+                        if(!video.viewCountText) {
+                            video.viewCountText = {
+                                "simpleText": ""
+                            }
+                        }
                         data.videos.push({
                             "id": video.videoId,
                             "title": video.title.runs[0].text,

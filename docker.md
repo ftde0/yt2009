@@ -38,6 +38,7 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_REENCODE_DEVS` sets a list of user-agent parts to reencode mp4 videos to h264 baseline (more compatibility with older devices). comma-separaed. don't enter to disable.
 - `YT2009_TRUSTEDCONTEXT` sets whether to require additional "context" data in mp4 video links to download them. true/false (default: `false`)
 - `YT2009_TCOVERRIDE` sets a key that can be used to override trusted context. more info in yt2009trustedcontext.js. don't enter to not use a key.
+- `YT2009_DATA_API_KEY` accepts a google data api v3 key for proper categories to show in video descriptions.
 
 ## troubleshooting
 #### reading auth tokens from a running container

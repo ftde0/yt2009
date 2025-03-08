@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="app_style.css">
 </head>
 <body>
-    <h1>playback setup</h1>
+    <a href="playback_setup_basic.htm" id="setup-nonjs">setting without JS?</a>
+    <h1 style="margin-top: 20px;">playback setup</h1>
     <h3>set how videos should be played on mobile.<br>
     click the correct option and your option will be saved automatically.</h3>
     <button onclick="setPlayback('rtsp_mp4')">RTSP / H264 MP4</button><br>
@@ -17,6 +18,8 @@
     <button onclick="setPlayback('http_mp4')">HTTP / H264 MP4</button><br>
     <button onclick="setPlayback('http_mp4_144')">HTTP / H264 MP4 / 144P</button><br>
     <button onclick="setPlayback('http_3gp')">HTTP / 3GP</button><br>
+    <button onclick="setPlayback('http_wmv')">HTTP / LQ/WMV</button><br>
+    <button onclick="setPlayback('http_xvid')">HTTP / XVID</button><br>
     <h3 style="margin-top: 20px;">bonus: toggle old_experience: exp_related and only_old together.</h3>
     <button onclick="setOld()">old_experience</button>
     <script>

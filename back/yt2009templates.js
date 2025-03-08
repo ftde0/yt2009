@@ -547,7 +547,7 @@ module.exports = {
             </div>
         </div>`
     },
-    "searchPlaylistEntry": function(id, protocol, videos, name, videoCount, a) {
+    "searchPlaylistEntry": function(id, protocol, videos, name, videoCount, a, flags) {
         return `
         <div class="playlist-cell" style="width:24.5%">
             <div class="playlist-entry yt-uix-hovercard">
@@ -555,13 +555,13 @@ module.exports = {
                     <div class="vCluster120WideEntry">
                         <div class="vCluster120WrapperOuter playlist-thumbnail">
                             <div class="vCluster120WrapperInner">
-                                <a href="/playlist?list=${id}" rel="nofollow">${videos[0] ? `<img src="${protocol}://i.ytimg.com/vi/${videos[0].id}/hqdefault.jpg" class="vimgCluster120 yt-uix-hovercard-target">` : (a ? `<img src="${a}" class="vimgCluster120 yt-uix-hovercard-target"/>` : "")}</a>
+                                <a href="/playlist?list=${id}" rel="nofollow">${videos[0] ? `<img src="${utils.getThumbUrl(videos[0].id, flags)}" class="vimgCluster120 yt-uix-hovercard-target">` : (a ? `<img src="${a}" class="vimgCluster120 yt-uix-hovercard-target"/>` : "")}</a>
                                 ${videos[0] ? `<div class="video-corner-text"><span>${videos[0].length}</span></div>` : ""}
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="playlist-main-content" id="playlist-main-content-DF3129C5832D6AE7">
+                <div class="playlist-main-content" id="playlist-main-content-${id}">
                     <div class="playlist-title playlist-title-results">
                         <div class="playlist-long-title">
                             <a href="/playlist?list=${id}" class="yt-uix-hovercard-target" rel="nofollow">${name}</a>
@@ -844,6 +844,10 @@ module.exports = {
         let uploadDate = flags.includes("fake_dates")
                         ? utils.genFakeDate(videoIndex) : video.upload
         let viewCount = video.views;
+        if(video.views == "EMPTY_ALLOWED") {
+            video.views = ""
+            viewCount = ""
+        }
         if(flags.includes("realistic_view_count")
         && parseInt(video.views.replace(/[^0-9]/g, "")) >= 100000) {
             viewCount = utils.countBreakup(
@@ -862,7 +866,7 @@ module.exports = {
                 <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
                 <div class="video-stats">
                     <div class="video-stat"><span class="stat-upload">${video.upload ? `Added: ${uploadDate}` : ""}</span></div>
-                    <div class="video-stat"><span class="stat-views">Views: ${viewCount}</span></div>
+                    ${viewCount ? `<div class="video-stat"><span class="stat-views">Views: ${viewCount}</span></div>` : ""}
                     <div class="video-stat"><span class="stat-rating"><img class="yt-rating-5.0" src="/assets/site-assets/pixel-vfl73.gif" alt="5.0" /></span></div>
                 </div>
             </div>
@@ -1048,7 +1052,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <openSearch:startIndex>1</openSearch:startIndex>
     <openSearch:itemsPerPage>25</openSearch:itemsPerPage>`,
     "gdata_feedEnd": "\n</feed>",
-    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category, flags, qualities) {
+    "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category, flags, qualities, additional) {
         // flag handling
         if(typeof(flags) == "object") {
             try {
@@ -1148,6 +1152,16 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
 
         // category names
         category = (category || "-").split("&").join("&amp;")
+
+        // additional data
+        let add = ""
+        if(additional && additional.authorFull) {
+            add += "\n          <yt9full>" + utils.xss(additional.authorFull).split("&").join("&amp;") + "</yt9full>"
+        }
+        if(additional && additional.authorId) {
+            add += "\n          <yt9aid>" + additional.authorId + "</yt9aid>"
+        }
+
         return `
         <entry>
             <id>http://${config.ip}:${config.port}/feeds/api/videos/${id}</id>
@@ -1155,8 +1169,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <published>${uploadDate ? new Date(uploadDate).toISOString() : ""}</published>
             <updated>${uploadDate ? new Date(uploadDate).toISOString() : ""}</updated>
             <category scheme="http://gdata.youtube.com/schemas/2007/categories.cat" label="${category}" term="${category}">${category}</category>
-            <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("")}</title>
-            <content type='text'>${description.split("<").join("").split(">").join("").split("&").join("")}</content>
+            <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("&amp;")}</title>
+            <content type='text'>${description.split("<").join("").split(">").join("").split("&").join("&amp;")}</content>
             <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>${favCode}
             <author>
                 <name>${author}</name>
@@ -1168,7 +1182,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <media:group>
                 <media:category label='${category}' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>${category}</media:category>
                 <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
-                <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("")}</media:description>
+                <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("&amp;")}</media:description>
                 <media:keywords>${unduplicateKeywordList.join(", ")}</media:keywords>
                 <media:player url='http://www.youtube.com/watch?v=${id}'/>
                 <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/${id}/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
@@ -1181,7 +1195,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             </media:group>
             <gd:rating average='5' max='5' min='1' numRaters='${Math.floor(views / 600)}' rel='http://schemas.google.com/g/2005#overall'/>
             <yt:statistics favoriteCount="${Math.floor(views / 150)}" viewCount="${views}"/>
-            <yt:rating numLikes="${Math.floor(likeCount)}" numDislikes="${Math.floor(dislikeCount)}"/>
+            <yt:rating numLikes="${Math.floor(likeCount)}" numDislikes="${Math.floor(dislikeCount)}"/>${add}
         </entry>`
     },
     "gdata_feedComment": function(id, authorName, comment, time) {
@@ -2811,6 +2825,7 @@ term='channel'/>
             <content type='application/atom+xml;type=feed' src='http://${config.ip}:${config.port}/feeds/api/users/${fname}/videos'/>
             <link rel='edit' href='http://${config.ip}:${config.port}/edit'/>
             <yt:username>${fname}</yt:username>
+            <y9id>${id}</y9id>
         </entry>`
     },
 
@@ -2919,23 +2934,41 @@ term='channel'/>
     "pchelper_accounts": function(accounts) {
         let html = `<table id="account-list">`
         let firstMarked = false;
+        let selectedName = ""
+        let selectedHandle = ""
         accounts.forEach(a => {
             let name = a.name;
             if(name.length > 26) {
                 name = name.substring(0, 26) + "..."
+            }
+            if(a.selected) {
+                selectedName = a.name;
+                selectedHandle = a.handle.replace("@", "");
             }
             html += `<tr class="account" data-pageid="${a.pageId}">
             <td><img src="/assets/site-assets/default.png"/><span id="account-name">${name}</span></td>
             <td class="selector">${a.selected
             ? `<span class="selected-label">Selected</span>`
             : `<a class="yt-button yt-button-primary"
-				href="#" onclick="login_change('${a.pageId}','${name.split("'").join("\"")}',${firstMarked ? "true" : "false"})">
+				href="#" onclick="login_change('${a.pageId}','${name.split("'").join("\"")}',${!firstMarked ? "true" : "false"})">
 				<span>Select</span>
 			</a>`}</td>
         </tr>`
             firstMarked = true;
         })
-        html += "</table>"
+        html += `</table>`
+        if(selectedName && selectedHandle) {
+            html += `
+        <div id="login-simulate-autopicker">
+            <h3>want to adjust your login name on yt2009?</h3>
+            <a class="yt-button yt-button-primary" href="#" onclick="login_sim_change('${selectedName.split("'").join("\\'")}')">
+				<span>${utils.xss(selectedName)}</span>
+			</a>
+            <a class="yt-button yt-button-primary" href="#" onclick="login_sim_change('${selectedHandle.split("'").join("\\'")}')">
+				<span>${utils.xss(selectedHandle)}</span>
+			</a>
+        </div>`
+        }
         return html;
     }
 }

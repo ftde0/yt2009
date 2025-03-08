@@ -40,6 +40,7 @@ const yt2009gdataauths = require("./yt2009mobileauths")
 const yt2009basefeeds = require("./yt2009basefeeds")
 const yt2009m = require("./yt2009m")
 const yt2009trusted = require("./yt2009trustedcontext")
+const mobileHelper = require("./yt2009mobilehelper")
 let devTimings = false;
 const package = require("../package.json")
 const version = package.version;
@@ -640,7 +641,43 @@ app.post("/video_rate", (req, res) => {
     let rating = req.headers.rating || 5;
     let id = req.headers.source.split("v=")[1].split("&")[0].split("#")[0]
     video_rating.setRating(id, token, rating)
-    res.sendStatus(200)
+    let usePchelper = false;
+    if(req.headers.cookie.includes("pchelper_flags=")
+    && req.headers.cookie.includes("pchelper_user=")
+    && mobileHelper && mobileHelper.hasLogin(req)) {
+        let pcf = req.headers.cookie.split("pchelper_flags=")[1].split(";")[0]
+        if(pcf.includes("commit_ratings")) {
+            usePchelper = true;
+        }
+    }
+
+    if(!usePchelper) {
+        res.sendStatus(200) // instant send 200 without pchelper
+    } else {
+        let state = false;
+        switch(parseInt(rating)) {
+            case 1:
+            case 2: {
+                state = "dislike"
+                break;
+            }
+            case 4:
+            case 5: {
+                state = "like"
+                break;
+            }
+        }
+        if(state) {
+            let fReq = {
+                "originalUrl": "/videos/" + id + "/rating",
+                "body": state,
+                "headers": req.headers
+            }
+            mobileHelper.rateVideo(fReq, res)
+        } else {
+            res.sendStatus(200)
+        }
+    }
 })
 
 
@@ -1951,14 +1988,25 @@ app.use(express.static("../"))
 /*
 ======
 legacy authorization
-this used to be necessary for some extremely old browsers.
-nowadays pretty useless but leaving it for some extreme case scenario.
 ======
 */
 app.get("/test_only_legacy_cookie_auth", (req, res) => {
     res.send(`<script>document.cookie = "auth=${
         req.query.token
     }; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT";</script>`)
+})
+app.get("/yt2009_nonjs_auth", (req, res) => {
+    if(!req.query.key) {
+        res.sendStatus(400)
+        return;
+    }
+    let cookieParams = [
+        `auth=${req.query.key}; `,
+        `Path=/; `,
+        `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+    ]
+    res.set("set-cookie", cookieParams.join(""))
+    res.send(`auth cookie added!<br><a href="/">return to yt2009</a>`)
 })
 
 /*
@@ -2060,10 +2108,26 @@ app.get("/mobile/view_comment", (req, res) => {
 app.get("/mobile/profile", (req, res) => {
     yt2009_mobile.channels(req, res)
 })
+app.get("/mobile/playback_setup_save", (req, res) => {
+    let o = req.query.playback_option || "rtsp_mp4"
+    if(o.length >= 16 || o.includes("<") || o.includes(">")) {
+        res.sendStatus(400)
+        return;
+    }
+    let cookieParams = [
+        `mobile_playback=${o}; `,
+        `Path=/; `,
+        `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+    ]
+    res.set("set-cookie", cookieParams.join(""))
+    res.send(`playback set to ${o}!<br><a href="/mobile/">return to /mobile</a>`)
+})
 let videoProcessEndpoints = [
     "/mobile/create_rtsp",
     "/mp4_144",
-    "/http_3gp"
+    "/http_3gp",
+    "/http_wmv",
+    "/http_xvid"
 ]
 videoProcessEndpoints.forEach(endpoint => {
     app.get(endpoint, (req, res) => {
@@ -2076,13 +2140,8 @@ videoProcessEndpoints.forEach(endpoint => {
 mobile (apk) endpoints
 ======
 */
-let mobileHelper = false;
-let useMobileHelper = false;
-if(fs.existsSync("./yt2009mobilehelper.js")) {
-    require("./yt2009mobilehelper").set(app)
-    mobileHelper = require("./yt2009mobilehelper");
-    useMobileHelper = true;
-}
+mobileHelper.set(app)
+let useMobileHelper = true;
 app.post("/youtube/accounts/registerDevice", (req, res) => {
     let deviceId = ""
     while(deviceId.length !== 7) {
@@ -2644,7 +2703,16 @@ recommended section
 ======
 */
 app.get("/yt2009_recommended", (req, res) => {
-    if(!req.headers.ids) {
+    let usePchelper = false;
+    if(req.headers.cookie.includes("pchelper_flags=")
+    && req.headers.cookie.includes("pchelper_user=")
+    && mobileHelper && mobileHelper.hasLogin(req)) {
+        let pcf = req.headers.cookie.split("pchelper_flags=")[1].split(";")[0]
+        if(pcf.includes("default_w2w")) {
+            usePchelper = true;
+        }
+    }
+    if(!req.headers.ids && !usePchelper) {
         res.send("YT2009_NO_DATA")
         return;
     }
@@ -2663,6 +2731,44 @@ app.get("/yt2009_recommended", (req, res) => {
     let baseVids = req.headers.ids.split(",").slice(0, 3)
     let processedVideos = 0;
     let videoSuggestions = []
+
+    if(usePchelper) {
+        let fReq = {
+            "headers": req.headers
+        }
+        let fRes = {
+            "set":function(name,key){},
+            "redirect":function(u){},
+            "send": function(data) {data.split("<entry>").forEach(v => {
+                if(v.includes("<feed xmlns")) return;
+                let id = v.split(`/feeds/api/videos/`)[1].split(`</id>`)[0]
+                let title = v.split(`<title type='text'>`)[1].split("</title>")[0]
+                let creatorName = v.split(`<name>`)[1].split("</name>")[0]
+                let creatorUrl = "/@" + creatorName
+                if(creatorName.startsWith("UC")) {
+                    creatorUrl = "/channel/" + creatorName
+                }
+                let views = v.split(`viewCount="`)[1].split(`"`)[0]
+                views = yt2009_utils.countBreakup(parseInt(views)) + " views"
+                let length = yt2009_utils.seconds_to_time(
+                    v.split(`<yt:duration seconds='`)[1].split(`'`)[0]
+                )
+                videoSuggestions.push({
+                    "o": true,
+                    "upload": "",
+                    "id": id,
+                    "title": title,
+                    "creatorName": creatorName,
+                    "creatorUrl": creatorUrl,
+                    "views": views,
+                    "length": length
+                })
+            });createSuggestionsResponse()}
+        }
+        mobileHelper.handle_recommendations(fReq, fRes)
+        return;
+    }
+
     yt2009.bulk_get_videos(baseVids, () => {
         baseVids.forEach(vid => {
             setTimeout(function() {
@@ -3063,6 +3169,17 @@ app.post("/comment_post", (req, res) => {
                       .split("syncses=")[1].split(";")[0]
                       .replace(/[^a-zA-Z0-9]/g, "").trim()
     }
+    let pchelper = false;
+    let usePchelper = false;
+    if(req.headers.cookie.includes("pchelper_flags=")
+    && req.headers.cookie.includes("pchelper_user=")
+    && mobileHelper && mobileHelper.hasLogin(req)) {
+        pchelper = req.headers.cookie.split("pchelper_user=")[1].split(";")[0]
+        let pcf = req.headers.cookie.split("pchelper_flags=")[1].split(";")[0]
+        if(pcf.includes("comments_add_youtube")) {
+            usePchelper = true;
+        }
+    }
 
     // parse request
     let body = {}
@@ -3096,6 +3213,32 @@ app.post("/comment_post", (req, res) => {
                      .split(" ").join("").substring(0, 20)
     let safeComment = yt2009_utils.xss(body.comment)
     let commentId = Math.floor(Math.random() * 110372949)
+
+    if(usePchelper && pchelper) {
+        let fReq = {
+            "headers": req.headers,
+            "originalUrl": "/videos/" + body.video_id + "/comments",
+            "body": `<content>${safeComment}</content>`
+        }
+        let fRes = {
+            "set": function(name, key) {},
+            "send": function(data) {
+                let content = data.split(`<content>`)[1].split(`</content>`)[0]
+                                  .split("\n").join("<br>");
+                let author = yt2009_utils.xss(
+                    data.split(`<name>`)[1].split(`</name>`)[0]
+                )
+                res.send(yt2009_languages.apply_lang_to_code(
+                    yt2009_templates.videoComment(
+                        "#", author, "1 second ago", content, "login_simulate",
+                        true, "0", yt2009.commentId(author, content)
+                    ), req)
+                )
+            }
+        }
+        mobileHelper.addComment(fReq, fRes)
+        return;
+    }
 
     let commentObject = {
         "author": safeAuthor,
@@ -3991,6 +4134,7 @@ app.post("/homepage_subscriptions", (req, res) => {
             "headers": {"url": c[0]},
             "query": {"flags": ""}
         }, {"send": function(data) {
+            if(!data.videos) {data.videos = []}
             data.videos.forEach(v => {
                 let tv = JSON.parse(JSON.stringify(v))
                 tv.uploadUnix = Math.floor(new Date(
@@ -4046,7 +4190,7 @@ app.post("/homepage_subscriptions", (req, res) => {
 })
 
 app.get("/ver", (req, res) => {
-    let wsEnabled = config.disableWs || true
+    let wsEnabled = config.disableWs ? false : true
     let wsCon = yt2009_exports.read().masterWs ? true : false
     res.send(`${version}<br>sync enabled:${wsEnabled}<br>sync connected:${wsCon}`)
 })
@@ -4690,6 +4834,418 @@ app.get("/get_flags_data", (req, res) => {
     }
     res.send(exportedDataCodes[c]);
     delete exportedDataCodes[c]
+})
+
+/*
+======
+pchelper-specific ajax
+======
+*/
+app.get("/pchelper_related", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.query.id || req.query.id.length !== 11) {
+        res.sendStatus(400)
+        return;
+    }
+    let watchFlags = ""
+    if(req.headers.cookie && req.headers.cookie.includes("watch_flags=")) {
+        watchFlags = req.headers.cookie.split("watch_flags=")[1].split(";")[0]
+    }
+    if(req.headers.cookie && req.headers.cookie.includes("global_flags")) {
+        watchFlags += ":" + req.headers.cookie
+                               .split("global_flags=")[1]
+                               .split(";")[0];
+    }
+    let oId = req.query.id;
+    let fReq = {
+        "originalUrl": "videos/" + oId + "/related",
+        "headers": req.headers
+    }
+    let html = ""
+    let fRes = {
+        "set": function(name,key){},
+        "send": function(data) {data.split("<entry>").forEach(v => {
+            if(v.includes("<feed xmlns")) return;
+            let id = v.split(`/feeds/api/videos/`)[1].split(`</id>`)[0]
+            let title = v.split(`<title type='text'>`)[1].split("</title>")[0]
+            let creatorName = v.split(`<name>`)[1].split("</name>")[0]
+            let creatorUrl = "/@" + creatorName
+            if(creatorName.startsWith("UC")) {
+                creatorUrl = "/channel/" + creatorName
+            }
+            let creatorId = ""
+            if(v.includes(`<yt9aid>`)) {
+                creatorId = v.split(`<yt9aid>`)[1].split(`</yt9aid>`)[0]
+                creatorUrl = "/channel/" + creatorId
+            }
+            let views = v.split(`viewCount="`)[1].split(`"`)[0]
+            views = yt2009_utils.countBreakup(parseInt(views)) + " views"
+            let length = yt2009_utils.seconds_to_time(
+                v.split(`<yt:duration seconds='`)[1].split(`'`)[0]
+            )
+            if(v.includes("<yt9full>")) {
+                creatorName = v.split("<yt9full>")[1].split("</yt9full>")[0]
+            }
+            html += yt2009_templates.relatedVideo(
+                id, title, req.protocol, length, views,
+                creatorUrl, creatorName, watchFlags
+            )
+        });html = yt2009_languages.apply_lang_to_code(html, req);res.send(html);}
+    }
+    mobileHelper.personalizedRelated(fReq, fRes)
+})
+app.get("/pchelper_subs", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let format = "cookie"
+    if(req.query.format == "localstorage") {
+        format = "localstorage"
+    }
+    let channels = []
+    let fRes = {
+        "set": function(key,value){},
+        "sendStatus":function(status){res.sendStatus(status)},
+        "send": function(data) {
+            data.split("<entry>").forEach(e => {
+                if(e.includes("<feed")) return;
+                let name = e.split("<yt:username>")[1].split("</yt:usernam")[0]
+                            .split("&").join("").split(";").join("")
+                            .split(":").join("")
+                let id = e.split("<y9id>")[1].split("</y9id>")[0]
+                if(format == "localstorage") {
+                    channels.push({"url": "/channel/" + id, "creator": name})
+                } else {
+                    if(channels.join(":").length > 3900) return;
+                    let channel = [
+                        encodeURIComponent(
+                            `http://${config.ip}:${config.port}/channel/${id}`
+                        ),
+                        encodeURIComponent(name)
+                    ]
+                    channels.push(channel.join("&"))
+                }
+            })
+            if(format == "localstorage") {
+                res.send(channels)
+            } else {
+                res.send(channels.join(":"))
+            }
+        }
+    }
+    mobileHelper.getSubscriptions(req, fRes)
+})
+app.post("/pchelper_subs", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let state = "subscribe"
+    let user = "uh00"
+    if(!req.body || !req.body.toString().includes("user=")) {
+        res.sendStatus(400)
+        return;
+    }
+    let body = req.body.toString().split("&")
+    body.forEach(v => {
+        switch(v.split("=")[0]) {
+            case "user": {
+                user = v.split("=")[1].replace("@", "")
+                break;
+            }
+            case "state": {
+                state = v.split("=")[1]
+                if(state !== "subscribe" && state !== "unsubscribe") {
+                    state = "subscribe"
+                }
+                break;
+            }
+        }
+    })
+
+    let fReq = {
+        "headers": req.headers,
+        "body": `
+        <yt:username>${user}</yt:username>
+        ${state == "unsubscribe" ? `<yt:unsubscribe/>` : ""}`
+    }
+
+    mobileHelper.manageSubscription(fReq, res)
+})
+app.get("/pchelper_playlists", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let format = "cookie"
+    if(req.query.format == "localstorage") {
+        format = "localstorage"
+    }
+    let fReq = {
+        "headers": req.headers,
+        "fake": true
+    }
+    let fRes = {
+        "sendStatus": function(s) {res.sendStatus(s);},
+        "set": function(name,value){},
+        "send": function(data) {
+            if(format == "cookie") {
+                let c = ""
+                data.forEach(pl => {
+                    if(pl[0] == "WL" || pl[0] == "LL"
+                    || pl[1] == "Favorites") return;
+                    // pl[0] = playlist id, pl[1] = playlist name
+                    pl[1] = pl[1].split(";").join("")
+                    c += encodeURIComponent(pl[1] + ";" + pl[0]) + ":"
+                })
+                res.send(c)
+            } else if(format == "localstorage") {
+                let r = []
+                data.forEach(pl => {
+                    if(pl[0] == "WL" || pl[0] == "LL"
+                    || pl[1] == "Favorites") return;
+                    r.push({"id": pl[0], "name": pl[1]})
+                })
+                res.send(r)
+            }
+        }
+    }
+    mobileHelper.getPlaylists(fReq, fRes)
+})
+app.post("/pchelper_playlists", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.body || !req.body.toString().includes("method=")) {
+        res.sendStatus(400)
+        return;
+    }
+    let params = {}
+    req.body.toString().split("&").forEach(p => {
+        params[p.split("=")[0]] = p.split("=")[1]
+    })
+    if((!params.video || params.video.length !== 11)
+    || (params.method == "create_new" && !params.playlist_name)
+    || (params.method == "add_existing" && !params.playlist_id)
+    || (params.method !== "create_new" && params.method !== "add_existing")) {
+        res.sendStatus(400)
+        return;
+    }
+    if(params.method == "create_new") {
+        let fReq = {
+            "headers": req.headers,
+            "body": `
+            <title type='text'>${params.playlist_name}</title>
+            <yt:videoid>${params.video}</yt:videoid>`
+        }
+        let fRes = {
+            "redirect": function(url) {
+                let pid = url.split("/playlists/")[1]
+                res.send(pid);
+            }
+        }
+        mobileHelper.createPlaylist(fReq, fRes)
+    } else {
+        let fReq = {
+            "headers": req.headers,
+            "originalUrl": "/playlists/" + params.playlist_id,
+            "body": `<id>${params.video}</id>`
+        }
+        let fRes = {
+            "set": function(name,value) {},
+            "sendStatus": function(status) {res.sendStatus(status)}
+        }
+        mobileHelper.addToPlaylist(fReq, fRes)
+    }
+})
+app.get("/pchelper_playlist", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.query.playlist) {
+        res.sendStatus(400)
+        return;
+    }
+    let format = "f"
+    if(req.query.format == "modern") {
+        format = "modern"
+    }
+    let fReq = {
+        "playlistId": req.query.playlist,
+        "originalUrl": "/playlists/" + req.query.playlist,
+        "headers": req.headers
+    }
+    let fRes = {
+        "set": function(name,value){},
+        "send": function(data) {
+            data = data.split("<entry>")
+            let vs = []
+            data.forEach(v => {
+                if(v.includes("<feed")) return;
+                let id = v.split(`<yt:videoid id='`)[1].split("'")[0]
+                let title = v.split(`<title type='text'>`)[1].split("</tit")[0]
+                let time = yt2009_utils.seconds_to_time(
+                    v.split(`<yt:duration seconds='`)[1].split("'")[0]
+                )
+                vs.push([id, title, "", "5", "", time])
+            })
+            if(format == "modern") {
+                let vr = []
+                vs.forEach(v => {
+                    vr.push({
+                        "id": v[0],
+                        "title": v[1],
+                        "date": v[2],
+                        "rating": v[3],
+                        "viewCount": v[4],
+                        "time": v[5]
+                    })
+                })
+                res.send(vr)
+            } else {
+                let vr = []
+                vs.forEach(v => {
+                    vr.push(encodeURIComponent(
+                        [encodeURIComponent(v[1]), v[0],
+                         v[4], "5", ""].join(";")
+                    ))
+                })
+                res.send(vr.join(":"))
+            }
+        }
+    }
+    mobileHelper.pullPlaylistAsUser(fReq, fRes)
+})
+app.get("/nonpch_playlist", (req, res) => {
+    if(!req.query.playlist) {
+        res.sendStatus(400)
+        return;
+    }
+    let format = "f"
+    if(req.query.format == "modern") {
+        format = "modern"
+    }
+    yt2009_playlists.parsePlaylist(req.query.playlist, (data) => {
+        let v = []
+        if(format == "modern") {data.videos.forEach(vr => {
+            v.push({
+                "id": vr.id,
+                "title": vr.title,
+                "date": "",
+                "rating": "5",
+                "viewCount": yt2009_utils.countBreakup(vr.views),
+                "time": vr.time
+            })
+        });res.send(v)} else {
+            data.videos.forEach(vr => {
+                v.push(encodeURIComponent([
+                    encodeURIComponent(vr.title), vr.id,
+                    yt2009_utils.countBreakup(vr.views), "5", ""
+                ].join(";")))
+            })
+            res.send(v.join(":"))
+        }
+    })
+})
+app.get("/pchelper_favorites", (req, res) => {
+    // pchelper_favorites 
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let format = "cookie"
+    if(req.query.format == "localstorage") {
+        format = "localstorage"
+    }
+    let fReq = {
+        "headers": req.headers,
+        "fake": true,
+        "unfiltered": true
+    }
+    let fRes = {
+        "sendStatus": function(s) {res.sendStatus(s);},
+        "set": function(name,value){},
+        "send": function(data) {
+            let favsFound = false;
+            data.forEach(p => {
+                if(p[1] == "Favorites") {
+                    favsFound = p[0]
+                }
+            })
+
+            if(favsFound) {
+                fReq = {
+                    "playlistId": favsFound,
+                    "originalUrl": "/playlists/" + favsFound,
+                    "headers": req.headers
+                }
+                fRes = {
+                    "set": function(name,value){},
+                    "send": function(data) {
+                        data = data.split("<entry>")
+                        let vs = []
+                        data.forEach(v => {
+                            if(v.includes("<feed")) return;
+                            let id = v.split(`<yt:videoid id='`)[1].split("'")[0]
+                            let title = v.split(`<title type='text'>`)[1].split("</tit")[0]
+                            vs.push({
+                                "id": id,
+                                "title": title
+                            })
+                        })
+
+                        if(format == "localstorage") {
+                            res.send(vs)
+                        } else {
+                            let cookieVs = []
+                            vs.forEach(v => {
+                                cookieVs.push([
+                                    encodeURIComponent(v.title),
+                                    "EMPTY_ALLOWED", v.id
+                                ].join("&"))
+                            })
+                            res.send(encodeURIComponent(cookieVs.join(":")))
+                        }
+                    }
+                }
+                mobileHelper.pullPlaylistAsUser(fReq, fRes)
+            } else {
+                if(format == "cookie") {
+                    res.send("")
+                } else if(format == "localstorage") {
+                    res.send("[]")
+                }
+            }
+        }
+    }
+    mobileHelper.getPlaylists(fReq, fRes)
+})
+app.post("/pchelper_favorites", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.body || !req.body.toString().includes("video_id=")) {
+        res.sendStatus(400)
+        return;
+    }
+    let video = req.body.toString().split("video_id=")[1].substring(0,11)
+    let fReq = {
+        "headers": req.headers,
+        "body": `<id>${video}</id>`
+    }
+    let fRes = {
+        "set": function(name,value){},
+        "sendStatus": function(s) {res.sendStatus(s)},
+        "redirect": function(u) {res.sendStatus(200)}
+    }
+    mobileHelper.addToFavorites(fReq, fRes)
 })
 
 /*

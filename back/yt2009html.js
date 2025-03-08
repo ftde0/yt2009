@@ -13,6 +13,7 @@ const yt2009languages = require("./language_data/language_engine")
 const yt2009exports = require("./yt2009exports")
 const yt2009signin = require("./yt2009androidsignin")
 const yt2009trusted = require("./yt2009trustedcontext")
+const yt2009mobilehelper = require("./yt2009mobilehelper")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
 const userid = require("./cache_dir/userid_cache")
@@ -60,6 +61,8 @@ let oldCommentsWrite = setInterval(function() {
 
 module.exports = {
     "innertube_get_data": function(id, callback) {
+        let useAndroidPlayer = true;
+
         if(JSON.stringify(innertube_context) == "{}") {
             innertube_context = constants.cached_innertube_context
             api_key = this.get_api_key()
@@ -72,6 +75,60 @@ module.exports = {
         }
 
         let callbacksRequired = 2;
+        if(config.data_api_key && useAndroidPlayer) {
+            callbacksRequired++
+            // some category ids match 2009 ids but not all
+            const dataApiCategoryIds = {
+                1: "Film & Animation",
+                2: "Autos & Vehicles",
+                10: "Music",
+                15: "Pets & Animals",
+                17: "Sports",
+                18: "Short Movies",
+                19: "Travel & Events",
+                20: "Gaming",
+                21: "Videoblogging",
+                22: "People & Blogs",
+                23: "Comedy",
+                24: "Entertainment",
+                25: "News & Politics",
+                26: "Howto & Style",
+                27: "Education",
+                28: "Science & Technology",
+                29: "Nonprofits & Activism",
+                30: "Movies",
+                34: "Comedy"
+            }
+            let url = [
+                `https://www.googleapis.com/youtube/v3/videos?part=snippet`,
+                `&id=${id}&key=${config.data_api_key}`
+            ].join("")
+            fetch(url, {
+                "headers": constants.headers,
+                "method": "GET"
+            }).then(r => {try {r.json().then(r => {
+                if(!r.error && r.items && r.items[0]
+                && r.items[0].snippet.categoryId) {
+                    let s = r.items[0].snippet
+                    let c = s.categoryId
+                    combinedResponse.category = dataApiCategoryIds[c]
+                                              || "People & Blogs";
+                    if(s.publishedAt) {
+                        combinedResponse.publishDate = s.publishedAt
+                    }
+                }
+                callbacksMade++
+                if(callbacksMade == callbacksRequired) {
+                    callback(combinedResponse)
+                }
+            })}catch(error){
+                console.log(error)
+                callbacksMade++
+                if(callbacksMade == callbacksRequired) {
+                    callback(combinedResponse)
+                }
+            }})
+        }
         let callbacksMade = 0;
         let combinedResponse = {}
         fetch(`https://www.youtube.com/youtubei/v1/next?key=${api_key}`, {
@@ -99,7 +156,6 @@ module.exports = {
             }
         })})
 
-        let useAndroidPlayer = true;
         let playerContext = JSON.parse(JSON.stringify(innertube_context))
         if(useAndroidPlayer) {
             playerContext = {
@@ -134,7 +190,7 @@ module.exports = {
                     yt2009exports.extendWrite("players", id, r)
                 }
                 combinedResponse.freezeSync = true;
-                combinedResponse.usedAndroid = true;
+                // ^ overriden when category pull done successfully
             }
             for(let i in r) {
                 combinedResponse[i] = r[i]
@@ -282,6 +338,8 @@ module.exports = {
                 if(videoData.microformat) {
                     data.upload = videoData.microformat.playerMicroformatRenderer
                                            .uploadDate
+                } else if(videoData.publishDate) {
+                    data.upload = videoData.publishDate
                 } else {
                     try {
                         data.upload = videoData.contents.twoColumnWatchNextResults
@@ -298,11 +356,17 @@ module.exports = {
                 data.tags = videoData.videoDetails.keywords || [];
                 data.related = []
                 data.length = parseInt(videoData.videoDetails.lengthSeconds)
-                try {
-                    data.category = videoData.microformat
-                                    .playerMicroformatRenderer.category
-                }
-                catch(error) {
+                if(videoData.microformat) {
+                    try {
+                        data.category = videoData.microformat
+                                        .playerMicroformatRenderer.category
+                    }
+                    catch(error) {
+                        data.category = "People & Blogs"
+                    }
+                } else if(videoData.category) {
+                    data.category = videoData.category;
+                } else {
                     data.category = "People & Blogs"
                 }
                 
@@ -311,7 +375,7 @@ module.exports = {
                     data.restricted = true
                 }
 
-                if(videoData.freezeSync) {
+                if(videoData.freezeSync && !videoData.category) {
                     data.freezeSync = true;
                 }
 
@@ -489,6 +553,11 @@ module.exports = {
                     videoData.streamingData.adaptiveFormats = [{"qualityLabel": "360p"}]
                 }
                 videoData.streamingData.adaptiveFormats.forEach(quality => {
+                    if(quality.qualityLabel) {
+                        quality.qualityLabel = quality.qualityLabel
+                                               .replace("p50", "p")
+                                               .replace("p60", "p");
+                    }
                     if(quality.qualityLabel
                     && !data.qualities.includes(quality.qualityLabel)) {
                         data.qualities.push(quality.qualityLabel)
@@ -702,9 +771,44 @@ module.exports = {
         }
 
         let totalCommentCount = 0;
+        let vCustomComments = []
+        if(yt2009mobilehelper.hasLogin(req)) {
+            let comments = yt2009mobilehelper.pullCommentsByUser(req)
+            comments.filter(s => s.video == data.id).forEach(c => {
+                vCustomComments.push({
+                    "author": c.name,
+                    "time": new Date(c.date).getTime(),
+                    "text": c.content,
+                    "rating": 0,
+                    "ratingSources": {}
+                })
+            })
+
+
+            let useRelated = false;
+            if(req.headers.cookie
+            && req.headers.cookie.includes("pchelper_flags=")) {
+                let pchFlags = req.headers.cookie
+                               .split("pchelper_flags=")[1]
+                               .split(";")[0];
+                if(pchFlags.includes("user_related")) {
+                    useRelated = true;
+                }
+            }
+            if(useRelated) {
+                let scriptName = "/assets/site-assets/yt2009pchelperrelated.js"
+                code = code.replace(
+                    `<!--yt2009_pchelper_related-->`,
+                    `<script src="${scriptName}"></script>`
+                )
+            }
+        }
         if(custom_comments[data.id]) {
+            custom_comments.forEach(c => {vCustomComments.push(c)})
+        }
+        if(vCustomComments.length >= 1) {
             let commentsHTML = ""
-            custom_comments[data.id].forEach(comment => {
+            vCustomComments.forEach(comment => {
                 if(!comment.time || !comment.text) return;
                 let commentTime = yt2009utils.unixToRelative(comment.time)
                 commentTime = yt2009utils.relativeTimeCreate(

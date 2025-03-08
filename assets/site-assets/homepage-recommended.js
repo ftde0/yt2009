@@ -62,7 +62,7 @@ if (window.XMLHttpRequest) {
 } else {
     r = new ActiveXObject("Microsoft.XMLHTTP");
 }
-r.open("GET", "/yt2009_recommended")
+r.open("GET", "/yt2009_recommended?r=" + Math.random().toString())
 r.setRequestHeader("ids", videoIdString)
 if(isVideosPage) {
     r.setRequestHeader("source", "recommended_page")

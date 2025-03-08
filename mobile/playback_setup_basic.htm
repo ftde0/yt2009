@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yt2009 mobile playback setup</title>
+    <link rel="stylesheet" href="app_style.css">
+</head>
+<body>
+    <h1 style="margin-top: 20px;">playback setup</h1>
+    <h3>set how videos should be played on mobile.<br>
+    select the appropriate option and save.</h3>
+    <form action="/mobile/playback_setup_save" method="GET">
+        <input type="radio" id="rtsp_mp4" value="rtsp_mp4" name="playback_option">
+        <label for="rtsp_mp4">RTSP / H264 MP4</label><br>
+        <input type="radio" id="rtsp_mp4_an" value="rtsp_mp4_an" name="playback_option">
+        <label for="rtsp_mp4_an">RTSP / H264 MP4 (no audio)</label><br>
+        <input type="radio" id="rtsp_3gp" value="rtsp_3gp" name="playback_option">
+        <label for="rtsp_3gp">RTSP / 3GP</label><br>
+        <input type="radio" id="rtsp_3gp_an" value="rtsp_3gp_an" name="playback_option">
+        <label for="rtsp_3gp_an">RTSP / 3GP (no audio)</label><br>
+        <input type="radio" id="http_mp4" value="http_mp4" name="playback_option">
+        <label for="http_mp4">HTTP / H264 MP4</label><br>
+        <input type="radio" id="http_mp4_144" value="http_mp4_144" name="playback_option">
+        <label for="http_mp4_144">HTTP / H264 MP4 / 144P</label><br>
+        <input type="radio" id="http_3gp" value="http_3gp" name="playback_option">
+        <label for="http_3gp">HTTP / 3GP</label><br>
+        <input type="radio" id="http_wmv" value="http_wmv" name="playback_option">
+        <label for="http_wmv">HTTP / LQ/WMV</label><br>
+        <input type="radio" id="http_xvid" value="http_xvid" name="playback_option">
+        <label for="http_xvid">HTTP / XVID</label><br><br>
+        <input type="submit" value="save" style="font-size: 20px;padding: 10px 10px;">
+    </form>
+</body>
+</html>

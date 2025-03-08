@@ -33,11 +33,30 @@ const ffmpeg_process_3gp = [
     "-s 176x144",
     "\"$2\""
 ]
+const ffmpeg_process_wmv = [
+    "ffmpeg",
+    "-i \"$1\"",
+    "-b:a 32k",
+    "-b:v 200k",
+    "-s 256x192",
+    "-filter:v fps=17",
+    "-c:v wmv1",
+    "\"$2\""
+]
+const ffmpeg_process_xvid = [
+    "ffmpeg",
+    "-i \"$1\"",
+    "-c:v mpeg4",
+    "-vtag xvid",
+    "-vf scale=640:480",
+    "\"$2\""
+]
 const ffmpeg_stream_mp4 = [
     "ffmpeg",
     "-re -i",
     "\"$1\"",
     "$2",
+    "-pix_fmt yuv420p",
     "-f rtsp",
     "-rtsp_transport udp",
     "$3"
@@ -214,7 +233,9 @@ module.exports = {
             "rtsp_3gp_an": [ffmpeg_process_3gp, "mute", "rtsp", "id.3gp"],
             "http_mp4": ["id.mp4"],
             "http_mp4_144": [ffmpeg_process_144, "id-144.mp4"],
-            "http_3gp": [ffmpeg_process_3gp, "id.3gp"]
+            "http_3gp": [ffmpeg_process_3gp, "id.3gp"],
+            "http_wmv": [ffmpeg_process_wmv, "id.wmv"],
+            "http_xvid": [ffmpeg_process_xvid, "id.avi"]
         }
 
         let tasks = taskLookup[playback]
@@ -393,7 +414,9 @@ module.exports = {
             "rtsp_3gp_an": "/mobile/create_rtsp?v=" + id + "&3gp=1&muted=1",
             "http_mp4": "/get_video?video_id=" + id + "/mp4",
             "http_mp4_144": "/mp4_144?v=" + id,
-            "http_3gp": "/http_3gp?v=" + id
+            "http_3gp": "/http_3gp?v=" + id,
+            "http_wmv": "/http_wmv?v=" + id,
+            "http_xvid": "/http_xvid?v=" + id
         }
 
         if(linkLookup[playback]) {

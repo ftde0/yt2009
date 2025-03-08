@@ -8,6 +8,9 @@ assets/*.jpg
 assets/*.3gp
 assets/*.mp3
 assets/*.m4a
+assets/*.wmv
+assets/*.avi
+assets/charts_temp/
 back/cache_dir/annotations/*
 back/cache_dir/*.json
 back/config.json
@@ -33,6 +36,7 @@ assets/site-assets/active_sharing_on-vfl70992.png
 assets/site-assets/activity_indicator-vfl120761.gif
 assets/site-assets/annotations_editor_switch-vfl78622.gif
 assets/site-assets/annotations_icon-vfl78622.gif
+assets/site-assets/apple-touch-icon2-vfl171763.png
 assets/site-assets/arrow_dropdown-vfl29016.gif
 assets/site-assets/autoshare-vfl137249.png
 assets/site-assets/background-drop-fade-vfl85178.gif
@@ -40,6 +44,9 @@ assets/site-assets/badge_annotate-vfl55396.gif
 assets/site-assets/badge_cc_domestic-vfl55396.gif
 assets/site-assets/badge_cc_intl-vfl55396.gif
 assets/site-assets/badge_featurelength-vfl55396.gif
+assets/site-assets/blazer_sprite_high-vfl176462.png
+assets/site-assets/blazer_sprite_low-vfl176462.png
+assets/site-assets/blazer_sprite_vhigh-vfl176746.png
 assets/site-assets/but-bck-vfl33160.png
 assets/site-assets/button_icons-vfl72305.png
 assets/site-assets/cart_icons-vfl115610.png
@@ -55,10 +62,13 @@ assets/site-assets/embed_selection-vfl81006.png
 assets/site-assets/faketrans-vfl35975.gif
 assets/site-assets/flags-vfl57703.gif
 assets/site-assets/forums_master-vfl68068.gif
+assets/site-assets/icn_cycds_warning-vfl33982.gif
 assets/site-assets/icn_loading_animated-vfl24663.gif
+assets/site-assets/icn_star_full_11x11.gif
 assets/site-assets/img_about_toexternal_14x9-vfl35309.gif
 assets/site-assets/iyt-vfl105161.png
 assets/site-assets/logo_content-id_352x109-vfl100716.png
+assets/site-assets/longform-underlay-1x1-vfl55396.png
 assets/site-assets/master_old-vfl72391.gif
 assets/site-assets/mmgrads-vfl38740.gif
 assets/site-assets/mmimgs-vfl38740.gif
@@ -71,6 +81,8 @@ assets/site-assets/sel-bck-omar-vfl34546.png
 assets/site-assets/sharing_icons-vfl84489.png
 assets/site-assets/silver-grad-vfl35285.png
 assets/site-assets/stars_5.0_49x9-vfl84759.gif
+assets/site-assets/tooltip-reverse-vfl88394.gif
+assets/site-assets/tooltip-vfl56131.gif
 assets/site-assets/ugcpromo_tagline_bg-vfl91176.gif
 assets/site-assets/video_bar_arrows-vfl84478.png
 assets/site-assets/video_cluster_180_border-vfl88394.png

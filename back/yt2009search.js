@@ -556,7 +556,8 @@ module.exports = {
                         playlist.videos,
                         playlist.name,
                         playlist.videoCount,
-                        playlist.a
+                        playlist.a,
+                        flags
                     );
 
                     playlist.videos.forEach(video => {

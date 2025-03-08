@@ -170,6 +170,14 @@ function subscribe() {
         sub = encodeURIComponent(location.pathname) + "&" + encodeURIComponent($(".yt2009-name").innerHTML) + ":" + sub;
         document.cookie = "sublist=" + sub + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
     }
+
+    if(document.cookie && document.cookie.indexOf("subscriptions_sync") !== -1) {
+        var reqUser = location.pathname.split("/")
+        reqUser = reqUser[reqUser.length - 1]
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_subs")
+        r.send("user=" + reqUser)
+    }
 }
 
 // unsub
@@ -216,6 +224,14 @@ function unsubscribe() {
 
         sub = sub.replace(encodeURIComponent(location.pathname) + "&" + encodeURIComponent($(".yt2009-name").innerHTML) + ":", "")
         document.cookie = "sublist=" + sub + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    }
+
+    if(document.cookie && document.cookie.indexOf("subscriptions_sync") !== -1) {
+        var reqUser = location.pathname.split("/")
+        reqUser = reqUser[reqUser.length - 1]
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_subs")
+        r.send("user=" + reqUser + "&state=unsubscribe")
     }
 }
 
@@ -304,6 +320,19 @@ function get_video_comments() {
 // dodawanie
 function favorite_video() {
     var currentId = document.querySelector(".playnav-video.selected").id.replace("playnav-video-", "")
+    if((localStorage && localStorage.favorites
+    && localStorage.favorites.indexOf("PCHELPER_MANAGED") !== -1)
+    || (document.cookie
+    && document.cookie.indexOf("favorites=PCHELPER_MANAGED") !== -1)) {
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_favorites")
+        r.send("video_id=" + currentId)
+        r.addEventListener("load", function(e) {
+            $(".favorite-remove").className += " hid"
+            $(".favorite-added").className = "favorite-added"
+        }, false)
+        return;
+    }
     var favorites = ""
     if(useLocalStorage) {
         // localstorage
@@ -315,7 +344,8 @@ function favorite_video() {
             favorites.unshift({
                 "id": currentId,
                 "title": document.querySelector(".video-title-" + currentId).innerHTML,
-                "views": document.querySelector(".video-meta-" + currentId).innerHTML.split(" views - ")[0]
+                "views": document.querySelector(".video-meta-" + currentId)
+                         .innerHTML.split(" views - ")[0]
             })
 
             // przy okazji usuń puste entry (usunięte z poziomu ui)
@@ -323,7 +353,12 @@ function favorite_video() {
         }
     } else {
         // cookie
-        var videoString = encodeURIComponent(document.querySelector(".video-title-" + currentId).innerHTML + "&" + document.querySelector(".video-meta-" + currentId).innerHTML.split(" views - ")[0] + "&" + currentId)
+        var videoString = encodeURIComponent(
+            document.querySelector(".video-title-" + currentId).innerHTML
+            + "&" + document.querySelector(".video-meta-" + currentId)
+                    .innerHTML.split(" views - ")[0]
+            + "&" + currentId
+        )
         document.cookie.split(";").forEach(function(cookie) {
             if(cookie.indexOf("favorites=") !== -1) {
                 favorites = cookie.trimLeft().replace("favorites=", "")
@@ -331,7 +366,8 @@ function favorite_video() {
         })
         if(favorites.indexOf(currentId) == -1) {
             favorites = videoString + ":" + favorites
-            document.cookie = "favorites=" + favorites + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            document.cookie = "favorites=" + favorites
+                            + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
         }
     }
     $(".favorite-remove").className += " hid"
