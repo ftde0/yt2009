@@ -455,8 +455,13 @@ module.exports = {
     },
 
     "genWorld": function(req, res) {
+        let bg = "white"
+        if(req.query.cbg) {
+            bg = "#" + req.query.cbg.replace(/[^a-zA-Z0-9]/g, "")
+        }
+
         let command = [
-            "magick -size 440x220 xc:white"
+            "magick -size 440x220 xc:" + bg
         ]
 
         let chco = []

@@ -171,7 +171,7 @@ module.exports = {
             }
         }
         rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
-        fetch(`https://www.youtube.com/youtubei/v1/player?key=${api_key}`, {
+        fetch(`https://www.youtube.com/youtubei/v1/player?prettyPrint=false`, {
             "headers": rHeaders,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -189,6 +189,12 @@ module.exports = {
                 if(r.streamingData) {
                     yt2009exports.extendWrite("players", id, r)
                 }
+                setTimeout(() => {
+                    // delete cached player after 15 minutes if still there
+                    if(yt2009exports.read().players[id]) {
+                        yt2009exports.delete("players", id)
+                    }
+                }, 1000 * 60 * 15)
                 combinedResponse.freezeSync = true;
                 // ^ overriden when category pull done successfully
             }
@@ -331,6 +337,7 @@ module.exports = {
                                       .videoSecondaryInfoRenderer
                                       .owner.videoOwnerRenderer
                                       .thumbnail.thumbnails[1].url
+                    data.author_img = yt2009utils.saveAvatar(data.author_img)
                 }
                 catch(error) {
                     data.author_img = "default"
@@ -347,6 +354,12 @@ module.exports = {
                                       .videoPrimaryInfoRenderer.dateText.simpleText
                         if(data.upload.includes(" on ")) {
                             data.upload = data.upload.split(" on ")[1]
+                        }
+                        if(data.upload.includes(" ago")) {
+                            // relative date (streams etc)
+                            data.upload = yt2009utils.relativeToAbsoluteApprox(
+                                data.upload
+                            )
                         }
                     }
                     catch(error) {
@@ -804,7 +817,10 @@ module.exports = {
             }
         }
         if(custom_comments[data.id]) {
-            custom_comments.forEach(c => {vCustomComments.push(c)})
+            try {
+                custom_comments.forEach(c => {vCustomComments.push(c)})
+            }
+            catch(error){}
         }
         if(vCustomComments.length >= 1) {
             let commentsHTML = ""

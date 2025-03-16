@@ -7,6 +7,11 @@ message textRuns {
     }
     repeated textRun run = 1;
 }
+message audioTrackData {
+    string displayName = 4;
+    string vssId = 5;
+    optional int32 isDefault = 6;
+}
 message root {
     message contextType {
         string contextToken = 2;
@@ -41,6 +46,7 @@ message root {
             string videoQuality = 16;
             int32 twentyFive = 25;
             string qualityLabel = 26;
+            repeated audioTrackData audioTrack = 28;
             int32 audioBitrate = 44;
             int32 audioSample = 45;
             int32 twoInt = 46;
@@ -82,6 +88,12 @@ message root {
             optional int32 int4 = 4;
         }
         repeated contents content = 51621377;
+        message v6Field {
+            string str1 = 1;
+            optional int32 visibility = 2; // usually 2 or 3
+            optional int32 int3 = 3;
+        }
+        repeated v6Field contentV6Field = 49413586;
     }
     repeated captionTracks captions = 10;
     message metadata {

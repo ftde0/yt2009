@@ -141,6 +141,12 @@ if(process.env.YT2009_DATA_API_KEY) {
     cfg.data_api_key = process.env.YT2009_DATA_API_KEY;
 }
 
+// set file upload limit
+if(process.env.YT2009_FILE_LIMIT
+&& !isNaN(parseInt(process.env.YT2009_FILE_LIMIT))) {
+    cfg.file_limit = parseInt(process.env.YT2009_FILE_LIMIT);
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

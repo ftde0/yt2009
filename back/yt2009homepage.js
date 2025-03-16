@@ -233,6 +233,14 @@ module.exports = function(req, res) {
                 moduleHTML += templates.homepage_subs
                 break;
             }
+            case "insmap": {
+                moduleHTML += templates.insightMap
+                return;
+            }
+            case "inschrt": {
+                moduleHTML += templates.insightChart
+                return;
+            }
         }
     })
 

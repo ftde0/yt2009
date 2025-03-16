@@ -1,0 +1,81 @@
+syntax = "proto3";
+package android_player_request;
+
+/*android /player REQUEST to send to yt*/
+
+message hwData {
+    fixed32 id = 12;
+}
+
+message appConfig {
+    string coldConfigData = 1;
+    string coldHashData = 3;
+    string hotHashData = 5;
+}
+
+message adSignalsMsg {
+    repeated uint64 signal = 4;
+}
+
+message playbackContextMsg {
+    message contentContext {
+        int32 one = 1;
+        int32 two = 2;
+        string highRec = 6;
+        string sourceFeed = 11;
+    }
+    repeated contentContext contentPlaybackContext = 1;
+}
+
+message root {
+    message contextType {
+        message clientType {
+            string deviceMake = 12;
+            string deviceModel = 13;
+            int32 clientNumber = 16;
+            string clientVersion = 17;
+            string osName = 18;
+            string osVersion = 19;
+            repeated hwData hw = 21;
+            string gl = 22;
+            string plreq = 25;
+            int32 screenWidth = 37;
+            int32 screenHeight = 38;
+            int32 screenWidth2 = 55;
+            int32 screenHeight2 = 56;
+            repeated appConfig configInfo = 62;
+            optional int32 utcOffsetMinutes = 67;
+            string timeZone = 80;
+            repeated adSignalsMsg adSignals = 84;
+            string deviceCodename = 92;
+        }
+        repeated clientType client = 1;
+        /*message clickTrackingParamsMsg {
+            message contents {
+
+            }
+            repeated contents content = 2;
+        }
+        repeated clickTrackingParamsMsg clickTrackingParams = 6;*/
+    }
+    repeated contextType context = 1;
+    string videoId = 2;
+    optional int32 racyCheckOk = 3;
+    repeated playbackContextMsg playbackContext = 4;
+    optional int32 contentCheckOk = 5;
+    string pps = 12;
+    message serviceIntegrityDimensionsMsg {
+        message contents {
+            optional bytes encryptData = 1;
+            optional bytes tokenData = 2;
+        }
+        repeated contents content = 1;
+    }
+    repeated serviceIntegrityDimensionsMsg serviceIntegrityDimensions = 27;
+    message otherVariousSets {
+        optional int32 dataSaving = 1;
+        int32 two = 2;
+        int64 initTimeMs = 3;
+    }
+    repeated otherVariousSets sets = 28;
+}

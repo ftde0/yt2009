@@ -11,6 +11,7 @@ assets/*.m4a
 assets/*.wmv
 assets/*.avi
 assets/charts_temp/
+assets/user-uploads-tmp/
 back/cache_dir/annotations/*
 back/cache_dir/*.json
 back/config.json

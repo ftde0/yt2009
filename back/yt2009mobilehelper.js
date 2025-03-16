@@ -8,6 +8,8 @@ const create_comment_pb = require("./proto/create_comment_pb")
 const mobileflags = require("./yt2009mobileflags")
 const watchNext = require("./proto/watchNextFeed_pb")
 const protobufNextReq = require("./proto/android_next_pb")
+const protoAnalytics = require("./proto/analytics_screen_request_pb")
+const metadataUpdate = require("./proto/android_metadata_update_pb")
 const androidHeaders = {
     "Accept": "*/*",
     "Accept-Language": "en-US;q=0.7,en;q=0.3",
@@ -16,6 +18,18 @@ const androidHeaders = {
     "x-origin": "https://www.youtube.com/",
     "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
 }
+const upUA = [
+    "com.google.android.youtube/1552803264",
+    "(Linux; U; Android 10; en_US; Android SDK built for x86;",
+    "Build/QSR1.190920.001; Cronet/133.0.6876.3)"
+].join(" ")
+const upInitial = JSON.stringify({
+    "deviceDisplayName":"GOOGLE Android SDK built for x86",
+    "fileId":"goog-edited-video:\\/\\/generated?videoFileUri=content%3A%2F%2Fmedia%2Fexternal%2Fvideo%2Fmedia%2F29",
+    "mp4MoovAtomRelocationStatus":"UNNECESSARY",
+    "transcodeResult":"DISABLED",
+    "connectionType":"WIFI"
+})
 const androidContext = {
     "client": {
         "hl": "en",
@@ -292,6 +306,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     }
                     r.forEach(s => {
                         try {
+                            if(!s.shelfRenderer) return;
                             s = s.shelfRenderer.content.horizontalListRenderer
                                  .items;
                             s.forEach(i => {
@@ -391,7 +406,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     "browseId": "FEchannels"
                 })
             }).then(r => {r.json().then(r => {
-                fs.writeFileSync("./test.json", JSON.stringify(r))
+                //fs.writeFileSync("./test.json", JSON.stringify(r))
                 r = r.contents.singleColumnBrowseResultsRenderer
                      .tabs[0].tabRenderer.content.sectionListRenderer
                      .contents[0];
@@ -1155,6 +1170,573 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         res.status(200);
         fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
         res.send("unlink successful! you can now close this window.")
+    },
+
+    "pullOwnVideos": function(req, callback) {
+        let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            res.sendStatus(404);
+            return;
+        }
+        let videos = []
+        setupYouTube(device, (h) => {
+            fetch("https://www.youtube.com/youtubei/v1/browse", {
+                "headers": h,
+                "method": "POST",
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "browseId": "FEmy_videos"
+                })
+            }).then(r => {r.json().then(r => {
+                r.frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
+                    if(m.payload && m.payload.creatorVideoData) {try {
+                        let v = m.payload.creatorVideoData
+                        let likes = parseInt(v.metrics.likeCount)
+                        let dislikes = parseInt(v.metrics.dislikeCount)
+                        let comments = v.metrics.commentCount
+                        let views = v.metrics.viewCount
+                        let added = parseInt(v.timeCreatedSeconds) * 1000
+                        let needThumbnail = false
+                        if(v.privacy == "VIDEO_PRIVACY_PRIVATE") {
+                            let thumb = v.thumbnailDetails.thumbnails.filter(s => {
+                                return s.url && s.url.includes("hqdefault")
+                            })
+                            if(thumb[0]) {
+                                needThumbnail = thumb[0].url
+                            }
+                        }
+                        videos.push({
+                            "id": v.videoId,
+                            "title": v.title,
+                            "likes": likes,
+                            "dislikes": dislikes,
+                            "comments": comments,
+                            "views": views,
+                            "added": added,
+                            "downloadUrl": v.downloadUrl,
+                            "time": utils.seconds_to_time(v.lengthSeconds),
+                            "privacy": v.privacy,
+                            "thumbnail": needThumbnail
+                        })
+                    }catch(error){}}
+                })
+                callback(videos)
+            })})
+        })
+    },
+
+    "locAutocomplete": function(req, callback, useHostAccount) {
+        if(!req.query.query) {
+            callback(false)
+        }
+        let q = req.query.query
+        let device = pullDeviceId(req)
+        if(!userdata[device] && !useHostAccount) {
+            callback([])
+            return;
+        }
+        function request(h) {
+            let root = new protobufNextReq.root()
+            let context = new protobufNextReq.root.contextType()
+            let client = new protobufNextReq.root.contextType.clientType()
+            client.setClientnumber(3)
+            client.setClientversion("19.02.39")
+            client.setOsname("Android")
+            client.setOsversion("14")
+            client.setAndroidsdkversion(34)
+            context.addClient(client)
+            root.setParams(q)
+            root.addContext(context)
+            let pbmsg = root.serializeBinary()
+
+            h["Content-Type"] = "application/x-protobuf"
+            h["x-goog-api-format-version"] = "2"
+            fetch("https://youtubei.googleapis.com/youtubei/v1/geo/place_autocomplete", {
+                "method": "POST",
+                "headers": h,
+                "body": pbmsg
+            }).then(s => (s.text().then(s => {
+                let filteredList = []
+                s = s.split("\x1a").filter(e => {return e.includes("ChIJ")})
+                s.shift()
+                s.forEach(l => {
+                    let pname = l.split("\n")
+                    let placeId = ""
+                    pname.forEach(part => {
+                        if(part.startsWith("\x1BChIJ")) {
+                            placeId = part.split("\x1B")[1].split("\x12")[0]
+                        }
+                    })
+                    pname = pname[pname.length - 1]
+                            .replace(/\p{Other_Symbol}/gui, "")
+                    while(pname.length > 0 && pname.charCodeAt(0) < 48) {
+                        pname = pname.substring(1)
+                    }
+                    if(pname.includes("\x12") || pname.length == 0) return;
+                    if(filteredList.filter(e => e[1] == pname).length == 0) {
+                        filteredList.push([placeId, pname])
+                    }
+                })
+
+                callback(filteredList)
+            })))
+        }
+
+        if(!useHostAccount) {
+            setupYouTube(device, (h) => {
+                request(h)
+            })
+        } else {
+            const account = require("./yt2009androidsignin").getData()
+            if(!account || !account.yAuth) {
+                callback([])
+                return;
+            }
+            let h = JSON.parse(JSON.stringify(androidHeaders))
+            h.Authorization = `Bearer ${account.yAuth}`
+            request(h)
+        }
+    },
+
+    "pullPlayer": function(req, callback) {
+        let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
+        setupYouTube(device, (h) => {
+            fetch("https://www.youtube.com/youtubei/v1/player", {
+                "headers": h,
+                "method": "POST",
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "videoId": req.query.video_id
+                })
+            }).then(r => {r.json().then(r => {
+                callback(r)
+            })})
+        })
+    },
+
+    "applyUpdateMetadata": function(req, res) {
+        let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
+        setupYouTube(device, (h) => {
+            h["Content-Type"] = "application/x-protobuf"
+            h["x-goog-api-format-version"] = "2"
+            fetch("https://youtubei.googleapis.com/youtubei/v1/video_manager/metadata_update", {
+                "method": "POST",
+                "headers": h,
+                "body": req.protoBody
+            }).then(r => {
+                if(r.status == 200) {
+                    res.redirect("/my_videos")
+                } else {
+                    res.sendStatus(r.status)
+                }
+            })
+        })
+    },
+
+    "analyticsMain": function(req, callback) {
+        let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
+        pullUserIdFromDevice(device, (id) => {
+            if(id.type || typeof(id) !== "string") {
+                callback({})
+                return;
+            }
+            let msg = new protoAnalytics.root()
+            let mc = new protoAnalytics.root.reqParamContents()
+            mc.setChannelid(id)
+            msg.addContents(mc)
+            let params = Buffer.from(
+                msg.serializeBinary()
+            ).toString("base64")
+
+            setupYouTube(device, (h) => {
+                fetch("https://youtubei.googleapis.com/youtubei/v1/browse", {
+                    "headers": h,
+                    "method": "POST",
+                    "body": JSON.stringify({
+                        "context": androidContext,
+                        "browseId": "FEanalytics_screen",
+                        "params": params
+                    })
+                }).then(r => {r.json().then(r => {
+                    let data = {
+                        "recentViews": [],
+                        "audiences": [],
+                        "mostViewed": []
+                    }
+                    let contents = []
+                    try {
+                        contents = r.contents.singleColumnBrowseResultsRenderer
+                        .tabs[0].tabRenderer.content.sectionListRenderer
+                        .contents[0].itemSectionRenderer.contents
+                    }
+                    catch(error) {console.log(error)}
+                    //fs.writeFileSync("./test.json", JSON.stringify(contents))
+                    contents.forEach(e => {
+                        try {
+                            e = e.elementRenderer.newElement.type.componentType
+                                 .model;
+                            if(e.analyticsRecentViewsModel) {
+                                e.analyticsRecentViewsModel.bars.forEach(b => {
+                                    data.recentViews.push(b)
+                                })
+                            }
+                            if(e.analyticsRootModel) {
+                                e.analyticsRootModel.analyticsTableCarouselData
+                                .data.tableCards.forEach(card => {
+                                    let m = []
+                                    card.cardData.rows.forEach(r => {
+                                        m.push(r)
+                                    })
+                                    data.audiences.push(m)
+                                })
+                            }
+                            if(e.analyticsVodCarouselCardModel) {
+                                e.analyticsVodCarouselCardModel.videoCarouselData
+                                .videos.forEach(v => {
+                                    data.mostViewed.push(v)
+                                })
+                            }
+                        }
+                        catch(error) {console.log(error)}
+                    })
+                    callback(data)
+                })})
+            })
+        })
+    },
+
+    "upload": function(req, flowData, callback) {
+        let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
+        let initHeaders = {
+            "user-agent": upUA,
+            "x-goog-upload-header-content-length": flowData.fsize,
+            "x-goog-upload-command": "start",
+            "x-goog-upload-protocol": "resumable",
+            "content-type": "application/x-www-form-urlencoded"
+        }
+        
+        // generate upload uuid
+        // from https://github.com/yusufusta/ytstudio/
+        let uuid = ""
+        let keys = []
+        while(keys.length !== 36) {
+            keys.push(" ")
+        }
+        let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("")
+        let e = 0;
+        let b = 0;
+        let c = ""
+        while(e < 36) {
+            if(e == 8 || e == 13 || e == 18 || e == 23) {
+                keys[e] = "-"
+            } else {
+                if(e == 14) {
+                    keys[e] = "4"
+                } else if(b <= 2) {
+                    let r = Math.random()
+                    while(r >= 0.9) {
+                        r = Math.random()
+                    }
+                    b = Math.round(33554432 + 16777216 * r)
+                }
+                c = b & 15;
+                b = b >> 4;
+                let index = 0;
+                if(e == 19) {
+                    index = (c & 3 | 8)
+                } else {
+                    index = c;
+                }
+                keys[e] = chars[index]
+            }
+            e++
+        }
+        uuid = keys.join("").toLowerCase()
+        
+        let uploadId = "innertube_android:"+uuid+":0:v=3,api=1,cf=3"
+        flowData.frontendUuid = uploadId
+        let initialData = JSON.parse(JSON.stringify(upInitial))
+        initialData.frontendUploadId = uploadId
+
+        // flow 1 - create upload session
+        setupYouTube(device, (h) => {
+            initHeaders.Authorization = h.Authorization
+            if(h["x-goog-pageid"]) {
+                initHeaders["x-goog-pageid"] = h["x-goog-pageid"]
+            }
+            fetch("https://upload.youtube.com/upload/youtubei", {
+                "headers": initHeaders,
+                "method": "POST",
+                "body": initialData
+            }).then(r => {
+                if(r.status !== 200) {
+                    console.log("INITIAL UP received " + r.status + "!")
+                    callback(false)
+                    return;
+                }
+                flowData.uploadUrl = r.headers.get("x-goog-upload-url")
+                flowData.controlUrl = r.headers.get("x-goog-upload-control-url")
+                flowData.scottyId = r.headers.get("x-goog-upload-header-scotty-resource-id")
+                queryUploadUrl();
+            })
+        })
+
+        // flow 2 - query upload id
+        function queryUploadUrl() {
+            fetch(flowData.uploadUrl, {
+                "headers": {
+                    "user-agent": upUA,
+                    "x-goog-upload-command": "query",
+                    "x-goog-upload-protocol": "resumable"
+                },
+                "method": "PUT"
+            }).then(r => {
+                if(r.status !== 200) {
+                    callback(false)
+                    console.log("QUERYUPLOAD received " + r.status + "!")
+                    return;
+                }
+                if(r.headers.has("x-guploader-uploadid")) {
+                    flowData.uploadId = r.headers.get("x-guploader-uploadid")
+                } else if(flowData.uploadUrl.includes("upload_id=")) {
+                    let uid = flowData.upload.split("upload_id=")[1]
+                                      .split("&")[0].split("#")[0];
+                    flowData.uploadId = uid;
+                }
+                if(r.headers.has("x-goog-upload-status")
+                && r.headers.get("x-goog-upload-status") == "active") {
+                    uploadFile()
+                }
+            })
+        }
+
+        // flow 3 - upload video file to server
+        function uploadFile() {
+            let dir = `${__dirname}/../assets/user-uploads-tmp`
+            const stream = fs.createReadStream(`${dir}/${flowData.fname}`)
+
+            fetch(flowData.uploadUrl, {
+                "headers": {
+                    "user-agent": upUA,
+                    "x-goog-upload-command": "upload, finalize",
+                    "x-goog-upload-protocol": "resumable",
+                    "x-goog-upload-offset": "0",
+                    "content-length": flowData.fsize
+                },
+                "method": "PUT",
+                "body": stream
+            }).then(r => {
+                if(r.status !== 200) {
+                    callback(false)
+                    console.log("UPLOADFILE return " + r.status + "!")
+                    return;
+                }
+                r.text().then(r => {
+                    try {flowData.nScotty = JSON.parse(r).scottyResourceId}
+                    catch(error) {}
+                    createInnertubeEntry()
+                })
+            })
+        }
+
+        // flow 4 - create video entry thru innertube
+        function createInnertubeEntry() {
+            let pageId = ""
+            let channelId = ""
+            function sendCreate() {
+                setupYouTube(device, (h) => {
+                    let privacy = flowData.privacy || "public"
+                    if(privacy !== "public"
+                    && privacy !== "unlisted"
+                    && privacy !== "private") {
+                        privacy = "public"
+                    }
+                    privacy = privacy.toUpperCase()
+    
+                    let nc = JSON.parse(JSON.stringify(androidContext))
+                    nc.user = {
+                        "onBehalfOfUser": pageId,
+                        "delegationContext": {
+                            "externalChannelId": channelId,
+                            "roleType": {
+                                "channelRoleType": "CREATOR_CHANNEL_ROLE_TYPE_OWNER"
+                            }
+                        }
+                    }
+
+                    fetch("https://youtubei.googleapis.com/youtubei/v1/upload/createvideo", {
+                        "headers": h,
+                        "method": "POST",
+                        "body": JSON.stringify({
+                            "context": nc,
+                            "resourceId": {"scottyResourceId": {
+                                "id": flowData.scottyId
+                            }},
+                            "frontendUploadId": uploadId,
+                            "initialMetadata": {
+                                "privacy": {"newPrivacy": privacy}
+                            }
+                        })
+                    }).then(r => {r.json().then(r => {
+                        //console.log(r)
+                        if(r.videoId) {
+                            flowData.videoId = r.videoId;
+                            updateMetadata()
+                        } else {
+                            console.log("smth went wrong", flowData)
+                            callback(false)
+                        }
+                    })})
+                })
+            }
+            pullAllYouTubeAccounts(userdata[device], (data) => {
+                data.forEach(a => {
+                    if(a.selected) {
+                        pageId = a.pageId
+                    }
+                })
+                if(channelId && pageId) {
+                    sendCreate()
+                }
+            })
+            pullUserIdFromDevice(device, (id) => {
+                channelId = id;
+                if(channelId && pageId) {
+                    sendCreate()
+                }
+            })
+            
+        }
+
+        // flow 5 - update video metadata to include things like description
+        function updateMetadata() {
+            let root = new metadataUpdate.root()
+            let context = new metadataUpdate.root.contextType()
+            let client = new metadataUpdate.root.contextType.clientType()
+            client.setClientnumber(3)
+            client.setClientversion("19.02.39")
+            client.setOsname("Android")
+            client.setOsversion("14")
+            client.setAndroidsdkversion(34)
+            context.addClient(client)
+            root.addContext(context)
+
+            root.setBrowseid(flowData.videoId)
+            root.setEightythree(1)
+
+            let titleUpd = new metadataUpdate.stringUpdateMsg()
+            titleUpd.addNewstring(flowData.title)
+            titleUpd.setUpdatetype(1)
+            root.addTitleupdate(titleUpd)
+
+            if(flowData.description) {
+                let upd = new metadataUpdate.stringUpdateMsg()
+                upd.addNewstring(flowData.description)
+                upd.setUpdatetype(1)
+                root.addDescriptionupdate(upd)
+            }
+
+            if(flowData.tags) {
+                let upd = new metadataUpdate.stringUpdateMsg()
+                flowData.tags = flowData.tags.split(" ")
+                flowData.tags.forEach(t => {
+                    upd.addNewstring(t.trim())
+                })
+                upd.setUpdatetype(1)
+                root.addTagsupdate(upd)
+            }
+
+            const acceptedPrivacyValues = ["public", "unlisted", "private"]
+            if(flowData.privacy
+            && acceptedPrivacyValues.includes(flowData.privacy)) {
+                let shouldUpd = new metadataUpdate.updateToggle()
+                shouldUpd.setUpdatefield(1)
+                root.addUpdateprivacysettings(shouldUpd)
+                let updSettings = new metadataUpdate.updateToggle()
+                switch(flowData.privacy) {
+                    case "public": {
+                        updSettings.setUpdatefield(1)
+                        break;
+                    }
+                    case "unlisted": {
+                        updSettings.setUpdatefield(2)
+                        break;
+                    }
+                    case "private": {
+                        updSettings.setUpdatefield(0)
+                        break;
+                    }
+                }
+                root.addVideoprivacy(updSettings)
+            }
+
+            const acceptedCommentsValues = [
+                "allow-all", "allow-friends", "allow-approved", "deny-all"
+            ]
+            if(flowData.comments
+            && acceptedCommentsValues.includes(flowData.comments)) {
+                let upd = new metadataUpdate.commentsUpdateMsg()
+                upd.setInt4(1)
+                upd.setInt5(1)
+                switch(flowData.comments) {
+                    case "allow-all": {
+                        upd.setAllowcomments(2)
+                        upd.setModerationtype(1)
+                        break;
+                    }
+                    case "allow-friends": {
+                        upd.setAllowcomments(2)
+                        upd.setModerationtype(3)
+                        break;
+                    }
+                    case "allow-approved": {
+                        upd.setAllowcomments(2)
+                        upd.setModerationtype(2)
+                        break;
+                    }
+                    case "deny-all": {
+                        upd.setAllowcomments(1)
+                        break;
+                    }
+                }
+                root.addCommentsupdate(upd)
+            }
+
+            let pbmsg = root.serializeBinary()
+            
+            setupYouTube(device, (h) => {
+                h["Content-Type"] = "application/x-protobuf"
+                h["x-goog-api-format-version"] = "2"
+                fetch("https://youtubei.googleapis.com/youtubei/v1/video_manager/metadata_update", {
+                    "method": "POST",
+                    "headers": h,
+                    "body": pbmsg
+                }).then(r => {
+                    if(r.status == 200) {
+                        callback(flowData)
+                    } else {
+                        console.log("METADATAUPDATE return " + r.status + "!")
+                        callback(false)
+                    }
+                })
+            })
+        }
     }
 }
 
@@ -1362,11 +1944,20 @@ function pullAllYouTubeAccounts(loginData, callback) {
 
         try {
             //fs.writeFileSync("test.json", JSON.stringify(r))
+            let hadAvatars = false;
             r.contents[0].accountSectionListRenderer
             .contents[0].accountItemSectionRenderer.contents.forEach(a => {
                 if(a.accountItem) {
                     a = a.accountItem
                     let name = pullName(a)
+                    let avatarUrl = false;
+                    try {
+                        avatarUrl = utils.saveAvatar(
+                            a.accountPhoto.thumbnails[0].url
+                        )
+                        hadAvatars = true;
+                    }
+                    catch(error) {console.log(error)}
                     if(!a.isRedirectToStudio) {
                         accounts.push({
                             "name": name.name,
@@ -1374,13 +1965,18 @@ function pullAllYouTubeAccounts(loginData, callback) {
                             "pageId": a.serviceEndpoint.signInEndpoint
                                        .directSigninIdentity
                                        .effectiveObfuscatedGaiaId,
-                            "selected": a.isSelected
+                            "selected": a.isSelected,
+                            "avatar": avatarUrl
                         })
                     }
                 }
             })
 
-            callback(accounts)
+            if(hadAvatars) {
+                setTimeout(() => {callback(accounts)}, 300)
+            } else {
+                callback(accounts)
+            }
         }
         catch(error) {
             console.log("account pull failed!", error)

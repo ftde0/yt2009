@@ -84,7 +84,7 @@
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/gsign_get_devices")
+    r.open("GET", "/gsign_get_devices?r=" + Math.random().toString())
     r.setRequestHeader("mode", "pchelper")
     r.setRequestHeader("device", device)
     r.send(null)
@@ -192,7 +192,7 @@ to clear playlist and subscription data to avoid conflicts.\n\
 all the data will be backed up in your browser for future use.\n\
 should we do so?");
             if(r) {
-                if(localStorage) {
+                if(window.localStorage) {
                     var subs = localStorage.subscriptions;
                     if(subs) {
                         localStorage.backup_subscriptions = subs;
@@ -211,28 +211,22 @@ should we do so?");
                 }
                 if(document.cookie.indexOf("favorites=") !== -1) {
                     var favs = document.cookie.split("favorites=")[1].split(";")[0]
-                    document.cookie = "favorites=PCHELPER_MANAGED" + "; Path=/;" + expiry;
                     document.cookie = "favorites_backup=" + favs
                                     + "; Path=/;" + expiry;
                 }
+                document.cookie = "favorites=PCHELPER_MANAGED; Path=/;" + expiry;
                 if(document.cookie.indexOf("playlist_index=") !== -1) {
                     var favs = document.cookie.split("playlist_index=")[1].split(";")[0]
-                    document.cookie = "playlist_index=" + "; Path=/;" + expiry;
                     document.cookie = "backup_pindex=" + favs
                                     + "; Path=/;" + expiry;
                 }
-                /*if(document.cookie.indexOf("watch_history=") !== -1) {
-                    var favs = document.cookie.split("watch_history=")[1].split(";")[0]
-                    document.cookie = "watch_history=" + "; Path=/;" + expiry;
-                    document.cookie = "watch_history_backup=" + favs
-                                    + "; Path=/;" + expiry;
-                }*/
+                document.cookie = "playlist_index=; Path=/;" + expiry;
                 if(document.cookie.indexOf("sublist=") !== -1) {
                     var favs = document.cookie.split("sublist=")[1].split(";")[0]
-                    document.cookie = "sublist=" + "; Path=/;" + expiry;
                     document.cookie = "sublist_backup=" + favs
                                     + "; Path=/;" + expiry;
                 }
+                document.cookie = "sublist=; Path=/;" + expiry;
             }
 
             var dataFormat = "cookie"
@@ -246,7 +240,10 @@ should we do so?");
             } else {
                 r = new ActiveXObject("Microsoft.XMLHTTP");
             }
-            r.open("GET", "/pchelper_subs?format=" + dataFormat)
+            function addR() {
+                return "&r=" + Math.random().toString()
+            }
+            r.open("GET", "/pchelper_subs?format=" + dataFormat + addR())
             r.send(null)
             r.onreadystatechange = function(e) {
                 if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
@@ -274,7 +271,7 @@ should we do so?");
             } else {
                 r2 = new ActiveXObject("Microsoft.XMLHTTP");
             }
-            r2.open("GET", "/pchelper_playlists?format=" + dataFormat)
+            r2.open("GET", "/pchelper_playlists?format=" + dataFormat + addR())
             r2.send(null)
             r2.onreadystatechange = function(e) {
                 if(r2.readyState == 4 || this.readyState == 4 || e.readyState == 4) {

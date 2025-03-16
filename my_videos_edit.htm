@@ -1,0 +1,612 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="en">
+<head>
+	<title>YouTube</title>
+	<link id="www-core-css" rel="stylesheet" href="/www-core-vfl122413.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-the-rest-vfl120680.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-my_account_base-vfl153434.css">
+	<link rel="stylesheet" href="/assets/site-assets/www-my_videos-vfl121286.css">
+	<link rel="stylesheet" href="/assets/site-assets/search-suggestions.css">
+	<style type="text/css">
+		#mymedia #messages-new-playlist,
+		#mymedia #messages-addto-playlist {
+			margin-bottom: 10px;
+		}
+		#mymedia #dialog-new-playlist,
+		#mymedia #dialog-addto-playlist {
+			width: 350px;
+		}
+		#mymedia #addto-playlist-checklist {
+			height: 100px;
+			overflow: auto;
+			border: 1px solid #999;
+		}
+		#mymedia #expand-view .video-details .video-title {
+			margin-bottom: 10px;
+		}
+		#mymedia #expand-view .video-details .video-title a {
+			color: #03c;
+			font-size: 14px;
+			font-weight: bold;
+			text-decoration: none;
+		}
+		#mymedia .sort-field {
+			border-left: 1px solid #666;
+			margin-left: 8px;
+			padding-left: 8px;
+		}
+		#mymedia .sort-field-first {
+			margin-left: 8px;
+		}
+		#mymedia a.sort-field,
+		#mymedia a.sort-field-first {
+			text-decoration: none;
+		}
+		#mymedia .submit-dialog {
+			background-color: #eee;
+			border: 1px solid #999;
+			padding: 8px 8px;
+		}
+		#mymedia .yt-uix-expander p {
+			color: #333;
+			font-size: 12px;
+			font-weight: bold;
+		}
+		#mymedia .video-thumbs {
+			height: 90px;
+		}
+		#mymedia .video-thumbs .video-thumb {
+			cursor: pointer;
+			float: left;
+			width: 106px;
+			border: 1px solid #999;
+			margin-right: 5px;
+			height: 81px;
+		}
+		#mymedia .video-thumbs .video-thumb:hover {
+			border-color: #ffe884;
+			background-color: #f8f2d7;
+		}
+		#mymedia .video-thumbs .video-thumb.selected {
+			border-color: #ffdc3d;
+			background-color: #fff0af;
+		}
+		#mymedia .video-thumbs .video-thumb img {
+			width: 100px;
+			height: 75px;
+			margin-left: 3px;
+  			margin-top: 3px;
+		}
+		#mymedia #video-thumbs-span {
+			font-size: 10px;
+		}
+		#mymedia iframe {
+			border: none;
+			width: 455px;
+			height: 310px;
+		}
+		#mymedia #video-pane button {
+			background: transparent url(/assets/site-assets/mmgrads-vfl38740.gif) repeat-x scroll 0 -116px;
+			height: 22px;
+			border-radius: 3px;
+			border: #9b9b9b 1px solid;
+			cursor: pointer;
+			padding: 0px 6px;
+			margin-left: 5px;
+			position: relative;
+			top: 2px;
+		}
+		#mymedia #video-pane button a {
+			color: black;
+			text-decoration: none;
+		}
+		#mymedia #video-pane button a:hover {
+			text-decoration: none;
+		}
+		#mymedia #video-pane button:hover {
+			background: transparent url(/assets/site-assets/mmgrads-vfl38740.gif) repeat-x scroll 0 -92px;
+		}
+		#mymedia #video-pane button:active {
+			background: transparent url(/assets/site-assets/mmgrads-vfl38740.gif) repeat-x scroll 0 -133px;
+		}
+		#mymedia #form-pane textarea {
+			resize: vertical;
+		}
+		#mymedia .flash-video, #mymedia #html5-video-insert {
+			width: 485px !important;
+			height: 360px;
+			border: none;
+			outline: none;
+			margin: 0px 0px;
+			padding: 0px 0px;
+		}
+	</style>
+</head>
+<body class="date-20091117 en_US is-english">
+	<!-- begin masthead section -->
+	<div id="page" class="">
+	</div>
+	<div id="masthead-container">
+		<div id="masthead">
+			<a href="/">
+				<button id="logo" class="master-sprite" title="" onclick="window.top.location.href='/'; return false;"></button>
+			</a>
+			<div id="masthead-search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
+					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" value="" maxlength="128">
+					<input id="search-type-masthead" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" onclick="yt2009_search();"><span>lang_search</span></a>
+				</form>
+			</div>
+			<div id="masthead-utility" class="util-a1">
+				<!--yt2009_login_insert-->
+			</div>
+			<div id="masthead-nav-user">
+				<a href="/watch_queue" id="quicklist-nav" style="background-color: rgb(255, 255, 255);" class="hid">lang_quicklist (<span id="quicklist-nav-count">?</span>)</a>
+				<a href="/my_subscriptions?masthead=1">lang_subs_btn</a>
+				<a href="/my_history">lang_history_btn</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" class href="/my_videos_upload"><span>lang_upload_btn</span></a>
+			</div>
+			<div id="masthead-nav-main">
+				<a href="/">lang_home</a>
+				<a href="/videos">lang_videos</a>
+				<a href="/channels">lang_channels</a>
+			</div>
+			<div id="masthead-end"></div>
+		</div>
+	</div>
+	<!-- end masthead section -->
+	<div id="baseDiv" class="date-20091117 video-info ">
+		<!-- begin top section -->
+		<div id="mymedia">
+			<div class="page-heading">
+				<div>
+					<div id="my-account-header">
+						<h1>
+							<span class="yt-menulink yt-menulink-primary" id="" style="" onmouseenter="this.className += ' yt-menulink-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menulink-primary-hover', '');"><a class="yt-menulink-btn yt-button yt-button-primary" href="/account" onclick="">lang_userpage_myaccount</a><a class="yt-menulink-arr" href="/account" onclick=""></a>
+								<ul class="yt-menulink-menu">
+									<li><a href="/inbox?folder=messages&amp;action_message=1" onclick="">lang_userpage_inbox_entry</a></li>
+									<li><a href="/my_videos" onclick="">lang_userpage_videos_entry</a></li>
+									<li><a href="/my_subscriptions" onclick="">lang_userpage_subs_entry</a></li>
+									<li><a href="/address_book" onclick="">lang_userpage_addressbook_entry</a></li>
+									<li><a href="/account" onclick="">lang_userpage_accsettings_entry</a></li>
+									<li><a href="/my_profile" onclick="">lang_userpage_mychannel_entry</a></li>
+									<li><a href="/my_videos_insight" onclick="">lang_userpage_insight_entry</a></li>
+								</ul>
+							</span>
+							&nbsp;<span class="subSep">/</span>&nbsp;
+							<span>lang_vedit_details</span>
+							<span class="yt-menulink yt-menulink-primary"><a class="yt-menulink-btn yt-button yt-button-primary" href="/watch?v=yt_videoid" onclick="">yt_title</a></span>
+						</h1>
+					</div>
+				</div>
+			</div>
+			<div class="page-sections">
+				<span href="#" class="section-link first selected">Info & Settings</span>
+				<a href="#" class="section-link">AudioSwap</a>
+				<a href="#" class="section-link">Annotations</a>
+				<a href="#" class="section-link">Captions and Subtitles</a>
+			</div>
+			<div class="panes">
+				<form action="/my_videos_edit" method="POST" name="videos_edit">
+					<input type="hidden" name="video_id" value="yt_videoid">
+					<div id="form-pane">
+						<div class="submit-dialog">
+							<a class="yt-button yt-button-primary" href="#" onclick="document['videos_edit'].submit()">
+								<span>Save changes</span>
+							</a>
+							or
+							<a href="/my_videos">cancel</a>
+						</div>
+						<div class="yt-uix-expander">
+							<div class="yt-uix-expander-head">
+								<table><tr>
+									<td><div class="yt-uix-expander-arrow"></div></td>
+									<td><b>Video Information</b></td>
+								</tr></table>
+							</div>
+							<div class="yt-uix-expander-body">
+								<div class="field">
+									<p>Title:</p>
+									<input type="hidden" name="og_title" value="yt_title">
+									<input type="text" class="textbox" value="yt_title" name="title" spellcheck="false" autocomplete="off">
+								</div>
+								<hr>
+								<div class="field">
+									<p>Description:</p>
+									<textarea style="display: none;" name="og_description">yt_description</textarea>
+									<textarea name="description">yt_description</textarea>
+								</div>
+								<hr>
+								<div class="field">
+									<p>Tags:</p>
+									<textarea style="display: none;" name="og_tags">yt_tags</textarea>
+									<textarea name="tags">yt_tags</textarea>
+								</div>
+							</div>
+						</div>
+						<div class="yt-uix-expander">
+							<div class="yt-uix-expander-head">
+								<table><tr>
+									<td><div class="yt-uix-expander-arrow"></div></td>
+									<td><b>Video Thumbnail</b></td>
+								</tr></table>
+							</div>
+							<div class="yt-uix-expander-body">
+								<div class="video-thumbs">
+									<input type="hidden" name="selected_thumb" id="selected-thumb" value="0">
+									<div class="video-thumb" onclick="selectThumb(1)" draggable="false">
+										<img src="//i.ytimg.com/vi/yt_videoid/1.jpg"/>
+									</div>
+									<div class="video-thumb" onclick="selectThumb(2)" draggable="false">
+										<img src="//i.ytimg.com/vi/yt_videoid/2.jpg"/>
+									</div>
+									<div class="video-thumb" onclick="selectThumb(3)" draggable="false">
+										<img src="//i.ytimg.com/vi/yt_videoid/3.jpg"/>
+									</div>
+								</div>
+								<span id="video-thumbs-span">Choose a video still from above to represent your video in search results and other displays. You can choose a different still image by clicking on it.<br>
+								Note: it can take up to 6 hours for your image to be updated.</span>
+							</div>
+						</div>
+						<div class="yt-uix-expander">
+							<div class="yt-uix-expander-head">
+								<table><tr>
+									<td><div class="yt-uix-expander-arrow"></div></td>
+									<td><b>Broadcasting and Sharing Options</b></td>
+								</tr></table>
+							</div>
+							<div class="yt-uix-expander-body">
+								<div class="field">
+									<div class="yt-uix-expander">
+										<div class="yt-uix-expander-head">
+											<table><tr>
+												<td><div class="yt-uix-expander-arrow"></div></td>
+												<td><b>Privacy</b></td>
+											</tr></table>
+										</div>
+										<div class="yt-uix-expander-body">
+											<input type="radio" name="privacy" value="public" id="privacy-public">
+											<label for="privacy-public">Share your video with the world (Recommended)</label><br>
+											<input type="radio" name="privacy" value="unlisted" id="privacy-unlisted">
+											<label for="privacy-unlisted">Unlisted (Everyone with link can view)</label><br>
+											<input type="radio" name="privacy" value="private" id="privacy-private">
+											<label for="privacy-private">Private (Viewable by up to 25 people)</label>
+										</div>
+									</div>
+								</div>
+								<hr>
+								<div class="field">
+									<div class="yt-uix-expander">
+										<div class="yt-uix-expander-head">
+											<table><tr>
+												<td><div class="yt-uix-expander-arrow"></div></td>
+												<td><b>Comments</b></td>
+											</tr></table>
+										</div>
+										<div class="yt-uix-expander-body">
+											<input type="radio" name="comments" value="allow-all" id="comments-allow-all">
+											<label for="comments-allow-all">Allow comments automatically</label><br>
+											<input type="radio" name="comments" value="allow-friends" id="comments-allow-friends">
+											<label for="comments-allow-friends">Allow friends' comments automatically, all others with approval only</label><br>
+											<input type="radio" name="comments" value="allow-approved" id="comments-approved">
+											<label for="comments-approved">Allow all comments with approval only</label><br>
+											<input type="radio" name="comments" value="deny-all" id="comments-disabled">
+											<label for="comments-disabled">Don't allow comments</label>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="submit-dialog">
+							<a class="yt-button yt-button-primary" href="#" onclick="document['videos_edit'].submit()">
+								<span>Save changes</span>
+							</a>
+							or
+							<a href="/my_videos">cancel</a>
+						</div>
+					</div>
+					<div id="video-pane">
+						<!--yt2009_video_insert-->
+						<div class="yt-uix-expander">
+							<div class="yt-uix-expander-head">
+								<table><tr>
+									<td><div class="yt-uix-expander-arrow"></div></td>
+									<td><b>Date and Map</b></td>
+								</tr></table>
+							</div>
+							<div class="yt-uix-expander-body">
+								<div class="field">
+									<p>Date:</p>
+									<select name="month" class="select-month">
+										<option>---</option>
+										<option>January</option>
+										<option>February</option>
+										<option>March</option>
+										<option>April</option>
+										<option>May</option>
+										<option>June</option>
+										<option>July</option>
+										<option>August</option>
+										<option>September</option>
+										<option>October</option>
+										<option>November</option>
+										<option>December</option>
+									</select>
+									<select name="day" class="select-day">
+										<option>---</option>
+										<option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+									</select>
+									<select name="year" class="select-year">
+										<option>---</option>
+										<option>2005</option><option>2006</option><option>2007</option><option>2008</option><option>2009</option><option>2010</option><option>2011</option><option>2012</option><option>2013</option><option>2014</option><option>2015</option><option>2016</option><option>2017</option><option>2018</option><option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option>
+									</select>
+									<button onclick="markToday();return false;"><a href="javascript:void()" onclick="markToday()">Today</a></button>
+									<button onclick="clearInp('date');return false;"><a href="javascript:void()" onclick="clearInp('date')">Clear</a></button>
+								</div>
+								<div class="field">
+									<p>Map Location:</p>
+									<input type="text" class="textbox" spellcheck="false" autocomplete="off" id="input-location" name="location" style="width: 200px;">
+									<input type="hidden" name="yt-internal-locationid" id="yt-internal-locationid">
+									<button onclick="return false;"><a href="javascript:void()" onclick="">Search</a></button>
+									<button onclick="clearInp('location');return false;"><a href="javascript:void()" onclick="clearInp('location')">Clear</a></button>
+									<div id="location-autocomplete"></div>
+								</div>
+								<div class="field">
+									<p>Altitude (in ft):</p>
+									<input type="text" class="textbox" spellcheck="false" autocomplete="off" id="input-altitude" name="altitude" style="width: 200px;">
+									<button onclick="setInp('altitude');return false;"><a href="javascript:void()" onclick="">Set</a></button>
+									<button onclick="clearInp('altitude');return false;"><a href="javascript:void()" onclick="clearInp('altitude')">Clear</a></button>
+								</div>
+								<hr>
+								<div class="field">
+									 <div id="map-canvas"><iframe src="/media/testmaps.html"></iframe></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div id="promos" class="clear">
+		</div>
+		<div id="footer">
+			<div class="search">
+				<form autocomplete="off" class="search-form" action="/results" method="get" name="footer-search-form">
+					<input id="footer-search-term" class="search-term" name="search_query" type="text" value="" maxlength="128">
+					<input id="search-type-footer" name="search_type" type="hidden" value="">
+					<a class="yt-button yt-button-primary" id="" class href="#"><span>lang_search</span></a>
+				</form>
+			</div>
+			<div class="links">
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<th>lang_footer_yt</th>
+						<th>lang_footer_programs</th>
+						<th>lang_footer_help</th>
+						<th>lang_footer_policy</th>
+						<th>lang_footer_discover</th>
+					</tr>
+					<tr>
+						<td><a href="/t/contact_us">lang_footer_contact</a></td>
+						<td><a href="/t/advertising">lang_footer_advertising</a></td>
+						<td><b><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US" target="_blank">lang_footer_ghelp</a></b></td>
+						<td><a href="/t/privacy">lang_footer_privacy</a></td>
+						<td><a href="/mobile">lang_footer_mobile</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://www.googlestore.com/youtube">lang_footer_store</a></td>
+						<td><a href="http://code.google.com/apis/youtube/overview.html">lang_footer_dev</a>
+						</td>
+						<td><a href="/t/yt_handbook_home">lang_footer_handbook</a>
+						</td>
+						<td><a href="/t/terms">lang_footer_tos</a></td>
+						<td><a href="/youtubeonyoursite">lang_footer_site</a></td>
+					</tr>
+					<tr>
+						<td><a href="/press_room">lang_footer_press</a></td>
+						<td><a href="/partners">lang_footer_partner</a></td>
+						<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">lang_footer_community</a></td>
+						<td><a href="/t/dmca_policy">lang_footer_dmca</a></td>
+						<td><a href="/youtubeonyourtv">lang_footer_tv</a></td>
+					</tr>
+					<tr>
+						<td><a href="http://ytbizblog.blogspot.com/">lang_footer_business</a></td>
+						<td><a href="/t/content_management">lang_footer_cm</a></td>
+						<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">lang_footer_safety</a></td>
+						<td><a href="/t/community_guidelines">lang_footer_guidelines</a></td>
+						<td><a href="/t/rss_feeds">lang_footer_rss</a></td>
+					</tr>
+					<tr>
+						<td><a href="/blog">lang_footer_blog</a></td>
+						<td></td>
+						<td><a href="/t/creators_corner">lang_footer_corner</a></td>
+						<td></td>
+						<td><a href="/testtube">lang_footer_test</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="region-and-language-pickers">
+				<div class="google-home">
+					<a href="http://www.google.com/webmasters/igoogle/youtube.html">lang_footer_igoogle</a>
+				</div>
+				<div class="region-picker-box">
+					<span class="region-label">lang_footer_location</span>
+					<strong class="region-title">lang_footer_worldwide</strong>
+					<a href="#" onclick="loadPicker('region-picker'); return false;">lang_footer_showloc</a>
+					<div id="region-picker-container">
+						<div id="region-picker-loading" style="display: none">Loading...</div>
+					</div>
+				</div>
+				<div class="language-picker-box">
+					<span class="language-label">lang_footer_language</span>
+					<strong class="language-title">lang_footer_langname</strong>
+					<a href="#" onclick="loadPicker('language-picker'); return false;">lang_footer_showlang</a>
+					<div id="language-picker-container">
+						<div id="language-picker-loading" style="display: none">Loading...</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="copyright">lang_footer_copyright</div>
+		</div>
+		<!-- end bottom section -->
+	</div>
+	<div>
+	</div>
+	<a name="pageBottom"></a>
+	<script>
+		var lsViewStringPrefix = "lang_userpage_views_prefix";
+	</script>
+	<script src="/assets/site-assets/yt2009_userpage_common.js"></script>
+	<script src="/assets/site-assets/search-suggestions.js"></script>
+	<script src="/assets/site-assets/yt2009langpicker.js"></script>
+	<script>
+		var useNativeClassName = true;
+        if(!document.getElementsByClassName) {
+            useNativeClassName = false;
+            document.getElementsByClassName = function(name) {
+                var l = []
+                var s = document.getElementsByTagName("*")
+                for(var e in s) {
+                    e = s[e]
+                    if(e && e.className && (e.className == name
+                    || (e.className.indexOf(name + " ") == 0)
+                    || (e.className.indexOf(" " + name + " ") !== -1))) {
+                        l.push(e)
+                    }
+                }
+                return l;
+            }
+        }
+		try {
+            if(HTMLCollection && !HTMLCollection.prototype.forEach) {
+                HTMLCollection.prototype.forEach = function(callback) {
+                    for(var e in this) {
+                        if(this[e] && this[e].tagName) {
+                            callback(this[e])
+                        }
+                    }
+                }
+            }
+        }
+        catch(error){}
+        if(!Array.prototype.forEach) {
+            Array.prototype.forEach = function(callback) {
+                for(var e in this) {
+                    if(this[e]) {
+                        callback(this[e])
+                    }
+                }
+            }
+        }
+		document.getElementsByClassName("yt-uix-expander-head").forEach(function(exp) {
+			exp.onclick = function() {
+				if(exp.parentNode.className.indexOf("-collapsed") !== -1) {
+					exp.parentNode.className = "yt-uix-expander"
+				} else {
+					exp.parentNode.className = "yt-uix-expander yt-uix-expander-collapsed"
+				}
+			}
+		})
+		if(navigator.userAgent.indexOf("MSIE 6.0") !== -1) {
+			document.getElementById("map-canvas").style.display = "none"
+		}
+		function markToday() {
+			var now = new Date()
+			var d = now.getDate()
+			document.getElementsByClassName("select-day")[0]
+					.getElementsByTagName("option")[d].selected = true;
+			var m = now.getMonth()
+			document.getElementsByClassName("select-month")[0]
+					.getElementsByTagName("option")[m + 1].selected = true;
+			var y = now.getFullYear()
+			var yopts = document.getElementsByClassName("select-year")[0]
+								.getElementsByTagName("option");
+			for(var o in yopts) {
+				try {
+					o = yopts[o]
+					if(o && o.tagName && o.innerHTML == y) {
+						o.selected = true;
+					}
+				}
+				catch(error) {}
+			}
+		}
+		function clearInp(name) {
+			if(name !== "date") {
+				document.getElementById("input-" + name).value = ""
+			} else {
+				document.getElementsByClassName("select-month")[0]
+						.getElementsByTagName("option")[0].selected = true;
+				document.getElementsByClassName("select-day")[0]
+						.getElementsByTagName("option")[0].selected = true;
+				document.getElementsByClassName("select-year")[0]
+						.getElementsByTagName("option")[0].selected = true;
+			}
+			if(name == "location") {
+				document.getElementById("location-autocomplete").innerHTML = ""
+				document.getElementById("yt-internal-locationid").value = ""
+			}
+		}
+		function selectThumb(index) {
+			document.getElementById("selected-thumb").value = index;
+			document.getElementsByClassName("video-thumb").forEach(function(v) {
+				v.className = "video-thumb"
+			})
+			document.getElementsByClassName("video-thumb")[index - 1].className = "video-thumb selected"
+		}
+
+		document.getElementById("input-location").oninput = function(e) {
+			var v = document.getElementById("input-location").value
+			var result = document.getElementById("location-autocomplete")
+			if(v.length < 2) {
+				result.innerHTML = ""
+				return;
+			}
+			var r;
+			if (window.XMLHttpRequest) {
+				r = new XMLHttpRequest()
+			} else {
+				r = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			var fullUrl = [
+				"/pchelper_location_autocomplete",
+				"?query=" + v,
+				"&r=" + Math.random().toString()
+			]
+			r.open("GET", fullUrl.join(""))
+			r.send(null)
+			r.onreadystatechange = function(e) {
+				if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+					result.innerHTML = r.responseText
+				}
+			}
+		}
+
+		function sl(id,element) {
+			document.getElementById("input-location").value = element.getElementsByTagName("td")[0].innerHTML;
+			document.getElementById("yt-internal-locationid").value = id;
+			document.getElementById("location-autocomplete").innerHTML = ""
+		}
+
+		function hl(element) {
+			var s = document.getElementById("location-autocomplete").getElementsByTagName("div")
+			for(var e in s) {
+				try {
+					e = s[e]
+					if(e.tagName) {
+						e.className = "google-ac-a"
+					}
+				}
+				catch(error) {}
+			}
+			element.className = "google-ac-b"
+		}
+
+		function uhl(element) {
+			element.className = "google-ac-a"
+		}
+	</script>
+</body>
+</html>

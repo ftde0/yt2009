@@ -42,7 +42,8 @@ module.exports = {
             flags += "only_old"
         }
 
-        let page = ((req.query["start-index"] || 0) / 20)
+        let index = req.query["start-index"]
+        if(!index) {index = 0;}
 
         // jsongdata
         if(req.query.alt == "json") {
@@ -61,7 +62,7 @@ module.exports = {
         search.get_search(
             encodeURIComponent(req.query.q) || "",
             flags,
-            {"page": page},
+            {"custom_index": index},
             (data => {
                 let first3Videos = []
                 data.forEach(video => {
@@ -128,8 +129,8 @@ module.exports = {
             })
 
             response =
-            templates.cpsSearchBegin(resultCount)
-            .replace(`x>1<`, `x>${page * 20 + 1}<`)
+            templates.cpsSearchBegin(resultCount, req.originalUrl)
+            .replace(`x>1<`, `x>${index + 1}<`)
             + "\n" + videos
             + templates.cpsSearchEnd;
 

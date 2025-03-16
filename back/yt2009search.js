@@ -29,7 +29,8 @@ module.exports = {
         if(params.search_sort || params.uploaded || params.high_definition
         || params.closed_captions || params.search_type || params.page
         || params.location || params.search_duration || params.four_k
-        || params.three_d || params.threesixty || params.creative_commons) {
+        || params.three_d || params.threesixty || params.creative_commons
+        || params.custom_index) {
             useProto = true
         }
 
@@ -175,6 +176,13 @@ module.exports = {
                 params.page = 1
             }
             paramsMsg.setIndex(parseInt(params.page) * 20)
+        }
+
+        if(params.custom_index) {
+            if(isNaN(parseInt(params.custom_index))) {
+                params.custom_index = 1
+            }
+            paramsMsg.setIndex(parseInt(params.custom_index))
         }
 
         if(useProto) {

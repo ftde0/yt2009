@@ -31,6 +31,7 @@ const yt2009_blazer = require("./yt2009mobileblazer")
 const yt2009_doodles = require("./yt2009doodles")
 const yt2009_exports = require("./yt2009exports")
 const yt2009_stats = require("./yt2009statsdata")
+const yt2009_myvideos = require("./yt2009myvideos")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -48,8 +49,15 @@ const version = package.version;
 const https = require("https")
 const fs = require("fs")
 const app = express();
+
+let fileLimit = 10;
+if(config.file_limit && !isNaN(parseInt(config.file_limit))) {
+    fileLimit = parseInt(config.file_limit)
+}
+
 app.use(express.raw({
-    "type": () => true
+    "type": () => true,
+    "limit": fileLimit + "mb"
 }))
 
 if(config.env == "dev") {
@@ -104,6 +112,18 @@ if(config.ip == "127.0.0.1" || config.ip == "localhost") {
     for anything other than quick testing, things WILL break!
     set yt2009's config correctly if planning on actual usage.
     
+
+`)
+}
+if(!config.data_api_key) {
+    console.log(`
+        
+        
+    data api V3 key not set.
+    while playback will work,
+    not all video data may be accurate.
+    recommended to set with config.data_api_key.
+
 
 `)
 }
@@ -1837,6 +1857,21 @@ app.get("/my_playlists", (req, res) => {
 app.get("/inbox", (req, res) => {
     yt2009_inbox.apply(req, res)
 })
+app.get("/my_videos", (req, res) => {
+    yt2009_myvideos.apply(req, res)
+})
+app.get("/my_videos_edit", (req, res) => {
+    yt2009_myvideos.createEditPage(req, res)
+})
+app.post("/my_videos_edit", (req, res) => {
+    yt2009_myvideos.craftEditProto(req, res)
+})
+app.get("/my_videos_upload", (req, res) => {
+    yt2009_myvideos.createInitialUpload(req, res)
+})
+app.post("/my_videos_upload", (req, res) => {
+    yt2009_myvideos.handleUploadFlow(req, res)
+})
 
 
 /*
@@ -1856,7 +1891,6 @@ let static_sites = {
     "/t/dmca_policy": "dmca.html",
     "/feather_beta": "feather_beta.html",
     "/testtube": "test.html",
-    "/my_videos_upload": "upload.html",
     "/warp_speed": "warp_speed.html",
     "/warp_speed_en": "warp_speed_en.html",
     "/t/new_viewing_experience": "new_viewing_experience.html",
@@ -2728,7 +2762,6 @@ app.get("/yt2009_recommended", (req, res) => {
         targetVideos = 25;
         isRecommendedPage = true;
     }
-    let baseVids = req.headers.ids.split(",").slice(0, 3)
     let processedVideos = 0;
     let videoSuggestions = []
 
@@ -2769,6 +2802,7 @@ app.get("/yt2009_recommended", (req, res) => {
         return;
     }
 
+    let baseVids = req.headers.ids.split(",").slice(0, 3)
     yt2009.bulk_get_videos(baseVids, () => {
         baseVids.forEach(vid => {
             setTimeout(function() {
@@ -3854,6 +3888,60 @@ app.get("/nearyou", (req, res) => {
         flags += req.headers.cookie.split("global_flags=")[1].split(";")[0]
     }
 
+    // renderign stuff
+    let randomMonth = Math.floor(Math.random() * 6) + 6
+    if(randomMonth < 10) {
+        randomMonth = "0" + randomMonth
+    }
+    let query = "a"
+    if(!req.headers.cookie
+    || !req.headers.cookie.includes("new_recommended")) {
+        query += " before:2012"
+    }
+    let finishHTML = ""
+    let videos = []
+    let calls = 0;
+    let regionParams = []
+    function createSearch() {
+        regionParams.forEach(rp => {
+            yt2009_search.get_search(query, "", {
+                "location": rp,
+                "page": Math.floor(Math.random() * 2) + 1
+            }, (data) => {
+                calls++
+                data.forEach(v => {
+                    if(v.type !== "video") return;
+                    if(query.includes("before:")) {
+                        if(v.upload.split(" ")[1] !== "years") return;
+                        if(parseInt(v.upload.split(" ")[0]) < 10) return;
+                    }
+                    // parse with flags
+                    v = JSON.parse(JSON.stringify(v))
+
+                    if(flags.includes("fake_dates")) {
+                        v.upload = yt2009_utils.fakeDatesModern(v.upload, "2012-01-01")
+                    } else {
+                        v.o = true
+                    }
+        
+                    if(flags.includes("realistic_view_count")
+                    && yt2009_utils.bareCount(v.views) > 100000) {
+                        v.views = yt2009_utils.countBreakup(Math.floor(
+                            yt2009_utils.bareCount(v.views) / 90
+                        )) + " views"
+                    }
+        
+                    v.length = v.time
+                    videos.push(v)
+                })
+                if(calls >= regionParams.length) {
+                    renderVids()
+                    return;
+                }
+            }, yt2009_utils.get_used_token(req), false)
+        })
+    }
+
     // get user region
 
     let region = "US"
@@ -3866,23 +3954,11 @@ app.get("/nearyou", (req, res) => {
     try {
         ipData = ipDb.getGeoDataSync(ip)
         region = ipData.country.iso_code
-        location = ipData.country.location
+        location = ipData.city.names.en
     }
     catch(error) {
         region = "US"
-        location = { // mountain view generic coords
-            "latitude": 37.411,
-            "longitude": -122.122
-        }
     }
-    let initialRegion = JSON.parse(JSON.stringify(region))
-    /*if(ipData && ipData.city) {
-        try {
-            region = ipData.city.names.en
-        }
-        catch(error) {}
-    }
-    region = "PL"*/
 
     // cookie region override
     if(req.headers.cookie
@@ -3890,113 +3966,84 @@ app.get("/nearyou", (req, res) => {
         region = req.headers.cookie.split("gl=")[1].split(";")[0]
     }
 
-    let regionParam = ""
-    if(region.length == 2) {
-        regionParam = regionParamTable[region] || regionParamTable["US"]
-        setTimeout(createSearch, 50)
-    } else {
-        /*const fetch = require("node-fetch")
-        let r = encodeURIComponent(region)
-        fetch(`https://www.google.com/earth/rpc/search?q=${r}&ie=utf-8&hl=en`, {
-            "headers": yt2009_constant.headers
-        }).then(r => {r.text().then(r => {
-            r = require("node-html-parser").parse(r)
-            let feature = r.querySelector("feature_id")
-            if(feature) {
-                let location = feature.innerHTML.split(":")[0].replace("0x", "")
-                let featureId = feature.innerHTML.split(":")[1].replace("0x", "")
-                while(location.endsWith("0")) {
-                    location = parseInt(location, 16).toString().slice(0, -1)
-                }
-                location = parseInt(location)
-                while(featureId.endsWith("0")) {
-                    featureId = parseInt(featureId, 16).toString().slice(0, -1)
-                }
-                featureId = parseInt(featureId)
-                // create protobuf location param
-                const locationParam = require("./proto/locationParam_pb")
-
-                let locationMsg = new locationParam.root()
-                let locationContainer = new locationParam.root.container()
-                locationContainer.setLocation(location)
-                locationContainer.setFeature(featureId)
-                locationMsg.addC(locationContainer)
-
-                try {
-                    regionParam = Buffer.from(
-                        locationMsg.serializeBinary()
-                    ).toString("base64").split("=").join("")
-                    createSearch()
-                }
-                catch(error) {
-                    console.log(error)
-                    region = initialRegion
-                    regionParam = regionParamTable[region] || regionParamTable["US"]
-                    createSearch()
-                }
-            } else {
-                // fallback to country search
-                region = initialRegion
-                regionParam = regionParamTable[region] || regionParamTable["US"]
-                createSearch()
-            }
-        })})*/
-    }
-
-    // search for vids in that region
-
-    let randomMonth = Math.floor(Math.random() * 6) + 6
-    if(randomMonth < 10) {
-        randomMonth = "0" + randomMonth
-    }
-    let query = "a before:2012"
-    let finishHTML = ""
-    let videos = []
-    let calls = 0;
-    function createSearch() {
-        if(calls > 4) {
-            renderVids()
-            return;
+    if(location) {
+        let fReq = {
+            "query": {
+                "query": location
+            },
+            "headers": {}
         }
-        calls++
-        yt2009_search.get_search(query, "", {
-            "location": regionParam,
-            "page": Math.floor(Math.random() * 4) + 1
-        }, (data) => {
-            data.forEach(v => {
-                if(v.type !== "video") return;
-                if(v.upload.split(" ")[1] !== "years") return;
-                if(parseInt(v.upload.split(" ")[0]) < 10) return;
-                // parse with flags
-                v = JSON.parse(JSON.stringify(v))
-    
-                if(flags.includes("fake_dates")) {
-                    v.upload = yt2009_utils.fakeDatesModern(v.upload, "2012-01-01")
-                }
-    
-                if(flags.includes("realistic_view_count")
-                && yt2009_utils.bareCount(v.views) > 100000) {
-                    v.views = yt2009_utils.countBreakup(Math.floor(
-                        yt2009_utils.bareCount(v.views) / 90
-                    )) + " views"
-                }
-    
-                v.length = v.time
-                v.creatorName = v.author_handle || yt2009_utils.asciify(v.author_name)
-                videos.push(v)
-            })
-            if(videos.length < 8 && region.length !== 2) {
+        mobileHelper.locAutocomplete(fReq, (locData => {
+            if(locData[0]) {
+                locData.forEach(l => {
+                    regionParams.push(l[0])
+                })
+                regionParams.push(
+                    regionParamTable[region] || regionParamTable["US"]
+                )
+                setTimeout(createSearch, 50)
+            } else {
+                regionParams.push(
+                    regionParamTable[region] || regionParamTable["US"]
+                )
+                setTimeout(createSearch, 50)
+            }
+        }), true)
+        return;
+    } else {
+        regionParams.push(
+            regionParamTable[region] || regionParamTable["US"]
+        )
+        setTimeout(createSearch, 50)
+    }
+
+    /*const fetch = require("node-fetch")
+    let r = encodeURIComponent(region)
+    fetch(`https://www.google.com/earth/rpc/search?q=${r}&ie=utf-8&hl=en`, {
+        "headers": yt2009_constant.headers
+    }).then(r => {r.text().then(r => {
+        r = require("node-html-parser").parse(r)
+        let feature = r.querySelector("feature_id")
+        if(feature) {
+            let location = feature.innerHTML.split(":")[0].replace("0x", "")
+            let featureId = feature.innerHTML.split(":")[1].replace("0x", "")
+            while(location.endsWith("0")) {
+                location = parseInt(location, 16).toString().slice(0, -1)
+            }
+            location = parseInt(location)
+            while(featureId.endsWith("0")) {
+                featureId = parseInt(featureId, 16).toString().slice(0, -1)
+            }
+            featureId = parseInt(featureId)
+            // create protobuf location param
+            const locationParam = require("./proto/locationParam_pb")
+
+            let locationMsg = new locationParam.root()
+            let locationContainer = new locationParam.root.container()
+            locationContainer.setLocation(location)
+            locationContainer.setFeature(featureId)
+            locationMsg.addC(locationContainer)
+
+            try {
+                regionParam = Buffer.from(
+                    locationMsg.serializeBinary()
+                ).toString("base64").split("=").join("")
+                createSearch()
+            }
+            catch(error) {
+                console.log(error)
                 region = initialRegion
                 regionParam = regionParamTable[region] || regionParamTable["US"]
                 createSearch()
-            } else if(videos.length < 8) {
-                createSearch()
-            } else {
-                renderVids()
             }
-        }, yt2009_utils.get_used_token(req), false)
-    }
-
+        } else {
+            // fallback to country search
+            region = initialRegion
+            regionParam = regionParamTable[region] || regionParamTable["US"]
+            createSearch()
+        }
+    })})*/
+    
     function renderVids() {
         let randomVids = []
         while(randomVids.length !== Math.min(videos.length, 8)) {
@@ -4010,7 +4057,7 @@ app.get("/nearyou", (req, res) => {
         }
 
         randomVids.forEach(v => {
-            finishHTML += yt2009_templates.recommended_videoCell(v, req)
+            finishHTML += yt2009_templates.recommended_videoCell(v, req, flags)
         })
 
         finishHTML = yt2009_languages.apply_lang_to_code(finishHTML, req)
@@ -5246,6 +5293,128 @@ app.post("/pchelper_favorites", (req, res) => {
         "redirect": function(u) {res.sendStatus(200)}
     }
     mobileHelper.addToFavorites(fReq, fRes)
+})
+app.get("/pchelper_location_autocomplete", (req, res) => {
+    mobileHelper.locAutocomplete(req, (data) => {
+        if(req.query.format == "raw") {
+            res.send(data)
+        } else {
+            let response = `<table class="google-ac-m location" cellpadding="0" cellspacing="0">`
+            data.forEach(p => {
+                let events = [
+                    `onclick="sl('${p[0]}', this);"`,
+                    `onmousemove="hl(this);"`,
+                    `onmouseout="uhl(this);"`
+                ].join(" ")
+                response += `
+            <tr class="google-ac-a" ${events}>
+                <td class="google-ac-c">${p[1]}</td>
+                <td class="google-ac-d"></td>
+            </tr>`
+            })
+            response += "</table>"
+            res.send(response)
+        }
+    })
+})
+app.get("/pchelper_insights", (req, res) => {
+    mobileHelper.analyticsMain(req, (data) => {
+        if(req.query.format == "raw") {
+            res.send(data)
+            return;
+        }
+
+        let response = "///WORLDCHART///\n"
+
+        // world chart/other audience data parse
+        let audienceAges = []
+        let audienceGenders = []
+        let topCountries = []
+        let insightMapChart = {}
+        let c = require("./geo/country-codes.json")
+        let continents = require("./geo/continent-data.json")
+        let tintedContinents = []
+        if(data.audiences) {data.audiences.forEach(aud => {aud.forEach(a => {
+            if(a.label && a.barRatio && c[a.label]) {
+                insightMapChart[c[a.label]] = Math.floor(Math.random() * 30) + (a.barRatio * 100) + 40
+                if(insightMapChart[c[a.label]] > 100) {
+                    insightMapChart[c[a.label]] = 100;
+                }
+    
+                let continent = continents[c[a.label]] || "North America"
+                if(!tintedContinents.includes(continent)) {
+                    reverseContinents[continent].forEach(d => {
+                        if(d !== c[a.label]
+                        && (!insightMapChart[d])) {
+                            insightMapChart[d] = Math.floor(Math.random() * 23) + 5
+                        }
+                    })
+                    tintedContinents.push(continent)
+                }
+    
+                topCountries.push([a.label, a.barRatio])
+            } else if(a.label && a.barRatio && a.label.includes(" years")) {
+                audienceAges.push(a)
+            } else if(a.label && a.barRatio && (
+                a.label == "Male" || a.label == "Female"
+                || a.label == "User-specified"
+            )) {
+                audienceGenders.push(a)
+            }
+        })})}
+        topCountries = topCountries.sort((a, b) => {return b[1] - a[1]})
+        audienceAges = audienceAges.sort((a, b) => {
+            return b.barRatio - a.barRatio
+        })
+        audienceGenders = audienceGenders.sort((a, b) => {
+            return b.barRatio - a.barRatio
+        })
+        let percentagesParam = []
+        let countriesParam = []
+        for(let c in insightMapChart) {
+            countriesParam.push(c)
+            percentagesParam.push(insightMapChart[c])
+        }
+        let mapUrl = [
+            "/chart?cht=t&chs=350x170",
+            "&chtm=world&chd=t:" + percentagesParam.join(),
+            "&chf=bg,s,eff8fe",
+            "&chco=f6f6f6,e5e9c9,ced9ab,a7ba7b,86a058,8ba65b,547136,32501a",
+            "&chld=" + countriesParam.join("") + "&cbg=e5e9c9"
+        ].join("")
+
+        // view count chart
+        let chartUrl = [
+            "/chart?cht=lc:nda&chs=380x181",
+            "&chf=bg,s,FFFFFF&chco=8ba65b&chg=0,33,1,1",
+            "&chxt=y,x&chxr=0,0,1|1,0&chm=B,b6cfadaa,0,0,0",
+            "&chxl=0:&chds=0,1&chd=t:"
+        ].join("")
+        if(data.recentViews) {
+            let points = []
+            data.recentViews.forEach(v => {
+                points.push(v.barHeight)
+            })
+            let t = []
+            if(points.length < 10) {
+                points.forEach(p => {
+                    t.push(p);t.push(p)
+                })
+            }
+            chartUrl += t.join()
+        }
+
+        response += yt2009_templates.bareHTML_map(
+            mapUrl, topCountries, chartUrl.replace("380x181", "200x40")
+        )
+
+        response += "\n///VIEWCHART///\n"
+        response += yt2009_templates.bareHTML_chart(
+            chartUrl, topCountries, data.mostViewed, audienceGenders
+        )
+
+        res.send(response)
+    })
 })
 
 /*

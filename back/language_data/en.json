@@ -319,5 +319,6 @@
     "channelpage_prev": "Previous",
     "channelpage_next": "Next",
     "channelpage_type": "Channel",
-    "channelpage_subs": " Subscribers"
+    "channelpage_subs": " Subscribers",
+    "vedit_details": "Video Details: "
 }

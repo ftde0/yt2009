@@ -1,0 +1,46 @@
+syntax = "proto3";
+package android_metadata_update;
+
+message updateToggle {
+    optional int32 updateField = 1;
+    optional int32 updateValue = 2;
+}
+message stringUpdateMsg {
+    repeated string newString = 1;
+    repeated string placeName = 3;
+    repeated string paramString = 4;
+    int32 updateType = 5; // default 1, also accepts 2 for remove
+}
+message commentsUpdateMsg {
+    int32 moderationType = 2;
+    // ^ 1 - allow all / 2 - hold all / 4 - basic / 5 - strict
+    int32 int4 = 4;
+    int32 int5 = 5; //unknown defs, set to 1
+    int32 allowComments = 6; // 1 - no, 2 - yes
+}
+message root {
+    message contextType {
+        message clientType {
+            int32 clientNumber = 16;
+            string clientVersion = 17;
+            string osName = 18;
+            string osVersion = 19;
+            int32 androidSdkVersion = 64;
+        }
+        repeated clientType client = 1;
+    }
+    repeated contextType context = 1;
+    string browseId = 2;
+    repeated stringUpdateMsg titleUpdate = 3; //.1 = new title
+    repeated stringUpdateMsg descriptionUpdate = 4; //.1 = new description
+    repeated stringUpdateMsg tagsUpdate = 6; // each .1 = one tag
+    repeated commentsUpdateMsg commentsUpdate = 9;
+    repeated stringUpdateMsg locationUpdate = 13; // .3 = name, .4 = location param
+    // 20.2 - 1-3 default thumbnails
+    repeated updateToggle thumbnailUpdate = 20;
+    // to change video visibility, 39 must have a value of 1
+    // videoPrivacy then: 0 - private / 1 - public / 2 - unlisted
+    repeated updateToggle videoPrivacy = 38;
+    repeated updateToggle updatePrivacySettings = 39;
+    int32 eightythree = 83; // set to 1, mb a toggle?
+}

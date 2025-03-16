@@ -7,7 +7,7 @@ const base_code_logged_in = `
             <a class="yt-menulink-arr"></a>
             <span class="yt-menulink-menu">
                 <span><a href="/account">Account</a></span>
-                <span><a href="#">My Videos</a></span>
+                <span><a href="/my_videos">My Videos</a></span>
                 <span><a href="/my_favorites">Favorites</a></span>
                 <span><a href="/my_playlists">Playlists</a></span>
             </span>

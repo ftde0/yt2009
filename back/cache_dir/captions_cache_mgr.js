@@ -3,6 +3,7 @@ const fetch = require("node-fetch")
 const constants = require("../yt2009constants.json")
 const config = require("../config.json")
 const yt2009html = require("../yt2009html")
+const yt2009exports = require("../yt2009exports")
 let cache = {}
 if(!config.fallbackMode) {
     try {
@@ -22,7 +23,7 @@ module.exports = {
         } else {
             // clean fetch
             let languages = {}
-            yt2009html.innertube_get_data(id, (data) => {
+            function parsePlayer(data) {
                 if(data.captions) {
                     try {
                         data.captions.playerCaptionsTracklistRenderer
@@ -46,9 +47,19 @@ module.exports = {
                     catch(error) {console.log(error)}
                 }
                 callback(languages)
-                this.write(id, languages)
-            })
-            
+                cache[id] = languages;
+                //this.write(id, languages)
+            }
+            if(yt2009exports.read().players[id]) {
+                parsePlayer(yt2009exports.read().players[id])
+                setTimeout(() => {
+                    yt2009exports.delete("players", id)
+                }, 200)
+            } else {
+                yt2009html.innertube_get_data(id, (player) => {
+                    parsePlayer(player)
+                })
+            }
         }
     }
 }

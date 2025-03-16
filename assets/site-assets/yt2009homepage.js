@@ -11,7 +11,9 @@ var modlist = {
     "activity": "FRI",
     "pop": "TOP",
     "nearyou": "GEO",
-    "latest": "SUB"
+    "latest": "SUB",
+    "insmap": "IMN",
+    "inschrt": "IMC"
 }
 
 function moveUp(m) {
@@ -137,7 +139,7 @@ if(moduleSetup.indexOf("nearyou") !== -1) {
     } else {
         geor = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    geor.open("GET", "/nearyou")
+    geor.open("GET", "/nearyou?r=" + Math.random().toString())
 }
 try {
     geor.send(null)
@@ -163,7 +165,7 @@ if(moduleSetup.indexOf("latest") !== -1) {
     } else {
         subr = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    subr.open("POST", "/homepage_subscriptions")
+    subr.open("POST", "/homepage_subscriptions?r=" + Math.random().toString())
 }
 try {
     var toSend = null;
@@ -186,3 +188,30 @@ try {
     }
 }
 catch(error) {}
+
+// insights (if used)
+if(moduleSetup.indexOf("insmap") !== -1
+|| moduleSetup.indexOf("inschrt") !== -1) {
+    var insr;
+    if (window.XMLHttpRequest) {
+        insr = new XMLHttpRequest()
+    } else {
+        insr = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    insr.open("GET", "/pchelper_insights?r=" + Math.random().toString())
+    insr.send(null)
+    insr.onreadystatechange = function(e) {
+        if(insr.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(document.getElementById("feed_insight_map-body")) {
+                var appr = insr.responseText
+                               .split("///WORLDCHART///")[1]
+                               .split("///VIEWCHART///")[0];
+                document.getElementById("feed_insight_map-body").innerHTML = appr;
+            }
+            if(document.getElementById("feed_insight_chart-body")) {
+                var appr = insr.responseText.split("///VIEWCHART///")[1]
+                document.getElementById("feed_insight_chart-body").innerHTML = appr;
+            }
+        }
+    }
+}

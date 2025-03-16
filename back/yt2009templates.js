@@ -190,7 +190,33 @@ module.exports = {
         }
         //"format": "34\/640x360\/9\/0\/115,18\/640x360\/9\/0\/115,5\/320x240\/7\/0\/0,36\/320x240\/99\/0\/0,17\/176x144\/99\/0\/0"
     },
-    "cpsSearchBegin": function(resultCount) {
+    "cpsSearchBegin": function(resultCount, ogUrl) {
+        let nextUrl = `http://${config.ip}:${config.port}${ogUrl}`;
+        let addNext = false;
+        let vidNumber = 20;
+        if(ogUrl.includes("max-results=")
+        && !isNaN(parseInt(
+            ogUrl.split("max-results=")[1].split("&")[0].split("#")[0]
+        ))) {
+            vidNumber = parseInt(
+                ogUrl.split("max-results=")[1].split("&")[0].split("#")[0]
+            )
+        }
+        if(ogUrl.includes("start-index=")) {
+            let index = ogUrl.split("start-index=")[1].split("&")[0].split("#")[0]
+            if(!isNaN(parseInt(index))) {
+                nextUrl = nextUrl.replace(
+                    "start-index=" + index,
+                    "start-index=" + (parseInt(index) + vidNumber)
+                )
+                addNext = true
+            }
+        } else {
+            nextUrl += "&start-index=" + vidNumber
+            addNext = true
+        }
+        nextUrl = nextUrl.split("&").join("&amp;")
+        let next = `\n    <link rel='next' type='application/atom+xml' href='${nextUrl}'/>`
         return `<?xml version='1.0' encoding='UTF-8'?>
 <feed>
     <id>http://gdata.youtube.com/feeds/api/videos</id>
@@ -207,7 +233,7 @@ module.exports = {
     <generator version='2.0' uri='http://gdata.youtube.com/'>YouTube data API</generator>
     <openSearch:totalResults>${resultCount}</openSearch:totalResults>
     <openSearch:startIndex>1</openSearch:startIndex>
-    <openSearch:itemsPerPage>20</openSearch:itemsPerPage>`
+    <openSearch:itemsPerPage>20</openSearch:itemsPerPage>${addNext ? next : ""}`
     },
     "cpsSearchEntry": function(id, title, description, lengthSeconds, authorName) {
         let domainName = config.ip + ":" + config.port
@@ -1146,7 +1172,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
         let videoUrl = streamStd
         if(flags && flags.includes("better-hd")) {
             videoUrl = `http://${config.ip}:${config.port}/exp_hd?video_id=${id}/lower`
-            videoUrl += "&" + yt2009trusted.generateContext(id, "UNIV", long)
+            videoUrl += "&amp;" + yt2009trusted.generateContext(id, "UNIV", long)
+                        .split("&").join("&amp;")
             qualityCode = ""
         }
 
@@ -1386,14 +1413,18 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                     <div class="clear"></div>
                 </div>
                 <script src="/assets/site-assets/homepage-recommended.js"></script>`,
-    "recommended_videoCell": function(video, req) {
+    "recommended_videoCell": function(video, req, flags) {
         let thumbUrl = utils.getThumbUrl(video.id, req)
+        let creatorName = video.author_name || video.creatorName;
+        if(flags && flags.includes("username_asciify")) {
+            creatorName = utils.asciify(creatorName)
+        }
         return `<div class="video-cell" style="width:24.5%" data-id="${video.id}">
         <div class="video-entry yt-uix-hovercard">
             <div class="v120WideEntry">
                 <div class="v120WrapperOuter">
                     <div class="v120WrapperInner"><a id="video-url-${video.id}" class="video-thumb-link" href="/watch?v=${video.id}" rel="nofollow"><img title="${video.title.split(`"`).join(`&quot;`)}" src="${thumbUrl}" class="vimg120 yt-uix-hovercard-target"></a>
-                        <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="lang_add_to_ql" onclick="addToQuicklist('${video.id}', '${video.title.split(`'`).join("&quot;").split(`"`).join("&quot;")}', '${utils.asciify(video.creatorName)}')"><button class="master-sprite QLIconImg" title=""></button></a>
+                        <div id="quicklist-icon-${video.id}" class="addtoQL90"><a id="add-to-quicklist-${video.id}" href="#" ql="${video.id}" title="lang_add_to_ql" onclick="addToQuicklist('${video.id}', '${video.title.split(`'`).join("&quot;").split(`"`).join("&quot;")}', '${creatorName.split(`'`).join("&quot;").split(`"`).join("&quot;")}')"><button class="master-sprite QLIconImg" title=""></button></a>
                             <div class="hid quicklist-inlist"><a href="/my_quicklist">lang_ql_added_homepage</a></div>
                         </div>
                         <div class="video-time"><a id="video-run-time-${video.id}" href="/watch?v=${video.id}" rel="nofollow">${video.length}</a></div>
@@ -1423,7 +1454,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                             <button class="master-sprite ratingVS ratingVS-4.5" title="4.5"></button>
                         </div>
                     </span>
-                    <span class="video-username"><a id="video-from-username-${video.id}" class="hLink" href="${video.creatorUrl}">${utils.asciify(video.creatorName)}</a></span>
+                    <span class="video-username"><a id="video-from-username-${video.id}" class="hLink" href="${video.author_url || video.creatorUrl}">${creatorName}</a></span>
                 </div>
             </div>
             <div class="video-clear-list-left"></div>
@@ -1538,6 +1569,88 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                     <div style="clear: both;"></div>
                     <div class="video-buttons">
                         <a class="yt-button" id="" href="/watch?v=${v.id}"><span>Play</span></a>
+                    </div>
+                </div>
+                <div class="video-buttons-ext">
+                </div>
+            </div>
+        </td>
+    </tr>`
+    },
+    "creator_listview_video": function(v, index, flags) {
+        let thumbUrl = utils.getThumbUrl(v.id, flags)
+
+        if(v.thumbnail) {
+            // override thumbnail - if defined, then needed
+            thumbUrl = v.thumbnail
+        }
+        let privacy = "Public"
+        switch(v.privacy) {
+            case "VIDEO_PRIVACY_PUBLIC": {
+                privacy = "Public"
+                break;
+            }
+            case "VIDEO_PRIVACY_UNLISTED": {
+                privacy = "Unlisted"
+                break;
+            }
+            case "VIDEO_PRIVACY_PRIVATE": {
+                privacy = "Private"
+                break;
+            }
+        }
+        let rating;
+        if(v.likes == 0 && v.dislikes == 0) {
+            rating = 0
+        } else if(v.likes == 0 && v.dislikes >= 1) {
+            rating = 1
+        } else {
+            rating = 5 * (v.likes / (v.likes + v.dislikes))
+            rating = utils.custom_rating_round(rating)
+        }
+        rating = rating.toFixed(1)
+        return `
+    <tr id="video-${v.id}" class="video ${index % 2 == 0 ? "even" : "odd"}">
+        <td class="column-check first"><input type="checkbox" value="${v.id}"></td>
+        <td class="column-details">
+            <div class="video-panel">
+                <div class="video-details" style="margin: 0 0 10px 130px;">
+                    <div class="video-image" style="position: absolute; margin-left: -130px;overflow: hidden;height: 78px;">
+                        <a class="video-thumb-120 no-quicklist" href="/watch?v=${v.id}"><img title="${v.title.split("\"").join("&quot;")}" src="${thumbUrl}" class="vimg120 yt-uix-hovercard-target" style="margin-top: -6px" alt="${v.title.split("\"").join("&quot;")}"></a>
+                    </div>
+                    <div class="video-title">
+                        <div class="clipper">
+                            <a href="/watch?v=${v.id}">${v.title}</a>
+                        </div>
+                    </div>
+                    <p id="video-description-${v.id}" class="video-description-expanded"><span>  </span></p>
+                    <div class="video-stats">
+                        <div class="video-stat">
+                            Added: <span class="stat-date-added">${utils.dateFormat(v.added)}</span>
+                        </div>
+                        <div class="video-stat">
+                            Time: <span class="stat-duration">${v.time}</span>
+                        </div>
+                        <div class="video-stat">
+                            Broadcast: <span class="stat-privacy">${privacy}</span></a>
+                        </div>
+                    </div>
+                    <div class="video-stats">
+                        <div class="video-stat">
+                            Views: <span class="stat-views">${utils.countBreakup(v.views)}</span>
+                        </div>
+                        <div class="video-stat">
+                            Comments: <span class="stat-comments">${utils.countBreakup(v.comments)}</span>
+                        </div>
+                        <div class="video-stat">
+                            Rating: <span class="stat-rating"><img class="yt-rating-${rating}" src="/assets/site-assets/pixel-vfl73.gif" alt="${rating}"></span>
+                        </div>
+                    </div>
+                    <div style="clear: both;"></div>
+                    <div class="video-buttons">
+                        <a class="yt-button" id="" href="/watch?v=${v.id}"><span>Play</span></a>
+                        <a class="yt-button" id="" href="/my_videos_edit?video_id=${v.id}"><span>Edit</span></a>
+                        ${v.downloadUrl ? `<a class="yt-button" target="_blank" id="" href="https://www.youtube.com${v.downloadUrl}"><span>Download MP4</span></a>` : ""}
                     </div>
                 </div>
                 <div class="video-buttons-ext">
@@ -2527,7 +2640,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
             <div id="feed_hometown">
                 <div class="fm2-title-border-box-gray yt-rounded">
                     <div class="fm2-title">
-                        <img class="homepage-sprite img_feed_hometown" src="/assets/site-assets/pixel-vfl73.gif">
+                        <img class="homepage-sprite img_feed_hometown fmt2-icon" src="/assets/site-assets/pixel-vfl73.gif">
                         <span class="fm2-titleText" id="feed_hometown-titleText">Videos Near You</span>
                     </div>
                     <div class="feedmodule-updown">
@@ -2945,8 +3058,12 @@ term='channel'/>
                 selectedName = a.name;
                 selectedHandle = a.handle.replace("@", "");
             }
+            let avatar = "/assets/site-assets/default.png"
+            if(a.avatar && require("fs").existsSync(".." + a.avatar)) {
+                avatar = a.avatar;
+            }
             html += `<tr class="account" data-pageid="${a.pageId}">
-            <td><img src="/assets/site-assets/default.png"/><span id="account-name">${name}</span></td>
+            <td><img src="${avatar}"/><span id="account-name">${name}</span></td>
             <td class="selector">${a.selected
             ? `<span class="selected-label">Selected</span>`
             : `<a class="yt-button yt-button-primary"
@@ -2970,5 +3087,142 @@ term='channel'/>
         </div>`
         }
         return html;
+    },
+
+    "insightMap": `<div class="feedmodule-anchor" id="feedmodule-IMN">
+    <div class="feedmodule-modheader" id="IMN-titlebar">
+        <div id="feed_insight_map">
+            <div class="fm2-title-border-box-gray yt-rounded">
+                <div class="fm2-title">
+                    <img src="/assets/site-assets/pixel-vfl73.gif" class="homepage-sprite img_feed_insight_map fm2-icon">
+                    <span class="fm2-titleText" id="feed_insight_map-titleText">Insight: Statistics and Data</span>
+                </div>
+                <div class="feedmodule-updown">
+                    <span id="mup-IMN" class="up-button" onclick="moveUp('insmap')">
+                        <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif"></span>
+                    <span id="mdown-IMN" class="down-button" onclick="moveDown('insmap')">
+                        <img class="master-sprite img-php-down-arrow" src="/assets/site-assets/pixel-vfl73.gif"></span>
+                    <span id="mclose-IMN" onclick="removeModule('insmap')">
+                        <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="clear feedmodule-border-gray yt-rounded" id="feed_insight_map-content">
+        <div class="feedmodule-data" id="IMN-data">
+            <div class="feedmodule-body compressed-view" id="feed_insight_map-body">
+                <span class="feedmodule-maintext">How popular were your videos, relative to those of other uploaders, in the last 7 days?</span>
+                <div class="spacer">&nbsp;</div>
+                <div class="feedmodule-chart"><img src="/assets/site-assets/pixel-vfl73.gif" class="feedmodule-border-gray"></div>
+                <div class="feedmodule-next"></div>
+                <div class="spacer">&nbsp;</div>
+            </div>
+        </div>
+    </div>
+    <div class="clear"></div>
+</div>`,
+
+    "insightChart": `<div class="feedmodule-anchor" id="feedmodule-IMC">
+        <div class="feedmodule-modheader" id="IMC-titlebar">
+            <div id="feed_insight_chart">
+                <div class="fm2-title-border-box-gray yt-rounded">
+                    <div class="fm2-title">
+                        <img src="/assets/site-assets/pixel-vfl73.gif" class="homepage-sprite img_feed_insight_chart fm2-icon">
+                        <span class="fm2-titleText" id="feed_insight_chart-titleText">Insight: Statistics and Data</span>
+                    </div>
+                    <div class="feedmodule-updown">
+                        <span id="mup-IMC" class="up-button" onclick="moveUp('inschrt')">
+                            <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif"></span>
+                        <span id="mdown-IMC" class="down-button" onclick="moveDown('inschrt')">
+                            <img class="master-sprite img-php-down-arrow" src="/assets/site-assets/pixel-vfl73.gif"></span>
+                        <span id="mclose-IMC" onclick="removeModule('inschrt')">
+                            <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clear feedmodule-border-gray yt-rounded" id="feed_insight_chart-content">
+            <div class="feedmodule-data" id="IMC-data">
+                <div class="feedmodule-body compressed-view" id="feed_insight_chart-body">
+                    <span class="feedmodule-maintext">Views for all of your videos for the last 7 days</span>
+                    <div class="spacer">&nbsp;</div>
+                    <div class="feedmodule-chart"><div class="feedmodule_chart_crop_big feedmodule-border-gray">
+                        <img src="/assets/site-assets/pixel-vfl73.gif"/>
+                    </div></div>
+                    <div class="feedmodule-next"></div>
+                    <div class="spacer">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`,
+
+    "bareHTML_map": function(chartUrl, topCountries, viewChart) {
+        return `<span class="feedmodule-maintext">How popular were your videos, relative to those of other uploaders, in the last 7 days?</span>
+        <div class="spacer">&nbsp;</div>
+        <div class="feedmodule-chart"><img src="${chartUrl}" class="feedmodule-border-gray"></div>
+        <div class="feedmodule-next">
+            ${topCountries && topCountries[0] ? `<div class="feedmodule-next-section">
+                <span class="bold">Your videos were most popular in</span>
+                <div class="spacer">&nbsp;</div>
+                <span class="feedmodule-stext">${topCountries[0] ? topCountries[0][0] : ""}</span>
+            </div>` : ""}
+            <div class="feedmodule-next-section">
+                <span class="bold">Total Views</span>
+                <div class="spacer">&nbsp;</div>
+                <div class="feedmodule_chart_crop_small">
+                    <img src="${viewChart}"/>
+                </div>
+            </div>
+        </div>
+        <div class="spacer">&nbsp;</div>`
+    },
+
+    "bareHTML_chart": function(chartUrl, topCountries, topVideos, genders) {
+        let topVList = ""
+        if(topVideos && topVideos[0]) {
+            topVideos.slice(0,3).forEach(v => {
+                let id = ""
+                try {
+                    id = v.videoEndpoint.innertubeCommand.watchEndpoint.videoId
+                    topVList += `<li><a href="/watch?v=${id}">${v.videoTitle}</a></li>`
+                }
+                catch(error) {}
+            })
+        }
+        let topGList = ""
+        if(genders && genders[0]) {
+            genders.forEach(g => {
+                topGList += `<li><span class="feedmodule-stext">${g.label} - ${g.displayValue}</span></li>`
+            })
+        }
+        let topCountriesFormatted = []
+        topCountries.forEach(tc => {
+            topCountriesFormatted.push(tc[0])
+        })
+        topCountriesFormatted = topCountriesFormatted.join(", ")
+        return `<span class="feedmodule-maintext">Views for all of your videos for the last 7 days</span>
+        <div class="spacer">&nbsp;</div>
+        <div class="feedmodule-chart"><div class="feedmodule_chart_crop_big feedmodule-border-gray">
+            <img src="${chartUrl}"/>
+        </div></div>
+        <div class="feedmodule-next">
+            ${topVideos && topVideos[0] ? `<div class="feedmodule-next-section">
+                <span class="bold">Most watched videos</span>
+                <div class="spacer">&nbsp;</div>
+                <ol>${topVList}</ol>
+            </div>` : ""}
+            ${topCountries && topCountries[0] ? `<div class="feedmodule-next-section">
+                <span class="bold">Your videos were most viewed in</span>
+                <div class="spacer">&nbsp;</div>
+                <span class="feedmodule-stext">${topCountriesFormatted}</span>
+            </div>` : ""}
+            ${genders && genders[0] ? `<div class="feedmodule-next-section">
+                <span class="bold">Your videos were most viewed by</span>
+                <div class="spacer">&nbsp;</div>
+                <ol>${topGList}</ol>
+            </div>` : ""}
+        </div>
+        <div class="spacer">&nbsp;</div>`
     }
 }

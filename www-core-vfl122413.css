@@ -6580,3 +6580,66 @@ td.spons-vid-thumb .user-thumb-jumbo img {
   width: 15px;
   height: 15px
 }
+
+#feed_insight_map-content, #feed_insight_chart-content {
+  height: 220px;
+}
+
+#feed_insight_map-content .feedmodule-body,
+#feed_insight_chart-content .feedmodule-body {
+  padding-top: 5px
+}
+
+#feed_insight_map-content .head-text {
+  margin-top: 5px;
+  margin-bottom: 5px
+}
+
+.feedmodule-chart {
+  width: 60%;
+  float: left
+}
+
+#feed_insight_map-body .feedmodule-chart img {
+  width: 350px;
+  height: 170px;
+}
+
+.feedmodule-next {
+  float: left;
+  width: 235px
+}
+
+.feedmodule-maintext {
+  margin-bottom: 5px;
+  display: block
+}
+
+.feedmodule-stext {
+  color: #999
+}
+
+.feedmodule-stat-block {
+  margin-bottom: 5px
+}
+
+.feedmodule-next-section {
+  margin-top: 10px
+}
+
+.feedmodule_chart_crop_small {
+  width: 180px;
+  height: 40px;
+  overflow: hidden
+}
+
+.feedmodule_chart_crop_big {
+  width: 350px;
+  height: 170px;
+  overflow: hidden
+}
+
+.feedmodule-next-section ol {
+  list-style: decimal !important;
+  margin-left: 12px
+}
