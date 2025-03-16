@@ -1222,7 +1222,7 @@ module.exports = {
                 for(let q in qualities) {
                     qlist.push(q)
                 }
-                quality = q;
+                quality = qlist[0];
             }
             if(!qualities[quality]) {
                 callback(false)

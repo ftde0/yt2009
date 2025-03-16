@@ -279,7 +279,8 @@
 			<input type="checkbox" id="global-thumbnail-proxy" title="miniaturki będą przechodzić przez yt2009, naprawiając je w sieciach które blokują youtube.">
 			<label for="global-thumbnail-proxy">thumbnail_proxy</label>
 		</div>
-		<a class="yt-button yt-button-primary" href="#" onclick="update_cookies();"><span id="i_save">zapisz</span></a>
+		<a class="yt-button yt-button-primary" href="#" onclick="update_cookies();"><span id="i_save">zapisz</span></a><br>
+		<span style="font-size: 10px;">ctest</span>
 
 
 		<!-- end bottom section -->
@@ -613,13 +614,16 @@
 			// cookies
 			var cookies = d.split("c:" + lsep)[1].split(lsep)[0].split("; ");
 			for(var c in cookies) {
-				c = cookies[c]
-				if(typeof(c) == "string" && c.indexOf("=") !== -1) {
-					var name = c.split("=")[0]
-					var value = c.split("=")[1]
-					document.cookie = name + "=" + value + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
-					cookiesChanged++
+				try {
+					c = cookies[c]
+					if(c && typeof(c) == "string" && c.indexOf("=") !== -1) {
+						var name = c.split("=")[0]
+						var value = c.split("=")[1]
+						document.cookie = name + "=" + value + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+						cookiesChanged++
+					}
 				}
+				catch(error){}
 			}
 			importMsg += cookiesChanged + " cookies affected"
 
@@ -628,13 +632,18 @@
 			if(d.indexOf("/l:") !== -1 && window.localStorage) {
 				var e = d.split("/l:")
 				for(var f in e) {
-					f = e[f]
-					if(typeof(f) == "string" && f.indexOf(":" + lsep) !== -1) {
-						var name = f.split(":" + lsep)[0]
-						var value = f.split(":" + lsep)[1].split(lsep)[0]
-						localStorage[name] = value;
-						localChanged++
+					try {
+						f = e[f]
+						if(f
+						&& typeof(f) == "string"
+						&& f.indexOf(":" + lsep) !== -1) {
+							var name = f.split(":" + lsep)[0]
+							var value = f.split(":" + lsep)[1].split(lsep)[0]
+							localStorage[name] = value;
+							localChanged++
+						}
 					}
+					catch(error){}
 				}
 			}
 			if(localChanged > 0) {

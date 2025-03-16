@@ -1,6 +1,6 @@
 {
   "name": "yt2009",
-  "version": "1.17",
+  "version": "1.17.1",
   "description": "2009 frontend for youtube",
   "main": "back/backend.js",
   "scripts": {
@@ -19,7 +19,7 @@
     "node-fetch": "^2.6.7",
     "node-html-parser": "^5.3.3",
     "readline-sync": "^1.4.10",
-    "ws": ">=1.1.1"
+    "ws": ">=1.1.5"
   },
   "author": "dxegom",
   "license": "ISC"

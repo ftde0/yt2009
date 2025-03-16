@@ -180,6 +180,16 @@ module.exports = {
 
         app.get("/gsign_get_devices", (req, res) => {
             if(!req.headers.device
+            && req.headers.cookie
+            && req.headers.cookie.includes("pchelper_user=")) {
+                // ie fallback
+                req.headers.device = req.headers.cookie
+                                     .split("pchelper_user=")[1]
+                                     .split(";")[0].trim()
+                req.headers.mode = "pchelper"
+            }
+
+            if(!req.headers.device
             || req.headers.device.length > 7) {
                 res.sendStatus(400);
                 return;
@@ -204,6 +214,23 @@ module.exports = {
         })
 
         app.post("/gsign_set", (req, res) => {
+            if(!req.headers.device
+            && req.query.device) {
+                req.headers.device = req.query.device;
+            }
+            if(!req.headers.uid
+            && req.query.uid) {
+                req.headers.uid = req.query.uid
+            }
+            if(!req.headers.username
+            && req.query.username) {
+                req.headers.username = decodeURIComponent(req.query.username)
+            }
+            if(!req.headers.first
+            && req.query.first) {
+                req.headers.first = true
+            }
+
             if(!req.headers.device
             || req.headers.device.length > 7
             || !req.headers.uid

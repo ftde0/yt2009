@@ -102,19 +102,43 @@
 
 
     function login_change(pageid, name, first) {
-        var xr = new XMLHttpRequest();
-        xr.open("POST", "/gsign_set")
-        xr.setRequestHeader("device", device)
-        xr.setRequestHeader("uid", pageid)
-        xr.setRequestHeader("username", name.substring(0,60))
-        xr.setRequestHeader("mode", "pchelper")
-        if(first) {
-            xr.setRequestHeader("first", "1")
+        var xr;
+        if (window.XMLHttpRequest) {
+            xr = new XMLHttpRequest()
+        } else {
+            xr = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+
+        if(navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1) {
+            // IE, put all params in url since doesnt apparently like headers
+            var url = [
+                "/gsign_set?r=" + Math.random().toString(),
+                "&device=" + device,
+                "&uid=" + pageid,
+                "&username=" + name.substring(0,60)
+            ]
+            if(first) {
+                url.push("&first=1")
+            }
+            url = url.join("")
+            xr.open("POST", url)
+        } else {
+            // anything more sane
+            xr.open("POST", "/gsign_set?r=" + Math.random().toString())
+            xr.setRequestHeader("device", device)
+            xr.setRequestHeader("uid", pageid)
+            xr.setRequestHeader("username", name.substring(0,60))
+            xr.setRequestHeader("mode", "pchelper")
+            if(first) {
+                xr.setRequestHeader("first", "1")
+            }
         }
         xr.send(null)
-        xr.addEventListener("load", function(e) {
-            location.reload();
-        }, false)
+        xr.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                location.reload()
+            }
+        }
     }
 
 

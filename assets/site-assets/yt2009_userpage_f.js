@@ -76,9 +76,9 @@ function show_playlist(element) {
             }
             r.open(
                 "GET", 
-                "/pchelper_playlist?playlist=" + id
+                "/pchelper_playlist?playlist=" + id + "&r=" + Math.random.toString()
             )
-            r.send(null)
+            setTimeout(function() {r.send(null)},100)
             r.onreadystatechange = function(e) {
                 if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
                     rawVideos = r.responseText
@@ -96,9 +96,9 @@ function show_playlist(element) {
             var r = new XMLHttpRequest();
             r.open(
                 "GET", 
-                "/nonpch_playlist?playlist=" + playlistId
+                "/nonpch_playlist?playlist=" + playlistId + "&r=" + Math.random.toString()
             )
-            r.send(null)
+            setTimeout(function() {r.send(null)},100)
             r.onreadystatechange = function(e) {
                 if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
                     rawVideos = r.responseText
@@ -109,6 +109,17 @@ function show_playlist(element) {
     }
 
     function onVideosReady() {
+        function rmTrs() {
+            var trs = $(".yt2009-videos-insert").getElementsByTagName("tr")
+            for(var tr in trs) {
+                try {
+                    tr = trs[tr]
+                    $(".yt2009-videos-insert").removeChild(tr)
+                }
+                catch(error){}
+            }
+        }
+        rmTrs();rmTrs();rmTrs();rmTrs();rmTrs(); //yes, doesn't work otherwise.
         rawVideos = rawVideos.split(":")
         var videoIndex = 0;
         for(var video in rawVideos) {
