@@ -43,7 +43,7 @@ const genericDefault = fs.readFileSync(
 ).toString().split("{url}").join(`${config.ip}:${config.port}`)
 const uida = "1234567890abcde".split("")
 let genericDg = fs.readFileSync("../mobile/mobilehelper/generic_dg.txt").toString()
-let userdata = {}
+let userdata = {"ikmc": 1}
 let initedSessions = []
 if(fs.existsSync(userdata_fname)) {
     try {
@@ -51,7 +51,7 @@ if(fs.existsSync(userdata_fname)) {
     }
     catch(error){}
 } else {
-    fs.writeFileSync(userdata_fname, "{}")
+    fs.writeFileSync(userdata_fname, "{\"ikmc\":1}")
 }
 
 module.exports = {
@@ -446,6 +446,9 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     res.send(templates.gdata_emptyfeed)
                     return;
                 }
+                if(req.originalUrl && req.originalUrl.includes("/feeds/")) {
+                    r = r.slice(0, 25)
+                }
                 r.forEach(v => {
                     if(!v.elementRenderer) return;
                     try {
@@ -465,17 +468,27 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         let id = false;
                         let handle = false;
                         try {
-                            v.command.innertubeCommand.commandExecutorCommand
-                            .commands.forEach(c => {
-                                if(c.browseEndpoint) {
-                                    c = c.browseEndpoint
+                            function put(browseEndpoint) {
+                                if(browseEndpoint) {
+                                    c = browseEndpoint
                                     id = c.browseId;
                                     if(c.canonicalBaseUrl
                                     && c.canonicalBaseUrl.includes("/@")) {
                                         handle = c.canonicalBaseUrl.split("/@")[1]
                                     }
+                                    handle = decodeURIComponent(handle)
                                 }
-                            })
+                            }
+                            let command = v.command.innertubeCommand
+                            if(command.commandExecutorCommand) {
+                                command.commandExecutorCommand
+                                .commands.forEach(c => {
+                                    if(c.browseEndpoint) {put(c.browseEndpoint)}
+                                })
+                            } else if(command.browseEndpoint) {
+                                put(command.browseEndpoint)
+                            }
+                            
                         }
                         catch(error){}
                         if(!id) return;
@@ -590,6 +603,10 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                 && JSON.stringify(r).includes("elementRenderer")) {
                     console.log("viewmodel related; try protobuf request")
                     retryProto()
+                    return;
+                }
+                if(!r.continuationContents) {
+                    res.send(templates.gdata_emptyfeed)
                     return;
                 }
                 r = r.continuationContents.sectionListContinuation.contents[0]
@@ -1123,11 +1140,13 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                     0, title.split(" - ").length - 1
                 ).join(" - ")
                 if(title.includes("\x01")) {
-                    title = title.substring(3)
+                    title = title.split("\x01")[title.split("\x01").length - 1]
                 } else {
                     title = title.substring(2)
                 }
-
+                if(title.includes("\x12")) {
+                    title = title.substring(3)
+                }
                 if(title.length >= 300 || title.includes("\x00")
                 || title.includes("\x01") || title.includes("\x02")) return;
 
@@ -1151,6 +1170,12 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 try {
                     authorFull = v.split(" · ")[0].split("\u001a")
                     authorFull = authorFull[authorFull.length - 1].substring(1)
+                    if(authorFull.includes("\x00")
+                    || authorFull.includes("\x12")) {
+                        authorFull = authorFull.split("\n")
+                        authorFull = authorFull[authorFull.length - 1]
+                        authorFull = authorFull.substring(1)
+                    }
                 }
                 catch(error) {
                     //console.log(error)
@@ -2090,8 +2115,11 @@ function pullUserIdFromDevice(device, callback) {
     })
 }
 
-const i = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
 const crypto = require("crypto")
+const tranferIkRef = "../www-core-feather.css"
+const i = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
+let ik = false;
+
 function decryptWthIk(input) {
     let d = crypto.createDecipheriv("aes-128-cbc", getIk(), i)
     let c = d.update(input, "hex", "utf8").toString()
@@ -2099,19 +2127,68 @@ function decryptWthIk(input) {
     return c;
 }
 
-function encryptWithIk(input) {
-    let d = crypto.createCipheriv("aes-128-cbc", getIk(), i)
+function encryptWithIk(input, whileIkmc) {
+    let d;
+    if(whileIkmc) {
+        let ref = tranferIkRef
+        let bt = 1
+        if(fs.existsSync(ref)) {
+            bt = fs.statSync(ref).birthtime.getTime()
+        }
+        let transferIk = bt.toString().padStart(16, "0");
+        d = crypto.createCipheriv("aes-128-cbc", transferIk, i)
+    } else {
+        d = crypto.createCipheriv("aes-128-cbc", getIk(), i)
+    }
     let c = d.update(input, "utf8", "hex")
     c += d.final("hex")
     return c;
 }
 
 // calculate ik
-let ik = false;
 function getIk() {
     if(!ik) {
-        ik = fs.statSync("./backend.js").birthtime
-               .getTime().toString().padStart(16, "0");
+        let ref = "./backend.js"
+        if(userdata && userdata.ikmc) {
+            ref = tranferIkRef
+        }
+        let bt = 1
+        if(fs.existsSync(ref)) {
+            bt = fs.statSync(ref).birthtime.getTime()
+        }
+        ik = bt.toString().padStart(16, "0");
     }
     return ik;
+}
+
+// migrate previous ik prone to breaking signins with updates
+if(userdata && !userdata.ikmc) {
+    //let oldIk = getIk().substring(0,17)
+    for(let u in userdata) {
+        if(userdata[u] && userdata[u].email) {
+            let elem = userdata[u]
+            let email = decryptWthIk(elem.email)
+            let gToken = decryptWthIk(elem.gToken)
+            let gAuth = decryptWthIk(elem.gAuth)
+            let yAuth = decryptWthIk(elem.yAuth)
+            email = encryptWithIk(email, true)
+            gToken = encryptWithIk(gToken, true)
+            gAuth = encryptWithIk(gAuth, true)
+            yAuth = encryptWithIk(yAuth, true)
+
+            userdata[u].email = email;
+            userdata[u].gToken = gToken;
+            userdata[u].gAuth = gAuth;
+            userdata[u].yAuth = yAuth;
+        }
+    }
+
+    userdata.ikmc = 1
+    let ref = tranferIkRef
+    let bt = 1
+    if(fs.existsSync(ref)) {
+        bt = fs.statSync(ref).birthtime.getTime()
+    }
+    ik = bt.toString().padStart(16, "0");
+    fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
 }

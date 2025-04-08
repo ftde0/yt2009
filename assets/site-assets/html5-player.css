@@ -569,10 +569,13 @@
 .embed-play-btn {
     position: absolute;
     background-image: url("/player-imgs/play-btn.png");
-    width: 101px;
-    height: 75px;
-    opacity: 0.85;
+    width: 90px;
+    height: 66px;
     cursor: pointer;
+}
+
+.embed-play-btn:hover {
+    background-image: url("/player-imgs/play-btn-hover.png");
 }
 
 .flashing-btn {

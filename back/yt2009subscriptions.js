@@ -154,6 +154,17 @@ module.exports = {
 
     "fetch_new_videos": function(req, res, sendRawData) {
         let url = req.headers.url;
+        if(!url) {
+            if(res.status) {
+                res.status(400)
+            }
+            if(sendRawData) {
+                res.send({"time": Date.now(), "videos": []})
+            } else {
+                res.send("")
+            }
+            return;
+        }
         if(url.startsWith("http")) {
             let prefix = url.split("/channel/")[0]
                             .split("/user/")[0]

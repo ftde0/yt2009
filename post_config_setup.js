@@ -18,7 +18,7 @@ check_tools.forEach(tool => {
         })
     }
     catch(error) {
-        console.log(tool.split(" ")[0] + " not found!! make sure it is in your path")
+        console.log(tool.split(" ")[0] + " not found!! make sure it is in your PATH")
         console.log("exiting")
         process.exit()
     }
@@ -79,8 +79,12 @@ for(let file in cacheFiles) {
     }
 }
 
-fs.mkdirSync("./back/cache_dir/annotations/")
-fs.mkdirSync("./back/cache_dir/subtitles/")
+if(!fs.existsSync("./back/cache_dir/annotations/")) {
+    fs.mkdirSync("./back/cache_dir/annotations/")
+}
+if(!fs.existsSync("./back/cache_dir/subtitles/")) {
+    fs.mkdirSync("./back/cache_dir/subtitles/")
+}
 
 /*
 =======
@@ -136,7 +140,6 @@ fetch("https://www.youtube.com/", {
         console.log("=== !!! ===")
         console.log("/back/yt2009constants.json was modified to include unique data.")
         console.log("this data may include the used useragent, your ip and others.")
-        console.log("make sure to remove such data if you intend on sharing your copy.")
         setTimeout(function() {
             console.log("=== downloading assets ===")
             downloadFile()

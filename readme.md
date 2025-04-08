@@ -23,6 +23,15 @@ afterwards, you can just `cd back` and `node backend.js` to start. no need to re
 
 ---
 
+it is highly recommended to add a google data api v3 key to ensure all video data is shown correctly.
+
+you will also be notified about that when starting the frontend without one set.
+
+more info in [config_params.md](config_params.md) / [docker.md](docker.md). obtain a key at https://console.developers.google.com/.
+
+
+---
+
 ## optional after-setup steps
 
 - set up an android app by following [apk_setup.md](apk_setup.md)
@@ -55,9 +64,9 @@ now that you're in, you can just use it as it is, but there is a bit more you ca
 
 navigate to **/flags** to change settings locally. here, for example, you can set up The Wayback Machine as a video data source. but look through, there is a lot more.
 
-feel free to nav to **/toggle_f** if you've set up flash players as described above to make the frontend work on older browsers, such as ie6.
+feel free to nav to **/toggle_f** to enable flash player support for old browsers, such as ie6.
 
-and just click around! you might find some useful features you didn't expect to work.
+and just click around!
 
 ---
 
@@ -66,6 +75,8 @@ and just click around! you might find some useful features you didn't expect to 
 **if you need to reclaim space, look through the assets folder where downloaded files (such as images, videos) are saved and delete ones you need.**
 
 **they will be redownloaded when necessary.**
+
+alternatively, set up auto_maintain as described in yt2009setup to handle this for you.
 
 ---
 

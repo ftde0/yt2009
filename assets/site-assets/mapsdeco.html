@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            overflow: hidden;
+        }
+        #maps-container {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #maps {
+            position: absolute;
+            overflow: hidden;
+        }
+        .row {
+            height: 256px;
+            overflow: hidden;
+        }
+        tr, td {
+            border: none;
+            margin: 0px 0px;
+            padding: 0px 0px;
+            height: 256px;
+            max-height: 256px;
+        }
+        .row img, .row div {
+            width: 256px;
+            height: 256px;
+            float: left;
+        }
+        * {user-select: none;cursor: pointer;}
+    </style>
+    <style id="fu"></style>
+</head>
+<body>
+    <div id="maps-container">
+        <div id="maps" style="left: 0px;top: 0px;"></div>
+    </div>
+    <div style="width: 37px; height: 94px; user-select: none; left: 7px; top: 7px;position: absolute;z-index:5;" class="gmnoprint">
+        <div style="position: absolute; left: 0px; top: 0px; width: 37px; height: 94px; overflow: hidden;">
+            <img style="position: absolute; left: 0px; top: 0px; width: 37px; height: 94px; user-select: none; border: 0px; padding: 0px; margin: 0px;" src="//www.google.com/intl/en_us/mapfiles/smc.png"/>
+            <div style="position: absolute; left: 10px; top: 0px; width: 18px; height: 18px; cursor: pointer;" title="Pan up" log="pan_up" onclick="pan(0,100)"><img src="/assets/site-assets/pixel-vfl73.gif" style="width: 18px; height: 18px;"/></div>
+            <div style="position: absolute; left: 0px; top: 20px; width: 18px; height: 18px; cursor: pointer;" title="Pan left" log="pan_lt" onclick="pan(100,0)"><img src="/assets/site-assets/pixel-vfl73.gif" style="width: 18px; height: 18px;"/></div>
+            <div style="position: absolute; left: 19px; top: 20px; width: 18px; height: 18px; cursor: pointer;" title="Pan right" log="pan_rt" onclick="pan(-100,0)"><img src="/assets/site-assets/pixel-vfl73.gif" style="width: 18px; height: 18px;"/></div>
+            <div style="position: absolute; left: 10px; top: 37px; width: 18px; height: 18px; cursor: pointer;" title="Pan down" log="pan_down" onclick="pan(0,-100)"><img src="/assets/site-assets/pixel-vfl73.gif" style="width: 18px; height: 18px;"/></div>
+            <div style="position: absolute; left: 10px; top: 56px; width: 18px; height: 18px; cursor: pointer;" title="Zoom In" log="zi" onclick="zoomModify(1)"><img src="/assets/site-assets/pixel-vfl73.gif" style="width: 18px; height: 18px;"/></div>
+            <div style="position: absolute; left: 10px; top: 76px; width: 18px; height: 18px; cursor: pointer;" title="Zoom Out" log="zo" onclick="zoomModify(-1)"><img src="/assets/site-assets/pixel-vfl73.gif" style="width: 18px; height: 18px;"/></div>
+        </div>
+    </div>
+    <script>
+        var ZOOM_LEVEL_TILE_COUNTS = {
+            "1": {
+                "x": 2,
+                "y": 2
+            },
+            "2": {
+                "x": 4,
+                "y": 4
+            },
+            "3": {
+                "x": 8,
+                "y": 8
+            }
+        }
+
+        var useNativeClassName = true;
+        if(!document.getElementsByClassName) {
+            useNativeClassName = false;
+            document.getElementsByClassName = function(name) {
+                var l = []
+                var s = document.getElementsByTagName("*")
+                for(var e in s) {
+                    e = s[e]
+                    if(e && e.className && (e.className == name
+                    || (e.className.indexOf(name + " ") == 0)
+                    || (e.className.indexOf(" " + name + " ") !== -1))) {
+                        l.push(e)
+                    }
+                }
+                return l;
+            }
+        }
+        try {
+            if(HTMLCollection && !HTMLCollection.prototype.forEach) {
+                HTMLCollection.prototype.forEach = function(callback) {
+                    for(var e in this) {
+                        if(this[e] && this[e].tagName) {
+                            callback(this[e])
+                        }
+                    }
+                }
+            }
+        }
+        catch(error){}
+        if(!Array.prototype.forEach) {
+            Array.prototype.forEach = function(callback) {
+                for(var e in this) {
+                    if(this[e]) {
+                        callback(this[e])
+                    }
+                }
+            }
+        }
+
+        var CANVAS_WIDTH = window.innerWidth
+        var CANVAS_HEIGHT = window.innerHeight
+        if(!CANVAS_WIDTH || !CANVAS_HEIGHT) {
+            CANVAS_WIDTH = document.documentElement.clientWidth
+            CANVAS_HEIGHT = document.documentElement.clientHeight
+        }
+        var MAP_X = 0;
+        var MAP_Y = 0;
+        var z = 1;
+        var tw = 256;
+        while(CANVAS_WIDTH >= tw) {
+            tw += 256
+        }
+        tw = tw * 2
+        tw += 512
+        var th = 256;
+        while(CANVAS_HEIGHT >= th) {
+            th += 256
+        }
+        th = th * 2
+        th += 512
+        var maps = document.getElementById("maps")
+        maps.style.width = tw + "px"
+        maps.style.height = th + "px"
+        
+        /*z = 4
+        if(CANVAS_WIDTH <= 700) {
+            z = 2;
+        }*/
+
+        function redrawMap() {
+            document.getElementById("maps").innerHTML = ""
+
+            var numRows = ZOOM_LEVEL_TILE_COUNTS[z].y
+            var numsMade = 0;
+            while(numsMade !== numRows) {
+                var tr = document.createElement("div")
+                tr.className = "row row-" + numsMade
+                tr.style.width = tw + "px"
+                document.getElementById("maps").appendChild(tr)
+                numsMade++
+            }
+
+            function createTileURL(x,y,z) {
+                //return "/assets/site-assets/contentid-cm-logo-vfl85500.jpg"
+                return "http://mt0.google.com/vt/lyrs=m@140&hl=en&x="+x+"&y="+y+"&z="+z
+            }
+
+            var RECORRECT_TILES = false;
+
+            var rowLength = ZOOM_LEVEL_TILE_COUNTS[z].x
+            var ri = 0;
+            var visibleX = ((tw / 2) / 256)
+            var visibleY = ((th / 2) / 256)
+
+            setTimeout(function() {
+                if(RECORRECT_TILES) {
+                    
+                }
+            }, 100)
+
+            document.getElementsByClassName("row").forEach(function(row) {
+                try {
+                    var m = 0;
+                    while(m !== rowLength) {
+                        if(m >= visibleX + 5 || ri >= visibleY + 5) {
+                            // load marker -- once visible
+                            var t = document.createElement("div")
+                            t.setAttribute("data-url", createTileURL(m,ri,z))
+                            t.className = "loader-tile tile-" + ri + "-" + m
+                            row.appendChild(t)
+                        } else {
+                            var t = document.createElement("img")
+                            t.setAttribute("draggable", "false")
+                            t.src = createTileURL(m,ri,z)
+                            t.className = "map-tile tile-" + ri + "-" + m
+                            row.appendChild(t)
+
+                            if(ri == 0 && m == 1 && t.getBoundingClientRect().top > 10) {
+                                RECORRECT_TILES = true;
+                            }
+                        }
+                        m++
+                    }
+                    ri++
+                }
+                catch(error){}
+            })
+        }
+
+        redrawMap()
+        var l = false;
+
+        function pan(numx, numy) {
+            MAP_X += numx
+            MAP_Y += numy
+
+            if(MAP_X >= 0 || MAP_X <= -((z + 1) * 256)) {
+                MAP_X = 0
+            }
+            if(MAP_Y >= 0 || MAP_Y <= -((z + 1) * 256)) {
+                MAP_Y = 0
+            }
+
+            document.getElementById("maps").style.left = MAP_X + "px"
+            document.getElementById("maps").style.top = MAP_Y + "px"
+
+            var visibleRows = []
+            document.getElementsByClassName("loader-tile").forEach(function(lt) {
+                if(lt.getBoundingClientRect
+                && lt.getBoundingClientRect().left <= CANVAS_WIDTH
+                && lt.getBoundingClientRect().top <= CANVAS_HEIGHT + 500) {
+                    lt.className = lt.className.split("loader-tile ")[1]
+                    var ni = document.createElement("img")
+                    ni.setAttribute("draggable", "false")
+                    ni.src = lt.getAttribute("data-url")
+                    var row = lt.parentNode
+                    var tid = parseInt(
+                        lt.className.split("tile-")[1]
+                        .split("-")[1].split("-")[0]
+                    )
+                    var rid = parseInt(
+                        lt.className.split("tile-")[1].split("-")[0]
+                    )
+                    ni.className = lt.className
+                    row.insertBefore(
+                        ni,
+                        document.getElementsByClassName("tile-" + rid + "-" + tid)[0]
+                    )
+                    row.removeChild(lt)
+                }
+            })
+
+
+            var imgs = document.getElementsByTagName("img")
+            for(var img in imgs) {
+                try {
+                    img = imgs[0]
+                    if(img.tagName) {
+                        if(img.getBoundingClientRect
+                        && (img.getBoundingClientRect().left + img.getBoundingClientRect().width <= 0
+                        || img.getBoundingClientRect().top + img.getBoundingClientRect().height <= 0)) {
+                            var ni = document.createElement("div")
+                            ni.setAttribute("data-url", img.src)
+                            ni.className = "loader-tile " + img.className
+                            var row = img.parentNode
+                            var tid = parseInt(
+                                img.className.split("tile-")[1]
+                                .split("-")[1].split("-")[0]
+                            )
+                            var rid = parseInt(
+                                img.className.split("tile-")[1].split("-")[0]
+                            )
+                            row.insertBefore(
+                                ni,
+                                document.getElementsByClassName("tile-" + rid + "-" + tid)[0]
+                            )
+                            row.removeChild(img)
+                        }
+                    }
+                }
+                catch(error) {}
+            }
+
+            if(!l) {
+                l = true;
+                var p = 0;
+                var r = setInterval(function() {
+                    pan(0,0)
+                    p++
+                    if(p >= 30) {
+                        clearInterval(r)
+                        l = false;
+                    }
+                }, 1)
+            }
+        }
+
+        function zoomModify(modifier) {
+            if(z + modifier < 1 || z + modifier > 3) return;
+            var center_y = CANVAS_HEIGHT / 2;
+            var matchRows = []
+            document.getElementsByClassName("row").forEach(function(row) {
+                if(!row.getBoundingClientRect) return;
+                var y = row.getBoundingClientRect().top;
+                if((y - center_y >= -200 && y - center_y <= 0)
+                || (y - center_y <= 200 && y - center_y >= 0)) {
+                    matchRows.push(parseInt(
+                        row.className.split("row-")[1].split(" ")[0]
+                    ))
+                }
+            })
+            var r = matchRows[0]
+            var sel = "row-" + r
+            if(!useNativeClassName) {
+                sel = "row row-" + r
+            }
+            var r2 = document.getElementsByClassName(sel)[0]
+            var center_x = CANVAS_WIDTH / 2
+            var matchTiles = []
+            var imgs = r2.getElementsByTagName("img")
+            for(var img in imgs) {
+                try {
+                    img = imgs[img]
+                    var x = img.getBoundingClientRect().left;
+                    if((x - center_x >= -400 && x - center_x <= 0)
+                    || (x - center_x <= 400 && x - center_x >= 0)) {
+                        matchTiles.push(img)
+                    }
+                }
+                catch(error) {}
+            }
+
+            var newTile = matchTiles[0].className.split("tile-")[1].split("-")[1].split(" ")[0]
+            if(modifier >= 0) {
+                newTile = newTile * 2
+                r = r * 2
+            } else {
+                newTile = newTile / 2
+                r = r / 2
+            }
+            
+            z += modifier;
+            redrawMap()
+            setTimeout(function() {
+                var t = document.getElementsByClassName("tile-" + r + "-" + newTile)[0]
+                var x = -(t.getBoundingClientRect().left)
+                var y = -(t.getBoundingClientRect().top)
+                pan(x + (CANVAS_WIDTH / 2), y + (CANVAS_HEIGHT / 2))
+                var p = 0;
+                var r = setInterval(function() {
+                    pan(-1,-1)
+                    p++
+                    if(p >= 30) {
+                        clearInterval(r)
+                    }
+                }, 10)
+            }, 50)
+        }
+    </script>
+</div>
+</body>
+</html>

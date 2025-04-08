@@ -80,8 +80,8 @@ module.exports = function(req, res) {
     if(req.version && req.current
     && req.type == "version-warning"
     && (!customHomepageText
-    || customHomepageText.includes("outdated version"))) {
-        customHomepageText = "you may be running an outdated version of yt2009!"
+    || customHomepageText.includes("too old and may "))) {
+        customHomepageText = "your yt2009 is too old and may cause issues. "
                            + `latest: ${req.version}, running: ${req.current}`
         return;
     }

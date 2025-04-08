@@ -1098,6 +1098,7 @@ module.exports = {
     "saveMp4_android": function(id, callback, existingPlayer, quality) {
         let testF18 = this.testF18;
         let downloadInParts_file = this.downloadInParts_file;
+        let funcRef = this.saveMp4_android;
 
         function parseResponse(r) {
             // parse formats
@@ -1199,7 +1200,7 @@ module.exports = {
                             })
                         )
                     } else {
-                        this.saveMp4_android(id, callback, r, quality)
+                        funcRef(id, callback, r, quality)
                     }
                 })
                 return;
@@ -1743,6 +1744,10 @@ module.exports = {
     },
 
     "fakeDatesModern": function(req, uploadDate) {
+        if(req && req.headers && req.headers.cookie
+        && !req.headers.cookie.includes("fake_dates")) {
+            return uploadDate;
+        }
         let date = Date.now()
         if(typeof(req) == "string") {
             date = req;
