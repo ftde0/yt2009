@@ -365,6 +365,7 @@ function video_show_play_btn() {
 }
 
 function video_play() {
+    //console.log("play")
     video.play();
     videoPauseOverride = true
 }
@@ -609,6 +610,13 @@ function adjustSeekbarWidth() {
     sizeAnnotationsContainer()
     setVidHeight()
     resizeCaptions()
+    if(mainElement.querySelector
+    && mainElement.querySelector(".unrecoverable-error-msg")
+    && !browserModernFeatures) {
+        positionUnrecoverable(
+            mainElement.querySelector(".unrecoverable-error-msg")
+        )
+    }
 }
 
 window.addEventListener("resize", adjustSeekbarWidth, false);
@@ -948,6 +956,7 @@ function videoNav(id) {
 }
 
 function videoReplay() {
+    //console.log("replay")
     videoEnded = false;
     video.className = video.className.replace(" showing-endscreen", "")
     $(".endscreen").className = "endscreen hid"
@@ -2277,4 +2286,36 @@ function hidePaTooltip() {
     paTooltipContainer.style.display = "none"
     paTooltipContainer.style.right = "0px"
     paTooltipContainer.style.top = "0px"
+}
+
+// unrecoverable (message in the middle) error
+
+// position in middle if not browserModernFeatures
+function positionUnrecoverable(errorMessage) {
+    var eWidth = errorMessage.getBoundingClientRect().width;
+    var eHeight = errorMessage.getBoundingClientRect().height;
+    var fWidth = mainElement.getBoundingClientRect().width;
+    var fHeight = mainElement.getBoundingClientRect().height;
+    errorMessage.style.left = ((fWidth / 2) - (eWidth / 2)) + "px"
+    errorMessage.style.top = ((fHeight / 2) - (eHeight / 2)) + "px"
+}
+
+// show func
+function showUnrecoverableError(message) {
+    video.volume = 0;
+    video.src = ""
+    video.pause()
+    video.parentNode.removeChild(video)
+    var overlay = document.createElement("div")
+    overlay.className = "video-player-overlay"
+    mainElement.appendChild(overlay)
+    var errorMessage = document.createElement("span")
+    errorMessage.innerHTML = message;
+    errorMessage.className = "unrecoverable-error-msg"
+    overlay.appendChild(errorMessage)
+    if(browserModernFeatures) {
+        errorMessage.className += " error-msg-modern"
+    } else {
+        positionUnrecoverable(errorMessage)
+    }
 }

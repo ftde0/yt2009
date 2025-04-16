@@ -336,7 +336,6 @@ module.exports = {
                 return videos;
             }
             yt2009html.featured().slice(startIndex, startIndex + maxResults).forEach(video => {
-                if(maxResults > 24) return;
                 if(video.category == categoryName
                 || parseInt(categoryNumber) == 0) {
                     addVideo(video)

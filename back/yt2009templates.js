@@ -262,6 +262,9 @@ module.exports = {
 </feed>`,
     "searchVideo": function(id, title, description, authorUrl, authorName, uploadDate, viewCount, time, protocol, browser, flags) {
         let thumbUrl = utils.getThumbUrl(id, flags)
+        title = title.split("$").join("&#36;")
+        description = description.split("$").join("&#36;")
+        authorName = authorName.split("$").join("&#36;")
         return `
         <div class="video-cell" data-id="${id}">
             <div class="video-entry">
@@ -269,7 +272,7 @@ module.exports = {
                     <div class="v120WrapperOuter">
                         <div class="v120WrapperInner">
                             <a id="video-title-results" href="/watch?v=${id}" rel="nofollow">
-                                <img title="${title.split('"').join("&quot;")}" src="${thumbUrl}" class="vimg120">
+                                <img title="${utils.xss(title.split('"').join("&quot;"))}" src="${thumbUrl}" class="vimg120">
                             </a>
                             <div id="quicklist-icon-${id}" class="addtoQL90"><a id="add-to-quicklist-${id}" href="#" ql="${id}" title="lang_add_to_ql"><button class="master-sprite QLIconImg ${browser == "firefox" ? "firefox" : ""} title="" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(authorName)}')"></button></a>
                                 <div class="hid quicklist-inlist"><a href="#">lang_ql_added</a></div>
@@ -282,10 +285,10 @@ module.exports = {
                 <div class="video-main-content" id="video-main-content">
                     <div class="video-title video-title-results">
                         <div class="video-short-title">
-                            <a id="video-short-title" href="/watch?v=${id}" title="${title.split('"').join("&quot;")}" rel="nofollow">${title}</a>
+                            <a id="video-short-title" href="/watch?v=${id}" title="${utils.xss(title.split('"').join("&quot;"))}" rel="nofollow">${title}</a>
                         </div>
                         <div class="video-long-title">
-                            <a id="video-long-title" href="/watch?v=${id}" title="${title.split('"').join("&quot;")}" rel="nofollow">${title}</a>
+                            <a id="video-long-title" href="/watch?v=${id}" title="${utils.xss(title.split('"').join("&quot;"))}" rel="nofollow">${title}</a>
                         </div>
                     </div>
     
@@ -295,7 +298,7 @@ module.exports = {
     
                     <div class="result-label">
                         <span class="result-type">Video:</span>
-                        <span class="video-username"><a id="video-from-username" class="hLink" href="${authorUrl}">${authorName}</a></span>
+                        <span class="video-username"><a id="video-from-username" class="hLink" href="${authorUrl}">${utils.xss(authorName)}</a></span>
                     </div>
     
                     <div class="video-facets">
@@ -307,7 +310,7 @@ module.exports = {
     
                         <span id="video-added-time" class="video-date-added">${uploadDate}</span>
                         <span id="video-num-views" class="video-view-count">${viewCount}</span>
-                        <span class="video-username"><a id="video-from-username" class="hLink" href="${authorUrl}">${authorName}</a></span>
+                        <span class="video-username"><a id="video-from-username" class="hLink" href="${authorUrl}">${utils.xss(authorName)}</a></span>
                         <span id="video-average-rating" class="video-rating-grid ">
                             <div>
                                 <button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button>
@@ -2968,6 +2971,9 @@ term='channel'/>
         function safeData(i, override) {
             i = i.split(">").join(override ? override : "&amp;gt;")
                  .split("<").join(override ? override : "&amp;lt;")
+                 .split("&").join(override ? override : "&amp;")
+                 .split("'").join("")
+                 .split("\"").join(override ? override : "&quot;")
             return i;
         }
 
@@ -3003,7 +3009,7 @@ term='channel'/>
                             <span style="color: #000000; font-size: 11px; font-weight: bold;">${utils.seconds_to_time(video.length)}</span>
                         </td>
                         <td style="font-size: 11px; padding-left: 20px;"><span style="color: #666666; font-size: 11px;">More in</span>
-                            <a href="http://${config.ip}:${config.port}/videos?c=${categoryNumber}">${video.category}</a>
+                            <a href="http://${config.ip}:${config.port}/videos?c=${categoryNumber}">${video.category.split("&").join("")}</a>
                         </td>
                     </tr>
                 </tbody>
@@ -3028,13 +3034,14 @@ term='channel'/>
         </entry>`
         }
 
-        return `<item>
+        return `
+        <item>
             <guid isPermaLink='false'>http://gdata.youtube.com/feeds/base/videos/F35L1dZtxjI</guid>
             <pubDate>${new Date(video.upload).toString().split(" (")[0]}</pubDate>
             <atom:updated>${video.upload}</atom:updated>
             <category domain='http://schemas.google.com/g/2005#kind'>http://gdata.youtube.com/schemas/2007#video</category>
             <title>${safeData(video.title)}</title>
-            <description>${safeData(description)}</description>
+            <description>${utils.xss(description)}</description>
             <link>http://${config.ip}:${config.port}/watch?v=${video.id}</link>
             <author>${safeData(video.author_name)}</author>
         </item>`

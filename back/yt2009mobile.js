@@ -935,7 +935,13 @@ module.exports = {
 
             let response = templates.gdata_feedStart;
 
-            (data.videos || []).forEach(video => {
+            let videosSource = (data.videos || [])
+            videosSource = videosSource.filter(s => {return !(
+                s.badges
+                && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+            )})
+
+            videosSource.forEach(video => {
                 let cacheVideo = yt2009html.get_cache_video(video.id)
                 
                 response += templates.gdata_feedVideo(

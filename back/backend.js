@@ -918,6 +918,15 @@ app.get("/get_video_info", (req, res) => {
     }
     req.query.video_id = req.query.video_id.split("/mp4")[0]
     yt2009.fetch_video_data(req.query.video_id, (data => {
+        if(data.unplayable) {
+            res.send([
+                "status=fail",
+                "errorcode=100",
+                "suberrorcode=8",
+                "reason=This video is unavailable."
+            ].join("&"))
+            return;
+        }
         let longVid = (data.length >= 60 * 30)
         yt2009.get_qualities(req.query.video_id, (qualities => {
             if((!qualities || qualities.length == 0) && data.qualities) {
@@ -2063,17 +2072,17 @@ app.get("/exp_hd", (req, res) => {
     && fs.existsSync(`../assets/${id}-1080p.mp4`)
     && fs.statSync(`../assets/${id}-1080p.mp4`).size < 5
     && fs.existsSync(`../assets/${id}-720p.mp4`)) {
-        res.redirect(`/assets/${id}-720p.mp4`)
+        res.redirect(`/assets/${id}-720p.mp4?ac=${Math.random()}`)
         return;
     }
 
     if(fs.existsSync(`../assets/${id}-${quality}.mp4`)
     && fs.statSync(`../assets/${id}-${quality}.mp4`).size > 5) {
-        res.redirect(`/assets/${id}-${quality}.mp4`)
+        res.redirect(`/assets/${id}-${quality}.mp4?ac=${Math.random()}`)
     } else {
         yt2009_utils.saveMp4_android(id, (success) => {
             if(success) {
-                res.redirect("/assets/" + success)
+                res.redirect("/assets/" + success + "?ac=" + Math.random())
             } else {
                 if(lower) {
                     let url = "/get_480?video_id=" + id + "/lower"
@@ -2101,11 +2110,11 @@ app.get("/get_480", (req, res) => {
     let quality = "480p"
     // callback mp4 if we already have one
     if(fs.existsSync(`../assets/${id}-${quality}.mp4`)) {
-        res.redirect(`/assets/${id}-${quality}.mp4`)
+        res.redirect(`/assets/${id}-${quality}.mp4?ac=${Math.random()}`)
     } else {
         yt2009_utils.saveMp4_android(id, (success) => {
             if(success) {
-                res.redirect("/assets/" + success)
+                res.redirect("/assets/" + success + "?ac=" + Math.random())
             } else {
                 if(lower) {
                     let url = "/channel_fh264_getvideo?v=" + id
@@ -2776,7 +2785,9 @@ app.get("/yt2009_recommended", (req, res) => {
                 if(v.includes("<feed xmlns")) return;
                 let id = v.split(`/feeds/api/videos/`)[1].split(`</id>`)[0]
                 let title = v.split(`<title type='text'>`)[1].split("</title>")[0]
-                let creatorName = v.split(`<name>`)[1].split("</name>")[0]
+                let creatorName = yt2009_utils.xss(decodeURIComponent(
+                    v.split(`<name>`)[1].split("</name>")[0]
+                ))
                 let creatorUrl = "/@" + creatorName
                 if(creatorName.startsWith("UC")) {
                     creatorUrl = "/channel/" + creatorName
@@ -3664,6 +3675,10 @@ app.get("/channel_sort", (req, res) => {
     function render(results) {
         let createdHTML = ``
         let i = 1;
+        results = results.filter(s => {return !(
+            s.badges
+            && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+        )})
         results.forEach(result => {
             let views = yt2009_utils.viewFlags(result.views, channelFlags)
             let upload = yt2009_utils.fakeDatesModern(req, result.upload)

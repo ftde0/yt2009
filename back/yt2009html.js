@@ -258,6 +258,7 @@ module.exports = {
             }
             this.innertube_get_data(id, (videoData => {
                 let fetchesCompleted = 0;
+                let fetchesRequired = 3;
 
                 let data = {}
                 try {
@@ -392,6 +393,13 @@ module.exports = {
                     data.freezeSync = true;
                 }
 
+                // unplayable check (country restriction/members only)
+                // still gets data
+                if(videoData.playabilityStatus
+                && videoData.playabilityStatus.status == "UNPLAYABLE") {
+                    data.unplayable = true;
+                }
+
                 // "related" videos
 
                 let related = []
@@ -415,6 +423,7 @@ module.exports = {
                 && related[1].itemSectionRenderer.contents) {
                     related = related[1].itemSectionRenderer.contents
                 }
+                let viewmodelViewCountFails = []
                 related.forEach(video => {
                     if(video.lockupViewModel
                     && video.lockupViewModel.contentType == "LOCKUP_CONTENT_TYPE_VIDEO") {
@@ -423,11 +432,6 @@ module.exports = {
                         let metadata = video.metadata.lockupMetadataViewModel;
                         let id = video.contentId
                         let title = metadata.title.content
-                        let viewCount = video.rendererContext
-                                        .accessibilityContext.label
-                                        .split(" views");
-                        viewCount = viewCount[viewCount.length - 2].split(" ");
-                        viewCount = viewCount[viewCount.length - 1] + " views";
                         let creatorUrl = "UC" + JSON.stringify(video)
                                                 .split(`browseId":"UC`)[1]
                                                 .split(`"`)[0];
@@ -440,6 +444,31 @@ module.exports = {
                                 catch(error){}
                             })}
                         })
+                        let viewCount = metadataParts.filter(s => {
+                            return s.includes(" views")
+                        })[0]
+                        if(viewCount) {
+                            viewCount = yt2009utils.approxSubcount(
+                                viewCount.split(" ")[0]
+                            ) + " views"
+                        } else {
+                            viewCount = "0 views"
+                        }
+                        try {
+                            let tvc = video.rendererContext
+                                      .accessibilityContext.label
+                                      .split(" views");
+                            tvc = tvc[viewCount.length - 2].split(" ");
+                            tvc = tvc[viewCount.length - 1] + " views"
+
+                            // full viewcount in accessibility data, use that
+                            if(tvc && !isNaN(parseInt(tvc.split(" ")[0]))) {
+                                viewCount = tvc;
+                            }
+                        }
+                        catch(error){
+                            viewmodelViewCountFails.push(id)
+                        }
                         let creatorName = metadataParts[0]
                         let upload = metadataParts[2]
                         let time = "1:00"
@@ -511,6 +540,50 @@ module.exports = {
                         
                     }
                 })
+                if(viewmodelViewCountFails.length >= 1 && config.data_api_key) {
+                    fetchesRequired++
+                    // fallback fetch full viewcount through data api
+                    if(config.env == "dev") {
+                        console.log(
+                            "viewmodel related lack full viewcounts",
+                            "// data api fetch!!"
+                        )
+                    }
+                    let dataApiUrl = [
+                        "https://www.googleapis.com/youtube/v3/videos",
+                        "?part=statistics&id=" + viewmodelViewCountFails.join(),
+                        "&key=" + config.data_api_key
+                    ].join("")
+                    fetch(dataApiUrl, {
+                        "headers": constants.headers,
+                        "method": "GET"
+                    }).then(r => {try {r.json().then(r => {
+                        if(!r.error && r.items) {
+                            r.items.forEach(v => {
+                                let rel = data.related.filter(s => {
+                                    return s.id == v.id
+                                })[0]
+                                let i = data.related.indexOf(rel)
+                                if(i && v.statistics && v.statistics.viewCount) {
+                                    let vc = parseInt(v.statistics.viewCount)
+                                    vc = yt2009utils.countBreakup(vc)
+                                    vc += " views"
+                                    data.related[i].views = vc;
+                                }
+                            })
+                        }
+                        fetchesCompleted++;
+                        if(fetchesCompleted >= fetchesRequired) {
+                            callback(data)
+                        }
+                    })}catch(error){
+                        console.log(error)
+                        fetchesCompleted++;
+                        if(fetchesCompleted >= fetchesRequired) {
+                            callback(data)
+                        }
+                    }})
+                }
 
                 // save channel image
 
@@ -521,7 +594,7 @@ module.exports = {
                     data.author_img = yt2009utils.saveAvatar(data.author_img, false)
                 }
                 fetchesCompleted++;
-                if(fetchesCompleted >= 3) {
+                if(fetchesCompleted >= fetchesRequired) {
                     callback(data)
                 }
             
@@ -551,7 +624,7 @@ module.exports = {
                     (comment_data) => {
                         data.comments = comment_data
                         fetchesCompleted++;
-                        if(fetchesCompleted >= 3) {
+                        if(fetchesCompleted >= fetchesRequired) {
                             callback(data)
                         }
                     }
@@ -587,7 +660,7 @@ module.exports = {
                                 (error, stdout, stderr) => {
                                     data.mp4 = `/assets/${id}`
                                     fetchesCompleted++;
-                                    if(fetchesCompleted >= 3) {
+                                    if(fetchesCompleted >= fetchesRequired) {
                                         callback(data)
                                     }  
                                 }
@@ -599,7 +672,7 @@ module.exports = {
                                 data.mp4 = `/assets/${id}`
                             }
                             fetchesCompleted++;
-                            if(fetchesCompleted >= 3) {
+                            if(fetchesCompleted >= fetchesRequired) {
                                 callback(data)
                             }
                             cache.write(id, data)
@@ -621,7 +694,7 @@ module.exports = {
                 } else {
                     data.mp4 = `/assets/${id}`
                     fetchesCompleted++;
-                    if(fetchesCompleted >= 3) {
+                    if(fetchesCompleted >= fetchesRequired) {
                         callback(data)
                     }
                     cache.write(id, data);
@@ -772,6 +845,14 @@ module.exports = {
             if(startQuality) {
                 yt2009utils.saveMp4_android(data.id, () => {}, false, startQuality)
             }
+        }
+
+        // unplayable state
+        if(data.unplayable && !useFlash) {
+            code = code.replace(
+                `//yt2009-unplay`,
+                `showUnrecoverableError("This video is unavailable.")`
+            )
         }
 
         // login_simulate comments

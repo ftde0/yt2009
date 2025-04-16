@@ -272,6 +272,18 @@ module.exports = {
                 if(video.richItemRenderer || video.gridVideoRenderer) {
                     video = (video.richItemRenderer || video.gridVideoRenderer)
                             .content.videoRenderer
+                    let badges = []
+                    if(video.badges) {
+                        try {
+                            video.badges.forEach(badge => {
+                                if(badge.metadataBadgeRenderer) {
+                                    badge = badge.metadataBadgeRenderer
+                                    badges.push(badge.style)
+                                }
+                            })
+                        }
+                        catch(error){}
+                    }
                     data.videos.push({
                         "id": video.videoId,
                         "title": video.title.runs[0].text,
@@ -282,7 +294,8 @@ module.exports = {
                                     + video.videoId
                                     + "/hqdefault.jpg",
                         "length": (video.lengthText || {"simpleText": "00:00"})
-                                  .simpleText
+                                  .simpleText,
+                        "badges": badges
                     })
                 }
             })
@@ -622,6 +635,11 @@ module.exports = {
         let watch_url = "/watch.swf"
         let watch_arg = "video_id"
         function videosRender() {
+            videosSource = videosSource.filter(s => {return !(
+                s.badges
+                && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+            )})
+
             // fake_dates shenanigans
             let cutoffDate = false
             if(flags.includes("fake_dates")) {
@@ -1939,6 +1957,19 @@ module.exports = {
                 if(video.richItemRenderer || video.gridVideoRenderer) {
                     video = (video.richItemRenderer || video.gridVideoRenderer)
                             .content.videoRenderer
+
+                     let badges = []
+                     if(video.badges) {
+                        try {
+                            video.badges.forEach(badge => {
+                                if(badge.metadataBadgeRenderer) {
+                                    badge = badge.metadataBadgeRenderer
+                                    badges.push(badge.style)
+                                }
+                            })
+                        }
+                        catch(error){}
+                    }
                     videos.push({
                         "id": video.videoId,
                         "title": video.title.runs[0].text,
@@ -1949,7 +1980,8 @@ module.exports = {
                                     + video.videoId
                                     + "/hqdefault.jpg",
                         "length": (video.lengthText || {"simpleText": "00:00"})
-                                  .simpleText
+                                  .simpleText,
+                        "badges": badges
                     })
                 }
             })

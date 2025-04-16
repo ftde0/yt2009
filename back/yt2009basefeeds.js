@@ -32,7 +32,7 @@ module.exports = {
         if(!mobileauths.isAuthorized(req, res)) return;
 
         // parse request
-        let max = 25;
+        let max = 24;
         let start = 0;
         let videosQuery = {
             "query": {
@@ -41,9 +41,13 @@ module.exports = {
             }
         }
         let feedType = req.originalUrl.split("/standardfeeds/")[1].split("?")[0]
+        if(req.query["max-results"]
+        && !isNaN(parseInt(req.query["max-results"])
+        && parseInt(req.query["max-results"]) <= 50)) {
+            max = parseInt(req.query["max-results"])
+        }
         if(feedType.includes("most_popular")) {
             videosQuery.query.s = "mp"
-            videosQuery.query.max = max
         }
         if(feedType.split("_").length >= 3) {
             let category = feedType.split("_")[2]
@@ -51,6 +55,8 @@ module.exports = {
                 videosQuery.query.c = categories[category]
             }
         }
+
+        videosQuery.query.max = max;
 
         // get vids
         res.set("content-type", "application/rss+xml;charset=UTF-8")
@@ -63,14 +69,21 @@ module.exports = {
             feedType.split("_").join(" "), videoIds.length
         )
         yt2009html.bulk_get_videos(videoIds, () => {
-            videoIds.forEach(v => {yt2009html.fetch_video_data(v, (v) => {
-                response += templates.baseFeed_feedVideo(
-                    v, categories[v.category.split(" ")[0]]
-                )
-            }, "", false, false, false, true)})
+            let videosAdded = 0;
+            videoIds.forEach(v => {
+                yt2009html.fetch_video_data(v, (v) => {
+                    response += templates.baseFeed_feedVideo(
+                        v, categories[v.category.split(" ")[0]]
+                    )
+                    videosAdded++
+                    if(videosAdded >= max) {
+                        response += templates.baseFeed_feedEnd
+                        //response = response.split("    ").join("").split("\n").join("")
+                        res.send(response)
+                    }
+                },
+            "", false, false, false, true)})
         })
-        response += templates.baseFeed_feedEnd
-        res.send(response)
     },
 
     "videoData": function(req, res) {

@@ -402,7 +402,14 @@ module.exports = {
         if(callbackName) {
             callback = callbackName;
         }
-        userData.videos.forEach(v => {
+
+        let videosSource = userData.videos
+        videosSource = videosSource.filter(s => {return !(
+            s.badges
+            && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+        )})
+
+        videosSource.forEach(v => {
             v = JSON.parse(JSON.stringify(v))
             v.author_name = userData.name;
             data.feed.entry.push(jsonVideo(v))

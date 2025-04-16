@@ -243,7 +243,7 @@ module.exports = {
         let search_type = "all"
         let userAgent = req.headers["user-agent"]
         let browser = userAgent.includes("Firefox/") ? "firefox" : "chrome"
-        let url = req.originalUrl
+        let url = req.originalUrl.split("\"").join("&quot;")
         let protocol = req.protocol
         
         let params = url.split("&")
@@ -583,7 +583,7 @@ module.exports = {
                     if(estResults == 0) {
                         code = code.replace(
                             `<!--yt2009_no_results-->`,
-                            yt2009templates.searchNoResults(query)
+                            yt2009templates.searchNoResults(yt2009utils.xss(query))
                         )
                     }
                     break;
@@ -594,7 +594,7 @@ module.exports = {
         if(results.length == 0) {
             code = code.replace(
                 `<!--yt2009_no_results-->`,
-                yt2009templates.searchNoResults(query)
+                yt2009templates.searchNoResults(yt2009utils.xss(query))
             )
         }
 
@@ -609,7 +609,7 @@ module.exports = {
             `<span class="yt2009-hook-${search_type}-selected search-type-selected" href="yt2009_search_${search_type}_link">${visibleNames[search_type]}</span>`
         )
 
-        let resultsUrl = `/results?search_query=${query.split(" ").join("+")}`
+        let resultsUrl = `/results?search_query=${query.split(" ").join("+").split("\"").join("&quot;")}`
         code = code.replace(
             `yt2009_search_all_link`,
             resultsUrl
@@ -623,8 +623,8 @@ module.exports = {
             `${resultsUrl}&search_type=search_playlists`
         )
         code = code.replace(`yt2009_fill_flags`, flags)
-        code = code.split(`yt2009_search_query`).join(query)
-        code = code.replace(`yt2009_title_query`, query)
+        code = code.split(`yt2009_search_query`).join(yt2009utils.xss(query).split("\"").join("&quot;"))
+        code = code.replace(`yt2009_title_query`, yt2009utils.xss(query))
         code = code.replace(`<!--yt2009_results-->`, results_html)
 
         // paging
