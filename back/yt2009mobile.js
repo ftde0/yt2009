@@ -891,6 +891,11 @@ module.exports = {
                 })
             }
 
+            let user = utils.asciify(data.name || "", true, true)
+            if(!user) {
+                user = data.handle || data.id
+            }
+
             let subcount = data.properties
                         && data.properties.subscribers
                         ? data.properties.subscribers : "0"
@@ -901,7 +906,7 @@ module.exports = {
             function sendData() {
                 res.send(templates.gdata_user(
                     id,
-                    utils.asciify(data.name || id),
+                    user,
                     `http://${config.ip}:${config.port}/${data.avatar}`,
                     subcount,
                     videoCount,
@@ -943,11 +948,13 @@ module.exports = {
 
             videosSource.forEach(video => {
                 let cacheVideo = yt2009html.get_cache_video(video.id)
-                
+                let user = data.handle ? data.handle.replace("@", "")
+                         : (data.id ? data.id : utils.asciify(data.name))
+
                 response += templates.gdata_feedVideo(
                     video.id,
                     video.title,
-                    utils.asciify(data.name),
+                    user,
                     utils.bareCount(video.views),
                     utils.time_to_seconds(
                         video.length
@@ -1218,10 +1225,16 @@ module.exports = {
         let videosAdded = 0;
         videos.forEach(video => {
             let cacheVideo = yt2009html.get_cache_video(video.id)
+
+            let author = cacheVideo.author_handle;
+            if(!author) {
+                author = cacheVideo.author_id
+            }
+
             response += templates.gdata_feedVideo(
                 video.id,
                 video.title,
-                utils.asciify(video.uploaderName),
+                author,
                 utils.bareCount(video.views),
                 utils.time_to_seconds(cacheVideo.length || "2:54"),
                 cacheVideo.description || "",

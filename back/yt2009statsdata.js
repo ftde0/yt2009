@@ -428,25 +428,42 @@ module.exports = {
                     ].join("")
                     fetch(multilineRequest, {"headers": headers})
                     .then(mr => {mr.text().then(mr => {
-                        mr = JSON.parse(mr.replace(")]}',\n", ""))
-                        // timelineData has an unknown to us amount of entries,
-                        // all of which need to fit on our 0-100 scale.
-                        let t = [0]
-                        mr.default.timelineData.forEach(m => {
-                            let c = parseInt(m.value[0])
-                            t.push(t[t.length - 1] + c + 1)
-                        })
-                        let scale = (100 / t[t.length - 1])
-                        // scale down t to 100.0% max
-                        let nt = []
-                        t.forEach(m => {
-                            nt.push((m * scale).toFixed(1))
-                        })
-                        data.push({
-                            "type": "chart-data",
-                            "value": nt
-                        })
-                        markDone()
+                        try {
+                            mr = JSON.parse(mr.replace(")]}',\n", ""))
+                            // timelineData has an unknown to us amount of entries,
+                            // all of which need to fit on our 0-100 scale.
+                            let t = [0]
+                            mr.default.timelineData.forEach(m => {
+                                let c = parseInt(m.value[0])
+                                t.push(t[t.length - 1] + c + 1)
+                            })
+                            let scale = (100 / t[t.length - 1])
+                            // scale down t to 100.0% max
+                            let nt = []
+                            t.forEach(m => {
+                                nt.push((m * scale).toFixed(1))
+                            })
+                            data.push({
+                                "type": "chart-data",
+                                "value": nt
+                            })
+                            markDone()
+                        }
+                        catch(error) {
+                            let nt = []
+                            let t = []
+                            let a = 0;
+                            while(nt[nt.length - 1] !== 100) {
+                                nt.push(a)
+                                t.push(a.toFixed(1))
+                                a += 2
+                            }
+                            data.push({
+                                "type": "chart-data",
+                                "value": t
+                            })
+                            markDone()
+                        }
                     })})
                 })
             })
