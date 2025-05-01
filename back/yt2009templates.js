@@ -918,7 +918,7 @@ module.exports = {
     "embedNoControlsFadeCode": `
     fadeControlsEnable = false;
     var s = document.createElement("style")
-    s.innerHTML = "video:not(.showing-endscreen) {height: calc(100% - 25px) !important;}#watch-player-div {background: black !important;}"
+    s.innerHTML = "video {height: calc(100% - 25px) !important;}#watch-player-div {background: black !important;}"
     document.body.appendChild(s)`,
     "embedVideoSources": function(id) {
         let mp4Path = `/get_video?video_id=${id}/mp4`

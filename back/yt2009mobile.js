@@ -543,7 +543,7 @@ module.exports = {
         }
         // default feeds
         let start = parseInt(req.query["start-index"] || 1)
-        if(start < 0 || isNaN(start)) {
+        if(start < 0 || isNaN(start) || start == 1) {
             start = 0;
         }
         let max = parseInt(req.query["max-results"] || 25)
@@ -702,6 +702,68 @@ module.exports = {
         let id = req.originalUrl.split("/videos/")[1]
                                 .split("/related")[0];
         yt2009html.fetch_video_data(id, (data) => {
+            let response = templates.gdata_feedStart
+            let relCopy = JSON.parse(JSON.stringify(data.related))
+
+            // flags
+            let passFlags = "only_old"
+            let flags = mobileflags.get_flags(req).watch
+            if(flags.includes("new-related")) {
+                passFlags = passFlags.replace("only_old", "")
+            }
+
+            // innertube_related - discard any other algorithm work
+            if(flags.includes("innertube-related")) {
+                let fetchesRequired = 0;
+                let fetchesCompleted = 0;
+
+                let ids = []
+                data.related.forEach(video => {
+                    ids.push(video.id)
+                })
+
+                relCopy = []
+                let rawData = JSON.parse(JSON.stringify(data.related))
+
+                for (let i = 0; i < rawData.length; i++) {
+                    rawData[i].type = "video"
+                    rawData[i].time = rawData[i].length
+                    rawData[i].author_handle = rawData[i].creatorHandle
+                    rawData[i].author_name = rawData[i].creatorName
+                }
+
+                let requestedData = ["publishedAt"]
+
+                if(config.data_api_key) {
+                    fetchesRequired++
+                    utils.dataApiBulk(ids, requestedData, (apidata) => {
+                        for(let id in apidata) {
+                            let videoData = apidata[id]
+                            let rel = rawData.filter(s => {
+                                return s.id == id
+                            })[0]
+                            let i = rawData.indexOf(rel)
+                            if(i !== null && i !== undefined && i >= 0) {
+                                rawData[i].upload = videoData.publishedAt
+                                rawData[i].dataApi = true;
+                            }
+                        }
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            createResponse(rawData)
+                        }
+                    })
+                }
+
+                if(fetchesCompleted >= fetchesRequired) {
+                    setTimeout(() => {
+                        createResponse(rawData)
+                    }, 50)
+                }
+
+                return;
+            }
+
             // exp_related keyword
             let lookup_keyword = ""
             // tags
@@ -716,21 +778,89 @@ module.exports = {
             if(lookup_keyword.length < 9) {
                 lookup_keyword = data.title.split(" ")[0]
             }
-            // flags
-            let passFlags = "only_old"
-            let flags = mobileflags.get_flags(req).watch
-            if(flags.includes("new-related")) {
-                passFlags = passFlags.replace("only_old", "")
-            }
 
-            // actual related search
-            let response = templates.gdata_feedStart
+            // actual related search && data api fetch if possible
             ytsearch.get_search(lookup_keyword, passFlags, "", (rawData => {
+                // add data api for precise upload dates
+                let fetchesRequired = 0;
+                let fetchesCompleted = 0;
+                if(config.data_api_key) {
+                    fetchesRequired++
+
+                    let ids = []
+                    let idSources = {
+                        "exp": [],
+                        "it": []
+                    }
+                    rawData.forEach(video => {
+                        if(video.type !== "video") return;
+                        ids.push(video.id)
+                        idSources.exp.push(video.id)
+                    })
+
+                    // also add bottom related to id list
+                    data.related.forEach(video => {
+                        if(video.uploaded
+                        && parseInt(video.uploaded.split(" ")[0]) >= 12
+                        && video.uploaded.includes("years")
+                        && !ids.includes(video.id)) {
+                            ids.push(video.id)
+                            idSources.it.push(video.id)
+                        }
+                    })
+
+                    let requestedData = ["publishedAt"]
+
+                    utils.dataApiBulk(ids, requestedData, (apidata) => {
+                        for(let id in apidata) {
+                            let videoData = apidata[id]
+                            if(idSources.exp.includes(id)) {
+                                let rel = rawData.filter(s => {
+                                    return s.id == id
+                                })[0]
+                                let i = rawData.indexOf(rel)
+                                if(i !== null && i !== undefined && i >= 0) {
+                                    rawData[i].upload = videoData.publishedAt
+                                    rawData[i].dataApi = true;
+                                }
+                            } else if(idSources.it.includes(id)) {
+                                let rel = relCopy.filter(s => {
+                                    return s.id == id
+                                })[0]
+                                let i = relCopy.indexOf(rel)
+                                if(i !== null && i !== undefined && i >= 0) {
+                                    relCopy[i].upload = videoData.publishedAt
+                                    relCopy[i].dataApi = true;
+                                }
+                            }
+                        }
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            createResponse(rawData)
+                        }
+                    })
+                }
+
+                if(fetchesCompleted >= fetchesRequired) {
+                    createResponse(rawData)
+                }
+            }), "", false)
+
+            // create response
+            function createResponse(rawData) {
                 // add search videos
                 rawData.forEach(video => {
-                    if(video.type !== "video") return;
-                    if(utils.time_to_seconds(video.time) >= 600) return;
+                    if(video.type !== "video"
+                    || utils.time_to_seconds(video.time) >= 600
+                    || response.includes(video.id) || video.id == id) return;
                     let cacheData = yt2009html.get_cache_video(video.id)
+
+                    let uploadDate = cacheData.upload
+                    if(!uploadDate && video.dataApi) {
+                        uploadDate = video.upload
+                    } else if(!uploadDate && !video.dataApi) {
+                        uploadDate = utils.relativeToAbsoluteApprox(video.uploaded)
+                    }
 
                     response += templates.gdata_feedVideo(
                         video.id,
@@ -739,20 +869,28 @@ module.exports = {
                         utils.bareCount(video.views),
                         utils.time_to_seconds(video.time),
                         cacheData.description || video.description || "-",
-                        utils.relativeToAbsoluteApprox(video.upload),
+                        uploadDate,
                         (cacheData.tags || []).join() || "-",
                         cacheData.category || "-",
                         mobileflags.get_flags(req).watch
                     )
                 })
 
-
                 // add old default related videos
-                data.related.forEach(video => {
-                    if(parseInt(video.uploaded.split(" ")[0]) >= 12
+                relCopy.forEach(video => {
+                    if(video.uploaded
+                    && parseInt(video.uploaded.split(" ")[0]) >= 12
                     && video.uploaded.includes("years")
                     && video.id !== id
                     && !response.includes(video.id)) {
+
+                        let uploadDate = utils.relativeToAbsoluteApprox(
+                            video.uploaded
+                        )
+                        if(video.dataApi && video.upload) {
+                            uploadDate = video.upload
+                        }
+
                         //let data = yt2009html.get_cache_video(video.id)
                         // only 12 years or older & no repeats
                         response += templates.gdata_feedVideo(
@@ -762,7 +900,7 @@ module.exports = {
                             utils.bareCount(video.views),
                             utils.time_to_seconds(video.length),
                             yt2009html.get_video_description(video.id),
-                            utils.relativeToAbsoluteApprox(video.uploaded)
+                            uploadDate
                         )
                     }
                 })
@@ -770,7 +908,7 @@ module.exports = {
                 response += templates.gdata_feedEnd
                 res.set("content-type", "application/atom+xml")
                 res.send(response)
-            }), "", false)
+            }
         }, "", "", false, false, true)
     },
 
@@ -891,10 +1029,11 @@ module.exports = {
                 })
             }
 
-            let user = utils.asciify(data.name || "", true, true)
+            let user = utils.xss(data.name)
             if(!user) {
                 user = data.handle || data.id
             }
+            user = user.split("&").join("&amp;").split("'").join("")
 
             let subcount = data.properties
                         && data.properties.subscribers
@@ -946,31 +1085,75 @@ module.exports = {
                 && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
             )})
 
-            videosSource.forEach(video => {
-                let cacheVideo = yt2009html.get_cache_video(video.id)
-                let user = data.handle ? data.handle.replace("@", "")
-                         : (data.id ? data.id : utils.asciify(data.name))
+            function buildFeed() {
+                videosSource.forEach(video => {
+                    let cacheVideo = yt2009html.get_cache_video(video.id)
+                    let user = data.handle ? data.handle.replace("@", "")
+                             : (data.id ? data.id : utils.asciify(data.name))
 
-                response += templates.gdata_feedVideo(
-                    video.id,
-                    video.title,
-                    user,
-                    utils.bareCount(video.views),
-                    utils.time_to_seconds(
-                        video.length
-                    ||  Math.floor(Math.random() * 240) + 60
-                    ),
-                    yt2009html.get_video_description(video.id),
-                    utils.relativeToAbsoluteApprox(video.upload),
-                    (cacheVideo.tags || []).join() || "-",
-                    cacheVideo.category || "-",
-                    mobileflags.get_flags(req).watch
-                )
-            })
+                    let upload = utils.relativeToAbsoluteApprox(video.upload)
+                    let description = yt2009html.get_video_description(video.id)
+                    if(video.dataApi) {
+                        upload = video.upload;
+                        description = video.description;
+                    }
+    
+                    response += templates.gdata_feedVideo(
+                        video.id,
+                        video.title,
+                        user,
+                        utils.bareCount(video.views),
+                        utils.time_to_seconds(
+                            video.length
+                        ||  Math.floor(Math.random() * 240) + 60
+                        ),
+                        description,
+                        upload,
+                        (cacheVideo.tags || []).join() || "-",
+                        cacheVideo.category || "-",
+                        mobileflags.get_flags(req).watch
+                    )
+                })
 
-            response += templates.gdata_feedEnd;
-            res.set("content-type", "application/atom+xml")
-            res.send(response)
+                response += templates.gdata_feedEnd;
+                res.set("content-type", "application/atom+xml")
+                res.send(response)
+            }
+
+            let fetchesRequired = 0;
+            let fetchesCompleted = 0;
+
+            if(config.data_api_key) {
+                fetchesRequired++
+
+                let videoIds = []
+                videosSource.forEach(v => {
+                    videoIds.push(v.id)
+                })
+                let requestedParts = ["publishedAt", "description"]
+                utils.dataApiBulk(videoIds, requestedParts, (apidata) => {
+                    for(let id in apidata) {
+                        let videoData = apidata[id]
+                        let rel = videosSource.filter(s => {
+                            return s.id == id
+                        })[0]
+                        let i = videosSource.indexOf(rel)
+                        if(i !== null && i !== undefined && i >= 0) {
+                            videosSource[i].upload = videoData.publishedAt
+                            videosSource[i].description = videoData.description
+                            videosSource[i].dataApi = true;
+                        }
+                    }
+                    fetchesCompleted++
+                    if(fetchesCompleted >= fetchesRequired) {
+                        buildFeed()
+                    }
+                })
+            }
+
+            if(fetchesCompleted >= fetchesRequired) {
+                buildFeed()
+            }
         }}, "", true)
     },
 
@@ -1120,21 +1303,63 @@ module.exports = {
         }, {
             "send": function(data) {
                 // anyway, we got videos to throw there
-                let response = templates.gdata_feedStart
-                data.videos.slice(0, 7).forEach(video => {
-                    response += templates.gdata_activityEntry(
-                        "video_uploaded",
-                        req.query.author,
-                        video.title,
-                        video.id,
-                        utils.relativeToAbsoluteApprox(video.upload),
-                        video.time,
-                        video.views
-                    )
-                })
-                response += templates.gdata_feedEnd
-                res.set("content-type", "application/atom+xml")
-                res.send(response)
+                let fetchesRequired = 0;
+                let fetchesCompleted = 0;
+
+                function buildResponse() {
+                    let response = templates.gdata_feedStart
+                    data.videos.slice(0, 7).forEach(video => {
+                        let upload = video.upload
+                        if(!video.dataApi) {
+                            upload = utils.relativeToAbsoluteApprox(
+                                video.upload
+                            )
+                        }
+                        response += templates.gdata_activityEntry(
+                            "video_uploaded",
+                            req.query.author,
+                            video.title,
+                            video.id,
+                            upload,
+                            video.time,
+                            video.views
+                        )
+                    })
+                    response += templates.gdata_feedEnd
+                    res.set("content-type", "application/atom+xml")
+                    res.send(response)
+                }
+                
+                if(config.data_api_key) {
+                    fetchesRequired++
+                    let videoIds = []
+                    let requestedParts = ["publishedAt"]
+                    data.videos.slice(0, 7).forEach(v => {
+                        videoIds.push(v.id)
+                    })
+
+                    utils.dataApiBulk(videoIds, requestedParts, (apidata) => {
+                        for(let id in apidata) {
+                            let videoData = apidata[id]
+                            let rel = data.videos.filter(s => {
+                                return s.id == id
+                            })[0]
+                            let i = data.videos.indexOf(rel)
+                            if(i !== null && i !== undefined && i >= 0) {
+                                data.videos[i].upload = videoData.publishedAt
+                                data.videos[i].dataApi = true;
+                            }
+                        }
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            buildResponse()
+                        }
+                    })
+                }
+
+                if(fetchesCompleted >= fetchesRequired) {
+                    buildResponse()
+                }
             }
         }, true)
     },

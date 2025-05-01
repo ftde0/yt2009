@@ -5,7 +5,8 @@ let data = {
     "fileDownloadStatus": {},
     "masterWs": false,
     "dataFetches": {},
-    "players": {}
+    "players": {},
+    "verboseDownloadProgress": {}
 }
 let fileDownloadListeners = {
 

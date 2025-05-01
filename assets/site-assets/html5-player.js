@@ -300,15 +300,16 @@ function checkBounds(element, mouse_left, mouse_top) {
 
 
 // player
+var animationDebounces = {}
 var upAnimationDebounce = false;
+var downAnimationDebounce = false;
 function non_css_anim_add(element, cssProperty, from, to) {
-    if(upAnimationDebounce
-    && element.className !== "volume_popout"
+    if(animationDebounces[element.className]
     || element.style[cssProperty] == to + "px") return;
-    upAnimationDebounce = true;
-    setTimeout(function() {
+    animationDebounces[element.className] = true;
+    /*setTimeout(function() {
         upAnimationDebounce = false
-    }, 200)
+    }, 200)*/
     element.style[cssProperty] = from + "px"
     var current = from;
     var ff = false;
@@ -325,13 +326,15 @@ function non_css_anim_add(element, cssProperty, from, to) {
         if(current >= to) {
             element.style[cssProperty] = to + "px"
             clearInterval(x);
+            animationDebounces[element.className] = false;
         }
     }, ff ? 20 : 33)
 }
 function non_css_anim_remove(element, cssProperty, from, to) {
-    if(element.style[cssProperty] == to + "px") return;
+    if(element.style[cssProperty] == to + "px"
+    || animationDebounces[element.className]) return;
     element.style[cssProperty] = from + "px"
-    upAnimationDebounce = false;
+    animationDebounces[element.className] = true;
     var current = from;
     var ff = false;
     if(navigator.userAgent.indexOf("Firefox") !== -1) {
@@ -342,8 +345,9 @@ function non_css_anim_remove(element, cssProperty, from, to) {
         element.style[cssProperty] = current + "px"
         if(current <= to) {
             clearInterval(x);
+            animationDebounces[element.className] = false;
         }
-    }, ff ? 33 : 33)
+    }, ff ? 20 : 33)
 }
 function $(element) {
     if(document.querySelectorAll(element).length !== 1) {
@@ -903,7 +907,9 @@ var openSectionIndex = 0;
 function showEndscreen() {
     var sections = document.querySelectorAll(".endscreen-section")
     videoEnded = true;
-    video.className += " showing-endscreen"
+    if(video.className && video.className.indexOf("showing-endscreen") == -1) {
+        video.className += " showing-endscreen"
+    }
     $(".endscreen").className = "endscreen"
     //non_css_anim_remove($(".video_controls"), "bottom", 0, -23);
     if(volume_up) {
@@ -958,7 +964,7 @@ function videoNav(id) {
 function videoReplay() {
     //console.log("replay")
     videoEnded = false;
-    video.className = video.className.replace(" showing-endscreen", "")
+    video.className = video.className.split(" showing-endscreen").join("")
     $(".endscreen").className = "endscreen hid"
     animSeek(0, function() {
         video.currentTime = 0;

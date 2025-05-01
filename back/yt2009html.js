@@ -435,6 +435,16 @@ module.exports = {
                         let creatorUrl = "UC" + JSON.stringify(video)
                                                 .split(`browseId":"UC`)[1]
                                                 .split(`"`)[0];
+                        let creatorHandle = null;
+                        try {
+                            let tc = JSON.stringify(video)
+                                     .split(`canonicalBaseUrl":"/@`)[1]
+                                     .split(`"`)[0];
+                            if(tc) {
+                                creatorHandle = tc;
+                            }
+                        }
+                        catch(error) {}
                         let metadataParts = []
                         let mrPath = metadata.metadata.contentMetadataViewModel
                                              .metadataRows;
@@ -468,6 +478,8 @@ module.exports = {
                         }
                         catch(error){
                             viewmodelViewCountFails.push(id)
+                            let bvc = viewCount.split(" ")[0]
+                            viewCount = yt2009utils.countBreakup(bvc) + " views"
                         }
                         let creatorName = metadataParts[0]
                         let upload = metadataParts[2]
@@ -484,6 +496,8 @@ module.exports = {
                             })
                         }
                         catch(error){}
+                        if(time.toLowerCase().includes("live")
+                        || time.toLowerCase().includes("short")) return;
                         data.related.push({
                             "id": id,
                             "title": title,
@@ -491,6 +505,7 @@ module.exports = {
                             "length": time,
                             "creatorName": creatorName,
                             "creatorUrl": "/channel/" + creatorUrl,
+                            "creatorHandle": creatorHandle,
                             "uploaded": upload
                         })
                         return;
@@ -518,6 +533,11 @@ module.exports = {
                                         .browseEndpoint.canonicalBaseUrl
                     })
 
+                    let creatorHandle = null;
+                    if(creatorUrl.startsWith("/@")) {
+                        creatorHandle = creatorUrl.split("/@")[1]
+                    }
+
                     if(!creatorUrl.startsWith("/c/")
                     && !creatorUrl.startsWith("/user/")
                     && !creatorUrl.startsWith("/channel/")) {
@@ -525,6 +545,12 @@ module.exports = {
                                                     .navigationEndpoint
                                                     .browseEndpoint.browseId
                     }
+
+                    if(!video.lengthText.simpleText
+                    || video.lengthText.simpleText.toLowerCase()
+                            .includes("live")
+                    || video.lengthText.simpleText.toLowerCase()
+                            .includes("short")) return;
                     try {
                         data.related.push({
                             "title": video.title.simpleText,
@@ -533,6 +559,7 @@ module.exports = {
                             "length": video.lengthText.simpleText,
                             "creatorName": creatorName,
                             "creatorUrl": creatorUrl,
+                            "creatorHandle": creatorHandle,
                             "uploaded": video.publishedTimeText.simpleText
                         })
                     }
@@ -564,7 +591,8 @@ module.exports = {
                                     return s.id == v.id
                                 })[0]
                                 let i = data.related.indexOf(rel)
-                                if(i && v.statistics && v.statistics.viewCount) {
+                                if(i !== null && i !== undefined && i >= 0
+                                && v.statistics && v.statistics.viewCount) {
                                     let vc = parseInt(v.statistics.viewCount)
                                     vc = yt2009utils.countBreakup(vc)
                                     vc += " views"
@@ -2053,9 +2081,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
 
                 .endscreen-video {
-                    background-image: url(/player-imgs/darker-bg.png);
-                    background-size: contain;
-                    -moz-background-size: contain;
+                    background-image: url(/player-imgs/endscreen-bg-opt.png);
+                    overflow: hidden;
+                    background-repeat: repeat-x;
                 }
                 </style>
                 `
@@ -2632,7 +2660,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
                     // add old defualt "related" videos at the end
                     data.related.forEach(video => {
-                        if(parseInt(video.uploaded.split(" ")[0]) >= 12
+                        if(video.uploaded
+                        && parseInt(video.uploaded.split(" ")[0]) >= 12
                         && video.uploaded.includes("years")
                         && !html.includes(`data-id="${video.id}"`)) {
                             // only 12 years or older & no repeats

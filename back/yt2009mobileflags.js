@@ -5,7 +5,7 @@ if(!fs.existsSync("./cache_dir/mobile_flags.json")) {
 }
 const mflags = require("./cache_dir/mobile_flags.json")
 const knownFlagNames = {
-    "watch": ["new-related", "realistic-view-count", "better-hd"],
+    "watch": ["new-related", "innertube-related", "realistic-view-count", "better-hd"],
     "search": ["only-old"],
     "channel": ["default-avatar-adapt", "uploads-count", "uncrop-avatar"]
 }

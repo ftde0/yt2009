@@ -677,17 +677,54 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     "body": pbmsg
                 }).then(s => (s.text().then(s => {
                     let videos = protoShortcut(s)
-                    videos.forEach(v => {
-                        let author = v.authorHandle || v.authorId || ""
-                        fullRes += templates.gdata_feedVideo(
-                            v.id, v.title, author, v.views, v.length, "-",
-                            v.upload, "-", "-", mobileflags.get_flags(req).watch,
-                            null, {"authorFull": v.authorFull,
-                            "authorId": v.authorId}
-                        )
-                    })
-                    fullRes += templates.gdata_feedEnd;
-                    res.send(fullRes)
+                    let fetchesRequired = 0;
+                    let fetchesCompleted = 0;
+
+                    if(config.data_api_key) {
+                        fetchesRequired++
+
+                        let videoIds = []
+                        let requestedParts = ["viewCount", "publishedAt"]
+
+                        videos.forEach(v => {videoIds.push(v.id)})
+
+                        utils.dataApiBulk(videoIds, requestedParts, (apid) => {
+                            for(let id in apid) {
+                                let videoData = apid[id]
+                                let rel = videos.filter(s => {
+                                    return s.id == id
+                                })[0]
+                                let i = videos.indexOf(rel)
+                                if(i !== null && i !== undefined && i >= 0) {
+                                    videos[i].upload = videoData.publishedAt
+                                    videos[i].views = videoData.viewCount
+                                    videos[i].dataApi = true;
+                                }
+                            }
+                            fetchesCompleted++
+                            if(fetchesCompleted >= fetchesRequired) {
+                                applyResponse()
+                            }
+                        })
+                    }
+
+                    function applyResponse() {
+                        videos.forEach(v => {
+                            let author = v.authorHandle || v.authorId || ""
+                            fullRes += templates.gdata_feedVideo(
+                                v.id, v.title, author, v.views, v.length, "-",
+                                v.upload, "-", "-",
+                                mobileflags.get_flags(req).watch,
+                                null, {"authorFull": v.authorFull,
+                                "authorId": v.authorId}
+                            )
+                        })
+                        fullRes += templates.gdata_feedEnd;
+                        res.send(fullRes)
+                    }
+                    if(fetchesCompleted >= fetchesRequired) {
+                        applyResponse()
+                    }
                 })))
             }
         })

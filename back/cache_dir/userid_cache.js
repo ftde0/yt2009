@@ -38,7 +38,7 @@ module.exports = {
                     "mode": "cors",
                     "credentials": "include"
                 }).then(r => {
-                    if(r.status == 404) {
+                    if(r.status == 404 || r.status == 400) {
                         callback(false)
                         return;
                     }
@@ -48,9 +48,53 @@ module.exports = {
                             let id = r.endpoint.browseEndpoint.browseId
                             callback(id)
                             this.write(url, id)
+                        } else {
+                            androidFallback()
                         }
                     })
                 })
+
+                // fetch with ANDROID client when WEB fails to send user id
+                function androidFallback() {
+                    let headers = JSON.parse(JSON.stringify(constants.headers))
+                    headers["user-agent"] = "com.google.android.youtube/20.06.36 (Linux; U; Android 14) gzip"
+                    delete headers.cookie
+
+                    fetch("https://www.youtube.com/youtubei/v1/navigation/resolve_url", {
+                        "headers": headers,
+                        "referrer": "https://www.youtube.com/",
+                        "referrerPolicy": "origin-when-cross-origin",
+                        "body": JSON.stringify({
+                            "context": {
+                                "client": {
+                                    "hl": "en",
+                                    "clientName": "ANDROID",
+                                    "clientVersion": "20.06.36",
+                                    "androidSdkVersion": 34
+                                }
+                            },
+                            "url": `https://www.youtube.com/${url}`
+                        }),
+                        "method": "POST",
+                        "mode": "cors",
+                        "credentials": "include"
+                    }).then(r => {
+                        if(r.status == 404 || r.status == 400) {
+                            callback(false)
+                            return;
+                        }
+                        r.json().then(r => {
+                            if(r.endpoint.browseEndpoint
+                            && r.endpoint.browseEndpoint.browseId) {
+                                let id = r.endpoint.browseEndpoint.browseId
+                                callback(id)
+                                cache[url] = id;
+                            } else {
+                                callback(false)
+                            }
+                        })
+                    })
+                }
             }
         }
     }

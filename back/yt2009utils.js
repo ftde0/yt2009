@@ -83,8 +83,29 @@ module.exports = {
 
     "comments_viewmodel_parser": function(response, comment_flags) {
         devlog("[dev] using comments_viewmodel_parser instead")
+        let firstPinned = false;
+        try {
+            response.onResponseReceivedEndpoints.forEach(e => {
+                if(e.reloadContinuationItemsCommand
+                && e.reloadContinuationItemsCommand.continuationItems
+                && e.reloadContinuationItemsCommand.continuationItems[0]
+                && e.reloadContinuationItemsCommand.continuationItems[0]
+                .commentThreadRenderer) {
+                    let first = e.reloadContinuationItemsCommand
+                                 .continuationItems[0]
+                                 .commentThreadRenderer
+                                 .commentViewModel
+                                 .commentViewModel;
+                    if(first.pinnedText) {
+                        firstPinned = true;
+                    }
+                }
+            })
+        }
+        catch(error) {}
         let comments = []
         try {
+            let i = 0;
             response.frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
                 if(m.payload
                 && m.payload.commentEntityPayload) {
@@ -104,21 +125,15 @@ module.exports = {
                         "likes": parseInt(m.toolbar.likeCountA11y.replace(
                             /[^0-9]/g, ""
                         )),
-                        "pinned": false
+                        "pinned": (i == 0 && firstPinned)
                     })
+                    i++
                 }
             })
 
             return comments;
         }
         catch(error) {
-            console.log(`
-    COMMENTVIEWMODEL PARSER FAIL: ${error}
-    REPRO DATA: ${constants.headers.cookie}
-    ${constants.cached_innertube_context.client.deviceExperimentId}
-    ${constants.cached_innertube_context.client.visitorData}
-    PLEASE REPORT AN ISSUE AT: https://github.com/ftde0/yt2009/
-`)
             return []
         }
     },
@@ -1157,6 +1172,14 @@ module.exports = {
             }
 
             if(downloadAudio) {
+
+                let c = yt2009exports.read().verboseDownloadProgress[fname]
+                c.state = "DOWNLOADING"
+                c.type = "DASH"
+                yt2009exports.extendWrite(
+                    "verboseDownloadProgress", fname, c
+                )
+
                 downloadInParts_file(
                     h264DashAudioUrl,
                     "../assets/" + id + "-audio.m4a",
@@ -1186,18 +1209,26 @@ module.exports = {
                         if(audioDownloadDone && videoDownloadDone) {
                             onFormatsDone()
                         }
-                    })
+                    }),
+                    fname
                 )
             } else {
                 testF18(qualities[quality].url, (working) => {
                     if(working) {
+                        let c = yt2009exports.read().verboseDownloadProgress[fname]
+                        c.state = "DOWNLOADING"
+                        c.type = "NONDASH"
+                        yt2009exports.extendWrite(
+                            "verboseDownloadProgress", fname, c
+                        )
                         downloadInParts_file(
                             qualities[quality].url,
                             "../assets/" + fname + ".mp4",
                             ((feedback) => {
                                 callback(`${fname}.mp4`)
                                 yt2009exports.updateFileDownload(`${fname}`, 2)
-                            })
+                            }),
+                            fname
                         )
                     } else {
                         funcRef(id, callback, r, quality)
@@ -1250,7 +1281,8 @@ module.exports = {
                                 } else {
                                     callback(false)
                                 }
-                            })
+                            }),
+                            fname
                         )
                         return;
                     }
@@ -1258,7 +1290,8 @@ module.exports = {
                     if(audioDownloadDone || !downloadAudio) {
                         onFormatsDone()
                     }
-                })
+                }),
+                fname
             )
 
             // merge formats once both are ready
@@ -1268,6 +1301,19 @@ module.exports = {
                     audioPath = "../assets/" + id + ".mp4"
                 }
                 let videoPath = "../assets/" + id + "-temp-" + quality + ".mp4"
+
+                if(yt2009exports.read().verboseDownloadProgress[fname]) {
+                    let c = yt2009exports.read().verboseDownloadProgress[fname]
+                    c.state = "MERGE_STARTED"
+                    try {
+                        c.videoFileSize = fs.statSync(videoPath).size;
+                        c.audioFileSize = fs.statSync(audioPath).size;
+                    }
+                    catch(error) {}
+                    yt2009exports.extendWrite(
+                        "verboseDownloadProgress", fname, c
+                    )
+                }
 
                 let cmd = [
                     "ffmpeg",
@@ -1318,6 +1364,9 @@ module.exports = {
         }
 
         yt2009exports.updateFileDownload(fname, 1)
+        yt2009exports.extendWrite(
+            "verboseDownloadProgress", fname, {"state": "STARTED"}
+        )
 
         /* can't use cached players for now
         if(yt2009exports.read().players[id]) {
@@ -1457,7 +1506,7 @@ module.exports = {
         })})
     },
 
-    "downloadInParts_file": function(url, out, callback, hasRetried) {
+    "downloadInParts_file": function(url, out, callback, metadata) {
         let partSize = 0;
         let partNumber = 0;
         let startB = 0;
@@ -1502,6 +1551,19 @@ module.exports = {
                     }
                     callback("RETRY")
                     return;
+                }
+                if(r.headers.get("content-range")
+                && r.headers.get("content-range").includes("/")
+                && metadata) {
+                    let f = metadata
+                    let cdata = yt2009exports.read().verboseDownloadProgress[f]
+                    if(cdata) {
+                        cdata.reportLength = r.headers.get("content-range")
+                                                      .split("/")[1];
+                        yt2009exports.extendWrite(
+                            "verboseDownloadProgress", metadata, cdata
+                        )
+                    }
                 }
                 if (r.headers.get('Content-Length') === '0') {
                     stream.end();
@@ -2057,6 +2119,82 @@ module.exports = {
                 }
             })})
         }
+    },
+
+    "dataApiBulk": function(ids, requestedData, callback) {
+        let results = {}
+        if(!config.data_api_key) {
+            callback({})
+            return;
+        }
+
+        if(typeof(ids) == "object") {
+            ids = ids.join(",")
+        }
+
+        let requestedParts = []
+        if(typeof(requestedData) == "string") {
+            requestedData = requestedData.split(",")
+        }
+        requestedData.forEach(part => {
+            switch(part) {
+                case "publishedAt":
+                case "channelId":
+                case "title":
+                case "description":
+                case "thumbnails":
+                case "tags":
+                case "categoryId":
+                case "channelTitle": {
+                    if(!requestedParts.includes("snippet")) {
+                        requestedParts.push("snippet")
+                    }
+                    break;
+                }
+                case "viewCount":
+                case "likeCount":
+                case "commentCount": {
+                    if(!requestedParts.includes("statistics")) {
+                        requestedParts.push("statistics")
+                    }
+                    break;
+                }
+            }
+        })
+
+        requestedParts = requestedParts.join(",")
+
+        let url = [
+            "https://www.googleapis.com/youtube/v3/videos",
+            "?part=" + requestedParts,
+            "&id=" + ids,
+            "&key=" + config.data_api_key
+        ].join("")
+        
+        fetch(url, {
+            "headers": constants.headers,
+            "method": "GET"
+        }).then(r => {try {r.json().then(r => {
+            if(!r.error && r.items) {
+                r.items.forEach(item => {
+                    let neededData = {}
+                    requestedData.forEach(property => {
+                        if(item.snippet && item.snippet[property]) {
+                            neededData[property] = item.snippet[property]
+                        } else if(item.statistics && item.statistics[property]) {
+                            neededData[property] = item.statistics[property]
+                        }
+                    })
+                    results[item.id] = neededData
+                })
+
+                callback(results)
+                return;
+            }
+            callback(results)
+        })}catch(error){
+            callback(results)
+        }})
     }
 }
 

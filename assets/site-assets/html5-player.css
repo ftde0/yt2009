@@ -331,7 +331,7 @@
 }
 
 .endscreen-video:hover {
-    background-image: url("/player-imgs/darker-bg-hover.png");
+    background-position: 0px -82px;
 }
 
 .endscreen-video-star.rating-4 {
@@ -568,14 +568,15 @@
 
 .embed-play-btn {
     position: absolute;
-    background-image: url("/player-imgs/play-btn.png");
+    background-image: url("/player-imgs/play-btn-opt.png");
     width: 90px;
-    height: 66px;
+    height: 65px;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .embed-play-btn:hover {
-    background-image: url("/player-imgs/play-btn-hover.png");
+    background-position: 0px -65px;
 }
 
 .flashing-btn {

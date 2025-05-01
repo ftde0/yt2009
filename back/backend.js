@@ -2253,6 +2253,38 @@ app.post("/feeds/api/videos/*/ratings", (req, res) => {
     }
     res.status(200).send()
 })
+app.get("/feeds/api/users/g.a000*", (req, res) => {
+    // rewrite 2.0.26 urls (#242)
+    let loginToken = req.originalUrl.split("/g.a000")[1].split("/")[0]
+    let urlSuffix = req.originalUrl.split(loginToken)[1]
+    res.redirect("/feeds/api/users/default" + urlSuffix)
+})
+app.post("/feeds/api/users/g.a000*", (req, res) => {
+    // 308 (redirect with body on browser) doesn't work on those apps
+    // proxy it is
+    let loginToken = req.originalUrl.split("/g.a000")[1].split("/")[0]
+    let urlSuffix = req.originalUrl.split(loginToken)[1]
+    let url = "/feeds/api/users/default" + urlSuffix
+    let body = (req.body && req.body.toString()) ? req.body.toString()
+               : ""
+    const fetch = require("node-fetch")
+    //console.log(body, req.headers, "http://" + config.ip + ":" + config.port + url)
+    fetch("http://" + config.ip + ":" + config.port + url, {
+        "method": "POST",
+        "body": body,
+        "headers": req.headers
+    }).then(r => {
+        res.status(r.status)
+        try {
+            r.text().then(r => {
+                res.send(r)
+            })
+        }
+        catch(error) {
+            res.send("")
+        }
+    })
+})
 app.get("/feeds/api/users/default/subscriptions", (req, res, next) => {
     if(useMobileHelper && mobileHelper.hasLogin(req)) {
         mobileHelper.getSubscriptions(req, res)

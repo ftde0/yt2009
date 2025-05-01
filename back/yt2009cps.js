@@ -2,7 +2,7 @@ const utils = require("./yt2009utils")
 const templates = require("./yt2009templates")
 const search = require("./yt2009search")
 const html = require("./yt2009html")
-const channels = require("./yt2009channels")
+const config = require("./config.json")
 const mobileauths = require("./yt2009mobileauths")
 const mobileflags = require("./yt2009mobileflags")
 const yt2009jsongdata = require("./yt2009jsongdata")
@@ -43,7 +43,7 @@ module.exports = {
         }
 
         let index = req.query["start-index"]
-        if(!index) {index = 0;}
+        if(!index || index == 1) {index = 0;}
 
         // jsongdata
         if(req.query.alt == "json") {
@@ -65,17 +65,48 @@ module.exports = {
             {"custom_index": index},
             (data => {
                 let first3Videos = []
+                let allVideos = []
+                let fetchesCompleted = 0;
+                let fetchesRequired = 1;
+                if(config.data_api_key) {
+                    fetchesRequired++
+                }
                 data.forEach(video => {
                     if(video.type !== "video") return;
                     if(first3Videos.length < 3) {
                         first3Videos.push(video.id)
                     }
+                    allVideos.push(video.id)
                 })
 
                 // add videos when preloading done
                 html.bulk_get_videos(first3Videos, () => {
-                    addVideosToResponse(data)
-                })    
+                    fetchesCompleted++
+                    if(fetchesCompleted >= fetchesRequired) {
+                        addVideosToResponse(data)
+                    }
+                })
+
+                // also if using data api wait for that
+                if(config.data_api_key) {
+                    utils.dataApiBulk(allVideos, ["publishedAt"], (apidata) => {
+                        for(let id in apidata) {
+                            let videoData = apidata[id]
+                            let rel = data.filter(s => {
+                                return s.id == id
+                            })[0]
+                            let i = data.indexOf(rel)
+                            if(i !== null && i !== undefined && i >= 0) {
+                                data[i].upload = videoData.publishedAt
+                                data[i].dataApi = true;
+                            }
+                        }
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            addVideosToResponse(data)
+                        }
+                    })
+                }
             }),
             utils.get_used_token(req) + "-cps",
             false
@@ -112,6 +143,13 @@ module.exports = {
 
                 let cacheData = html.get_cache_video(video.id)
 
+                let uploadDate = cacheData.upload;
+                if(!uploadDate && video.dataApi) {
+                    uploadDate = video.upload
+                } else if(!uploadDate && !video.dataApi) {
+                    uploadDate = utils.relativeToAbsoluteApprox(video.upload)
+                }
+
                 videos += templates.gdata_feedVideo(
                     video.id,
                     video.title,
@@ -119,8 +157,7 @@ module.exports = {
                     utils.bareCount(video.views),
                     videoTime,
                     videoDescription,
-                    cacheData.upload
-                    || utils.relativeToAbsoluteApprox(video.upload),
+                    uploadDate,
                     (cacheData.tags || []).join() || "-",
                     cacheData.category || "-",
                     flags,
