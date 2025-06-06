@@ -42,7 +42,7 @@ const yt2009basefeeds = require("./yt2009basefeeds")
 const yt2009m = require("./yt2009m")
 const yt2009trusted = require("./yt2009trustedcontext")
 const mobileHelper = require("./yt2009mobilehelper")
-let devTimings = false;
+const devTimings = false;
 const package = require("../package.json")
 const version = package.version;
 
@@ -1060,8 +1060,8 @@ fmt_url_map=${encodeURIComponent(fmt_stream_map)}
 token=amogus
 plid=amogus
 track_embed=0
-author=${data.author_name}
-title=${data.title}
+author=${data.author_name.split("&").join("")}
+title=${data.title.split("&").join("")}
 video_id=${req.query.video_id}
 fmt_list=${encodeURIComponent(fmt_list)}
 fmt_stream_map=${encodeURIComponent(fmt_stream_map)}${urlStreams}${dashData}`.split("\n").join("&"))
@@ -1410,6 +1410,9 @@ channel_endpoints.forEach(channel_endpoint => {
         // autouser
         if(flags.includes("auto_user")) {
             yt2009_channels.autoUserHandle(req, res, flags)
+            if(devTimings) {
+                console.log("potential time loss because of auto_user")
+            }
             return;
         }
     
@@ -1505,6 +1508,60 @@ app.get("/channel_fh264_getvideo", (req, res) => {
     if(checkBaseline(req, res)) return;
 
     req.query.v = req.query.v.replace(/[^a-zA-Z0-9+\-+_]/g, "").substring(0, 11)
+
+    if(req.headers.range && yt2009_utils.privExpStreamEligible(req)) {
+        let partSize = (1024 * 1024 * 2) // send the file in 2mb parts
+        // when streaming
+
+        let id = req.query.v;
+        let partSent = false;
+        let callbackId;
+        let start = 0;
+        let end = -1;
+        let range = req.headers.range
+        if(range && range.includes("bytes=")) {
+            if(!isNaN(parseInt(range.split("bytes=")[1].split("-")[0]))) {
+                start = parseInt(range.split("bytes=")[1].split("-")[0])
+            }
+        }
+        res.status(206)
+        res.set("accept-ranges", "bytes")
+        res.set("content-type", "video/mp4")
+        function sendPart(full) {
+            if(end == -1) {
+                end = start + partSize
+            }
+            res.set(
+                "content-range",
+                "bytes " + start + "-" + (full - 1) + "/" + full
+            )
+            fs.createReadStream(
+                `../assets/${id}.mp4`,
+                {"start": start, "end": end}
+            ).pipe(res)
+
+            if(callbackId) {
+                yt2009_exports.unregisterExtendCallback(callbackId)
+            }
+        }
+        if(yt2009_exports.getStatus(id)
+        && yt2009_exports.getStatus(id) < 2) {
+            callbackId = yt2009_exports.registerExtendCallback(
+                "verboseDownloadProgress", id, () => {
+                    // download state changed
+                    let s = yt2009_exports.read().verboseDownloadProgress[id]
+
+                    if(s.type == "NONDASH"
+                    && s.downloaded >= (start + partSize + (512 * 1024))
+                    && !partSent) {
+                        // ready to send part
+                        sendPart(parseInt(s.reportLength))
+                        partSent = true;
+                    }
+                }
+            )
+        }
+    }
 
     if(yt2009_exports.getStatus(req.query.v)) {
         // wait for mp4 while it's downloading
@@ -2074,6 +2131,72 @@ app.get("/exp_hd", (req, res) => {
     && fs.existsSync(`../assets/${id}-720p.mp4`)) {
         res.redirect(`/assets/${id}-720p.mp4?ac=${Math.random()}`)
         return;
+    }
+
+    if(config.priv_exp_stream && req.headers.range
+    && yt2009_utils.privExpStreamEligible(req)) {
+        let partSize = (1024 * 1024 * 2)
+        let partSent = false;
+        let fname = `${id}-${quality}`
+        if(yt2009_exports.getStatus(fname) !== 1
+        && quality == "1080p"
+        && yt2009_exports.getStatus(`${id}-720p`)) {
+            fname = `${id}-720p`
+        }
+        let fpath = `../assets/${fname}`
+        let callbackId;
+        let start = 0;
+        let end = -1;
+        let range = req.headers.range
+        if(range && range.includes("bytes=")) {
+            if(!isNaN(parseInt(range.split("bytes=")[1].split("-")[0]))) {
+                start = parseInt(range.split("bytes=")[1].split("-")[0])
+            }
+        }
+        res.status(206)
+        res.set("accept-ranges", "bytes")
+        res.set("content-type", "video/mp4")
+        function sendPart(full) {
+            if(end == -1) {
+                end = start + partSize
+            }
+            res.set(
+                "content-range",
+                "bytes " + start + "-" + (full - 1) + "/" + full
+            )
+            fs.createReadStream(fname, {"start": start, "end": end}).pipe(res)
+
+            if(callbackId) {
+                yt2009_exports.unregisterExtendCallback(callbackId)
+            }
+        }
+        if(yt2009_exports.getStatus(id)
+        && yt2009_exports.getStatus(id) < 2) {
+            console.log("// incomplete download HD")
+            callbackId = yt2009_exports.registerExtendCallback(
+                "verboseDownloadProgress", fname, () => {
+                    // download state changed
+                    let s = yt2009_exports.read().verboseDownloadProgress[fname]
+                    console.log(s)
+
+                    end = start + partSize
+
+                    if(s.type == "DASH"
+                    && s.state == "MERGE_STARTED"
+                    && fs.existsSync(fpath)
+                    && fs.statSync(fpath).size >= start + end + (512 * 1024)
+                    && !partSent) {
+                        // ready to send part
+                        let fullSize = s.videoFileSize
+                                     + s.audioFileSize
+                                     + (512 * 1024)
+                        console.log("// ready to send part - partially downloaded video: " + start)
+                        sendPart(fullSize)
+                        partSent = true;
+                    }
+                }
+            )
+        }
     }
 
     if(fs.existsSync(`../assets/${id}-${quality}.mp4`)
@@ -4581,7 +4704,7 @@ app.get("/insight_ajax", (req, res) => {
                 })
 
                 // slight tints on common countries (na/random parts of asia)
-                let rCountries = []
+                /*let rCountries = []
                 reverseContinents["North America"].forEach(c => {
                     rCountries.push(c)
                 })
@@ -4597,7 +4720,7 @@ app.get("/insight_ajax", (req, res) => {
                 
                 while(percentagesParam.join().split(",").length > countriesParam.join("").length / 2) {
                     percentagesParam.shift()
-                }
+                }*/
 
                 // render map
                 let mapUrl = [
@@ -4605,7 +4728,8 @@ app.get("/insight_ajax", (req, res) => {
                     "&chtm=world&chd=t:" + percentagesParam.join(),
                     "&chf=bg,s,eff8fe",
                     "&chco=f6f6f6,e5e9c9,ced9ab,a7ba7b,86a058,8ba65b,547136,32501a",
-                    "&chld=" + countriesParam.join("")
+                    "&chld=" + countriesParam.join(""),
+                    "&cbg=e5e9c9"
                 ].join("")
                 insightHTML += `<img width="350" height="170" id="stats-big-map-expanded" src="${mapUrl}"/>`
                 insightHTML += yt2009_templates.map_audiences_end

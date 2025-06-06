@@ -2159,6 +2159,9 @@ var loadingRototo;
 
 function setupLoadingRototo() {
     var rotate = 0
+    if(loadingRototo) {
+        clearInterval(loadingRototo)
+    }
     loadingRototo = setInterval(function() {
         rotate += 45
         if(rotate >= 360) {
@@ -2176,6 +2179,7 @@ function setupLoadingRototo() {
 
 function stopLoadingRototo() {
     clearInterval(loadingRototo)
+    loadingRototo = 0;
     $(".html5-loading").style = ""
 }
 
@@ -2203,26 +2207,6 @@ try {
 }
 catch(error) {}
 
-// on mp4 error redirect to retryVideo
-// commented out for now cause it causin issues with hd
-/*video.querySelector("source").addEventListener("error", function() {
-    var videoId = ""
-    if(video.innerHTML.indexOf("?video_id=") !== -1) {
-        videoId = video.innerHTML.split("?video_id=")[1]
-                       .split("\"")[0].split("&")[0]
-    } else if(video.getAttribute("src")
-    && video.getAttribute("src").indexOf("?video_id=") !== -1) {
-        videoId = video.getAttribute("src").split("?video_id=")[1].split("&")[0]
-    }
-    video.src = "/retry_video?video_id=" + videoId
-    showLoadingSprite();
-
-    video.addEventListener("error", function() {
-        $(".html5-loading").className += " hid"
-        stopLoadingRototo()
-    }, false)
-}, false)*/
-
 // retry video load if stuck after 5 seconds
 setTimeout(function() {
     if(!video.playing && video.buffered.length <= 0 && !videoStartedPlaying) {
@@ -2233,6 +2217,28 @@ setTimeout(function() {
         video.src = src;
     }
 }, 5000)
+
+// video loading sprite on unloaded area
+video.addEventListener("seeking", function(e) {
+    var partLoaded = false
+    if(!video.buffered || !video.buffered.length || !videoStartedPlaying) {
+        partLoaded = true;
+        return;
+    }
+
+    for (var i = 0; i < video.buffered.length; i++) {
+        var start = video.buffered.start(i)
+        var end = video.buffered.end(i)
+        
+        if(video.currentTime >= start && video.currentTime <= end) {
+            partLoaded = true;
+        }
+    }
+
+    if(!partLoaded) {
+        showLoadingSprite()
+    }
+})
 
 // space=pause
 document.body.addEventListener("keydown", function(e) {

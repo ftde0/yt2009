@@ -29,8 +29,19 @@ you will also be notified about that when starting the frontend without one set.
 
 more info in [config_params.md](config_params.md) / [docker.md](docker.md). obtain a key at https://console.developers.google.com/.
 
-
 ---
+
+## !! if hosting on windows 7 !!
+
+the last version of node.js supported on windows 7 doesn't support the latest version of express, so you might experience crashes on start.
+
+install an older one to host yt2009 on windows 7:
+
+```
+npm install express@4.17.1
+```
+
+if still facing issues take a look at #243.
 
 ## optional after-setup steps
 

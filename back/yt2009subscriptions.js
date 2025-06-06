@@ -8,6 +8,8 @@ yt2009, 2022-2023
 
 const utils = require("./yt2009utils")
 const fetch = require("node-fetch")
+const search = require("./yt2009search")
+const channels = require("./yt2009channels")
 const yt2009exports = require("./yt2009exports")
 const templates = require("./yt2009templates")
 const constants = require("./yt2009constants.json")
@@ -201,6 +203,12 @@ module.exports = {
                            .split(":")[1].split(";")[0]
                 flags += ";fake_dates" + date
             }
+            req.headers.cookie.split(";").forEach(cookie => {
+                if(cookie.trimStart().startsWith("channel_flags")) {
+                    flags += cookie.trimStart().replace("channel_flags=", "")
+                                   .split(":").join(";")
+                }
+            })
         }
         catch(error) {}
 
@@ -209,6 +217,60 @@ module.exports = {
             thumbUrl = "/1.jpg"
         }
 
+        // adaptive_old, fetches stuff entirely differently 
+        if(req.headers.cookie && req.headers.cookie.includes("adaptive_old")
+        && flags.includes("only_old")) {
+            let lookupDate = search.handle_only_old(flags + ";adaptive_old")
+            console.log(lookupDate, flags)
+            let channelRequest = {
+                "path": url,
+                "headers": {},
+                "query": {}
+            }
+            let vids = []
+            let page = 1;
+            function getNextPage(name, id) {
+                let params = {
+                    "page": page,
+                    "search_sort": "video_date_uploaded"
+                }
+                search.get_search(
+                    `${name} ${lookupDate}`,
+                    "", params, (search => {
+                        search.forEach(result => {
+                            if(result.type == "video"
+                            && result.author_url.includes(id)) {
+                                vids.push(result)
+                            }
+                        })
+                        if(vids.length <= 10 && page < 5) {
+                            page++
+                            params.page = page;
+                            getNextPage(name, id)
+                        } else {
+                            render(vids)
+                        }
+                    }
+                ), utils.get_used_token(req), false)
+            }
+            let parse_new_videos = this.parse_new_videos;
+            function render(videos) {
+                if(sendRawData) {
+                    res.send({
+                        "time": Math.floor(Date.now() / 1000),
+                        "videos": videos
+                    })
+                } else {
+                    res.send(parse_new_videos({"videos": videos}, flags))
+                }
+            }
+            channels.main(channelRequest, ({"send": function(data) {
+                getNextPage(data.name, data.id)
+            }}), "", true)
+            return;
+        }
+
+        // non-adaptive_old
         if(saved_subscription_data[url]
         && Math.floor(Date.now() / 1000) - saved_subscription_data[url].time <= 600) {
             if(sendRawData) {

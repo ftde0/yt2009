@@ -1171,8 +1171,10 @@ module.exports = {
                 downloadAudio = false;
             }
 
-            if(downloadAudio) {
+            let audioDownloadId = Math.floor(Math.random() * 5020435602)
+            let audioFile = `../assets/${id}-audio-${audioDownloadId}.m4a`
 
+            if(downloadAudio) {
                 let c = yt2009exports.read().verboseDownloadProgress[fname]
                 c.state = "DOWNLOADING"
                 c.type = "DASH"
@@ -1182,13 +1184,13 @@ module.exports = {
 
                 downloadInParts_file(
                     h264DashAudioUrl,
-                    "../assets/" + id + "-audio.m4a",
+                    audioFile,
                     ((feedback) => {
                         if(feedback == "RETRY") {
                             devlog("RETRY download audio")
                             downloadInParts_file(
                                 h264DashAudioUrl,
-                                "../assets/" + id + "-audio.m4a",
+                                audioFile,
                                 (f) => {
                                     if(feedback !== "RETRY") {
                                         audioDownloadDone = true;
@@ -1296,9 +1298,8 @@ module.exports = {
 
             // merge formats once both are ready
             function onFormatsDone() {
-                let audioPath = "../assets/" + id + "-audio.m4a"
                 if(!downloadAudio) {
-                    audioPath = "../assets/" + id + ".mp4"
+                    audioFile = "../assets/" + id + ".mp4"
                 }
                 let videoPath = "../assets/" + id + "-temp-" + quality + ".mp4"
 
@@ -1307,7 +1308,7 @@ module.exports = {
                     c.state = "MERGE_STARTED"
                     try {
                         c.videoFileSize = fs.statSync(videoPath).size;
-                        c.audioFileSize = fs.statSync(audioPath).size;
+                        c.audioFileSize = fs.statSync(audioFile).size;
                     }
                     catch(error) {}
                     yt2009exports.extendWrite(
@@ -1318,7 +1319,7 @@ module.exports = {
                 let cmd = [
                     "ffmpeg",
                     `-y -i "${__dirname}/${videoPath}"`,
-                    `-i "${__dirname}/${audioPath}"`,
+                    `-i "${__dirname}/${audioFile}"`,
                     `-c:v copy -c:a copy`,
                     `-map 0:v -map 1:a`,
                     `"${__dirname}/../assets/${fname}.mp4"`
@@ -1327,15 +1328,31 @@ module.exports = {
                 require("child_process").exec(cmd, (e, so) => {
                     if(e) {callback(false);return;}
                     callback(`${fname}.mp4`)
+
+                    if(yt2009exports.read().verboseDownloadProgress[fname]) {
+                        let c = yt2009exports.read().verboseDownloadProgress[fname]
+                        c.state = "DONE"
+                        try {
+                            c.videoFileSize = fs.statSync(videoPath).size;
+                            c.audioFileSize = fs.statSync(audioPath).size;
+                        }
+                        catch(error) {}
+                        yt2009exports.extendWrite(
+                            "verboseDownloadProgress", fname, c
+                        )
+                    }
+
                     setTimeout(() => {
                         // delete temp assets
                         try {
-                            if(!audioPath.includes(".mp4")) {
-                                fs.unlinkSync(`${__dirname}/${audioPath}`)
+                            if(!audioFile.includes(".mp4")) {
+                                fs.unlinkSync(`${__dirname}/${audioFile}`)
                             }
                             fs.unlinkSync(`${__dirname}/${videoPath}`)
                         }
-                        catch(error) {}
+                        catch(error) {
+                            console.log(error)
+                        }
                     }, 10000)
                     yt2009exports.updateFileDownload(fname, 2)
                 })
@@ -1538,11 +1555,6 @@ module.exports = {
             const newHeaders = { ...androidHeaders };
             newHeaders.headers.range = `bytes=${startB}-${startB + partSize}`;
             fetch(url, newHeaders).then(r => {
-                /*if(r.status !== 200 && r.status !== 206) {
-                    console.log(url, newHeaders.headers.range, r.status, partSize)
-                } else {
-                    console.log(partSize, "200")
-                }*/
                 if(r.status == 403) {
                     stream.end()
                     try {fs.unlinkSync(out)}catch(error){
@@ -1560,6 +1572,16 @@ module.exports = {
                     if(cdata) {
                         cdata.reportLength = r.headers.get("content-range")
                                                       .split("/")[1];
+                        if(cdata.type == "NONDASH") {
+                            cdata.downloaded = stream.bytesWritten
+                        }
+                        if(cdata.type == "DASH" && out.includes(".m4a")) {
+                            cdata.dashAudioDownloaded = stream.bytesWritten
+                            cdata.dashAudioLength = cdata.reportLength
+                        } else if(cdata.type == "DASH" && out.includes(".mp4")) {
+                            cdata.dashVideoDownloaded = stream.bytesWritten
+                            cdata.dashVideoLength = cdata.reportLength
+                        }
                         yt2009exports.extendWrite(
                             "verboseDownloadProgress", metadata, cdata
                         )
@@ -1567,6 +1589,16 @@ module.exports = {
                 }
                 if (r.headers.get('Content-Length') === '0') {
                     stream.end();
+                    if(metadata) {
+                        let f = metadata
+                        let cdata = yt2009exports.read().verboseDownloadProgress[f]
+                        if(cdata.type && cdata.type == "NONDASH") {
+                            cdata.state = "DONE"
+                            yt2009exports.extendWrite(
+                                "verboseDownloadProgress", f, cdata
+                            )
+                        }
+                    }
                     return callback("ALRIGHT");
                 }
                 r.body.pipe(stream, { end: false });
@@ -2195,6 +2227,33 @@ module.exports = {
         })}catch(error){
             callback(results)
         }})
+    },
+
+    "privExpStreamEligible": function(req) {
+        // target modern-ish browsers for streaming experiment
+        // others get the usual full-download-before-play treatment
+        
+        if(!req || !req.headers || !req.headers["user-agent"]) return false;
+
+        let ua = req.headers["user-agent"]
+        
+        // ie11 works well enough
+        if(ua.includes("rv:11.0")) return true;
+
+        // chrome/firefox above 80s - safe bets
+        if(ua.includes("Firefox/")) {
+            let version = parseFloat(ua.split("Firefox/")[1].split(" ")[0])
+            if(!isNaN(version) && version >= 80) {
+                return true;
+            }
+        } else if(ua.includes("Chrome/")) {
+            let version = parseFloat(ua.split("Chrome/")[1].split(" ")[0])
+            if(!isNaN(version) && version >= 80) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

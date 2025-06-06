@@ -6,7 +6,8 @@ let data = {
     "masterWs": false,
     "dataFetches": {},
     "players": {},
-    "verboseDownloadProgress": {}
+    "verboseDownloadProgress": {},
+    "extendWriteCallbacks": {}
 }
 let fileDownloadListeners = {
 
@@ -24,6 +25,14 @@ module.exports = {
 
     "extendWrite": function(name, property, value) {
         data[name][property] = value;
+        if(data.extendWriteCallbacks[name]
+        && data.extendWriteCallbacks[name][property]) {
+            data.extendWriteCallbacks[name][property].forEach(c => {
+                if(c && c.callback) {
+                    c.callback()
+                }
+            })
+        }
     },
 
     "delete": function(name, value) {
@@ -92,6 +101,39 @@ module.exports = {
             return;
         }
         dataFetchListeners[id].push(callback)
+    },
+
+    "registerExtendCallback": function(name, property, callback) {
+        // id is generated for future ref, once done we can remove the callback
+        let id = Math.floor(Math.random() * 5902306)
+        let cbObject = {
+            "id": id,
+            "callback": callback
+        }
+        if(!data.extendWriteCallbacks[name]) {
+            data.extendWriteCallbacks[name] = {}
+        }
+        if(!data.extendWriteCallbacks[name][property]) {
+            data.extendWriteCallbacks[name][property] = []
+        }
+        data.extendWriteCallbacks[name][property].push(cbObject)
+        return id;
+    },
+
+    "unregisterExtendCallback": function(callbackId) {
+        //delete data.extendWriteCallbacks[callbackId];
+        for(let n in data.extendWriteCallbacks) {
+            if(data.extendWriteCallbacks[n]) {
+                for(let d in data.extendWriteCallbacks[n]) {
+                    if(data.extendWriteCallbacks[n][d]) {
+                        let c = data.extendWriteCallbacks[n][d]
+                        data.extendWriteCallbacks[n][d] = c.filter(s => {
+                            s.id !== callbackId
+                        })
+                    }
+                }
+            }
+        }
     }
 }
 

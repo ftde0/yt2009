@@ -793,6 +793,18 @@ module.exports = {
             // no dates
             resultSyntax = "before:2010-04-01"
         }
+
+        // adaptive_old - current day/month but only_old year
+        if(flags.includes("adaptive_old")) {
+            if(resultSyntax.includes("before:")) {
+                let year = resultSyntax.split("before:")[1].split("-")[0]
+                let date = new Date()
+                let month = date.getMonth() + 1
+                let day = date.getDate() + 1
+                resultSyntax = `before:${year}-${month}-${day}`
+            }
+        }
+        
         return resultSyntax;
     },
 

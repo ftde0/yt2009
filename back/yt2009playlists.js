@@ -13,7 +13,7 @@ let cache = require("./cache_dir/playlist_cache_manager")
 
 module.exports = {
     "innertube_get_data": function(id, callback) {
-        fetch(`https://www.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`, {
+        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
             "headers": constants.headers,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",

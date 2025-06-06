@@ -267,7 +267,7 @@ function getYTAuth() {
         let status = r.status;
         r.text().then(r => {
             if(status !== 200) {
-                console.log(errorMsg + status + " / " + r)
+                console.log(errorMsg + status + " / " + r + "\n(Y)")
                 return;
             }
 
@@ -375,7 +375,7 @@ function signIn(email, token) {
         let status = r.status;
         r.text().then(r => {
             if(status !== 200) {
-                console.log(errorMsg + status + " / " + r)
+                console.log(errorMsg + status + " / " + r + "\n(G)")
                 return;
             }
 

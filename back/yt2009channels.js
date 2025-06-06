@@ -15,6 +15,7 @@ const templates = require("./yt2009templates")
 const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
 const overrideBgs = require("./channel_backgrounds.json")
+const devTimings = false;
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
@@ -25,7 +26,6 @@ try {
     featured_channels = require("./cache_dir/public_channel_listing.json")
 }
 catch(error) {}
-let tCache = {}
 
 setTimeout(function() {
     if(!yt2009html.v) {
@@ -44,10 +44,16 @@ module.exports = {
     "main": function(req, res, flags, sendRawData) {
         let requestTime = 0;
         let timingData = ""
-        let timing = setInterval(function() {
-            requestTime += 0.1
-        }, 100)
+        let timing;
+        if(devTimings) {
+            timing = setInterval(function() {
+                requestTime += 0.1
+            }, 100)
+        }
         function writeTimingData(stage) {
+            if(devTimings) {
+                console.log(stage, requestTime)
+            }
             timingData += stage + " finish at: " + requestTime.toFixed(2) + "\n"
         }
         // url parse
@@ -74,11 +80,17 @@ module.exports = {
             let cached = n_impl_yt2009channelcache.read("main")[id]
                       || n_impl_yt2009channelcache.read("main")[url]
             // read from cache
-            if(cached && req.query.resetcache !== "1"
-            && (flags || "").includes("+resetcache")) {
+            if(cached
+            && cached.oldTryoutComplete
+            && req.query.resetcache !== "1"
+            && !(flags || "").includes("+resetcache")) {
                 writeTimingData("cache retrieve")
                 sendResponse(cached)
             } else {
+                let fetchesRequired = 2;
+                let fetchesCompleted = 0;
+                let fullData = {}
+
                 // clean fetch the channel
                 fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
                     yt2009html.get_api_key()
@@ -99,17 +111,71 @@ module.exports = {
                             res.send(`[yt2009] channel not found`)
                             return;
                         }
+                        for(let property in data) {
+                            fullData[property] = data[property]
+                        }
                         writeTimingData("main response parse")
-                        sendResponse(data)
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            sendResponse(fullData)
+                        }
                     })
                 })})
+
+                // pull videos at the same time
+                // shortens load times
+                this.get_direct_by_chipparam(
+                    "8gYuGix6KhImCiQ2N2ViM2Y1NS0wMDAwLTI2ZWEtYjE4NS01ODI0MjliZTA1NjggAg%3D%3D",
+                    id,
+                    (vids) => {
+                        fullData.videos = vids;
+                        writeTimingData("separate videos fetch")
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            sendResponse(fullData)
+                        }
+                    }
+                )
+
+                // check whether old background/banners can be used
+                this.tryout_legacy_images(id, (tryout) => {
+                    writeTimingData("tryout legacy images")
+                    if(fetchesCompleted >= (fetchesRequired - 1)
+                    && n_impl_yt2009channelcache.read("main")[id]) {
+                        let fd = n_impl_yt2009channelcache.read("main")[id]
+                        for(let property in tryout) {
+                            fd[property] = tryout[property]
+                        }
+                        n_impl_yt2009channelcache.write("main", id, fd)
+                    } else {
+                        for(let property in tryout) {
+                            fullData[property] = tryout[property]
+                        }
+                    }
+                })
             }
 
             function sendResponse(data) {
                 // send raw json data or full HTML
                 if(sendRawData) {
                     res.send(data)
+                    if(timing) {clearInterval(timing)}
                 } else {
+                    let fetchesRequired = 2;
+                    let fetchesCompleted = 0;
+                    let htmlCode = ""
+
+                    function markComplete() {
+                        fetchesCompleted++
+                        if(fetchesCompleted == fetchesRequired) {
+                            try {
+                                res.send(htmlCode)
+                                clearInterval(timing)
+                            }
+                            catch(error) {}
+                        }
+                    }
+
                     getAdditionalSections(data, flags, () => {
                         writeTimingData("getAdditionalSections")
                         applyHTML(data, flags, (html => {
@@ -119,11 +185,26 @@ module.exports = {
                             if(html.includes(` (0)</div>`)) {
                                 html = html.split(` (0)</div>`).join(`</div>`)
                             }
-                            html = html.replace("yt2009_timings", timingData)
-                            res.send(html)
-                            clearInterval(timing)
+                            htmlCode = html;
+                            markComplete()
                         }), req, flashMode)
                     })
+
+                    // get dominant color from banner
+                    let fname = `${__dirname}/../assets/${data.newBanner}`
+                    if(fs.existsSync(fname)) {
+                        dominant_color(fname, (color) => {
+                            writeTimingData("dominantColor (has file)")
+                            data.dominant_color = color;
+                            n_impl_yt2009channelcache.write("main", id, data)
+                            markComplete()
+                        })
+                    } else {
+                        writeTimingData("dominantColor (no file)")
+                        data.dominant_color = [180, 180, 180];
+                        n_impl_yt2009channelcache.write("main", id, data)
+                        markComplete()
+                    }
                 }
                 n_impl_yt2009channelcache.write("main", id, data)
             }
@@ -136,7 +217,7 @@ module.exports = {
     ========
     */
     "parse_main_response": function(r, flags, callback) {
-        let fetchesRequired = 2;
+        let fetchesRequired = 1;
         let additionalFetchesCompleted = 0;
 
         // basic extract
@@ -208,24 +289,8 @@ module.exports = {
             catch(error) {}
         }
         data.url = r.metadata.channelMetadataRenderer.channelUrl
-        data.videos = []
 
-        // fetch videos tab
         data.tabParams = {}
-        const popularVids = require("./proto/popularVidsChip_pb")
-        let vidsContinuation = new popularVids.vidsChip()
-        let msg = new popularVids.vidsChip.nestedMsg1()
-        msg.setChannelid(data.id)
-        // need to figure out what that does, leaving it in as it's
-        // what came out of decode
-        msg.setChipparam(
-            "8gYuGix6KhImCiQ2N2ViM2Y1NS0wMDAwLTI2ZWEtYjE4NS01ODI0MjliZTA1NjggAg%3D%3D"
-        )
-        vidsContinuation.addMsg(msg)
-        let chip = encodeURIComponent(Buffer.from(
-            vidsContinuation.serializeBinary()
-        ).toString("base64"))
-        fetchChip(chip)
         r.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
             // get params for other tabs for future use
             try {
@@ -235,73 +300,6 @@ module.exports = {
             }
             catch(error) {}
         })
-
-        function fetchChip(chipToken) {
-            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                yt2009html.get_api_key()
-            }`, {
-                "headers": yt2009constants.headers,
-                "referrer": "https://www.youtube.com/",
-                "referrerPolicy": "strict-origin-when-cross-origin",
-                "body": JSON.stringify({
-                    "context": yt2009constants.cached_innertube_context,
-                    "continuation": chipToken
-                }),
-                "method": "POST",
-                "mode": "cors"
-            }).then(r => {r.json().then(r => {
-                if(!r.onResponseReceivedActions) {
-                    createVideosFromChip([])
-                    return;
-                }
-                r.onResponseReceivedActions.forEach(action => {
-                    if(action.reloadContinuationItemsCommand.slot
-                    == "RELOAD_CONTINUATION_SLOT_BODY") {
-                        videosTabAvailable = true
-                        createVideosFromChip(
-                            action.reloadContinuationItemsCommand
-                                  .continuationItems
-                        )
-                    }
-                })
-            })})
-        }
-
-        function createVideosFromChip(chip) {
-            chip.forEach(video => {
-                if(video.richItemRenderer || video.gridVideoRenderer) {
-                    video = (video.richItemRenderer || video.gridVideoRenderer)
-                            .content.videoRenderer
-                    let badges = []
-                    if(video.badges) {
-                        try {
-                            video.badges.forEach(badge => {
-                                if(badge.metadataBadgeRenderer) {
-                                    badge = badge.metadataBadgeRenderer
-                                    badges.push(badge.style)
-                                }
-                            })
-                        }
-                        catch(error){}
-                    }
-                    data.videos.push({
-                        "id": video.videoId,
-                        "title": video.title.runs[0].text,
-                        "views": (video.viewCountText
-                              || {"simpleText": "0 views"}).simpleText,
-                        "upload": video.publishedTimeText.simpleText,
-                        "thumbnail": "http://i.ytimg.com/vi/"
-                                    + video.videoId
-                                    + "/hqdefault.jpg",
-                        "length": (video.lengthText || {"simpleText": "00:00"})
-                                  .simpleText,
-                        "badges": badges
-                    })
-                }
-            })
-            additionalFetchesCompleted++;
-            onVideosCreate()
-        }
 
         // find featured channels (/channels tab removed / 2023-11-16)
         let homeTab;
@@ -348,81 +346,76 @@ module.exports = {
 
         data.friends = featuredChannels;
 
-        // exec when videos are done fetching
-        function onVideosCreate() {
-            if(additionalFetchesCompleted >= fetchesRequired) {
-                callback(data)
+        // save avatar and banner
+        let avatar = "";
+        try {
+            if(useViewmodelParse) {
+                avatar = r.header.pageHeaderRenderer.content
+                          .pageHeaderViewModel.image.decoratedAvatarViewModel
+                          .avatar.avatarViewModel.image.sources[0].url // jes
+            } else {
+                avatar = r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url
             }
+        }
+        catch(error) {}
+        let fname = avatar.split("/")[avatar.split("/").length - 1]
+        if(!fs.existsSync(`../assets/${fname}.png`)) {
+            yt2009utils.saveAvatar(avatar)
+        }
+        data.avatar = `/assets/${fname}.png`
 
-            // final things, dominant color and such
-            // save avatar
-            let avatar = "";
-            try {
-                if(useViewmodelParse) {
-                    avatar = r.header.pageHeaderRenderer.content
-                              .pageHeaderViewModel.image.decoratedAvatarViewModel
-                              .avatar.avatarViewModel.image.sources[0].url // jes
-                } else {
-                    avatar = r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url
-                }
+        // get the banner
+        try {
+            let banner = ""
+            if(useViewmodelParse) {
+                banner = r.header.pageHeaderRenderer.content.pageHeaderViewModel
+                          .banner.imageBannerViewModel.image.sources[0].url
+            } else {
+                banner = r.header.c4TabbedHeaderRenderer.banner.thumbnails[0].url
             }
-            catch(error) {}
-            let fname = avatar.split("/")[avatar.split("/").length - 1]
-            if(!fs.existsSync(`../assets/${fname}.png`)) {
-                yt2009utils.saveAvatar(avatar)
-            }
-            data.avatar = `/assets/${fname}.png`
+            let cId = data.id.replace("UC", "")
+            data.banner = cId + "_banner.jpg"
+            data.newBanner = cId + "_uniq_banner.jpg"
+            data.bannerUrl = banner
 
-            // get the dominant color from the banner
-            try {
-                let banner = ""
-                if(useViewmodelParse) {
-                    banner = r.header.pageHeaderRenderer.content.pageHeaderViewModel
-                              .banner.imageBannerViewModel.image.sources[0].url
-                } else {
-                    banner = r.header.c4TabbedHeaderRenderer.banner.thumbnails[0].url
-                }
-                let cId = data.id.replace("UC", "")
-                data.banner = cId + "_banner.jpg"
-                data.newBanner = cId + "_uniq_banner.jpg"
-                data.bannerUrl = banner
-
-                if(!data.bannerUrl) {
-                    fs.writeFileSync(`../assets/${data.newBanner}`, "")
-                    additionalFetchesCompleted++;
-                    if(additionalFetchesCompleted >= fetchesRequired) {
-                        callback(data)
-                    }
-                    return;
-                }
-                fetch(banner, {
-                    "headers": yt2009constants.headers
-                }).then(r => {
-                    r.buffer().then(buffer => {
-                        fs.writeFileSync(`../assets/${data.newBanner}`, buffer)
-                        additionalFetchesCompleted++;
-                        if(additionalFetchesCompleted >= fetchesRequired) {
-                            callback(data)
-                        }
-                    })
-                }).catch(e => {
-                    fs.writeFileSync(`../assets/${data.newBanner}`, "")
-                    delete data.banner;
-                    delete data.newBanner;
-                    delete data.bannerUrl;
-                    additionalFetchesCompleted++;
-                    if(additionalFetchesCompleted >= fetchesRequired) {
-                        callback(data)
-                    }
-                    return;
-                })
-            }
-            catch(error) {
-                data["dominant_color"] = [180, 180, 180]
+            if(!data.bannerUrl) {
+                fs.writeFileSync(`../assets/${data.newBanner}`, "")
                 additionalFetchesCompleted++;
                 if(additionalFetchesCompleted >= fetchesRequired) {
                     callback(data)
                 }
+                return;
+            }
+            fetch(banner, {
+                "headers": yt2009constants.headers
+            }).then(r => {
+                r.buffer().then(buffer => {
+                    fs.writeFileSync(`../assets/${data.newBanner}`, buffer)
+                    additionalFetchesCompleted++;
+                    if(additionalFetchesCompleted >= fetchesRequired) {
+                        callback(data)
+                    }
+                })
+            }).catch(e => {
+                fs.writeFileSync(`../assets/${data.newBanner}`, "")
+                delete data.banner;
+                delete data.newBanner;
+                delete data.bannerUrl;
+                additionalFetchesCompleted++;
+                if(additionalFetchesCompleted >= fetchesRequired) {
+                    callback(data)
+                }
+                return;
+            })
+        }
+        catch(error) {
+            data["dominant_color"] = [180, 180, 180]
+            additionalFetchesCompleted++;
+            if(additionalFetchesCompleted >= fetchesRequired) {
+                callback(data)
+            }
+            if(devTimings) {
+                console.log("banner (unknown error, empty)")
             }
         }
     },
@@ -500,13 +493,22 @@ module.exports = {
     ========
     */
     "applyHTML": function(data, flags, callback, req, flashMode) {
-        let env = config.env
         let code = channel_code;
         let stepsRequiredToCallback = 1;
-        let requireMoreFetch = false;
         let videosSource = data.videos;
         let stepsTaken = 0;
         let channelCommentCount = 0;
+
+        let time = 0;
+        let x;
+        if(devTimings) {
+            x = setInterval(() => {
+                time += 0.1
+                if(time >= 8) {
+                    clearInterval(x)
+                }
+            }, 100)
+        }
 
         // wayback_features init
         let wayback_settings = ""
@@ -940,6 +942,10 @@ module.exports = {
                 )
 
                 if(!wayback_settings.includes("comments")) {
+                    if(devTimings) {
+                        let progress = `${stepsTaken}/${stepsRequiredToCallback}`
+                        console.log(`videos rendererd (${progress})`, time)
+                    }
                     stepsTaken++;
                     setTimeout(function() {
                         if(stepsRequiredToCallback == stepsTaken) {
@@ -1183,6 +1189,10 @@ module.exports = {
                     yt2009html.get_video_comments(id, (comments) => {
                         saved_channel_comments[id] = comments.slice();
                         videosRender();
+                        if(devTimings) {
+                            let progress = `${stepsTaken}/${stepsRequiredToCallback}`
+                            console.log(`only_old (w comments) (${progress})`, time)
+                        }
                         stepsTaken++
                         if(stepsTaken >= stepsRequiredToCallback) {
                             try{callback(code)}catch(error){}
@@ -1190,6 +1200,10 @@ module.exports = {
                     })
                 } else {
                     videosRender();
+                    if(devTimings) {
+                        let progress = `${stepsTaken}/${stepsRequiredToCallback}`
+                        console.log(`only_old (n comments) (${progress})`, time)
+                    }
                     stepsTaken++
                     if(stepsTaken >= stepsRequiredToCallback) {
                         try{callback(code)}catch(error){}
@@ -1457,6 +1471,10 @@ module.exports = {
 
 
                 stepsTaken++
+                if(devTimings) {
+                    let progress = `${stepsTaken}/${stepsRequiredToCallback}`
+                    console.log(`wayback full (${progress})`, time)
+                }
                 if(stepsRequiredToCallback == stepsTaken) {
                     try{callback(code)}catch(error){}
                 }
@@ -1482,8 +1500,12 @@ module.exports = {
             // callback at the top
             function markAsDone() {
                 stepsTaken++
+                if(devTimings) {
+                    let progress = `${stepsTaken}/${stepsRequiredToCallback}`
+                    console.log(`author_old_avatar (${progress})`, time)
+                }
                 if(stepsRequiredToCallback <= stepsTaken) {
-                    try{callback(code)}catch(error){}
+                    try{callback(code)}catch(error){console.log(error)}
                 }
             }
             // exists and not there = set default
@@ -1533,175 +1555,84 @@ module.exports = {
         =======
         */
         let cId = data.id.replace("UC", "")
-        let oldBannerUsed = false;
+        let oBg = false;
 
-        let banner = `https://i3.ytimg.com/u/${cId}/profile_header.jpg`
-        let oBg = overrideBgs[cId]
-        let bgsTry = [
-            `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`,
-            `https://i3.ytimg.com/bg/${cId}/default.jpg`
-        ]
-        let bgsTryIndex = 0;
-        //let bg = `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`
-        let bgfile = __dirname + "/../assets/" + cId + "_background.jpg"
-
-        // channel background
-        function getOldBg(source) {
-            let css = `#channel-body {
-                background-image: url("/assets/${cId}_background.jpg")
-            }
-            `
-            if(!oldBannerUsed && source == "404") {
-                c();
-                return;
-            }
-            // download old background if used
-            let bg = bgsTry[bgsTryIndex]
-            if(!fs.existsSync(bgfile)) {
-                fetch(bg, {
-                    "headers": yt2009constants.headers
-                }).then(r => {
-                    if(r.status !== 404) {
-                        r.buffer().then(buffer => {
-                            fs.writeFileSync(
-                                `../assets/${cId}_background.jpg`,
-                                buffer
-                            )
-                            code = code.replace(`/*yt2009_custom_bg*/`, css)
-                            oldBgUsed = true;
-                            c()
-                        })
-                    } else {
-                        bgsTryIndex++
-                        if(bgsTry.length <= bgsTryIndex) {
-                            // no working bgs, set default
-                            fs.writeFileSync(bgfile, "")
-                            c()
-                        } else {
-                            getOldBg()
-                        }
-                        
-                    }
-                }).catch(e => {
-                    // bg pull fail, use default
-                    fs.writeFileSync(bgfile, "")
-                    c()
-                })
-            } else if(fs.existsSync(bgfile) && fs.statSync(bgfile).size > 5) {
-                // use downloaded background
-                code = code.replace(`/*yt2009_custom_bg*/`, css)
-                oldBgUsed = true;
-                c()
-            } else {
-                // just callback
-                c()
-            }
+        // wait for dominant color complete
+        let dominantColor = []
+        function waitDominantColor(callback) {
+            let z = setInterval(() => {
+                let utd = n_impl_yt2009channelcache.read("main")[data.id]
+                if(utd.dominant_color) {
+                    dominantColor = utd.dominant_color;
+                    clearInterval(z)
+                    callback()
+                }
+            }, 100)
         }
 
-        // top banner
-        let b = __dirname + "/../assets/" + cId + "_banner.jpg"
-        if(!fs.existsSync(b)) {
-            // try to get old top banner
-            fetch(banner, {
-                "headers": yt2009constants.headers
-            }).then(r => {
-                if(r.status !== 404) {
-                    // old banner exists, save
-                    r.buffer().then(buffer => {
-                        fs.writeFileSync(`../assets/${cId}_banner.jpg`, buffer)
-                        code = code.replace(
-                            `<!--yt2009_banner-->`,
-                            templates.banner(`/assets/${cId}_banner.jpg`)
-                        )
-                        oldBannerUsed = true;
-                        getOldBg()
+        // wait for legacy img tryout complete
+        if(!flags.includes("disable_old_banners")) {
+            let y = setInterval(() => {
+                let utd = n_impl_yt2009channelcache.read("main")[data.id]
+
+                if(!utd.oldTryoutComplete) return;
+
+                oBg = utd.obgObject
+
+                clearInterval(y)
+
+                // apply old background if used
+                if(utd.oldBackgroundFile) {
+                    let css = `#channel-body {
+                        background-image: url("/assets/${cId}_background.jpg")
+                    }
+                    `
+                    code = code.replace(`/*yt2009_custom_bg*/`, css)
+                }
+
+                if(utd.oldBannerFile) {
+                    code = code.replace(
+                        `<!--yt2009_banner-->`,
+                        templates.banner(`/assets/${cId}_banner.jpg`)
+                    )
+                    dominant_color(utd.oldBannerFile, (color) => {
+                        applyColor(color)
+                    })
+                } else if(data.bannerUrl) {
+                    code = code.replace(
+                        `<!--yt2009_banner-->`,
+                        templates.banner(`/assets/${cId}_uniq_banner.jpg`)
+                    )
+                    // poll dominant_color
+                    waitDominantColor(() => {
+                        applyColor(dominantColor)
                     })
                 } else {
-                    // doesn't exist, download current
-                    downCurrent()
+                    code = code.split(`yt2009_main_bg`).join(
+                        yt2009utils.createRgb([200, 200, 200])
+                    )
+                    code = code.split(`yt2009_darker_bg`).join(
+                        yt2009utils.createRgb([135, 135, 135])
+                    )
+                    code = code.split("yt2009_text_color").join("black")
+                    code = code.split("yt2009_black").join("icon_black")
+                    ac()
                 }
-            }).catch(e => {
-                // can't pull, use current
-                downCurrent()
-            })
-
-            // failed :( get current banner
-            function downCurrent() {
-                if(!data.bannerUrl) {
-                    fs.writeFileSync(`../assets/${cId}_banner.jpg`, "")
-                    getOldBg()
-                    return;
-                }
-                fetch(data.bannerUrl, {
-                    "headers": yt2009constants.headers
-                }).then(r => {
-                    r.buffer().then(buffer => {
-                        fs.writeFileSync(`../assets/${cId}_banner.jpg`, buffer)
-                        code = code.replace(
-                            `<!--yt2009_banner-->`,
-                            templates.banner(`${`/assets/${cId}_banner.jpg`}`)
-                        )
-                        getOldBg("404")
-                    })
-                }).catch(e => {
-                    fetch(data.bannerUrl.replace("googleusercontent", "ggpht"), {
-                        "headers": yt2009constants.headers
-                    }).then(r => {
-                        fs.writeFileSync(`../assets/${cId}_banner.jpg`, "")
-                        getOldBg()
-                        return;
-                    })
-                })
-            }
+            }, 100)
         } else {
-            if(fs.statSync(b).size > 5
-            && (!oBg || (oBg && !oBg.hideHeader))) {
+            if(devTimings) {
+                console.log("skipping wait for banner")
+            }
+            if(data.newBanner) {
                 code = code.replace(
                     `<!--yt2009_banner-->`,
-                    templates.banner(`/assets/${cId}_banner.jpg`)
+                    templates.banner(`/assets/${cId}_uniq_banner.jpg`)
                 )
-            }
-            getOldBg()
-        }
-        
-        // callback
-        function ac() {
-            stepsTaken++
-            if(stepsRequiredToCallback <= stepsTaken) {
-                try{callback(code)}catch(error){}
-            }
-        }
-        function c() {
-            // get dominant color of banner and set as bg
-            let fname = `${__dirname}/../assets/${cId}_banner.jpg`
-            function applyBanner() {
-                dominant_color(fname, (color) => {
-                    code = code.split(`yt2009_main_bg`).join(
-                        oBg && oBg.primaryBg
-                        ? oBg.primaryBg : yt2009utils.createRgb(color)
-                    )
-                    let brighterBg = [
-                        color[0] + 10, color[1] + 10, color[2] + 10
-                    ]
-                    code = code.split(`yt2009_darker_bg`).join(
-                        oBg && oBg.secondaryBg
-                        ? oBg.secondaryBg : yt2009utils.createRgb(brighterBg)
-                    )
-                    if(brighterBg[0] + brighterBg[1] >= 340
-                    || (oBg && oBg.blackText)) {
-                        code = code.split("yt2009_text_color").join("black")
-                        code = code.split("yt2009_black").join("icon_black")
-                    } else {
-                        code = code.split("yt2009_text_color").join("white")
-                    }
-
-
-                    // callback
-                    ac()
-                }, 32, true)
-            }
-            if(fs.statSync(fname).size < 5) {
-                // banner file doesn't exist, apply default colors
+                // poll dominant_color
+                waitDominantColor(() => {
+                    applyColor(dominantColor)
+                })
+            } else {
                 code = code.split(`yt2009_main_bg`).join(
                     yt2009utils.createRgb([200, 200, 200])
                 )
@@ -1711,15 +1642,48 @@ module.exports = {
                 code = code.split("yt2009_text_color").join("black")
                 code = code.split("yt2009_black").join("icon_black")
                 ac()
-            } else {
-                // exists!!
-                applyBanner()
             }
         }
 
+        function applyColor(color) {
+            code = code.split(`yt2009_main_bg`).join(
+                oBg && oBg.primaryBg
+                ? oBg.primaryBg : yt2009utils.createRgb(color)
+            )
+            let brighterBg = [
+                color[0] + 10, color[1] + 10, color[2] + 10
+            ]
+            code = code.split(`yt2009_darker_bg`).join(
+                oBg && oBg.secondaryBg
+                ? oBg.secondaryBg : yt2009utils.createRgb(brighterBg)
+            )
+            if(brighterBg[0] + brighterBg[1] >= 340
+            || (oBg && oBg.blackText)) {
+                code = code.split("yt2009_text_color").join("black")
+                code = code.split("yt2009_black").join("icon_black")
+            } else {
+                code = code.split("yt2009_text_color").join("white")
+            }
+            // callback
+            ac()
+        }
+        
+        // callback
+        function ac() {
+            stepsTaken++
+
+            if(devTimings) {
+                let progress = `${stepsTaken}/${stepsRequiredToCallback}`
+                console.log(`banners/avatars sorted (${progress})`, time)
+            }
+
+            if(stepsRequiredToCallback <= stepsTaken) {
+                try{callback(code)}catch(error){console.log(error)}
+            }
+        }
 
         if(stepsRequiredToCallback <= stepsTaken) {
-            try{callback(code)}catch(error){}
+            try{callback(code)}catch(error){console.log(error)}
         }
     },
 
@@ -2029,75 +1993,133 @@ module.exports = {
         })})
     },
 
-    "mini_channel_images": function(id, callback) {
-        let cached = tCache[id]
-        // read from cache
-        if(cached) {
-            callback(cached)
-        } else {
-            // clean fetch the channel
-            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                yt2009html.get_api_key()
-            }`, {
-                "headers": yt2009constants.headers,
-                "referrer": "https://www.youtube.com/",
-                "referrerPolicy": "strict-origin-when-cross-origin",
-                "body": JSON.stringify({
-                    "context": yt2009constants.cached_innertube_context,
-                    "browseId": id
-                }),
-                "method": "POST",
-                "mode": "cors"
-            }).then(r => {r.json().then(r => {
-                let c = {}
-                if(!r.header
-                || !r.header.c4TabbedHeaderRenderer) {
-                    c.avatar = "default"
-                    let bFname = id.replace("UC", "") + "_uniq_banner.jpg"
-                    fs.writeFileSync(`../assets/${bFname}`, "")
-                    callback(c)
-                    c.banner = false
-                    tCache[id] = c;
-                }
+    "tryout_legacy_images": function(cId, callback) {
+        cId = cId.replace("UC", "")
+        let data = {
+            "oldTryoutComplete": false,
+            "oldBannerFile": false,
+            "oldBackgroundFile": false,
+            "obgObject": false
+        }
 
-                // avatar
-                try {
-                    console.log(r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url)
-                }catch(error) {
-                    c.avatar = "default"
-                    c.banner = false;
-                    tCache[id] = c;
-                    callback(c)
-                    return;
-                }
-                let avatar = r.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url
-                let fname = avatar.split("/")[avatar.split("/").length - 1]
-                if(!fs.existsSync(`../assets/${fname}.png`)) {
-                    yt2009utils.saveAvatar(avatar)
-                }
-                c.avatar = `/assets/${fname}.png`
+        function c() {
+            // done
+            data.oldTryoutComplete = true;
+            callback(data)
+        }
 
-                // banner
-                let bFname = id.replace("UC", "") + "_uniq_banner.jpg"
-                try {
-                    let banner = r.header.c4TabbedHeaderRenderer.banner.thumbnails[0].url
-                    fetch(banner, {
-                        "headers": yt2009constants.headers
-                    }).then(r => {
+        let banner = `https://i3.ytimg.com/u/${cId}/profile_header.jpg`
+        let oBg = overrideBgs[cId]
+
+        data.obgObject = oBg;
+
+        let bgsTry = [
+            `https://i3.ytimg.com/bg/${cId}/${oBg ? oBg.imageId : "101"}.jpg`,
+            `https://i3.ytimg.com/bg/${cId}/default.jpg`
+        ]
+        let bgsTryIndex = 0;
+        let bgfile = __dirname + "/../assets/" + cId + "_background.jpg"
+
+        let fetchesRequired = 2;
+        let fetchesCompleted = 0;
+
+        function mc() { //markcomplete
+            fetchesCompleted++
+            if(fetchesCompleted >= fetchesRequired) {
+                c()
+            }
+        }
+
+        // channel background
+        function getOldBg() {
+            // download old background if used
+            let bg = bgsTry[bgsTryIndex]
+            if(!fs.existsSync(bgfile)) {
+                if(devTimings) {
+                    console.log(`old bg download attempt start`)
+                }
+                fetch(bg, {
+                    "headers": yt2009constants.headers
+                }).then(r => {
+                    if(r.status !== 404) {
                         r.buffer().then(buffer => {
-                            fs.writeFileSync(`../assets/${bFname}`, buffer)
+                            fs.writeFileSync(bgfile, buffer)
+                            data.oldBackgroundFile = bgfile
+                            if(devTimings) {
+                                console.log(`old bg downloaded`)
+                            }
+                            mc()
                         })
-                    })
-                    c.banner = `/assets/${bFname}`
+                    } else {
+                        bgsTryIndex++
+                        if(bgsTry.length <= bgsTryIndex) {
+                            mc()
+                        } else {
+                            getOldBg()
+                        }
+                        
+                    }
+                }).catch(e => {
+                    // bg pull fail, use default
+                    if(devTimings) {
+                        console.log(`old bg not working`)
+                    }
+                    mc()
+                    console.log(e)
+                })
+            } else if(fs.existsSync(bgfile) && fs.statSync(bgfile).size > 5) {
+                // use downloaded background
+                if(devTimings) {
+                    console.log(`old bg already downloaded, using`)
                 }
-                catch(error) {
-                    fs.writeFileSync(`../assets/${bFname}`, "")
+                data.oldBackgroundFile = bgfile
+                mc()
+            } else {
+                // just callback
+
+                if(devTimings) {
+                    console.log(`old bg different case, using modern`)
                 }
 
-                // send
-                tCache[id] = c;
-                callback(c)
-            })})
+                mc()
+            }
+        }
+        getOldBg()
+
+        // top banner
+        let b = __dirname + "/../assets/" + cId + "_banner.jpg"
+        if(!fs.existsSync(b)) {
+            if(devTimings) {
+                console.log(`old top banner attempt start`)
+            }
+            // try to get old top banner
+            fetch(banner, {
+                "headers": yt2009constants.headers
+            }).then(r => {
+                if(r.status !== 404) {
+                    // old banner exists, save
+                    r.buffer().then(buffer => {
+                        fs.writeFileSync(b, buffer)
+                        data.oldBannerFile = b;
+                        
+                        mc()
+
+                        if(devTimings) {
+                            console.log(`old banner downloaded`)
+                        }
+                    })
+                } else {
+                    mc()
+                }
+            }).catch(e => {
+                console.log(e)
+            })
+        } else {
+            if(fs.statSync(b).size > 5
+            && (!oBg || (oBg && !oBg.hideHeader))) {
+                data.oldBannerFile = b
+            }
+            mc()
         }
     }
 }

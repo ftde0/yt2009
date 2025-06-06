@@ -257,14 +257,20 @@ module.exports = {
             // remove only_old markings
             t = t.split(" before:")[0]
             if(t == ":" || t == "") {markDone();return;}
+
+            let date = (new Date(v.upload).getTime() + (1000 * 60 * 60 * 24 * 9))
+            if(date >= Date.now()) {
+                date = Date.now()
+            }
+
             data.push({
                 "type": "ref-found-search",
                 "display_header": "First referral from YouTube search - ",
                 "query": t,
                 "approx_view": estViewCountAtTime(
-                    v, (new Date(v.upload).getTime() + (1000 * 60 * 60 * 24 * 9))
+                    v, date
                 ),
-                "date": new Date(v.upload).getTime() + (1000 * 60 * 60 * 24 * 9)
+                "date": date
             })
             markDone()
         })
@@ -313,10 +319,14 @@ module.exports = {
         // if new video and a lot of views, mark as viral
         if((new Date() - new Date(v.upload) - (1000 * 60 * 60 * 24 * 7)) < 651665357
         && v.viewCount > 100000) {
+            let date = new Date(v.upload).getTime() + (1000 * 60 * 60 * 24 * 3)
+            if(date >= Date.now()) {
+                date = Date.now()
+            }
             data.push({
                 "type": "viral",
                 "approx_view": Math.floor(v.viewCount / 3),
-                "date": new Date(v.upload).getTime() + (1000 * 60 * 60 * 24 * 3)
+                "date": date
             })
             markDone()
         } else {

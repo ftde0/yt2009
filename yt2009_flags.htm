@@ -214,6 +214,8 @@
 			<span id="default-avatar-notice">zobacz default_avatar na /watch dla możliwych wartości</span><br>
 			<input type="checkbox" id="channel-default-color" title="domyślne kolory tła (szare) zamiast brania ich z baneru">
 			<label for="channel-default-color">default_color</label><br>
+			<input type="checkbox" id="channel-disable-old-banners" title="nie pokazuje starych banerów i teł. przyspiesza ładowanie stron.">
+			<label for="channel-disable-old-banners">disable_old_banners</label><br>
 			<input type="checkbox" id="channel-index-contribute" title="kanały które odwiedzisz będą widoczne (anonimowo) dla wszystkich na /channels">
 			<label for="channel-index-contribute">index_contribute</label><br>
 			<input type="checkbox" id="channel-only-old" title="pokazuje na kanałach tylko filmy wrzucone w zakresie/przed datą (domyślnie 01.04.2010)">
@@ -267,6 +269,8 @@
 			<label for="global-autogen-thumbnails">autogen_thumbnails</label><br>
 			<input type="checkbox" id="global-fake-dates" title="podstawione daty komentarzy i opublikowania">
 			<label for="global-fake-dates">fake_dates</label><br>
+			<input type="checkbox" id="global-adaptive-old" title="automatycznie ustawia only_old na obecną datę w przeszłości. wymaga włączonego only_old.">
+			<label for="global-adaptive-old">adaptive_old</label><br>
 			<input type="checkbox" id="global-login-simulate" title="symuluje zalogowanego użytkownika">
 			<label for="global-login-simulate">login_simulate</label>
 			<input type="text" id="global-login-simulate-input" autocomplete="off" spellcheck="false" placeholder="nazwa" maxlength="20" onkeypress=""><br>
@@ -280,7 +284,6 @@
 			<label for="global-thumbnail-proxy">thumbnail_proxy</label>
 		</div>
 		<a class="yt-button yt-button-primary" href="#" onclick="update_cookies();"><span id="i_save">zapisz</span></a><br>
-		<span style="font-size: 10px;">ctest</span>
 
 
 		<!-- end bottom section -->
