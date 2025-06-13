@@ -74,14 +74,19 @@ function show_playlist(element) {
             } else {
                 r = new ActiveXObject("Microsoft.XMLHTTP");
             }
-            r.open(
-                "GET", 
-                "/pchelper_playlist?playlist=" + id + "&r=" + Math.random.toString()
-            )
+            var playlistUrl = [
+                "/pchelper_playlist",
+                "?playlist=" + id,
+                "&r=" + Math.random.toString()//,
+                //"&format=ssr"
+            ].join("")
+            r.open("GET", playlistUrl)
             setTimeout(function() {r.send(null)},100)
             r.onreadystatechange = function(e) {
                 if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
                     rawVideos = r.responseText
+                    /*$(".yt2009-videos-insert").innerHTML = rawVideos;
+                    playlistAddPchelperDelete(id)*/
                     onVideosReady()
                 }
             }
@@ -93,15 +98,19 @@ function show_playlist(element) {
             } else {
                 r = new ActiveXObject("Microsoft.XMLHTTP");
             }
-            var r = new XMLHttpRequest();
-            r.open(
-                "GET", 
-                "/nonpch_playlist?playlist=" + playlistId + "&r=" + Math.random.toString()
-            )
+            var playlistUrl = [
+                "/nonpch_playlist",
+                "?playlist=" + id,
+                "&r=" + Math.random.toString()//,
+                //"&format=ssr"
+            ].join("")
+            r.open("GET", playlistUrl)
             setTimeout(function() {r.send(null)},100)
             r.onreadystatechange = function(e) {
                 if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
                     rawVideos = r.responseText
+                    /*$(".yt2009-videos-insert").innerHTML = rawVideos;
+                    playlistAddPchelperDelete(id) you piece of shit IE*/
                     onVideosReady()
                 }
             }
@@ -173,9 +182,76 @@ function show_playlist(element) {
             
             videoIndex++;
         }
+        playlistAddPchelperDelete(id)
     }
 }
 
+var pchelperFavPage = (
+    location.href.indexOf("my_favorites") !== -1
+    && document.cookie
+    && document.cookie.indexOf("playlists_sync") !== -1
+)
+
+var pchelper_global_playlist_id = ""
+if(pchelperFavPage) {
+    pchelper_global_playlist_id = document.getElementById("pchelper-fav-id").innerHTML
+}
+
+function playlistAddPchelperDelete(playlistId) {
+    if(document.cookie && document.cookie.indexOf("playlists_sync") !== -1) {
+        pchelper_global_playlist_id = playlistId;
+        document.querySelector("#playlist-btn-remove").onclick = function() {
+            var selectedVideoIds = []
+            var inputs = document.getElementsByTagName("input")
+            for(var i in inputs) {
+                if(inputs[i]
+                && inputs[i].tagName
+                && inputs[i].getAttribute("type") == "checkbox"
+                && inputs[i].getAttribute("data-videoid")
+                && inputs[i].checked) {
+                    selectedVideoIds.push(
+                        inputs[i].getAttribute("data-videoid")
+                    )
+                }
+            }
+
+            var pchelperRequest = [
+                "method=remove_videos",
+                "playlist_id=" + pchelper_global_playlist_id,
+                "video_ids=" + selectedVideoIds.join(",")
+            ].join("&")
+
+            var r;
+            if (window.XMLHttpRequest) {
+                r = new XMLHttpRequest()
+            } else {
+                r = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            r.open("POST", "/pchelper_playlists?r=" + Math.random().toString())
+            r.send(pchelperRequest)
+            r.onreadystatechange = function(e) {
+                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                    // reload playlist
+
+                    if(pchelperFavPage) {
+                        location.reload()
+                        return;
+                    }
+
+                    var divs = document.getElementById("list-pane")
+                                       .getElementsByTagName("div");
+                    for(var d in divs) {
+                        if(divs[d] && divs[d].tagName
+                        && divs[d].getAttribute("data-id") == pchelper_global_playlist_id) {
+                            show_playlist(divs[d])
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+}
 
 function switchChannel(element) {
     var url = element.getAttribute("data-url")
@@ -216,5 +292,14 @@ function switchChannel(element) {
             document.getElementById("view-pane")
                     .getElementsByTagName("h2")[0].innerHTML = username
         }
+    }
+}
+
+
+// my_videos: delete
+function deletePrompt(videoId) {
+    var ans = confirm("Are you sure you want to delete the selected videos?")
+    if(ans) {
+        document.getElementById("video-delete-" + videoId).submit()
     }
 }

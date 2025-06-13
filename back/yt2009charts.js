@@ -389,6 +389,7 @@ module.exports = {
                 let x = chartXStart + ((chartXSize / 100) * c.p)
                 let lineYStart = chartYStart + 20
                 let tY = Math.floor(c.p / 100 * updates)
+                if(!polyline[tY]) return;
                 try {
                     polyline[tY].split(",")[1]
                 }

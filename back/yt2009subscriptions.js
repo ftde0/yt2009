@@ -68,7 +68,7 @@ module.exports = {
             )
         }
 
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
         code = languages.apply_lang_to_code(code, req)
 
         res.send(code);

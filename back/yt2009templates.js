@@ -21,6 +21,7 @@ module.exports = {
             likeColor = "red"
         }
         // check for timestamps/@s in contents
+        content = utils.xss(content)
         content.split(" ").forEach(c => {
             if(c.includes(":")) {
                 let dIndex = c.indexOf(":")
@@ -467,7 +468,7 @@ module.exports = {
             </div>
         </div>`
     },
-    "videoCommentPost": function(useRelay, relay_url, id, relay_key) {
+    "videoCommentPost": function(id) {
         return `
                         <div id="watch-comment-post">
                             <div class="floatR hid">
@@ -478,8 +479,7 @@ module.exports = {
                         <div>
                             <div style="float:left;width:650px;">
                                 <div id="div_main_comment" style="float:left;" class="">
-                                    <form name="comment_formmain_comment" id="comment_formmain_comment" onsubmit="return false;" method="post" action="${useRelay ? relay_url : ""}/comment_post">
-                                        ${useRelay ? `<input type="hidden" name="relay_key" value="${relay_key}">` : ""}
+                                    <form name="comment_formmain_comment" id="comment_formmain_comment" onsubmit="return false;" method="post" action="/comment_post">
                                         <input type="hidden" name="video_id" value="${id}" id="comment_textarea_video_id">
                                         <input type="hidden" name="form_id" value="comment_formmain_comment">
                                         <input type="hidden" name="reply_parent_id" value="">
@@ -887,7 +887,7 @@ module.exports = {
         <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">
             <div style="float: left;">
                 <div style="float: left;">
-                    <input type="checkbox" class="checkbox" value="${video.id}" />
+                    <input type="checkbox" class="checkbox" value="${video.id}" data-videoid="${video.id}" />
                 </div>
             </div>
             <div style="float: left; width: 120px;">
@@ -1654,6 +1654,10 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                         <a class="yt-button" id="" href="/watch?v=${v.id}"><span>Play</span></a>
                         <a class="yt-button" id="" href="/my_videos_edit?video_id=${v.id}"><span>Edit</span></a>
                         ${v.downloadUrl ? `<a class="yt-button" target="_blank" id="" href="https://www.youtube.com${v.downloadUrl}"><span>Download MP4</span></a>` : ""}
+                        <a class="yt-button" id="delete-video-button" href="javascript:void(0)" onclick="deletePrompt('${v.id}')"><span>Delete</span></a>
+                        <form action="/my_videos_delete" method="POST" class="hid" id="video-delete-${v.id}">
+                        <input type="hidden" name="video_ids" value="${v.id}">
+                        </form>
                     </div>
                 </div>
                 <div class="video-buttons-ext">
@@ -3231,5 +3235,43 @@ term='channel'/>
             </div>` : ""}
         </div>
         <div class="spacer">&nbsp;</div>`
+    },
+    "ssr_yt_playlist": function(videos, autogen, proxy) {
+        let html = ""
+        let i = 0;
+        videos.forEach(v => {
+            let thumbUrl = `//i.ytimg.com/vi/${v.id}/${autogen ? "1.jpg" : "default.jpg"}`
+            if(proxy) {
+                thumbUrl = `/get_still.php?video_id=${v.id}`
+            }
+            html += `
+<tr class="video ${i % 2 == 0 ? "even" : "odd"}" data-videoid="${v.id}">
+    <td id="heading-check" class="first heading">
+        <div><input id="all-items-checkbox" type="checkbox" onclick="" data-videoid="${v.id}"/></div>
+    </td>
+    <td id="heading-position" class="heading">
+        <div style="text-align: center;"><a href="#" style="text-align: center;font-size: 14px;"><b>${i + 1}</b></a></div>
+    </td>
+    <td id="heading-title" class="heading">
+        <button title="" class="master-sprite"></button>
+        <a href="/watch?v=${v.id}" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="${thumbUrl}"></a>
+        <a href="/watch?v=${v.id}" class="video-title">${utils.xss(v.title)}</a>
+    </td>
+    <td id="heading-time" class="heading">
+        <div>${v.time}</div>
+    </td>
+    <td id="heading-date" class="heading">
+        <div>${v.date}</div>
+    </td>
+    <td id="heading-views" class="heading">
+        <div>${v.viewCount}</div>
+    </td>
+    <td id="heading-rating" class="heading">
+        <div><div class="video-stat"><span class="stat-rating"><img class="yt-rating-${v.rating}" src="/assets/site-assets/pixel-vfl73.gif" alt="${v.rating}" /></span></div></div>
+    </td>
+</tr>`
+            i++
+        })
+        return html;
     }
 }

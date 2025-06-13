@@ -112,7 +112,7 @@ module.exports = {
         code = require("./yt2009loginsimulate")(req, code, true);
         code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
         code = code.split(`yt2009_page_count`).join(pageNum)
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
         code = languages.apply_lang_to_code(code, req)
 
         res.send(code);

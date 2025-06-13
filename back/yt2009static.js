@@ -52,7 +52,7 @@ module.exports = {
             site = site.replace(`yt2009_html5_mark`, `html5`)
         }
         site = require("./yt2009loginsimulate")(req, site)
-        site = doodles.applyDoodle(site)
+        site = doodles.applyDoodle(site, req)
         res.send(site)
     }
 }

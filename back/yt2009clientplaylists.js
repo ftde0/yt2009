@@ -56,7 +56,7 @@ module.exports = {
         }
 
         code = require("./yt2009loginsimulate")(req, code, true);
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
         code = languages.apply_lang_to_code(code, req)
         res.send(code);
     }

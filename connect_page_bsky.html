@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>account login</title>
+    <style>
+        body {
+            background-color: rgb(50,50,90);
+            color: white;
+            font-family: sans-serif;
+        }
+        #centered {
+            position: absolute;
+            width: 270px;
+            height: 380px;
+            background-color: rgb(70,70,110);
+            border-radius: 10px;
+            padding: 10px 15px;
+        }
+        #https-notice {
+            font-size: 16px;
+            padding: 10px 15px;
+            background: rgb(164, 65, 65);
+            border-radius: 5px;
+            z-index: 5;
+            position: relative;
+            margin-bottom: 15px;
+        }
+        #show-on-demand-notice {
+            font-size: 16px;
+            padding: 10px 15px;
+            background: rgb(220, 79, 79);
+            border-radius: 5px;
+            z-index: 5;
+            position: relative;
+        }
+        td {
+            width: 120px;
+        }
+        td span {
+            white-space: nowrap;
+        }
+        td input {
+            width: 150px;
+        }
+        table {
+            margin-top: 40px;
+        }
+        #submit-button-container {
+            margin-top: 30px;
+            text-align: center;
+            width: 270px;
+        }
+        #submit-btn {
+            background-color: rgb(90,90,130);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            text-align: center;
+        }
+        #submit-btn:visited {
+            color: white;
+        }
+        #submit-btn:hover {
+            background-color: rgb(100,100,140);
+        }
+        #bottom-notice {
+            margin-top: 55px;
+        }
+        #bottom-notice span {
+            margin-bottom: 10px;
+            display: block;
+        }
+        #bottom-notice a, #bottom-notice a:visited {
+            color: white;
+        }
+
+        .font-size-small {
+            color: #aaa;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="https-notice">
+        <span>[!] you are visiting this webpage over HTTP. your sent data will be obfuscated but proper encryption is not possible. visit this page over HTTPS for better security.</span>
+    </div>
+    <div id="show-on-demand-notice" style="display: none;">
+        <span>show_on_demand_notice_text</span>
+    </div>
+    <div id="centered">
+        <form action="/autoshare_connect" method="POST" id="autoshare-connect">
+            <table>
+                <tr>
+                    <td>
+                        <span>username:</span>
+                    </td>
+                    <td>
+                        <input type="input1_type" name="input1" autocomplete="off" spellcheck="false">
+                        <input type="input2_type" name="input2" autocomplete="off" spellcheck="false">
+                        <input type="input3_type" name="input3" autocomplete="off" spellcheck="false">
+                        <input type="input4_type" name="input4" autocomplete="off" spellcheck="false">
+                        <input type="input5_type" name="input5" autocomplete="off" spellcheck="false">
+                        <input type="input6_type" name="input6" autocomplete="off" spellcheck="false">
+                        <input type="input7_type" name="input7" autocomplete="off" spellcheck="false">
+                        <input type="input8_type" name="input8" autocomplete="off" spellcheck="false">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span>app password:</span>
+                    </td>
+                    <td>
+                        <input type="input9_type" name="input9" autocomplete="off" spellcheck="false">
+                        <input type="input10_type" name="input10" autocomplete="off" spellcheck="false">
+                        <input type="input11_type" name="input11" autocomplete="off" spellcheck="false">
+                        <input type="input12_type" name="input12" autocomplete="off" spellcheck="false">
+                        <input type="input13_type" name="input13" autocomplete="off" spellcheck="false">
+                        <input type="input14_type" name="input14" autocomplete="off" spellcheck="false">
+                        <input type="input15_type" name="input15" autocomplete="off" spellcheck="false">
+                        <input type="input16_type" name="input16" autocomplete="off" spellcheck="false">
+                    </td>
+                </tr>
+                <tr id="verify-code-inputs">
+                    <td>
+                        <span>verify code:</span>
+                    </td>
+                    <td>
+                        <input type="input17_type" name="input17" autocomplete="off" spellcheck="false">
+                    </td>
+                </tr>
+                <input type="hidden" name="crc" id="crc-input">
+                <tr style="text-align: center;">
+                    <td colspan="2">
+                        <div id="submit-button-container">
+                            <a href="javascript:void(0)" id="submit-btn" onclick="submitData()">submit</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <div id="bottom-notice">
+            <span>yt2009 <b>dev</b> contact: <a href="https://github.com/ftde0" target="_blank">https://github.com/ftde0</a></span>
+            <span>yt2009 <b>instance host</b> contact: <i>(to be filled)</i></span>
+            <span class="font-size-small">
+                neither the instance host, nor the dev has access to your bsky account without your access tokens.
+                <br>your raw username and password aren't saved.<br><br>
+                yt2009 is not affiliated nor endorsed with bsky.
+            </span>
+        </div>
+    </div>
+    <script>
+        if(location.protocol && location.protocol.indexOf("https") !== -1) {
+            document.getElementById("https-notice").style.display = "none"
+        }
+
+        function center() {
+            var center_width = 300
+            var center_height = 400
+
+            var height = window.innerHeight || document.documentElement.clientHeight
+            var width = window.innerWidth || document.documentElement.clientWidth
+
+            var l = (width / 2) - (center_width / 2)
+            var t = (height / 2) - (center_height / 2)
+            document.getElementById("centered").style.left = l + "px"
+            document.getElementById("centered").style.top = t + "px"
+        }
+        center()
+        window.onresize = center;
+
+        function fakeData(length, hex) {
+            var a = []
+            while(a.length !== length) {
+                var i = Math.floor(Math.random() * 70) + 48
+                if(hex) {
+                    i = String.fromCharCode(i)
+                }
+                a.push(i)
+            }
+            return a;
+        }
+
+        function shift(input, amount) {
+            var a = []
+            input = input.split("")
+            for(var i in input) {
+                if(input[i]) {
+                    a.push(input[i].charCodeAt(0) + amount)
+                }
+            }
+            return a;
+        }
+
+        function joinCodes(charcodes) {
+            var s = ""
+            for(var c in charcodes) {
+                if(charcodes[c]) {
+                    s += String.fromCharCode(charcodes[c])
+                }
+            }
+            return s;
+        }
+
+        function padStart(string, maxLength, fillString) {
+            try {
+                return string.padStart(maxLength, fillString)
+            }
+            catch(error) {
+                var a = ""
+                while(a.length !== (maxLength - string.length)) {
+                    a += fillString
+                }
+                a += string;
+                return a;
+            }
+        }
+
+        function submitData() {
+            var usernameInput = document.getElementById("input-username")
+            var passwordInput = document.getElementById("input-password")
+            var verifiInput = document.getElementById("input-verifi")
+
+            // username
+            var usernameLength = usernameInput.value.length;
+            var usernameShift = Math.floor(Math.random() * 120) + 1
+            var shiftedUsername = shift(usernameInput.value, usernameShift)
+
+            var fakeUsernames = []
+            while(fakeUsernames.length !== 7) {
+                fakeUsernames.push(fakeData(usernameLength, true))
+            }
+
+            // password
+            var pwdLength = passwordInput.value.length;
+            var pwdShift = Math.floor(Math.random() * 120) + 1
+            var shiftedPwd = shift(passwordInput.value, pwdShift)
+
+            var fakePwds = []
+            while(fakePwds.length !== 7) {
+                fakePwds.push(fakeData(pwdLength, true))
+            }
+            
+            // apply shifts and fakes
+            var inputs = document.getElementsByTagName("input")
+            var usernameInputs = [1,2,3,4,5,6,7,8]
+            var pwdInputs = [9,10,11,12,13,14,15,16]
+
+            var tui = 0;
+            for(var i in usernameInputs) {
+                if(usernameInputs[i] && typeof(usernameInputs[i]) == "number") {
+                    var code = "input" + usernameInputs[i];
+                    var e = document.getElementsByName(code)
+                    if(e[0]
+                    && e[0].getAttribute("name") !== usernameInput.getAttribute("name")) {
+                        e[0].value = fakeUsernames[tui].join("")
+                        tui++
+                    }
+                }
+            }
+
+            var tpi = 0;
+            for(var i in pwdInputs) {
+                if(pwdInputs[i] && typeof(pwdInputs[i]) == "number") {
+                    var code = "input" + pwdInputs[i];
+                    var e = document.getElementsByName(code)
+                    if(e[0]
+                    && e[0].getAttribute("name") !== passwordInput.getAttribute("name")) {
+                        e[0].value = fakePwds[tpi].join("")
+                        tpi++
+                    }
+                }
+            }
+
+            
+            var usernameCIP1 = parseInt(
+                usernameInput.getAttribute("name").replace("input", "")
+            ).toString(16)
+            usernameCIP1 = padStart(usernameCIP1, 2, "0")
+            var usernameCIP2 = usernameShift.toString(16)
+            usernameCIP2 = padStart(usernameCIP2, 2, "0")
+            var pwdCIP1 = parseInt(
+                passwordInput.getAttribute("name").replace("input", "")
+            ).toString(16)
+            pwdCIP1 = padStart(pwdCIP1, 2, "0")
+            var pwdCIP2 = pwdShift.toString(16)
+            pwdCIP2 = padStart(pwdCIP2, 2, "0")
+
+            usernameInput.value = joinCodes(shiftedUsername);
+            passwordInput.value = joinCodes(shiftedPwd)
+
+            var fullCI = [
+                usernameCIP1, usernameCIP2,
+                pwdCIP1, pwdCIP2
+            ]
+
+            if(verifiInput) {
+                fullCI.push(verifiInput.value)
+            }
+
+            fullCI = fullCI.join("")
+
+            document.getElementById("crc-input").value = "TYPE_B-" + fullCI;
+            document.getElementById("autoshare-connect").submit()
+
+        }
+    </script>
+</body>
+</html>

@@ -46,15 +46,16 @@ var languageData_EN = {
         "mainpage-remove-username-space": "removes spaces from usernames",
         "mainpage-username-asciify": "remove special characters from usernames",
 
+        "global-adaptive-old": "automatically sets only_old to the current day and month in the past. requires only_old enabled.",
         "global-always-annotations": "automatically enables annotations for videos",
         "global-always-captions": "automatically enables captions for videos",
         "global-author-old-avatar": "uses old avatars if present on youtube servers",
         "global-autogen-thumbnails": "use automatically generated thumbnails",
         "global-fake-dates": "fake upload and comment dates",
-        "global-adaptive-old": "automatically sets only_old to the current day and month in the past. requires only_old enabled.",
         "global-login-simulate": "simulates a logged in user",
         "global-new-suggestions": "shows new suggestions in search box",
         "global-no-controls-fade": "disables video controls fade out",
+        "global-no-doodles": "disables doodles -- seasonal youtube logos",
         "global-annotation-redirect": "redirects all youtube.com links within annotations to yt2009",
         "global-shows-tab": "shows a Shows tab (only for demo, doesn't actually work)",
         "global-thumbnail-proxy": "routes thumbnails through yt2009 to fix them on networks that might block youtube."

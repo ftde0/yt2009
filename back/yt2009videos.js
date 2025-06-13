@@ -123,7 +123,7 @@ module.exports = {
                 `http://${config.ip}:${config.port}/videos-rss?r=1&uid=${uid}`
             )
             code = require("./yt2009loginsimulate")(req, code)
-            code = doodles.applyDoodle(code)
+            code = doodles.applyDoodle(code, req)
             code = language.apply_lang_to_code(code, req)
             res.send(code)
             return;
@@ -282,7 +282,7 @@ module.exports = {
 
         // finalize
         code = require("./yt2009loginsimulate")(req, code)
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
         code = language.apply_lang_to_code(code, req)
         res.send(code)
     },

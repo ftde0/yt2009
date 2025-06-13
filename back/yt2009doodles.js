@@ -37,8 +37,10 @@ module.exports = {
         return doodles[date] || false;
     },
 
-    "applyDoodle": function(code) {
-        if(this.getDoodle()) {
+    "applyDoodle": function(code, req) {
+        if(this.getDoodle()
+        && (!req || !req.headers || !req.headers.cookie
+        || !req.headers.cookie.includes("no_doodles"))) {
             let d = this.getDoodle()
             let dc = `<img id="logo" src="${d}" style="width: auto;height: auto;"/>`
             replacableCodes.forEach(c => {

@@ -181,7 +181,7 @@ module.exports = {
                         applyHTML(data, flags, (html => {
                             writeTimingData("applyHTML")
                             html = yt2009languages.apply_lang_to_code(html, req)
-                            html = yt2009doodles.applyDoodle(html)
+                            html = yt2009doodles.applyDoodle(html, req)
                             if(html.includes(` (0)</div>`)) {
                                 html = html.split(` (0)</div>`).join(`</div>`)
                             }
@@ -2120,6 +2120,88 @@ module.exports = {
                 data.oldBannerFile = b
             }
             mc()
+        }
+    },
+    
+    "aboutChannel": function(cId, callback) {
+        let metadata = {}
+        fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+            "headers": yt2009constants.headers,
+            "referrer": "https://www.youtube.com/",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": yt2009constants.cached_innertube_context,
+                "browseId": cId,
+                "params": "EgVhYm91dPIGBBICIgA%3D"
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            //fs.writeFileSync("./test.json", JSON.stringify(r))
+            try {
+                let mr = r.contents.twoColumnBrowseResultsRenderer.tabs[0]
+                         .tabRenderer.content.sectionListRenderer.contents[0]
+                         .channelAboutFullMetadataRenderer
+                if(!mr || !mr.canonicalChannelUrl) {
+                    mr = r.contents.twoColumnBrowseResultsRenderer.tabs[0]
+                         .tabRenderer.content.sectionListRenderer.contents[0]
+                         .itemSectionRenderer.contents[0]
+                         .channelAboutFullMetadataRenderer
+                }
+                for(let p in mr) {
+                    metadata[p] = mr[p]
+                }
+            }
+            catch(error) {
+                console.log("error at extract ful metadata", error)
+            }
+            try {
+                let mr = r.metadata.channelMetadataRenderer
+                for(let p in mr) {
+                    metadata[p] = mr[p]
+                }
+            }
+            catch(error) {
+                console.log("error at extract part metadata", error)
+            }
+
+            callback(metadata)
+        })})
+    },
+
+    "subCount": function(cId, callback) {
+        if(n_impl_yt2009channelcache.read("main")[cId]
+        && n_impl_yt2009channelcache.read("main")[cId].properties
+        && n_impl_yt2009channelcache.read("main")[cId].properties.subscribers) {
+            let subc = n_impl_yt2009channelcache.read("main")[cId]
+                       .properties.subscribers;
+            callback(yt2009utils.approxSubcount(subc.split(" ")[0]))
+        } else {
+            fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+                "headers": yt2009constants.headers,
+                "referrer": "https://www.youtube.com/",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": JSON.stringify({
+                    "context": yt2009constants.cached_innertube_context,
+                    "browseId": cId
+                }),
+                "method": "POST",
+                "mode": "cors"
+            }).then(r => {r.json().then(r => {
+                this.parse_main_response(r, "", (data) => {
+                    if(!data) {
+                        callback("0")
+                        return;
+                    }
+
+                    if(data.properties && data.properties.subscribers) {
+                        let subc = data.properties.subscribers
+                        callback(yt2009utils.approxSubcount(subc.split(" ")[0]))
+                    } else {
+                        callback("0")
+                    }
+                })
+            })})
         }
     }
 }

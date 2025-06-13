@@ -32,6 +32,7 @@ const yt2009_doodles = require("./yt2009doodles")
 const yt2009_exports = require("./yt2009exports")
 const yt2009_stats = require("./yt2009statsdata")
 const yt2009_myvideos = require("./yt2009myvideos")
+const yt2009_autoshare = require("./yt2009autoshare")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -427,7 +428,7 @@ app.get("/watch", (req, res) => {
                 res.redirect("/?ytsession=3")
             }
             code = yt2009_languages.apply_lang_to_code(code, req)
-            code = yt2009_doodles.applyDoodle(code)
+            code = yt2009_doodles.applyDoodle(code, req)
             if(devTimings) {
                 console.log(t, "apply watchpage done")
                 clearInterval(x)
@@ -1362,7 +1363,7 @@ app.get("/embed_get_endscreen", (req, res) => {
         </style>
         `
         res.send(endscreen_html)
-    }, "", true)
+    }, "", (req.headers.cookie && req.headers.cookie.includes("exp_related")))
 })
 
 /*
@@ -1938,7 +1939,47 @@ app.get("/my_videos_upload", (req, res) => {
 app.post("/my_videos_upload", (req, res) => {
     yt2009_myvideos.handleUploadFlow(req, res)
 })
+app.post("/my_videos_delete", (req, res) => {
+    if(!mobileHelper.hasLogin(req)) {
+        res.sendStatus(400)
+        return;
+    }
+    let s = ""
+    let fRes = {
+        "setS": function(state) {
+            s = state;
+        },
+        "sendStatus": function(status) {
+            if(status >= 200 && status <= 300) {
+                res.redirect("/my_videos?s="  +s)
+            } else {
+                res.redirect("/my_videos")
+            }
+        }
+    }
+    mobileHelper.deleteVideos(req, fRes)
+})
 
+/*
+======
+activity sharing endpoints
+======
+*/
+app.get("/autoshare_connect", (req, res) => {
+    yt2009_autoshare.genConnectPage(req, res)
+})
+app.post("/autoshare_connect", (req, res) => {
+    yt2009_autoshare.handleConnect(req, res)
+})
+app.get("/autoshare_resolve_user", (req, res) => {
+    yt2009_autoshare.handleResolve(req, res)
+})
+app.get("/autoshare_disconnect", (req, res) => {
+    yt2009_autoshare.disconnect(req, res)
+})
+app.post("/autoshare_submit", (req, res) => {
+    yt2009_autoshare.submit(req, res)
+})
 
 /*
 ======
@@ -2075,11 +2116,335 @@ app.get("/account", (req, res) => {
         return;
     }
 
+    let fetchesRequired = 0;
+    let fetchesCompleted = 0;
+
+    function finalize() {
+        // add mainpage notices if needed
+        if(req.query.src == "avatar_changed") {
+            code = code.replace(
+                `page-main-message hid`,
+                `page-main-message`
+            )
+            code = code.replace(
+                `changes_saved_notice`,
+                `Changes saved! Your new picture may take a few minutes to appear everywhere.`
+                //"Changes saved!"
+            )
+        }
+
+        if(code.includes("yt2009_videos_uploaded")) {
+            code = code.replace("yt2009_videos_uploaded", "0")
+            code = code.replace("yt2009_video_views", "0")
+            code = code.replace("yt2009_channel_views", "1")
+            code = code.replace("yt2009_subscriber_count", "0")
+            code = code.replace("yt2009_favorite_count", "0")
+        }
+        res.send(code)
+    }
+
     let code = accountHTML;
     code = require("./yt2009loginsimulate")(req, code, true)
     code = yt2009_languages.apply_lang_to_code(code, req)
-    res.send(code)
 
+    // account data if pchelper
+    if(mobileHelper.hasLogin(req)) {
+        fetchesRequired++;
+        mobileHelper.openBrowseId(req, (id) => {
+            fetchesCompleted++
+            if(!id) {
+                // can't proceed without channel id (no channel?)
+                fetchesCompleted++
+                if(fetchesCompleted == fetchesRequired) {
+                    finalize()
+                }
+                return;
+            }
+
+            code = code.replace(
+                `<span class="greyText">Channel Views:</span>`,
+                ""
+            )
+            code = code.replace(
+                `<span id="channel-views">yt2009_channel_views</span><br>`,
+                ""
+            )
+
+            fetchesRequired += 4
+            // about channel
+            yt2009_channels.aboutChannel(id, (about) => {
+                if(about.avatar && about.avatar.thumbnails
+                && about.avatar.thumbnails[0]) {
+                    let url = about.avatar.thumbnails[0].url;
+                    if(url.includes("=s900")) {
+                        url = url.replace("=s900", "=s88")
+                    }
+                    if(url.includes("=s48")) {
+                        url = url.replace("=s48", "=s88")
+                    }
+                    url = yt2009_utils.saveAvatar(url, false, true)
+                    code = code.replace(
+                        `/assets/site-assets/default.png`,
+                        url
+                    )
+                    code = code.replace(
+                        `/assets/site-assets/default-centered.png`,
+                        url
+                    )
+                    code = code.replace(
+                        ` style="margin-left: -12px"`,
+                        ""
+                    )
+                    code = code.replace(
+                        ` style="margin-left: -2px;"`,
+                        ""
+                    )
+                }
+                if(about.viewCountText && about.viewCountText.simpleText) {
+                    code = code.replace(
+                        `yt2009_video_views`,
+                        about.viewCountText.simpleText.split(" ")[0]
+                    )
+                } else {
+                    code = code.replace(
+                        `yt2009_video_views`,
+                        "0"
+                    )
+                }
+                if(about.title) {
+                    if(about.title.simpleText) {
+                        code = code.replace(
+                            `>username<`,
+                            ">" + yt2009_utils.xss(about.title.simpleText) + "<"
+                        )
+                    } else {
+                        code = code.replace(
+                            `>username<`,
+                            ">" + yt2009_utils.xss(about.title) + "<"
+                        )
+                    }
+                }
+                if(about.description && typeof(about.description) == "string") {
+                    code = code.replace(
+                        `yt2009_channel_description`,
+                        about.description
+                    )
+                } else if(about.description && about.description.simpleText) {
+                    code = code.replace(
+                        `yt2009_channel_description`,
+                        about.description.simpleText
+                    )
+                } else {
+                    code = code.replace(`yt2009_channel_description`, "")
+                }
+
+                setTimeout(() => {
+                    fetchesCompleted++
+                    if(fetchesCompleted == fetchesRequired) {
+                        finalize()
+                    }
+                }, 400)
+            })
+            // subscriber count
+            yt2009_channels.subCount(id, (count) => {
+                code = code.replace(
+                    "yt2009_subscriber_count",
+                    yt2009_utils.countBreakup(count)
+                )
+
+                fetchesCompleted++
+                if(fetchesCompleted == fetchesRequired) {
+                    finalize()
+                }
+            })
+            // videos for video uploaded count
+            mobileHelper.pullOwnVideos(req, (videos) => {
+                let vCount = videos.length;
+                let firstThree = videos.filter(s => {
+                    return s.privacy !== "VIDEO_PRIVACY_PRIVATE"
+                }).slice(0,3)
+
+                code = code.replace(
+                    "yt2009_videos_uploaded",
+                    vCount
+                )
+
+                if(vCount == 0) {
+                    code = code.replace(
+                        `<!--yt2009_videos_insert-->`,
+                        `<span class="grayText">no videos</span>`
+                    )
+                }
+
+                let videosHTML = ""
+                let vi = 0;
+                firstThree.forEach(v => {
+                    vi++
+                    videosHTML += `<td><a href="javascript:void(0)" id="video-still-${vi}" onclick="pickVideoStill(${vi}, '${v.id}')">
+						<div class="outer-border">
+							<div class="image-holder">
+								<img src="http://i.ytimg.com/vi/${v.id}/2.jpg"/>
+							</div>
+						</div>
+					</a></td>`
+                })
+                code = code.replace(
+                    `<!--yt2009_videos_insert-->`,
+                    videosHTML
+                )
+
+                fetchesCompleted++
+                if(fetchesCompleted == fetchesRequired) {
+                    finalize()
+                }
+            })
+            // favorite count
+            let fReq = {
+                "headers": req.headers,
+                "fake": true,
+                "unfiltered": true
+            }
+            let fRes = {
+                "sendStatus": function(s) {res.sendStatus(s);},
+                "set": function(name,value){},
+                "send": function(data) {
+                    let favsFound = false;
+                    data.forEach(p => {
+                        if(p[1] == "Favorites") {
+                            favsFound = p[0]
+                        }
+                    })
+
+                    if(favsFound) {
+                        fReq = {
+                            "playlistId": favsFound,
+                            "originalUrl": "/playlists/" + favsFound,
+                            "headers": req.headers
+                        }
+                        fRes = {
+                            "set": function(name,value){},
+                            "send": function(data) {
+                                let fcount = data.split("<entry>").length - 1
+                                code = code.replace(
+                                    `yt2009_favorite_count`,
+                                    fcount
+                                )
+                                fetchesCompleted++
+                                if(fetchesCompleted == fetchesRequired) {
+                                    finalize()
+                                }
+                            }
+                        }
+                        mobileHelper.pullPlaylistAsUser(fReq, fRes)
+                    } else {
+                        code = code.replace(
+                            `yt2009_favorite_count`,
+                            "0"
+                        )
+                        fetchesCompleted++
+                        if(fetchesCompleted == fetchesRequired) {
+                            finalize()
+                        }
+                    }
+                }
+            }
+            mobileHelper.getPlaylists(fReq, fRes)
+        })
+    }
+
+    if(fetchesCompleted == fetchesRequired) {
+        finalize()
+    }
+})
+
+app.post("/pchelper_avatar_change", (req, res) => {
+    let uploadType = req.body.toString().split(`name="av_type"`)[1]
+                        .split("\n--")[0].trim().split("\n").join("");
+    let dir = `${__dirname}/../assets/user-uploads-tmp`
+    if(!fs.existsSync(dir)) {
+        fs.mkdirSync(dir)
+    }
+    let targetUrl = "/account?src=avatar_changed&r=" + Date.now()
+    switch(uploadType) {
+        case "upload_image": {
+            // custom image to be uploaded
+            let index = req.body.toString().split(`name="image-file"`)[1]
+                           .split(`Content-Type: `)[1].split("\n")[0];
+            index = req.body.toString().indexOf(index) + index.length
+            let file = req.body.slice(index)
+            while(file[0] == 10 || file[0] == 13) {
+                file = file.slice(1)
+            }
+            let fname = `flow-${Date.now()}`
+            let f = `${__dirname}/../assets/user-uploads-tmp/${fname}`
+
+            fs.writeFile(
+                `../assets/user-uploads-tmp/${fname}`,
+                file,
+                (err, callback) => {
+                    mobileHelper.changeAvatar(
+                        req,
+                        `/assets/user-uploads-tmp/${fname}`,
+                        (status) => {
+                            res.redirect(targetUrl)
+                            setTimeout(() => {
+                                try { 
+                                    fs.unlink(f, (e) => {})
+                                }
+                                catch(error) {}
+                            }, 10000)
+                        }
+                    )
+                }
+            )
+            break;
+        }
+        case "video_still": {
+            // thumbnail from a picked video
+            let v = req.body.toString().split(`name="picked_video_still_id"`)[1]
+                       .split("\n--")[0].trim().split("\n").join("");
+            const fetch = require("node-fetch")
+            fetch(`https://i.ytimg.com/vi/${v}/hq2.jpg`, {
+                "headers": yt2009_constant.headers,
+                "method": "GET"
+            }).then(r => {
+                let fname = `flow-${Date.now()}`
+                let f = `${__dirname}/../assets/user-uploads-tmp/${fname}`
+                r.buffer().then(buffer => {
+                    fs.writeFileSync(
+                        `../assets/user-uploads-tmp/${fname}`,
+                        buffer
+                    )
+
+                    mobileHelper.changeAvatar(
+                        req,
+                        `/assets/user-uploads-tmp/${fname}`,
+                        (status) => {
+                            res.redirect(targetUrl)
+                            setTimeout(() => {
+                                try { 
+                                    fs.unlink(f, (e) => {})
+                                }
+                                catch(error) {}
+                            }, 10000)
+                        }
+                    )
+                })
+            })
+            break;
+        }
+        case "use_default": {
+            // default (/assets/site-assets/default-centered.png)
+            mobileHelper.changeAvatar(
+                req,
+                "/assets/site-assets/default-centered.png",
+                (status) => {
+                    res.redirect(targetUrl)
+                }
+            )
+            break;
+        }
+    }
 })
 
 app.use(express.static("../"))
@@ -2884,15 +3249,6 @@ app.post("/create_playlist", (req, res) => {
         .write(playlistId, playlistObject)
         res.send(playlistId)
     }
-})
-
-/*
-======
-relay
-======
-*/
-app.get("/relay", (req, res) => {
-    res.redirect("/relay/intro.htm")
 })
 
 /*
@@ -5247,38 +5603,69 @@ app.post("/pchelper_playlists", (req, res) => {
     req.body.toString().split("&").forEach(p => {
         params[p.split("=")[0]] = p.split("=")[1]
     })
-    if((!params.video || params.video.length !== 11)
+    if((!params.video_ids
+    && (!params.video || params.video.length !== 11))
     || (params.method == "create_new" && !params.playlist_name)
     || (params.method == "add_existing" && !params.playlist_id)
-    || (params.method !== "create_new" && params.method !== "add_existing")) {
+    || (params.method == "remove_videos" && !params.video_ids)
+    || (params.method == "remove_videos" && !params.playlist_id)
+    || (params.method !== "create_new" && params.method !== "add_existing"
+    && params.method !== "remove_videos")) {
         res.sendStatus(400)
         return;
     }
-    if(params.method == "create_new") {
-        let fReq = {
-            "headers": req.headers,
-            "body": `
-            <title type='text'>${params.playlist_name}</title>
-            <yt:videoid>${params.video}</yt:videoid>`
-        }
-        let fRes = {
-            "redirect": function(url) {
-                let pid = url.split("/playlists/")[1]
-                res.send(pid);
+    switch(params.method) {
+        case "create_new": {
+            let fReq = {
+                "headers": req.headers,
+                "body": `
+                <title type='text'>${params.playlist_name}</title>
+                <yt:videoid>${params.video}</yt:videoid>`
             }
+            let fRes = {
+                "redirect": function(url) {
+                    let pid = url.split("/playlists/")[1]
+                    res.send(pid);
+                }
+            }
+            mobileHelper.createPlaylist(fReq, fRes)
+            break;
         }
-        mobileHelper.createPlaylist(fReq, fRes)
-    } else {
-        let fReq = {
-            "headers": req.headers,
-            "originalUrl": "/playlists/" + params.playlist_id,
-            "body": `<id>${params.video}</id>`
+        case "add_existing": {
+            let fReq = {
+                "headers": req.headers,
+                "originalUrl": "/playlists/" + params.playlist_id,
+                "body": `<id>${params.video}</id>`
+            }
+            let fRes = {
+                "set": function(name,value) {},
+                "sendStatus": function(status) {res.sendStatus(status)}
+            }
+            mobileHelper.addToPlaylist(fReq, fRes)
+            break;
         }
-        let fRes = {
-            "set": function(name,value) {},
-            "sendStatus": function(status) {res.sendStatus(status)}
+        case "remove_videos": {
+            let i = 0;
+            params.video_ids.split(",").forEach(v => {
+                setTimeout(() => {
+                    let fReq = {
+                        "headers": req.headers,
+                        "originalUrl": "/playlists/" + params.playlist_id,
+                        "body": `<id>${v}</id>`
+                    }
+                    let fRes = {
+                        "set": function(name,value) {},
+                        "sendStatus": function(a) {}
+                    }
+                    mobileHelper.removeFromPlaylist(fReq, fRes)
+                }, 500 * i)
+                i++
+            })
+            setTimeout(() => {
+                res.sendStatus(200)
+            }, 500 * (i + 1))
+            break;
         }
-        mobileHelper.addToPlaylist(fReq, fRes)
     }
 })
 app.get("/pchelper_playlist", (req, res) => {
@@ -5291,8 +5678,15 @@ app.get("/pchelper_playlist", (req, res) => {
         return;
     }
     let format = "f"
-    if(req.query.format == "modern") {
-        format = "modern"
+    switch(req.query.format) {
+        case "modern": {
+            format = "modern"
+            break;
+        }
+        case "ssr": {
+            format = "ssr"
+            break;
+        }
     }
     let fReq = {
         "playlistId": req.query.playlist,
@@ -5313,28 +5707,55 @@ app.get("/pchelper_playlist", (req, res) => {
                 )
                 vs.push([id, title, "", "5", "", time])
             })
-            if(format == "modern") {
-                let vr = []
-                vs.forEach(v => {
-                    vr.push({
-                        "id": v[0],
-                        "title": v[1],
-                        "date": v[2],
-                        "rating": v[3],
-                        "viewCount": v[4],
-                        "time": v[5]
+            switch(format) {
+                case "f": {
+                    let vr = []
+                    vs.forEach(v => {
+                        vr.push(encodeURIComponent(
+                            [encodeURIComponent(v[1]), v[0],
+                            v[4], "5", ""].join(";")
+                        ))
                     })
-                })
-                res.send(vr)
-            } else {
-                let vr = []
-                vs.forEach(v => {
-                    vr.push(encodeURIComponent(
-                        [encodeURIComponent(v[1]), v[0],
-                         v[4], "5", ""].join(";")
-                    ))
-                })
-                res.send(vr.join(":"))
+                    res.send(vr.join(":"))
+                    break;
+                }
+                case "modern": {
+                    let vr = []
+                    vs.forEach(v => {
+                        vr.push({
+                            "id": v[0],
+                            "title": v[1],
+                            "date": v[2],
+                            "rating": v[3],
+                            "viewCount": v[4],
+                            "time": v[5]
+                        })
+                    })
+                    res.send(vr)
+                    break;
+                }
+                case "ssr": {
+                    let autogen = (req.headers.cookie
+                                  && req.headers.cookie.includes("autogen"))
+                    let proxy = (req.headers.cookie
+                                && req.headers.cookie.includes("_proxy"))
+                    let vr = []
+                    vs.forEach(v => {
+                        vr.push({
+                            "id": v[0],
+                            "title": v[1],
+                            "date": v[2],
+                            "rating": v[3],
+                            "viewCount": v[4],
+                            "time": v[5]
+                        })
+                    })
+                    let ssrHTML = yt2009_templates.ssr_yt_playlist(
+                        vr, autogen, proxy
+                    )
+                    res.send(ssrHTML)
+                    break;
+                }
             }
         }
     }
@@ -5346,21 +5767,39 @@ app.get("/nonpch_playlist", (req, res) => {
         return;
     }
     let format = "f"
-    if(req.query.format == "modern") {
-        format = "modern"
+    switch(req.query.format) {
+        case "modern": {
+            format = "modern"
+            break;
+        }
+        case "ssr": {
+            format = "ssr"
+            break;
+        }
     }
     yt2009_playlists.parsePlaylist(req.query.playlist, (data) => {
         let v = []
-        if(format == "modern") {data.videos.forEach(vr => {
-            v.push({
-                "id": vr.id,
-                "title": vr.title,
-                "date": "",
-                "rating": "5",
-                "viewCount": yt2009_utils.countBreakup(vr.views),
-                "time": vr.time
-            })
-        });res.send(v)} else {
+        if(format == "modern" || format == "ssr") {
+            data.videos.forEach(vr => {
+                v.push({
+                    "id": vr.id,
+                    "title": vr.title,
+                    "date": "",
+                    "rating": "5",
+                    "viewCount": yt2009_utils.countBreakup(vr.views),
+                    "time": vr.time
+                })
+            });
+            if(format == "ssr") {
+                let autogen = (req.headers.cookie
+                                  && req.headers.cookie.includes("autogen"))
+                let proxy = (req.headers.cookie
+                            && req.headers.cookie.includes("_proxy"))
+                res.send(yt2009_templates.ssr_yt_playlist(v, autogen, proxy))
+            } else {
+                res.send(v)
+            }
+        } else {
             data.videos.forEach(vr => {
                 v.push(encodeURIComponent([
                     encodeURIComponent(vr.title), vr.id,
@@ -5462,6 +5901,10 @@ app.post("/pchelper_favorites", (req, res) => {
         "set": function(name,value){},
         "sendStatus": function(s) {res.sendStatus(s)},
         "redirect": function(u) {res.sendStatus(200)}
+    }
+    if(req.body.toString().includes("state=undo")) {
+        mobileHelper.removeFromFavorites(fReq, fRes)
+        return;
     }
     mobileHelper.addToFavorites(fReq, fRes)
 })

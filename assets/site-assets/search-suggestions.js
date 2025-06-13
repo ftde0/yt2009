@@ -26,7 +26,6 @@ function adjustTablePos() {
     sTable.style.left = bounds.left + "px"
     sTable.style.top = (bounds.top + bounds.height) + "px"
 }
-adjustTablePos()
 sTable.setAttribute("cellpadding", "0")
 sTable.setAttribute("cellspacing", "0")
 sTable.className = "google-ac-m"
@@ -34,6 +33,23 @@ if(location.href.indexOf("/results") !== -1) {
     sTable.style.zIndex = "90"
 }
 document.body.appendChild(sTable)
+adjustTablePos()
+
+// force readjust if doodle
+if(document.getElementById("logo")
+&& document.getElementById("logo").tagName == "IMG") {
+    document.getElementById("logo").onload = function() {
+        adjustTablePos()
+    }
+    var readj = 0;
+    var x = setInterval(function() {
+        adjustTablePos()
+        readj++
+        if(readj >= 5) {
+            clearInterval(x)
+        }
+    }, 50)
+}
 
 var sTbody = document.createElement("tbody")
 sTable.appendChild(sTbody)

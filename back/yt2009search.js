@@ -689,7 +689,7 @@ module.exports = {
             pagingHTML
         )
 
-        code = yt2009doodles.applyDoodle(code)
+        code = yt2009doodles.applyDoodle(code, req)
 
         let baseUrl = `/results?search_query=${query.split(" ").join("+")}`
         code = code.replace(

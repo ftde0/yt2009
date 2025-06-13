@@ -665,6 +665,27 @@
 			<!-- end footer section -->
 			<!--yt2009-->
 			<!--hook /assets/site-assets/f_script.js -->
+			<script>
+				if(document.getElementsByTagName
+				&& document.getElementsByTagName("video")
+				&& document.getElementsByTagName("video")[0]) {
+					// html5 page, check if supported
+					var v = document.getElementsByTagName("video")[0];
+					if(typeof(v.volume) !== "number") {
+						// no
+						var player = document.getElementById("watch-player-div")
+						player.innerHTML = ""
+						var noplayer = document.createElement("div")
+						noplayer.id = "watch-noplayer-div"
+						var messageParts = [
+							"your browser does not appear to support HTML5.",
+							'<a href="/toggle_f">enable Flash Player</a>'
+						]
+						noplayer.innerHTML = messageParts.join(" ")
+						player.appendChild(noplayer)
+					}
+				}
+			</script>
 			<script src="nbedit_watch.js"></script>
 			<script src="/assets/site-assets/yt2009quicklist.js"></script>
 			<script src="/assets/site-assets/html5-player.js"></script>

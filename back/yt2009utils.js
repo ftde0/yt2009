@@ -589,7 +589,7 @@ module.exports = {
     },
 
 
-    "saveAvatar": function(link, banner) {
+    "saveAvatar": function(link, banner, forceUpdate) {
         if(link.startsWith("//")) {
             link = link.replace("//", "https://")
         }
@@ -598,7 +598,7 @@ module.exports = {
             fname = banner + "_banner"
         }
         fname = fname.replace(".png", "")
-        if(!fs.existsSync(`../assets/${fname}.png`)) {
+        if(!fs.existsSync(`../assets/${fname}.png`) || forceUpdate) {
             fetch(link.replace("ggpht.com", "googleusercontent.com"), {
                 "headers": constants.headers
             }).then(r => {

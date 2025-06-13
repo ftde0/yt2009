@@ -471,6 +471,18 @@ function show_playlist_localstorage(playlist) {
 
 // play all
 // create a playlist with our videos with the server
+
+var pchelperFavPage = (
+    location.href.indexOf("my_favorites") !== -1
+    && document.cookie
+    && document.cookie.indexOf("playlists_sync") !== -1
+)
+
+var pchelper_global_playlist_id = ""
+if(pchelperFavPage) {
+    pchelper_global_playlist_id = document.getElementById("pchelper-fav-id").innerHTML
+}
+
 if(document.querySelector("#playlist-btn-play")) {
     document.querySelector("#playlist-btn-play")
     .addEventListener("click", function() {
@@ -505,37 +517,74 @@ if(document.querySelector("#playlist-btn-play")) {
     // remove picked video(s) from the playlist
     document.querySelector("#playlist-btn-remove")
             .addEventListener("click", function() {
-        var playlistId = document.querySelector(".subfolder.selected")
-                                .getAttribute("data-id")
+        var playlistId = ""
+        if(!pchelperFavPage) {
+            playlistId = document.querySelector(".subfolder.selected")
+                                 .getAttribute("data-id")
+        } else {
+            playlistId = pchelper_global_playlist_id;
+        }
         var s = document.querySelectorAll('input[type="checkbox"]')
+        var videoQueue = [] //pchelper only
         for(var sel in s) {
             if(s[sel].checked && s[sel].getAttribute("data-videoid")) {
-                var videoElement = {}
-    
-                var playlistVideos = JSON.parse(
-                    localStorage["playlist-" + playlistId]
-                )
-                playlistVideos.forEach(function(video) {
-                    if(video.id == s[sel].getAttribute("data-videoid")) {
-                        videoElement = video;
-                    }
-                })
-    
-                localStorage["playlist-" + playlistId] = localStorage[
-                    "playlist-" + playlistId
-                ].replace(JSON.stringify(videoElement), "")
-    
-                // poprawianie jsona
-                localStorage["playlist-" + playlistId] = localStorage[
-                    "playlist-" + playlistId
-                ].replace("[,", "[").replace(",]", "]")
+                if(document.cookie
+                && document.cookie.indexOf("playlists_sync") !== -1) {
+                    // pchelper -- push to queue
+                    videoQueue.push(s[sel].getAttribute("data-videoid"))
+                } else {
+                    // non-pchelper -- delete as it goes
+                    var videoElement = {}
+                    var playlistVideos = JSON.parse(
+                        localStorage["playlist-" + playlistId]
+                    )
+                    playlistVideos.forEach(function(video) {
+                        if(video.id == s[sel].getAttribute("data-videoid")) {
+                            videoElement = video;
+                        }
+                    })
+        
+                    localStorage["playlist-" + playlistId] = localStorage[
+                        "playlist-" + playlistId
+                    ].replace(JSON.stringify(videoElement), "")
+        
+                    // poprawianie jsona
+                    localStorage["playlist-" + playlistId] = localStorage[
+                        "playlist-" + playlistId
+                    ].replace("[,", "[").replace(",]", "]")
+                }
             }
         }
-    
-        // update the playlist
-        show_playlist_localstorage(
-            document.querySelector(".subfolder.selected")
-        )
+
+        function onDelete() {
+            // update the playlist
+            if(pchelperFavPage) {
+                location.reload()
+                return;
+            }
+
+            show_playlist_localstorage(
+                document.querySelector(".subfolder.selected")
+            )
+        }
+
+        // request delete with pchelper
+        if(videoQueue.length >= 1) {
+            var pchelperRequest = [
+                "method=remove_videos",
+                "playlist_id=" + playlistId,
+                "video_ids=" + videoQueue.join(",")
+            ].join("&")
+
+            var r = new XMLHttpRequest();
+            r.open("POST", "/pchelper_playlists")
+            r.send(pchelperRequest)
+            r.addEventListener("load", function(e) {
+                onDelete()
+            }, false)
+        } else {
+            onDelete()
+        }
     }, false)
 }
 
@@ -715,4 +764,12 @@ if(document.querySelector("#view-toggle .grid-selected")) {
 function qlNoVidsShow() {
     document.getElementById("novids-template").id = "videos"
     document.getElementById("videos").className = ""
+}
+
+// my_videos: delete
+function deletePrompt(videoId) {
+    var ans = confirm("Are you sure you want to delete the selected videos?")
+    if(ans) {
+        document.getElementById("video-delete-" + videoId).submit()
+    }
 }

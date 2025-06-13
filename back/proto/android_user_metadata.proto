@@ -1,0 +1,21 @@
+syntax = "proto3";
+package android_user_metadata;
+
+message stringUpdateMsg {
+    repeated string newString = 1;
+}
+message root {
+    message contextType {
+        message clientType {
+            int32 clientNumber = 16;
+            string clientVersion = 17;
+            string osName = 18;
+            string osVersion = 19;
+            int32 androidSdkVersion = 64;
+        }
+        repeated clientType client = 1;
+    }
+    repeated contextType context = 1;
+    string browseId = 2;
+    repeated stringUpdateMsg avatarBlob = 9;
+}

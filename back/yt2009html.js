@@ -944,7 +944,7 @@ module.exports = {
         && !req.headers.cookie.includes("relay_key")) {
             code = code.replace(
                 `<!--yt2009_relay_comment_form-->`,
-                yt2009templates.videoCommentPost(false, null, data.id)
+                yt2009templates.videoCommentPost(data.id)
             )
         }
 
@@ -1422,7 +1422,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     if(requiredCallbacks == callbacksMade) {
                         render_endscreen();
                         fillFlashIfNeeded();
-                        genRelay();
                         callback(code)
                     }
                 }, req.query.resetcache == 1)
@@ -1972,7 +1971,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 if(requiredCallbacks == callbacksMade) {
                     render_endscreen();
                     fillFlashIfNeeded();
-                    genRelay();
                     callback(code)
                 }
             })
@@ -2345,7 +2343,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             if(requiredCallbacks == callbacksMade) {
                 render_endscreen();
                 fillFlashIfNeeded();
-                genRelay();
                 callback(code)
             }
         })
@@ -2794,7 +2791,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     if(requiredCallbacks == callbacksMade) {
                         render_endscreen();
                         fillFlashIfNeeded();
-                        genRelay();
                         callback(code)
                     }
                 },
@@ -2820,7 +2816,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 if(requiredCallbacks <= callbacksMade) {
                     render_endscreen()
                     fillFlashIfNeeded();
-                    genRelay();
                     callback(code)
                 }
             }
@@ -2871,33 +2866,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             if(requiredCallbacks <= callbacksMade) {
                 render_endscreen()
                 fillFlashIfNeeded();
-                genRelay();
                 callback(code)
-            }
-        }
-
-        // relay
-        function genRelay() {
-            if(req.headers.cookie.includes("relay_key")) {
-                let relayKey = req.headers.cookie
-                                        .split("relay_key=")[1]
-                                        .split(";")[0]
-                let relayPort = "6547"
-                if(req.headers.cookie.includes("relay_port")) {
-                    relayPort = req.headers.cookie
-                                            .split("relay_port=")[1]
-                                            .split(";")[0]
-                }
-    
-                code = code.replace(
-                    `<!--yt2009_relay_comment_form-->`,
-                    yt2009templates.videoCommentPost(
-                        true,
-                        "http://127.0.0.1:" + relayPort,
-                        data.id,
-                        relayKey
-                    )
-                )
             }
         }
 
@@ -2930,7 +2899,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             if(requiredCallbacks <= callbacksMade) {
                 render_endscreen()
                 fillFlashIfNeeded();
-                genRelay();
                 try {
                     callback(code)
                 }
@@ -2942,7 +2910,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(requiredCallbacks == 0) {
             render_endscreen()
             fillFlashIfNeeded();
-            genRelay();
             callback(code)
         }
         
@@ -3076,117 +3043,36 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         } else if(saved_related_videos[id]) {
             callback(saved_related_videos[id])
         } else {
-            this.innertube_get_data(id, (data) => {
-                // related videos
-                let relatedParsed = []
-                let related = []
-                
-                // prioritize exp_related
-                let lookup_keyword = ""
-                // tags
-                data.videoDetails.keywords.forEach(tag => {
-                    if(lookup_keyword.length < 9) {
-                        lookup_keyword += `${tag.toLowerCase()} `
-                    }
-                })
-                // or the first word from the title if not enough
-                if(lookup_keyword.length < 9) {
-                    lookup_keyword = data.videoDetails.title.split(" ")[0]
-                }
-                
-                // search
-                yt2009search.related_from_keywords(
-                    lookup_keyword, data.id, "realistic_view_count", (html, rawData) => {
-                        rawData.forEach(video => {
-                            relatedParsed.push({
-                                "title": video.title,
-                                "id": video.id,
-                                "views": video.views,
-                                "length": yt2009utils.time_to_seconds(video.length || 0),
-                                "creatorName": video.creatorName,
-                                "creatorUrl": video.creatorUrl,
-                                "uploaded": ""
-                            })
-                        })
-                        if(relatedParsed.length >= 6) {
-                            callback(relatedParsed)
-                            saved_related_videos[id] = JSON.parse(JSON.stringify(
-                                relatedParsed
-                            ))
-                        } else {
-                            useDefaultRelated()
-                        }
-                    },
-                    ""
-                )
-
-                function useDefaultRelated() {
-                    // add default related videos if less than 6 were added
-                    // by exp_related
-                    if(relatedParsed.length < 6) {
-                        try {
-                            related = data.contents.twoColumnWatchNextResults
-                                            .secondaryResults.secondaryResults
-                                            .results
-                                    || data.contents.twoColumnWatchNextResults
-                                            .secondaryResults.secondaryResults
-                                            .results[1].itemSectionRenderer
-                                            .contents
-                        }
-                        catch(error) {}
-                        if(JSON.stringify(data).includes("richGridRenderer")) {
-                            try {
-                                related = videoData.contents.twoColumnWatchNextResults
-                                          .secondaryResults.secondaryResults.results[0]
-                                          .richGridRenderer.contents
-                            }
-                            catch(error) {}
-                        }
-                        related.forEach(video => {
-                            if(!video.compactVideoRenderer && !video.richItemRenderer) return;
-        
-                            let gridResult = false;
-                            if(video.richItemRenderer) {
-                                gridResult = true;
-                            }
-        
-                            video = video.compactVideoRenderer || video.richItemRenderer;
-        
-                            if(gridResult
-                            && (!video.content
-                            || !video.content.videoRenderer)) return;
-        
-                            if(gridResult) {video = video.content.videoRenderer}
-        
-                            let creatorName = ""
-                            let creatorUrl = ""
-                            video.shortBylineText.runs.forEach(run => {
-                                creatorName += run.text;
-                                creatorUrl += run.navigationEndpoint
-                                                .browseEndpoint.canonicalBaseUrl
-                            })
-                            try {
+            this.fetch_video_data(id, (data) => {
+                if(ignoreDefaultRelated) {
+                    // use exp_related if default shouldn't be used
+                    let keyword = yt2009utils.exp_related_keyword(
+                        data.tags, data.title
+                    )
+                    let relatedParsed = []
+                    yt2009search.related_from_keywords(
+                        keyword, data.id, "", (html, rawData) => {
+                            rawData.forEach(video => {
                                 relatedParsed.push({
-                                    "title": video.title.simpleText,
-                                    "id": video.videoId,
-                                    "views": video.viewCountText.simpleText,
-                                    "length": video.lengthText.simpleText,
-                                    "creatorName": creatorName,
-                                    "creatorUrl": creatorUrl,
-                                    "uploaded": video.publishedTimeText.simpleText
+                                    "title": video.title,
+                                    "id": video.id,
+                                    "views": video.views,
+                                    "length": yt2009utils.time_to_seconds(
+                                        video.length || 0
+                                    ),
+                                    "creatorName": video.creatorName,
+                                    "creatorUrl": video.creatorUrl,
+                                    "uploaded": ""
                                 })
-                            }
-                            catch(error) {}
-                        })
-        
-                        callback(relatedParsed)
-                        saved_related_videos[id] = JSON.parse(JSON.stringify(
-                            relatedParsed
-                        ))
-                    }
+                            })
+                            callback(relatedParsed)
+                        }, ""
+                    )
+                } else {
+                    // default related
+                    callback(data.related)
                 }
-                
-            })
+            }, "", "", false, false, true)
         }
     },
 

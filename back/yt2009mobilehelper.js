@@ -10,6 +10,7 @@ const watchNext = require("./proto/watchNextFeed_pb")
 const protobufNextReq = require("./proto/android_next_pb")
 const protoAnalytics = require("./proto/analytics_screen_request_pb")
 const metadataUpdate = require("./proto/android_metadata_update_pb")
+const userMetadata = require("./proto/android_user_metadata_pb")
 const androidHeaders = {
     "Accept": "*/*",
     "Accept-Language": "en-US;q=0.7,en;q=0.3",
@@ -756,6 +757,29 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         //POST http://192.168.1.7/feeds/api/users/default/playlists create pl <yt:private/>
     },
 
+    "removeFromPlaylist": function(req, res) {
+        let device = pullDeviceId(req)
+        res.set("content-type", "application/xml")
+        let playlist = req.originalUrl.split("/playlists/")[1].split("?")[0]
+        let v = req.body.toString().split("<id>")[1].split("</id>")[0]
+        setupYouTube(device, (h) => {
+            fetch("https://www.youtube.com/youtubei/v1/browse/edit_playlist", {
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "playlistId": playlist,
+                    "actions": [{
+                        "action": "ACTION_REMOVE_VIDEO_BY_VIDEO_ID",
+                        "removedVideoId": v
+                    }]
+                }),
+                "method": "POST"
+            }).then(r => {
+                res.sendStatus(200);
+            })
+        })
+    },
+
     "addToFavorites": function(req, res) {
         let device = pullDeviceId(req)
         if(!device || !userdata[device]) {res.sendStatus(400);return;}
@@ -773,7 +797,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
             // if there is a favorites playlist, add into it,
             // otherwise create one
             if(favesId) {
-                addToPl(favesId)
+                checkAlreadyAdded(favesId)
             } else {
                 createPl()
             }
@@ -796,6 +820,39 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
             })
         }
 
+        let pullPlaylistAsUser = this.pullPlaylistAsUser;
+        function checkAlreadyAdded(playlistId) {
+            // check if video isn't already added to favorites
+            let fReq = {
+                "playlistId": playlistId,
+                "originalUrl": "/playlists/" + playlistId,
+                "headers": req.headers
+            }
+            let fRes = {
+                "set": function(name,value){},
+                "send": function(data) {
+                    data = data.split("<entry>")
+                    let vs = []
+                    data.forEach(v => {
+                        if(v.includes("<feed")) return;
+                        let id = v.split(`<yt:videoid id='`)[1].split("'")[0]
+                        vs.push(id)
+                    })
+
+                    console.log(vs, v)
+
+                    if(!vs.includes(v)) {
+                        // not in favorites
+                        addToPl(playlistId)
+                    } else {
+                        // already in favorites
+                        res.sendStatus(400)
+                    }
+                }
+            }
+            pullPlaylistAsUser(fReq, fRes)
+        }
+
         function addToPl(playlistId) {
             setupYouTube(device, (h) => {
                 fetch("https://www.youtube.com/youtubei/v1/browse/edit_playlist", {
@@ -813,6 +870,48 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     res.redirect("/feeds/api/videos/" + v)
                 })
             })
+        }
+    },
+
+    "removeFromFavorites": function(req, res) {
+        let device = pullDeviceId(req)
+        if(!device || !userdata[device]) {res.sendStatus(400);return;}
+        res.set("content-type", "application/xml")
+        let v = req.body.toString().split("<id>")[1].split("</id>")[0]
+        req.fake = true;
+        this.getPlaylists(req, {"send": (p) => {
+            let favesId = false;
+            p.forEach(playlist => {
+                if(playlist[1] == "Favorites") {
+                    favesId = playlist[0]
+                }
+            })
+
+            // if there is a favorites playlist, add into it,
+            // otherwise create one
+            if(favesId) {
+                rmPl(favesId)
+            } else {
+                // removing from nonexistent playlist?
+                res.sendStatus(400)
+            }
+        }, "set": function(s1, s2){}})
+
+        let removeFromPlaylist = this.removeFromPlaylist;
+        function rmPl(playlistId) {
+            let fReq = {
+                "headers": req.headers,
+                "originalUrl": "/playlists/" + playlistId,
+                "body": req.body.toString()
+            }
+            let fRes = {
+                "set": function(a1, a2) {},
+                "sendStatus": function(status) {
+                    res.sendStatus(status)
+                }
+            }
+            
+            removeFromPlaylist(fReq, fRes)
         }
     },
 
@@ -1823,6 +1922,180 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                         console.log("METADATAUPDATE return " + r.status + "!")
                         callback(false)
                     }
+                })
+            })
+        }
+    },
+
+    "openBrowseId": function(req, callback) {
+        pullUserIdFromDevice(pullDeviceId(req), (id) => {
+            if(id.type) {
+                callback(false)
+                return;
+            }
+            callback(id)
+        })
+    },
+
+    "changeAvatar": function(req, imgPath, callback) {
+        imgPath = imgPath.split("..").join("")
+        if(imgPath.startsWith("/assets/")) {
+            imgPath = ".." + imgPath
+        }
+
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
+
+        pullUserIdFromDevice(device, (id) => {
+            if(id.type || !id) {
+                callback(false)
+                return;
+            }
+            let h = {}
+            setupYouTube(device, (headers) => {
+                for(let n in headers) {
+                    h[n] = headers[n]
+                }
+                if(id) {
+                    h["x-youtube-channelid"] = id;
+                }
+                h["content-type"] = "application/json-rpc; charset=utf-8"
+                h["x-goog-upload-command"] = "start"
+                h["x-goog-upload-protocol"] = "resumable"
+                fetch("https://www.youtube.com/channel_image_upload/profile", {
+                    "method": "POST",
+                    "headers": h,
+                    "body": ""
+                }).then(r => {
+                    let uploadUrl = ""
+                    if(r.headers.has("X-Goog-Upload-URL")) {
+                        uploadUrl = r.headers.get("X-Goog-Upload-URL")
+                    } else if(r.headers.has("X-GUploader-UploadID")) {
+                        uploadUrl = [
+                            "https://www.youtube.com/channel_image_upload/profile",
+                            "?upload_id=" + r.headers.get("X-GUploader-UploadID")
+                        ].join("")
+                    }
+
+                    if(uploadUrl) {
+                        console.log(uploadUrl)
+                        uploadImage(uploadUrl, h, id)
+                    }
+                })
+            })
+        })
+
+        function uploadImage(url, headers, userId) {
+            const stream = fs.createReadStream(imgPath)
+            headers["x-goog-upload-command"] = "upload, finalize"
+            headers["x-goog-upload-offset"] = "0"
+            headers["content-length"] = fs.statSync(imgPath).size
+            fetch(url, {
+                "method": "PUT",
+                "headers": headers,
+                "body": stream
+            }).then(r => {r.json().then(r => {
+                // get blobId to update with innertube
+                if(r.encryptedBlobId) {
+                    innertubeUpdate(r.encryptedBlobId, userId)
+                } else {
+                    callback(500)
+                }
+            })})
+        }
+
+        function innertubeUpdate(blob, userId) {
+            let root = new userMetadata.root()
+            let context = new userMetadata.root.contextType()
+            let client = new userMetadata.root.contextType.clientType()
+            client.setClientnumber(3)
+            client.setClientversion("19.02.39")
+            client.setOsname("Android")
+            client.setOsversion("14")
+            client.setAndroidsdkversion(34)
+            context.addClient(client)
+            root.addContext(context)
+
+            root.setBrowseid(userId)
+
+            let upd = new userMetadata.stringUpdateMsg()
+            upd.addNewstring(blob)
+            root.addAvatarblob(upd)
+            
+            let pbmsg = root.serializeBinary()
+            
+            setupYouTube(device, (h) => {
+                h["Content-Type"] = "application/x-protobuf"
+                h["x-goog-api-format-version"] = "2"
+                fetch("https://youtubei.googleapis.com/youtubei/v1/channel_edit/update_channel_page_settings", {
+                    "method": "POST",
+                    "headers": h,
+                    "body": pbmsg
+                }).then(r => {
+                    callback(r.status)
+                })
+            })
+        }
+    },
+
+    "deleteVideos": function(req, res) {
+        if(!req.body
+        || !req.body.toString()
+        || !req.body.toString().includes("video_ids=")) {
+            res.sendStatus(400)
+            return;
+        }
+
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            res.sendStatus(400)
+            return;
+        }
+
+        let videos = req.body.toString()
+                        .split("video_ids=")[1]
+                        .split("&")[0].split(",");
+        if(videos.length < 1) {
+            res.sendStatus(400)
+            return;
+        }
+
+        if(!req.setS) {
+            req.setS = function(s) {}
+        }
+        if(!res.setS) {
+            res.setS = function(s) {}
+        }
+
+        if(videos.length == 1) {
+            setupYouTube(device, (h) => {
+                fetch("https://www.youtube.com/youtubei/v1/video/delete", {
+                    "headers": h,
+                    "method": "POST",
+                    "body": JSON.stringify({
+                        "context": androidContext,
+                        "videoId": videos[0]
+                    })
+                }).then(r => {
+                    res.setS("SINGLE_DELETE")
+                    res.sendStatus(r.status)
+                })
+            })
+        } else {
+            setupYouTube(device, (h) => {
+                fetch("https://www.youtube.com/youtubei/v1/creator/enqueue_creator_bulk_delete", {
+                    "headers": h,
+                    "method": "POST",
+                    "body": JSON.stringify({
+                        "context": androidContext,
+                        "videos": {"videoIds": videos}
+                    })
+                }).then(r => {
+                    res.setS("MULTI_DELETE")
+                    res.sendStatus(r.status)
                 })
             })
         }

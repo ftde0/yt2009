@@ -184,7 +184,8 @@
 					}
 				}
 				var labelText = label.getAttribute("title")
-				target.setAttribute("title", labelText)
+				try {target.setAttribute("title", labelText)}
+				catch(error) {}
 			}
 		}
 

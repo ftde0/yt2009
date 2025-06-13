@@ -153,12 +153,14 @@ module.exports = {
             "return": 0
         }
         let relatedSource = "default"
-        if(req.headers.cookie.includes("exp_related")) {
+        if(req.headers && req.headers.cookie
+        && req.headers.cookie.includes("exp_related")) {
             relatedSource = "exp_related"
         }
     
         let flags = ""
-        if(req.headers.cookie.includes("watch_flags")) {
+        if(req.headers && req.headers.cookie
+        && req.headers.cookie.includes("watch_flags")) {
             flags = req.headers.cookie
                     .split("watch_flags=")[1]
                     .split(";")[0]
@@ -181,7 +183,8 @@ module.exports = {
                         response.total = videos.length
                         res.send(response)
                     }),
-                    "xl-related")
+                    "xl-related"
+                )
                 break;
             }
 
@@ -262,7 +265,8 @@ module.exports = {
         }
 
         let flags = ""
-        if(req.headers.cookie.includes("results_flags")) {
+        if(req.headers && req.headers.cookie
+        && req.headers.cookie.includes("results_flags")) {
             flags = req.headers.cookie.split("results_flags=")[1].split(";")[0]
         }
         /*
@@ -304,7 +308,8 @@ module.exports = {
         }
 
         let flags = ""
-        if(req.headers.cookie.includes("channel_flags")) {
+        if(req.headers && req.headers.cookie
+        && req.headers.cookie.includes("channel_flags")) {
             flags = req.headers.cookie.split("channel_flags=")[1].split(";")[0]
         }
         /*
@@ -421,7 +426,8 @@ module.exports = {
             
             // get xl favorites if exist
             let favorites = ""
-            if(req.headers.cookie.includes("xl_favs=")) {
+            if(req.headers && req.headers.cookie
+            && req.headers.cookie.includes("xl_favs=")) {
                 favorites = req.headers.cookie
                             .split("xl_favs=")[1]
                             .split(";")[0]
@@ -497,7 +503,8 @@ module.exports = {
         // check if we need to use login_simulate (local) favs
         // or actually get the user's favorites playlist
         let loginSim = false;
-        if(req.headers.cookie.includes("login_simulate")) {
+        if(req.headers && req.headers.cookie
+        && req.headers.cookie.includes("login_simulate")) {
             loginSim = req.headers.cookie
                        .split("login_simulate")[1]
                        .split(":")[0]
@@ -507,7 +514,8 @@ module.exports = {
         if(loginSim && loginSim == req.query.user) {
             // use login_simulate favorites
             let videoIds = []
-            if(req.headers.cookie.includes("xl_favs=")) {
+            if(req.headers && req.headers.cookie
+            && req.headers.cookie.includes("xl_favs=")) {
                 videoIds = req.headers.cookie
                            .split("xl_favs=")[1]
                            .split(";")[0]
@@ -564,7 +572,8 @@ module.exports = {
         }
 
         let loginSim = false;
-        if(req.headers.cookie.includes("login_simulate")) {
+        if(req.headers && req.headers.cookie
+        && req.headers.cookie.includes("login_simulate")) {
             loginSim = req.headers.cookie
                        .split("login_simulate")[1]
                        .split(":")[0]

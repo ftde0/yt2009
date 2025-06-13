@@ -2,6 +2,7 @@ const utils = require("./yt2009utils")
 const config = require("./config.json")
 const fs = require("fs")
 const templates = require("./yt2009templates")
+const autoshare = require("./yt2009autoshare")
 const page = fs.readFileSync("../my_videos.htm").toString()
 const pageEdit = fs.readFileSync("../my_videos_edit.htm").toString()
 const pageUploadFlow1 = fs.readFileSync("../my_videos_upload.htm").toString()
@@ -37,6 +38,23 @@ module.exports = {
             flags = req.headers.cookie.split("global_flags=")[1].split(";")[0]
         }
 
+        // state
+        let sMsgs = {
+            "SINGLE_DELETE": "Videos successfully deleted.",
+            "MULTI_DELETE": "Your videos are enqueued to be deleted."
+        }
+        let sMsg = sMsgs[req.query.s]
+        if(sMsg) {
+            code = code.replace(
+                `<!--yt2009_message-->`,
+                `<div class="confirmBox">${sMsg}</div>`
+            )
+            code = code.replace(
+                `id="messages" class="yt-message-panel hidden"`,
+                `id="messages" class="yt-message-panel"`
+            )
+        }
+
         let videos = []
 
         let default_no_videos = `<tbody id="videos"><tr>
@@ -63,7 +81,7 @@ module.exports = {
 
             code = require("./yt2009loginsimulate")(req, code, true);
             code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
-            code = doodles.applyDoodle(code)
+            code = doodles.applyDoodle(code, req)
             code = languages.apply_lang_to_code(code, req)
     
             res.send(code);
@@ -119,7 +137,7 @@ module.exports = {
             }
             code = require("./yt2009loginsimulate")(req, code, true);
             code = code.replace(`<!--yt2009_video_insert-->`, embedCode)
-            code = doodles.applyDoodle(code)
+            code = doodles.applyDoodle(code, req)
             code = languages.apply_lang_to_code(code, req)
 
             res.send(code)
@@ -278,7 +296,7 @@ module.exports = {
         let code = pageUploadFlow1;
         code = code.replace("MAX_SERVER_SIZE", uploadLimit)
         code = require("./yt2009loginsimulate")(req, code, true);
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
         code = languages.apply_lang_to_code(code, req)
         res.send(code)
     },
@@ -330,7 +348,7 @@ module.exports = {
             let code = pageUploadFlow2;
             code = code.replace(`yt2009_flow_token`, flowToken)
             code = require("./yt2009loginsimulate")(req, code, true);
-            code = doodles.applyDoodle(code)
+            code = doodles.applyDoodle(code, req)
             code = languages.apply_lang_to_code(code, req)
             res.send(code)
         } else if(state == 3) {
@@ -380,9 +398,30 @@ module.exports = {
                         code = require("./yt2009loginsimulate")(
                             req, code, true
                         );
-                        code = doodles.applyDoodle(code)
+                        code = doodles.applyDoodle(code, req)
                         code = languages.apply_lang_to_code(code, req)
                         res.send(code)
+
+                        // pchelper autosharing
+                        if(req.headers.cookie.includes("sharing-enabled")
+                        && req.headers.cookie.includes("sharing-up")
+                        && (!uploadFlowTokens[flowToken].privacy
+                        || uploadFlowTokens[flowToken].privacy == "public")) {
+                            let t = uploadFlowTokens[flowToken].title
+                                    .split("&").join("").split("=").join("")
+                            let fReq = {
+                                "headers": req.headers,
+                                "body": [
+                                    "type=upload",
+                                    "video_name=" + t,
+                                    "video=" + data.videoId
+                                ].join("&")
+                            }
+                            let fRes = {
+                                "sendStatus": function(s) {}
+                            }
+                            autoshare.submit(fReq, fRes)
+                        }
                     } else {
                         console.log("?")
                         res.send("unknown error occured")

@@ -90,7 +90,7 @@ module.exports = {
         }
 
         code = code.replace(`<!--yt2009_video_entries-->`, videos_html)
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
         code = language.apply_lang_to_code(code, req)
 
         return code;

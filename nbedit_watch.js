@@ -304,6 +304,25 @@ $("#subscribeDiv").addEventListener("click", function() {
         var r = new XMLHttpRequest();
         r.open("POST", "/pchelper_subs")
         r.send("user=" + reqUser)
+
+        // autoshare
+        if(document.cookie
+        && document.cookie.indexOf("pchelper_user=") !== -1
+        && document.cookie.indexOf("sharing-sub") !== -1
+        && document.cookie.indexOf("sharing-enabled") !== -1) {
+            var currentId = $(".email-video-url").value.split("?v=")[1]
+            var reqParams = [
+                "type=subscribe",
+                "video=" + currentId,
+                "channel_name=" + $(".yt2009-channel-link").innerHTML
+                                  .trimLeft().trimRight(),
+                "channel_id=" + $(".yt2009-channel-link").href
+                                .split("channel/")[1]
+            ].join("&")
+            var mr = new XMLHttpRequest();
+            mr.open("POST", "/autoshare_submit")
+            mr.send(reqParams)
+        }
     }
 }, false)
 
@@ -642,12 +661,31 @@ function favorite_video() {
     && localStorage.favorites.indexOf("PCHELPER_MANAGED") !== -1)
     || (document.cookie
     && document.cookie.indexOf("favorites=PCHELPER_MANAGED") !== -1)) {
+        $("#watch-remove-faves").className += " hid"
         var r = new XMLHttpRequest();
         r.open("POST", "/pchelper_favorites")
         r.send("video_id=" + currentId)
         r.addEventListener("load", function(e) {
+            if(r.status >= 400) {
+                alert("This video is already in your favorites!")
+                return;
+            }
             $("#watch-add-faves").className += " hid"
             $("#watch-remove-faves").className = "watch-action-result"
+
+            // autoshare
+            if(document.cookie
+            && document.cookie.indexOf("pchelper_user=") !== -1
+            && document.cookie.indexOf("sharing-fav") !== -1
+            && document.cookie.indexOf("sharing-enabled") !== -1) {
+                var reqParams = [
+                    "type=favorite",
+                    "video=" + currentId
+                ].join("&")
+                var mr = new XMLHttpRequest();
+                mr.open("POST", "/autoshare_submit")
+                mr.send(reqParams)
+            }
         }, false)
         return;
     }
@@ -695,6 +733,19 @@ function favorite_video() {
 // removing
 function favorite_undo() {
     var currentId = $(".email-video-url").value.split("?v=")[1]
+    if((localStorage && localStorage.favorites
+    && localStorage.favorites.indexOf("PCHELPER_MANAGED") !== -1)
+    || (document.cookie
+    && document.cookie.indexOf("favorites=PCHELPER_MANAGED") !== -1)) {
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_favorites")
+        r.send("video_id=" + currentId + "&state=undo")
+        r.addEventListener("load", function(e) {
+            $("#watch-remove-faves").className += " hid"
+            $("#watch-add-faves").className = "watch-action-result"
+        }, false)
+        return;
+    }
     var favorites = ""
     if(useLocalStorage) {
         // localstorage
@@ -1218,13 +1269,31 @@ if(document.cookie.indexOf("login_simulate") !== -1) {
         r.addEventListener("load", function(e) {
             $("#defaultRatingMessage span").innerHTML = "Thanks for rating!"
         }, false)
+
+        // pchelper autosharing
+        if(document.cookie
+        && document.cookie.indexOf("pchelper_user=")
+        && document.cookie.indexOf("sharing-like") !== -1
+        && document.cookie.indexOf("sharing-enabled") !== -1) {
+            var currentId = $(".email-video-url").value.split("?v=")[1]
+            var reqParams = [
+                "type=rate",
+                "video=" + currentId,
+                "rating=" + parseInt(
+                    $(".yt2009-stars").getAttribute("title")
+                )
+            ].join("&")
+            var mr = new XMLHttpRequest();
+            mr.open("POST", "/autoshare_submit")
+            mr.send(reqParams)
+        }
     }, false)
 }
 
 
 /*
 ======
-comments with relay
+comments
 ======
 */
 function updateCharacterCount() {
@@ -1233,12 +1302,6 @@ function updateCharacterCount() {
     if(charsLeft < 0) {
         $("#maxCharLabelmain_comment").innerHTML = "Number of characters over the limit: " + Math.abs(charsLeft)
     }
-}
-
-var relay_address = ""
-if(document.querySelector("#comment_formmain_comment")) {
-    relay_address = $("#comment_formmain_comment").getAttribute("action")
-                    .replace("comment_post", "")
 }
 
 function commentSend() {
@@ -1283,6 +1346,26 @@ function commentSend() {
             a.innerHTML = "(help)"
             eBox.appendChild(a)
             mc.appendChild(eBox)
+        }
+
+        // pchelper autosharing
+        if(document.cookie
+        && document.cookie.indexOf("pchelper_user") !== -1
+        && document.cookie.indexOf("comments_add_youtube") !== -1
+        && document.cookie.indexOf("sharing-enabled") !== -1
+        && document.cookie.indexOf("sharing-comment") !== -1) {
+            // autoshare
+            var currentId = $(".email-video-url").value.split("?v=")[1]
+            var reqParams = [
+                "type=comment",
+                "video=" + currentId,
+                "comment=" + $("#comment_textarea_main_comment").value
+                             .trimLeft().trimRight().split("=").join("")
+                             .split("&").join("")
+            ].join("&")
+            var mr = new XMLHttpRequest();
+            mr.open("POST", "/autoshare_submit")
+            mr.send(reqParams)
         }
     }, false)
 }

@@ -20,6 +20,34 @@
 		#user-profile-picture {
 			text-align: center;
 		}
+		.dialog {
+			max-width: 700px;
+		}
+		.dialog .indented input {
+			margin-top: 5px;
+			margin-bottom: 5px;
+		}
+		.dialog .video-still-picker table {
+			position: relative;
+		}
+		.dialog .video-still-picker a.selected {
+			border-color: black;
+		}
+		.img-autoshare-bsky {
+			background: transparent url("/assets/site-assets/autoshare-bsky.png") no-repeat scroll;
+		}
+		#autoshare-a {
+			margin-top: 20px;
+		}
+		#autoshare-f {
+			margin-top: 35px;
+		}
+		.autoshare-service-divider {
+			margin: 0px 5px;
+		}
+		.field.line input {
+			width: 300px !important;
+		}
 	</style>
 	<!-- begin postpage section -->
 </head>
@@ -102,6 +130,9 @@
 				<td class="column-divider"></td>
 				<td id="account-page" class="page">
                     <div class="section-page page-overview">
+						<div class="message">
+                            <div id="response-holder-template" class="confirmBox page-main-message hid">changes_saved_notice</div>
+                        </div>
                         <div class="header">
                             <div class="page">
                                 <table id="overview-userinfo">
@@ -111,25 +142,25 @@
 												<div class="user-thumb-xlarge">
 													<img src="/assets/site-assets/default.png" style="margin-left: -12px"/>
 												</div>
-												<a class="imageChange">change</a>
+												<a class="imageChange" href="javascript:void(0)" onclick="showPictureChangeDialog()">change</a>
 											</div>
 											<div class="statBlock statsBox">
 												<a href="#" id="overview-username" class="nameDiv" style="display: block;">username</a>
 												<span class="greyText">Videos Uploaded:</span>
-												<span id="videos-uploaded">0</span><br>
+												<span id="videos-uploaded">yt2009_videos_uploaded</span><br>
 												<span class="greyText">Video Views:</span>
-												<span id="videos-views">0</span><br>
+												<span id="videos-views">yt2009_video_views</span><br>
 												<span class="greyText">Favorites:</span>
-												<span id="videos-favd">0</span>
+												<span id="videos-favd">yt2009_favorite_count</span>
 											</div>
 										</td>
 										<td>
 											<div class="statBlock statsBox">
 												<span class="greyText">Channel Type:</span><br>
 												<span class="greyText">Channel Views:</span>
-												<span id="channel-views">1</span><br>
+												<span id="channel-views">yt2009_channel_views</span><br>
 												<span class="greyText">Subscribers:</span>
-												<span id="channel-subscribers">0</span>
+												<span id="channel-subscribers">yt2009_subscriber_count</span>
 											</div>
 										</td>
 										<td>
@@ -346,6 +377,278 @@
                             </div>
                         </div>
                     </div>
+					<div class="section-page page-activity hid">
+                        <div class="message">
+                            <div id="response-holder-template" class="confirmBox page-activity-message" style="display: none">Changes saved.</div>
+                        </div>
+                        <div class="header">
+                            <div class="page">
+                                <div id="save-template" class="save-button">
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveActivity();return false;"><span>Save Changes</span></a>
+                                    <div class="cb"></div>
+                                </div>
+                            </div>
+                        </div>
+						<div class="body">
+							<div class="section-tabs">
+								<div class="section current section-sharing" onf="toggleExpander('activity', 'sharing')">
+									<div class="tab">
+										<div class="fl">
+											<div class="bullet" style="background-position: -78px 0px;"></div><a href="javascript:;">Activity Sharing</a>
+										</div>
+										<div class="cb"></div>
+									</div>
+									<div class="page" id="page">
+										<p id="pchelper-sharing-notice" class="hid">[!] use pchelper for autosharing to actually work and take effect with your actual youtube activities. <a href="/mh_pc_intro">add pchelper</a></p>
+										<div class="page">
+											<span class="autoshare-intro">Your activity feed is the actions that you take on YouTube like favoriting, rating, or uploading a video.</span>
+											<div class="activity-pref">
+												<input id="sharing-enabled" type="radio" name="sharing-enable" class="sharing-set">
+												<label for="sharing-enabled">Yes, allow a selected set of my activities to viewable</label><br>
+												<input id="sharing-disabled" type="radio" name="sharing-enable" class="sharing-set" checked>
+												<label for="sharing-disabled">No, do not allow my activities to be viewable</label>
+											</div>
+											<div id="autoshare-a">
+												<table>
+													<tr>
+														<td style="width: 210px;">
+															<span class="bold">What activities do I share?</span><br>
+															<span class="grayText">Include these actions in my feed:</span><br>
+															<input type="checkbox" id="sharing-like">
+															<label for="sharing-like">Rate a video</label><br>
+															<input type="checkbox" id="sharing-comment">
+															<label for="sharing-comment">Comment on a video</label><br>
+															<input type="checkbox" id="sharing-sub">
+															<label for="sharing-sub">Subscribe to a channel</label><br>
+															<input type="checkbox" id="sharing-fav">
+															<label for="sharing-fav">Favorite a video</label><br>
+															<input type="checkbox" id="sharing-up">
+															<label for="sharing-up">Upload a video</label>
+														</td>
+														<td>
+															<span class="bold">Where do I share my activities?</span><br>
+															<span class="grayText">Automatically post my activies to:</span><br>
+															<div id="autoshare-icons" class="autoshare-services">
+																<div class="autoshare-service">
+																	<div class="autoshare-service-detail" id="autoshare-service-bsky">
+																		<img src="/assets/site-assets/pixel-vfl73.gif" class="autoshare-service-icon img-autoshare-bsky"/>
+																		<span class="autoshare-service-name" id="autoshare-name-bsky">Bluesky</span>
+																		<span class="autoshare-service-divider"> - </span>
+																		<a href="/autoshare_connect?s=bsky" id="autoshare-link-bsky">Connect accounts</a>
+																	</div>
+																</div>
+															</div>
+														</td>
+													</tr>
+												</table>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+                        <div class="footer">
+                            <div class="page">
+                                <div id="save-template" class="save-button">
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveActivity();return false;"><span>Save Changes</span></a>
+                                    <div class="cb"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+					<div class="section-page page-profile hid">
+                        <div class="message">
+                            <div id="response-holder-template" class="confirmBox page-activity-message" style="display: none">Changes saved.</div>
+                        </div>
+                        <div class="header">
+                            <div class="page">
+                                <div id="save-template" class="save-button">
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveProfile();return false;"><span>Save Changes</span></a>
+                                    <div class="cb"></div>
+                                </div>
+                            </div>
+                        </div>
+						<div class="body">
+							soon!
+							<form action="/pchelper_profile_setup" id="pchelper-profile-setup-form" class="hid" style="display: none;" method="POST">
+								<div class="section-tabs">
+									<div class="section current section-about">
+										<div class="tab" onclick="toggleExpander('profile', 'about')">
+											<div class="fl">
+												<div class="bullet" style="background-position: -78px 0px;"></div><a href="javascript:;">About Me</a>
+											</div>
+											<div class="cb"></div>
+										</div>
+										<div class="page" id="page" style="height: 200px;">
+											<div style="display:inline-block;width:300px;">
+												<div id="user-profile-picture">
+													<div class="user-thumb-large fl">
+														<img src="/assets/site-assets/default-centered.png" style="margin-left: -2px;" alt="">
+													</div>
+												</div>
+												<div class="about-me-buttons">
+													<a class="yt-button" type="submit" href="javascript:void(0)" onclick="showPictureChangeDialog()">
+														<span>Change Picture</span>
+													</a>
+												</div>
+											</div><br>
+											<div class="input-section">
+												<div class="field box">
+													<span>Describe Yourself:</span><br>
+													<textarea name="channel-description">yt2009_channel_description</textarea>
+												</div>
+												<div class="field line">
+													<span>Website (URL):</span><br>
+													<input type="text" name="website" spellcheck="false" autocomplete="off">
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="section section-personal">
+										<div class="tab" onclick="toggleExpander('profile', 'personal')">
+											<div class="fl">
+												<div class="bullet"></div><a href="javascript:;">Personal Details</a>
+											</div>
+											<div class="cb"></div>
+										</div>
+										<div class="page hid" id="page">
+											<div class="input-section">
+												<div class="field line">
+													<span>First Name:</span><br>
+													<input type="text" name="first-name" spellcheck="false" autocomplete="off">
+												</div>
+												<div class="field line">
+													<span>Last Name:</span><br>
+													<input type="text" name="last-name" spellcheck="false" autocomplete="off">
+												</div>
+												<div class="field">
+													<span>Gender:</span><br>
+													<select name="gender">
+														<option value="na">--</option>
+														<option value="m">Male</option>
+														<option value="f">Female</option>
+													</select>
+												</div>
+												<div class="field">
+													<span>Relationship Status:</span><br>
+													<select name="relationship">
+														<option value="na">--</option>
+														<option value="s">Single</option>
+														<option value="t">Taken</option>
+														<option value="o">Open</option>
+													</select>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="section section-hometown">
+										<div class="tab" onclick="toggleExpander('profile', 'hometown')">
+											<div class="fl">
+												<div class="bullet"></div><a href="javascript:;">Hometown / Location</a>
+											</div>
+											<div class="cb"></div>
+										</div>
+										<div class="page hid" id="page">
+											<div class="input-section">
+												<div class="field line">
+													<span>Hometown:</span><br>
+													<input type="text" name="hometown" spellcheck="false" autocomplete="off">
+												</div>
+												<div class="field line">
+													<span>Current City:</span><br>
+													<input type="text" name="current-city" spellcheck="false" autocomplete="off">
+												</div>
+												<div class="field">
+													<span>Current Zip / Postal Code:</span><br>
+													<input type="text" name="zip-code" spellcheck="false" autocomplete="off">
+												</div>
+												<div class="field line">
+													<span>Country:</span><br>
+													<select name="country">
+														<option value="noc">--</option>
+														<!--yt2009_insert_countries-->
+													</select>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="section section-job">
+										<div class="tab" onclick="toggleExpander('profile', 'job')">
+											<div class="fl">
+												<div class="bullet"></div><a href="javascript:;">Jobs / Career</a>
+											</div>
+											<div class="cb"></div>
+										</div>
+										<div class="page hid" id="page">
+											<div class="input-section">
+												<div class="field box">
+													<span>Occupations:</span><br>
+													<textarea name="occupations"></textarea>
+												</div>
+												<div class="field box">
+													<span>Companies:</span><br>
+													<textarea name="companies"></textarea>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="section section-edu">
+										<div class="tab" onclick="toggleExpander('profile', 'edu')">
+											<div class="fl">
+												<div class="bullet"></div><a href="javascript:;">Education</a>
+											</div>
+											<div class="cb"></div>
+										</div>
+										<div class="page hid" id="page">
+											<div class="input-section">
+												<div class="field box">
+													<span>Schools:</span><br>
+													<textarea name="schools"></textarea>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="section section-inter">
+										<div class="tab" onclick="toggleExpander('profile', 'inter')">
+											<div class="fl">
+												<div class="bullet"></div><a href="javascript:;">Interests</a>
+											</div>
+											<div class="cb"></div>
+										</div>
+										<div class="page hid" id="page">
+											<div class="input-section">
+												<div class="field box">
+													<span>Interests:</span><br>
+													<textarea name="interests"></textarea>
+												</div>
+												<div class="field box">
+													<span>Favorite Movies & Shows:</span><br>
+													<textarea name="fav-movies"></textarea>
+												</div>
+												<div class="field box">
+													<span>Favorite Music:</span><br>
+													<textarea name="fav-music"></textarea>
+												</div>
+												<div class="field box">
+													<span>Favorite Books:</span><br>
+													<textarea name="fav-books"></textarea>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+							
+						</div>
+                        <div class="footer">
+                            <div class="page">
+                                <div id="save-template" class="save-button">
+                                    <a class="yt-button yt-button-primary" id="" style="" href="#" onclick="saveProfile();return false;"><span>Save Changes</span></a>
+                                    <div class="cb"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </td>
 			</tr>
 		</tbody></table>
@@ -448,6 +751,54 @@
 		</div>
 	</div>
 	<div>
+	</div>
+	<div class="cover hid" id="overlay-cover"></div>
+	<div class="hid" id="avatar-picker">
+		<div class="dialog-holder">
+			<div class="dialog"><div class="frame"><div class="body">
+				<span class="dialog-title">Change Picture</span>
+				<form action="/pchelper_avatar_change" id="pchelper-avatar-change-form" method="POST" enctype="multipart/form-data">
+					<div class="radiogroup">
+						<div class="radio">
+							<input type="radio" checked name="av_type" value="upload_image" id="upload-image">
+							<label for="upload-image">Upload an image:</label><br>
+							<div class="indented">
+								<input type="file" name="image-file"><br>
+								<span class="grayText">You can upload a JPG, non-animated GIF, BMP, or PNG file.
+								Do not upload pictures containing celebrities, nudity, artwork or copyrighted images.
+								Your image will be displayed as an 88px by 88px square. <b>Maximum file size is 256K.</b></span>
+							</div>
+						</div>
+						<div class="radio">
+							<input type="radio" name="av_type" value="video_still" id="video-still">
+							<label for="video-still">Choose a video still:</label><br>
+							<div class="indented">
+								<input type="hidden" name="picked_video_still" id="picked-video-still" value="0">
+								<input type="hidden" name="picked_video_still_id" id="picked-video-still-id" value="">
+								<div class="video-still-picker">
+									<table><tr>
+										<!--yt2009_videos_insert-->
+									</tr></table>
+								</div>
+							</div>
+						</div>
+						<div class="radio">
+							<input type="radio" name="av_type" value="use_default" id="use-default">
+							<label for="use-default">Use default image</label>
+						</div>
+						<div>
+							<a class="yt-button" type="submit" href="javascript:void(0)" onclick="document.getElementById('pchelper-avatar-change-form').submit()">
+								<span>Save changes</span>
+							</a>
+							or
+							<a href="javascript:void(0)" onclick="hidePictureChangeDialog()">
+								cancel
+							</a>
+						</div>
+					</div>
+				</form>
+			</div></div></div>
+		</div>
 	</div>
 	<a name="pageBottom"></a>
     <script src="/assets/site-assets/yt2009accountpage.js"></script>

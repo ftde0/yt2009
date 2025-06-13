@@ -520,7 +520,27 @@ function flagVideoSend() {
 
 // dodaj obecny film do playlisty
 function addPlaylistVideo(playlistId) {
-    var currentId = document.querySelector(".playnav-video.selected").id.split("video-")[1]
+    var currentId = document.querySelector(".playnav-video.selected")
+                            .id.split("video-")[1]
+
+    if(document.cookie && document.cookie.indexOf("playlists_sync") !== -1) {
+        // use pchelper for playlists
+        var pchelper_request = [
+            "method=add_existing",
+            "video=" + currentId,
+            "playlist_id=" + playlistId
+        ].join("&")
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_playlists")
+        r.send(pchelper_request)
+        r.addEventListener("load", function(e) {
+            $("#addToPlaylistResult").style.display = "block"
+            $("#addToPlaylistDiv").style.display = "none"
+        }, false)
+        return;
+    }
+
+    
     var dateAdded = new Date().toString().split(" ")
     dateAdded.shift();
     dateAdded = dateAdded.slice(0, 3)
@@ -555,12 +575,40 @@ function playlistResultBack() {
 
 // event listener: przycisk add na istniejącej playliście
 $("#playlist-add-btn").addEventListener("click", function() {
-    console.log(selectedOption)
     addPlaylistVideo(selectedOption.value);
 }, false)
 
 // event listener: przycisk add na new playlist
 $("#playlist-create-btn").addEventListener("click", function() {
+    if(document.cookie && document.cookie.indexOf("playlists_sync") !== -1) {
+        var currentId = document.querySelector(".playnav-video.selected").id
+                        .replace("playnav-video-", "")
+        // use pchelper for playlists
+        var pchelper_request = [
+            "method=create_new",
+            "video=" + currentId,
+            "playlist_name=" + $(".playlist-name-input").value
+        ].join("&")
+        var r = new XMLHttpRequest();
+        r.open("POST", "/pchelper_playlists")
+        r.send(pchelper_request)
+        r.addEventListener("load", function(e) {
+            updatePlaylists();
+            $(".playlist-create").style.display = "none"
+            $(".playlist-add").style.display = "inline-block"
+            selectedOption = plDropdown.querySelectorAll("option")[0]
+
+            var newId = r.responseText
+            var index = JSON.parse(localStorage.playlistsIndex);
+            index.unshift({"id": newId, "name": $(".playlist-name-input").value})
+            localStorage.playlistsIndex = JSON.stringify(index)
+
+            $("#addToPlaylistResult").style.display = "block"
+            $("#addToPlaylistDiv").style.display = "none"
+        }, false)
+        return;
+    }
+
     var playlistId = Math.floor(Date.now() / 1000)
     localStorage["playlist-" + playlistId] = "[]"
     addPlaylistVideo(playlistId)

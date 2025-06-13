@@ -47,6 +47,7 @@ module.exports = {
         let readable = []
 
         if(!favorites.includes("PCHELPER_MANAGED")) {
+            code = code.split(`visible-if-pchelper`).join("hid")
             buildHTML();
         } else if(mobilehelper.hasLogin(req)) {
             let fReq = {
@@ -78,6 +79,11 @@ module.exports = {
         }
 
         function pchelper_favs(favId) {
+            code = code.replace(`pchelper_fav_id`, favId)
+            code = code.replace(
+                `pchelper_dummies`,
+                `<div id="playlist-btn-play"></div>`
+            )
             let fReq = {
                 "playlistId": favId,
                 "originalUrl": "/playlists/" + favId,
@@ -163,7 +169,7 @@ module.exports = {
             code = require("./yt2009loginsimulate")(req, code, true);
             code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
             code = code.split(`yt2009_page_count`).join(pageNum)
-            code = doodles.applyDoodle(code)
+            code = doodles.applyDoodle(code, req)
             code = languages.apply_lang_to_code(code, req)
     
             res.send(code);

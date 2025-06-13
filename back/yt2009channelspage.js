@@ -112,7 +112,7 @@ module.exports = {
 
         // final
         code = code.replace(`<!--yt2009_channels_insert-->`, channelsHTML + pagingHTML)
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
         code = languages.apply_lang_to_code(code, req)
 
         res.send(code)

@@ -19,7 +19,7 @@ module.exports = {
             )
         }
         code = require("./yt2009loginsimulate")(req, code);
-        code = doodles.applyDoodle(code)
+        code = doodles.applyDoodle(code, req)
 
         res.send(code);
     }

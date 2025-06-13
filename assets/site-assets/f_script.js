@@ -23,8 +23,25 @@ function trimLeft(input) {
     while(temp.indexOf(" ") == 0) {
         temp = temp.replace(" ", "")
     }
+    while(temp.indexOf("\n") == 0) {
+        temp = temp.replace("\n", "")
+    }
+    while(temp.indexOf("\t") == 0) {
+        temp = temp.replace("\t", "")
+    }
 
     return temp;
+}
+
+function trimRight(input) {
+    var temp = input.split("")
+    while(temp[temp.length - 1] == " "
+    || temp[temp.length - 1] == "\n"
+    || temp[temp.length - 1] == "\t") {
+        temp = temp.slice(0, temp.length - 1)
+    }
+
+    return temp.join("");
 }
 
 // document.querySelector
@@ -308,6 +325,30 @@ if(location.href.indexOf("watch") !== -1) {
             }
             r.open("POST", "/pchelper_subs")
             r.send("user=" + reqUser)
+
+            // autoshare
+            if(document.cookie
+            && document.cookie.indexOf("pchelper_user=") !== -1
+            && document.cookie.indexOf("sharing-sub") !== -1
+            && document.cookie.indexOf("sharing-enabled") !== -1) {
+                var currentId = "12345678901"
+                var reqParams = [
+                    "type=subscribe",
+                    "video=" + currentId,
+                    "channel_name=" + trimRight(trimLeft(
+                        $(".yt2009-channel-link").innerHTML
+                    )),
+                    "channel_id=" + reqUser
+                ].join("&")
+                var mr;
+                if (window.XMLHttpRequest) {
+                    mr = new XMLHttpRequest()
+                } else {
+                    mr = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                mr.open("POST", "/autoshare_submit")
+                mr.send(reqParams)
+            }
         }
     }
     
@@ -414,8 +455,37 @@ function favorite_video() {
         }
         r.open("POST", "/pchelper_favorites")
         r.send("video_id=" + currentId)
-        $("#watch-add-faves").className += " hid"
-        $("#watch-remove-faves").className = "watch-action-result"
+        r.onreadystatechange = function(e) {
+            if((r.readyState && r.readyState == 4)
+            || (this.readyState && this.readyState == 4) 
+            || (e.readyState && e.readyState == 4)) {
+                if(r.status >= 400) {
+                    alert("This video is already in your favorites!")
+                    return;
+                }
+                $("#watch-add-faves").className += " hid"
+                $("#watch-remove-faves").className = "watch-action-result"
+
+                // autoshare
+                if(document.cookie
+                && document.cookie.indexOf("pchelper_user=") !== -1
+                && document.cookie.indexOf("sharing-fav") !== -1
+                && document.cookie.indexOf("sharing-enabled") !== -1) {
+                    var reqParams = [
+                        "type=favorite",
+                        "video=" + currentId
+                    ].join("&")
+                    var mr;
+                    if (window.XMLHttpRequest) {
+                        mr = new XMLHttpRequest()
+                    } else {
+                        mr = new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                    mr.open("POST", "/autoshare_submit")
+                    mr.send(reqParams)
+                }
+            }
+        }
         return;
     }
     var favorites = ""
@@ -604,6 +674,10 @@ function playlistCreate() {
         }
     }
 
+    if(!cookieIndex) {
+        cookieIndex = ""
+    }
+
     cookieIndex = encodeURIComponent(name + ";" + id) + ":" + cookieIndex
     document.cookie = "playlist_index=" + cookieIndex
                       + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
@@ -613,8 +687,14 @@ function playlistCreate() {
 
 
 // watchpage: add current video to playlist
-function playlistAdd(id) {
-    var currentId = $(".email-video-url").value.split("?v=")[1]
+function playlistAdd(id, videoId) {
+    var currentId = videoId;
+    if(!videoId) {
+        try {
+            currentId = $(".email-video-url").value.split("?v=")[1]
+        }
+        catch(error) {}
+    }
 
     if(document.cookie && document.cookie.indexOf("playlists_sync") !== -1) {
         // pchelper playlist
@@ -638,6 +718,29 @@ function playlistAdd(id) {
 
     var videoName = $(".watch-vid-ab-title").innerHTML
     var viewCount = $("#watch-view-count").innerHTML
+    if(videoId) {
+        // adding from channelpage
+        var title = $("#playnav-curvideo-title")
+        if(title.getElementsByTagName
+        && title.getElementsByTagName("span")
+        && title.getElementsByTagName("span")[0]) {
+            videoName = $("#playnav-curvideo-title")
+                        .getElementsByTagName("span")[0]
+                        .innerHTML;
+        } else {
+            videoName = $("#playnav-curvideo-title").innerHTML;
+        }
+        if(document.getElementById("playnav-curvideo-view-count")) {
+            viewCount = $("#playnav-curvideo-view-count")
+                        .innerHTML
+                        .split(" ")[0];
+        } else {
+            viewCount = $("#playnav-curvideo-info-line")
+                        .innerHTML.split(" views")[0]
+            viewCount = viewCount.split(" ")
+            viewCount = viewCount[viewCount.length - 1]
+        }
+    }
     var starRating = "5.0"
     var tempStars = 0
     var stars = document.getElementById("ratingStars").getElementsByTagName("a")
@@ -842,6 +945,29 @@ function rateVid(rating) {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
             ratingText.innerHTML = "Thanks for rating!"
         }
+
+        // pchelper autosharing
+        if(document.cookie
+        && document.cookie.indexOf("pchelper_user=")
+        && document.cookie.indexOf("sharing-like") !== -1
+        && document.cookie.indexOf("sharing-enabled") !== -1) {
+            var currentId = $(".email-video-url").value.split("?v=")[1]
+            var reqParams = [
+                "type=rate",
+                "video=" + currentId,
+                "rating=" + parseInt(
+                    $(".yt2009-stars").getAttribute("title")
+                )
+            ].join("&")
+            var mr;
+            if (window.XMLHttpRequest) {
+                mr = new XMLHttpRequest()
+            } else {
+                mr = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            mr.open("POST", "/autoshare_submit")
+            mr.send(reqParams)
+        }
     }
 }
 
@@ -903,6 +1029,31 @@ function commentSend() {
                 a.innerHTML = "(help)"
                 eBox.appendChild(a)
                 mc.appendChild(eBox)
+            }
+
+            // pchelper autosharing
+            if(document.cookie
+            && document.cookie.indexOf("pchelper_user") !== -1
+            && document.cookie.indexOf("comments_add_youtube") !== -1
+            && document.cookie.indexOf("sharing-enabled") !== -1
+            && document.cookie.indexOf("sharing-comment") !== -1) {
+                // autoshare
+                var currentId = $(".email-video-url").value.split("?v=")[1]
+                var reqParams = [
+                    "type=comment",
+                    "video=" + currentId,
+                    "comment=" + trimRight(trimLeft(
+                        $("#comment_textarea_main_comment").value
+                    )).split("=").join("").split("&").join("")
+                ].join("&")
+                var mr;
+                if (window.XMLHttpRequest) {
+                    mr = new XMLHttpRequest()
+                } else {
+                    mr = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                mr.open("POST", "/autoshare_submit")
+                mr.send(reqParams)
             }
         }
     }
@@ -1498,6 +1649,10 @@ function playnav_switchPanel(tabName) {
             playnav_favorite_video();
             break;
         }
+        case "playlists": {
+            createPlaynavPlaylists()
+            break;
+        }
         case "flag": {
             loadFlagMenu(true)
             break;
@@ -1666,6 +1821,36 @@ function playnav_favorite_video() {
         }
         r.open("POST", "/pchelper_favorites")
         r.send("video_id=" + currentId)
+
+        r.onreadystatechange = function(e) {
+            if((r.readyState && r.readyState == 4)
+            || (this.readyState && this.readyState == 4) 
+            || (e.readyState && e.readyState == 4)) {
+                if(r.status >= 400) {
+                    alert("This video is already in your favorites!")
+                    return;
+                }
+
+                // autoshare
+                if(document.cookie
+                && document.cookie.indexOf("pchelper_user=") !== -1
+                && document.cookie.indexOf("sharing-fav") !== -1
+                && document.cookie.indexOf("sharing-enabled") !== -1) {
+                    var reqParams = [
+                        "type=favorite",
+                        "video=" + currentId
+                    ].join("&")
+                    var mr;
+                    if (window.XMLHttpRequest) {
+                        mr = new XMLHttpRequest()
+                    } else {
+                        mr = new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                    mr.open("POST", "/autoshare_submit")
+                    mr.send(reqParams)
+                }
+            }
+        }
         return;
     }
     var videoString = encodeURIComponent(
@@ -1715,6 +1900,30 @@ function subscribe() {
         }
         r.open("POST", "/pchelper_subs")
         r.send("user=" + reqUser)
+
+        // autoshare
+        if(document.cookie
+        && document.cookie.indexOf("pchelper_user=") !== -1
+        && document.cookie.indexOf("sharing-sub") !== -1
+        && document.cookie.indexOf("sharing-enabled") !== -1) {
+            var currentId = "12345678901"
+            var reqParams = [
+                "type=subscribe",
+                "video=" + currentId,
+                "channel_name=" + trimRight(trimLeft(
+                    $("#channel_title").innerHTML
+                )),
+                "channel_id=" + reqUser
+            ].join("&")
+            var mr;
+            if (window.XMLHttpRequest) {
+                mr = new XMLHttpRequest()
+            } else {
+                mr = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            mr.open("POST", "/autoshare_submit")
+            mr.send(reqParams)
+        }
     }
 
     // write sub
@@ -1817,6 +2026,110 @@ function playnav_sort(sortMode) {
             $(".uploads-filtered").innerHTML = r.responseText
         }
     }
+}
+
+// playnav playlists for adding into
+var playnavPlaylistsFirstInit = false;
+
+function playnavAddPlaylist(name, id) {
+    var optionCreate = document.createElement("option");
+    optionCreate.setAttribute("value", id)
+    optionCreate.innerHTML = name.split("<").join("&lt;").split(">").join("&gt;")
+    $(".playlists-options").appendChild(optionCreate)
+}
+
+function createPlaynavPlaylists() {
+    if(!playnavPlaylistsFirstInit) {
+        $("#playlist-create-btn").onclick = function() {
+            if(document.cookie && document.cookie.indexOf("playlists_sync") !== -1) {
+                // create new playlist through pchelper
+                var name = $(".playlist-name-input").value
+                var r;
+                if (window.XMLHttpRequest) {
+                    r = new XMLHttpRequest()
+                } else {
+                    r = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                r.open("POST", "/pchelper_playlists")
+                var params = [
+                    "method=create_new",
+                    "playlist_name=" + name,
+                    "video=" + currentVideo
+                ].join("&")
+                r.send(params)
+                r.addEventListener("load", function(e) {
+                    if(r.status == 200) {
+                        var id = r.responseText;
+
+                        // write cookie and index
+                        var cookies = document.cookie.split(";")
+                        var cookieIndex = false;
+                        for(var c in cookies) {
+                            if(cookies[c].indexOf("playlist_index=") !== -1) {
+                                cookieIndex = trimLeft(cookies[c]).replace(
+                                    "playlist_index=", ""
+                                )
+                            }
+                        }
+
+                        cookieIndex = encodeURIComponent(name + ";" + id)
+                                    + ":" + cookieIndex
+                        document.cookie = "playlist_index=" + cookieIndex
+                                        + "; Path=/"
+                                        + "; expires=Fri, 31 Dec 2066 23:59:59 GMT";
+
+                        $("#addToPlaylistResult").style.display = "block"
+                        $("#addToPlaylistDiv").style.display = "none"
+                    }
+                })
+                return;
+            }
+            var newId = playlistCreate();
+            playlistAdd(newId, currentVideo)
+        }
+        $("#playlist-add-btn").onclick = function() {
+            onPlaylistChange();
+            playlistAdd(plSelectedOption.getAttribute("value"), currentVideo);
+            playnav_switchPanel("playlists")
+        }
+    }
+
+    playnavPlaylistsFirstInit = true;
+
+    $(".playlist-create").style.display = "none"
+    $(".playlist-add").style.display = "inline-block"
+
+    $(".playlists-options").innerHTML = ""
+
+    var addedPlaylists = 0
+    if(document.cookie
+    && document.cookie.indexOf("playlist_index=") !== -1
+    && document.cookie.indexOf("playlist_index=;") == -1) {
+        var index = document.cookie.split("playlist_index=")[1].split(";")[0]
+        var playlists = index.split(":")
+        for(var p in playlists) {
+            var playlist = decodeURIComponent(playlists[p])
+            var playlistName = playlist.split(";")[0];
+            var playlistId = playlist.split(";")[1];
+            
+            if(playlistId) {
+                playnavAddPlaylist(playlistName, playlistId)
+                addedPlaylists++
+            }
+        }
+    }
+
+    var optionCreate = document.createElement("option");
+    optionCreate.setAttribute("value", "override-createnew")
+    optionCreate.innerHTML = "[ New Playlist ]"
+    if(addedPlaylists >= 1) {
+        optionCreate.style.display = "none"
+    } else {
+        $(".playlist-create").style.display = "inline-block"
+        $(".playlist-add").style.display = "none"
+    }
+    $(".playlists-options").appendChild(optionCreate)
+    $(".playlists-options").onchange = onPlaylistChange;
 }
 
 // flip!!
@@ -2151,19 +2464,22 @@ function close_embed() {
 show more from if no related
 ======
 */
-var related = getElementsByClassName(
-    document.getElementById("watch-related-discoverbox"),
-    "video-entry"
-)
-if(related.length <= 0) {
-    var channelVids = document.getElementById("watch-channel-videos-panel")
-                      .getElementsByTagName("h2")[0]
-    toggleExpander(channelVids)
+try {
+    var related = getElementsByClassName(
+        document.getElementById("watch-related-discoverbox"),
+        "video-entry"
+    )
+    if(related.length <= 0) {
+        var channelVids = document.getElementById("watch-channel-videos-panel")
+                        .getElementsByTagName("h2")[0]
+        toggleExpander(channelVids)
 
-    var relatedExpander = document.getElementById("watch-related-videos-panel")
-                          .getElementsByTagName("h2")[0]
-    toggleExpander(relatedExpander)
+        var relatedExpander = document.getElementById("watch-related-videos-panel")
+                            .getElementsByTagName("h2")[0]
+        toggleExpander(relatedExpander)
+    }
 }
+catch(error) {}
 
 /*
 ======
