@@ -1543,6 +1543,8 @@ function switchVideo(video) {
         video.className = "playnav-item playnav-video selected playnav-item-selected"
     }
     
+    // share tab
+    $("#playnav-panel-share-link").value = "http://youtu.be/" + id
 }
 
 // other playnav tabs (all/uploads/playlists etc)

@@ -1680,3 +1680,125 @@ if(document.cookie && document.cookie.indexOf("rec_rss_id=") !== -1) {
     r.setRequestHeader("source", location.href)
     r.send(null)
 }
+
+/*
+======
+live chat -- actual video handled by html5player
+======
+*/
+function initLiveChat(id) {
+    var continuation = ""
+    var last = ""
+    function getChat() {
+        var url = [
+            "/stream_chat?video_id=" + id + "&format=json"
+        ]
+        if(continuation) {
+            url.push("&continuation=" + continuation)
+        }
+        if(last) {
+            url.push("&last=" + last)
+        }
+        url = url.join("")
+        
+        var r = new XMLHttpRequest();
+        r.open("GET", url)
+        r.send(null)
+        
+        // retry on network errors
+        r.addEventListener("error", function() {
+            setTimeout(function() {
+                getChat()
+            }, 2000)
+        }, false)
+        r.addEventListener("abort", function() {
+            setTimeout(function() {
+                getChat()
+            }, 2000)
+        }, false)
+
+        // messages loaded
+        r.addEventListener("load", function(e) {
+            if(r.getResponseHeader("next-cont")) {
+                continuation = r.getResponseHeader("next-cont")
+            }
+            if(r.getResponseHeader("next-last")) {
+                last = r.getResponseHeader("next-last")
+            }
+            var msgs = JSON.parse(r.responseText)
+            msgs.forEach(function(msg) {
+                var mtr = document.createElement("tr")
+                mtr.className = "live-chat-message"
+
+                var matd = document.createElement("td")
+                matd.className = "author-username"
+                var maa = document.createElement("a")
+                maa.href = "/channel/" + msg.authorId
+                maa.innerHTML = msg.authorName
+                matd.appendChild(maa)
+                mtr.appendChild(matd)
+
+                var mctd = document.createElement("td")
+                mctd.className = "message-content"
+                var mcs = document.createElement("span")
+                mcs.innerHTML = msg.msg;
+                mctd.appendChild(mcs)
+                mtr.appendChild(mctd)
+
+                $("#live-chat-t tbody").appendChild(mtr)
+            })
+            setTimeout(function() {
+                getChat()
+            }, 5000)
+            $("#watch-live-discoverbox").scrollBy(0,900)
+        }, false)
+    }
+    getChat()
+
+
+    // other
+    liveUiInit(id)
+}
+
+function liveUiInit(id) {
+    $("#watch-comment-panel").style.display = "none"
+
+    var continuation = ""
+    function pullWatching() {
+        var url = [
+            "/stream_current_vc?video_id=" + id
+        ]
+        if(continuation) {
+            url.push("&continuation=" + continuation)
+        }
+        url = url.join("")
+        
+        var r = new XMLHttpRequest();
+        r.open("GET", url)
+        r.send(null)
+        
+        // retry on network errors
+        r.addEventListener("error", function() {
+            setTimeout(function() {
+                pullWatching()
+            }, 2000)
+        }, false)
+        r.addEventListener("abort", function() {
+            setTimeout(function() {
+                pullWatching()
+            }, 2000)
+        }, false)
+
+        // messages loaded
+        r.addEventListener("load", function(e) {
+            if(r.getResponseHeader("next-cont")) {
+                continuation = r.getResponseHeader("next-cont")
+            }
+            $("#watch-views").innerHTML = r.responseText
+            setTimeout(function() {
+                pullWatching()
+            }, 5000)
+        }, false)
+    }
+    pullWatching()
+}

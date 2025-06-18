@@ -34,6 +34,8 @@ var languageData_EN = {
         "channel-default-color": "use the default gray color instead of taking one from the banner",
         "channel-disable-old-banners": "disables old banners and backgrounds. speeds up loading times",
         "channel-index-contribute": "visited channels will be visible in /channels",
+        "channel-no-community": "disables the Recent Activity window that shows community tab posts",
+        "channel-no-live": "disables the Live tab that shows channel's current live streams",
         "channel-only-old": "will only show videos uploaded in the specified date range on channels (default before 2010-04-01)",
         "channel-realistic-view-count": "more realistic for 2009 view counts",
         "channel-remove-username-space": "removes spaces from usernames",

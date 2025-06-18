@@ -624,9 +624,9 @@ module.exports = {
             </div>
                 `
     },
-    "playnavVideo": function(video, video_index, views, upload_date, ratings, protocol) {
+    "playnavVideo": function(video, video_index, views, upload_date, ratings, protocol, live) {
         return `
-        <div class="playnav-item playnav-video ${video_index == 0 ? "selected playnav-item-selected" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this);return false;">
+        <div class="playnav-item playnav-video ${video_index == 0 ? "selected playnav-item-selected" : ""} ${live ? "playnav-live-video" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this);return false;">
             <div id="playnav-video-play-${video.id}-selector" class="selector"></div>
             <div class="content">
                 <div class="playnav-video-thumb link-as-border-color">
@@ -635,7 +635,7 @@ module.exports = {
                 </div>
                 <div class="playnav-video-info">
                     <a href="#" class="playnav-item-title ellipsis"><span class="video-title-${video.id}">${video.title}</span></a>
-                    <div class="metadata video-meta-${video.id}">${views} - ${upload_date}</div>
+                    <div class="metadata video-meta-${video.id}">${views}${!live ? " - " : ""}${upload_date}</div>
                     <div class="video-ratings-${video.id} hid">${utils.countBreakup(ratings)}</div>
                 </div>
             </div>
@@ -674,6 +674,21 @@ module.exports = {
                 </a>
             </div>`,
     "playlistScrollboxEnd": `
+        <div class="spacer">&nbsp;</div>
+        <div class="scrollbox-separator">
+            <div class="outer-box-bg-as-border"></div>
+        </div>
+    </div>
+    </div>`,
+    "liveScrollboxHead": `
+    <div class="outer-scrollbox yt2009-scrollbox scrollbox-live hid">
+        <div id="playnav-play-live-items" class="inner-scrollbox">
+            <div class="playnav-live-header">
+                <a style="text-decoration:none" class="title title-text-color">
+                    <span id="playnav-live-title" class="title">lang_playnav_livevids</span>
+                </a>
+            </div>`,
+    "liveScrollboxEnd": `
         <div class="spacer">&nbsp;</div>
         <div class="scrollbox-separator">
             <div class="outer-box-bg-as-border"></div>
@@ -3273,5 +3288,124 @@ term='channel'/>
             i++
         })
         return html;
-    }
+    },
+    "playerHDLive": function(id, use720p, autoHQ) {
+        return `
+        //exp_hq
+        seekbarRemoveWidth = 245;
+        adjustSeekbarWidth();
+        var liveHd = false;
+
+        ${autoHQ ? `
+        liveHd = true;` : ""}
+
+        // hd/hq playback
+        $(".video_controls .hq").addEventListener("click", function() {
+            video_pause();
+
+            if(!liveHd) {
+                liveHd = true;
+                $("video").innerHTML = "";
+                initAsLive("${id}")
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
+                //video_play()
+            } else {
+                liveHd = false;
+                $("video").innerHTML = "";
+                initAsLive("${id}")
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
+                //video_play()
+            }
+        }, false)`
+    },
+    
+    "liveChatMessage": function(msg) {
+        return `<tr class="live-chat-message">
+            <td class="author-username">
+                <a href="/channel/${msg.authorId}">${msg.authorName}</a>
+            </td>
+            <td class="message-content">
+                <span>${msg.msg}</span>
+            </td>
+        </tr>`
+    },
+
+    "livechatTemplate": `<div id="watch-live-chat-panel" class="watch-discoverbox-wrapper yt-uix-expander " data-expander-action="watchTogglePanel" data-discoverbox-type="live" data-discoverbox-username="">
+		<h2 class="yt-uix-expander-head" onclick="toggleExpander(this)">
+			<button title="" class="yt-uix-expander-arrow master-sprite"></button>
+			<span>Live Chat</span>
+		</h2>
+		<div id="watch-live-chat-body" class="watch-discoverbox-body mini-list-view yt-uix-expander-body">
+			<div id="watch-live-discoverbox" class="watch-discoverbox" style="height:432px">
+				<table id="live-chat-t"><tbody></tbody></table>
+			</div>
+		</div>
+		<div class="clearL"></div>
+	</div>`,
+
+    "recentActivityHead": `<div class="inner-box" id="user_recent_activity">
+	<div style="zoom:1">
+		<div class="box-title title-text-color">Recent Activity &nbsp;</div>
+		<div style="float:right;zoom:1;_display:inline;white-space:nowrap"><div style="float:right"></div></div>
+		<div class="cb"></div>
+	</div>
+	<div id="user_recent_activity-messages" style="color:#333;margin:1em;padding:1em;display:none"></div>
+	<div id="user_recent_activity-body">
+		<div id="feed_success" style="display: none;">Successfully removed.</div>
+		<div id="feed_success_custom" style="display: none;"></div>
+		<div id="feed_error" style="display: none;">Sorry, an error occurred.</div>
+		<div id="feed_error_custom" style="display: none;"></div>
+		<div id="feed_loading" style="display: none; text-align: center;"><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif"></div>
+		<div id="feed_table">
+			<div class="text-field recent-activity-content outer-box-bg-as-border">
+				<table border="0" cellspacing="0" cellpadding="0" width="97%">
+					<tbody>`,
+    
+    "recentActivityPost": function(p, index, req) {
+        return `<tr id="feed_item_${index}" valign="top">
+			<td class="feed_icon"><img src="/assets/site-assets/pixel-vfl73.gif" class="icon-BUL"></td>
+			<td>
+				<div class="feed_title">
+					${p.authorText}
+                    <span class="feed-content">${p.text}</span>
+					<span class="timestamp">(${p.time})</span>
+				</div>
+				<div class="centerpiece">
+                    ${p.imageAttachmentSmall ?
+                    `<div style="float:left; margin-right: 8px;"><img class="feed-image" src="/avatar_wait?av=${encodeURIComponent(p.imageAttachmentSmall)}"/></div>` : ""}
+                    ${p.embedVideoId && p.embedVideoTitle ? 
+                    `<div style="float:left; margin-right: 8px;"><a href="/watch?v=${p.embedVideoId}" rel="nofollow"><img style="width: 60px; height: 45px; border: 1px solid;" src="${utils.getThumbUrl(p.embedVideoId, req)}" class="link-as-border-color"></a></div>
+					<div>
+						<a href="/watch?v=${p.embedVideoId}" rel="nofollow">${p.embedVideoTitle}</a>
+					</div>` : ""}
+				</div>
+			</td>
+			<td class="feed_delete">&nbsp;</td>
+		</tr>
+
+		<tr id="feed_divider_${index}">
+			<td colspan="3" class="outer-box-bg-as-border divider">&nbsp;</td>
+		</tr>`
+
+        /*<div>
+						<span id="feed_item_UgY69lf0UCE_collapsed">
+							ALTERNATE ENDING &amp; DELETED SCENE: <a href="http://web.archive.org/web/20091124022218/http://smosh.com/videos" target="_blank" title="http://smosh.com/videos" rel="nofollow" dir="ltr">http://smosh.com/videos</a><br><br>Can we survive a frickin' zombie apocalypse? See if we make it in our new video!<br><br><a href="http://web.archive.org/web/20091124022218/http://smosh.com/" target="_blank" title="http://smosh.com" rel="nofollow" dir="ltr">http:/...</a>
+							&nbsp;
+							<a href="#" onclick="_hidediv('feed_item_UgY69lf0UCE_collapsed'); _showdiv('feed_item_UgY69lf0UCE_expanded'); return false;" style="font-size: 10px;" class="hLink">more</a>
+						</span>
+						<span id="feed_item_UgY69lf0UCE_expanded" style="display:none">
+							ALTERNATE ENDING &amp; DELETED SCENE: <a href="http://web.archive.org/web/20091124022218/http://smosh.com/videos" target="_blank" title="http://smosh.com/videos" rel="nofollow" dir="ltr">http://smosh.com/videos</a><br><br>Can we survive a frickin' zombie apocalypse? See if we make it in our new video!<br><br><a href="http://web.archive.org/web/20091124022218/http://smosh.com/" target="_blank" title="http://smosh.com" rel="nofollow" dir="ltr">http://smosh.com</a><br><a href="http://web.archive.org/web/20091124022218/http://twitter.com/smosh" target="_blank" title="http://twitter.com/smosh" rel="nofollow" dir="ltr">http://twitter.com/smosh</a><br><a href="http://web.archive.org/web/20091124022218/http://facebook.com/smosh" target="_blank" title="http://facebook.com/smosh" rel="nofollow" dir="ltr">http://facebook.com/smosh</a><br><a href="http://web.archive.org/web/20091124022218/http://myspace.com/smosh" target="_blank" title="http://myspace.com/smosh" rel="nofollow" dir="ltr">http://myspace.com/smosh</a>
+							&nbsp;
+							<a href="#" onclick="_hidediv('feed_item_UgY69lf0UCE_expanded'); _showdiv('feed_item_UgY69lf0UCE_collapsed'); return false;" style="font-size: 10px;" class="hLink">less</a>
+						</span>
+					</div>*/
+    },
+
+    "recentActivityEnd": `</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>`
 }

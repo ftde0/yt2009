@@ -26,33 +26,46 @@ function use_ryd_first_video() {
 // playnav
 function switchVideo(video) {
     playnav_view("play")
-    $(".playnav-video.selected").className = "playnav-item playnav-video"
+
+    var liveVideo = (video.className.indexOf("playnav-live-video") !== -1)
+    
+    var currentIsLive = (
+        document.querySelector(".playnav-video.selected")
+        .className.indexOf("playnav-live-video") !== -1
+    )
+    $(".playnav-video.selected").className = "playnav-item playnav-video" + (currentIsLive ? " playnav-live-video" : "")
 
     var id = video.id.split("-").splice(2, video.id.split("-").length).join("-")
+
+    var vidUrl = "/embed/" + id
+    if(liveVideo) {
+        vidUrl += "?live=1"
+    }
 
     $("#playnav-curvideo-title").innerHTML = document.querySelector(".video-title-" + id).innerHTML
     $("#playnav-curvideo-info-line").innerHTML = "From: " + $(".yt2009-name").innerHTML + " | " + document.querySelector(".video-meta-" + id).innerHTML.replace(" - ", " | ")
     $("#playnav-curvideo-description").innerHTML = ""
     $("#defaultRatingMessage").innerHTML = "<span class='smallText'>" + document.querySelector(".video-ratings-" + id).innerHTML + " ratings</span>"
-    $("#yt2009_playhead").src = "/embed/" + id;
+    $("#yt2009_playhead").src = vidUrl;
     $("#playnav-watch-link").setAttribute("href", "/watch?v=" + id)
 
     var e = document.querySelectorAll(".playnav-video")
     // wywal .selected z reszty
     for(var sel in e) {
         try {
-            e[sel].className = "playnav-item playnav-video"
+            var vlive = (e[sel].className.indexOf("playnav-live-video") !== -1)
+            e[sel].className = "playnav-item playnav-video" + (vlive ? " playnav-live-video" : "")
         }
-        catch(error) {console.log(error)}
+        catch(error) {}
     }
     // dodaj .selected z powrotem do innych wystąpień tego filmu
     e = document.querySelectorAll("#playnav-video-" + id)
     for(var sel in e) {
-        try {e[sel].className = "playnav-item playnav-video selected playnav-item-selected"}
-        catch(error) {console.log(error)}
+        try {e[sel].className = "playnav-item playnav-video selected playnav-item-selected" + (liveVideo ? " playnav-live-video" : "")}
+        catch(error) {}
     }
 
-    video.className = "playnav-item playnav-video selected playnav-item-selected"
+    video.className = "playnav-item playnav-video selected playnav-item-selected" + (liveVideo ? " playnav-live-video" : "")
 
     // zmień kartę na info
     playnav_switchPanel("info")
@@ -76,6 +89,9 @@ function switchVideo(video) {
             }, false)
         }
     }
+
+    // share tab
+    $("#playnav-panel-share-link").value = "http://youtu.be/" + id
 }
 
 // karty

@@ -95,6 +95,11 @@
 			margin-bottom: 10px;
 		}
 
+		#playnav-panel-share-link {
+			width: 400px;
+			font-size: 21px;
+			margin-top: 3px
+		}
 
 	</style>
 
@@ -319,6 +324,15 @@
 			border-bottom: 3px solid #999999;
 		}
 
+		.feed-content {
+			font-weight: normal;
+		}
+		
+		.feed-image {
+			width: 235px;
+			height: auto;
+		}
+
 	</style>
 
 	<!--yt2009_wayback_channel_custom_css-->
@@ -496,6 +510,7 @@
 								<tr>
 									<td><a class="navbar-tab inner-box-link-color navbar-tab-selected" id="playnav-navbar-tab-all" onclick="switchTab('all', this)">lang_playnav_all</a></td>
 									<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-uploads" onclick="switchTab('uploads', this)">lang_playnav_videos</a></td>
+									<!--yt2009_live_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-live" onclick="switchTab('live', this)">lang_playnav_livevids</a></td>yt2009_live_remove_end-->
 									<!--yt2009_favorites_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-favorites" onclick="openPlaylist(document.querySelector('.yt2009_favorites_id_div'), 'favorites')">lang_playnav_favorites</a><div class="hid yt2009_favorites_id_div" data-id="yt2009_favorites_id_value"></div></td>yt2009_favorites_remove_end-->
 									<!--yt2009_playlists_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-playlists" onclick="switchTab('playlists', this)">lang_playnav_playlists_top</a></td>yt2009_playlists_remove_end-->
 								</tr>
@@ -714,7 +729,12 @@
 													</div>
 												</div>
 											</div>
-											<div id="playnav-panel-share" class="hid scrollable"></div>
+
+											<div id="playnav-panel-share" class="hid scrollable">
+												<span>Link to this video:</span><br>
+												<input type="text" spellcheck="false" value="playnav_share_short_link" readonly autocomplete="off" id="playnav-panel-share-link">
+											</div>
+
 											<div id="playnav-panel-playlists" class="hid">
 												<div id="addToPlaylistDiv" class="watch-more-action" style="padding: 0px 8px 5px 3px;">
 													<h2>lang_playnav_playlist_add</h2>
@@ -756,8 +776,10 @@
 											<div class="scrollbox-body" style="height: 585px;">
 												<div class="outer-scrollbox yt2009-scrollbox scrollbox-all">
 													<div id="playnav-play-all-items" class="inner-scrollbox">
-														<div class="playnav-playlist-header">
-															<div class="spacer">&nbsp;</div>
+														<div class="playnav-all-header">
+															<a style="text-decoration:none" class="title title-text-color">
+																<span id="playnav-all-title" class="title">Uploads</span>
+															</a>
 														</div>
 														<!--yt2009_all_scrollbox_uploads-->
 														<div class="playnav-play-column-all">
@@ -806,6 +828,8 @@
 
 													</div>
 												</div>
+
+												<!--yt2009_live_scrollbox-->
 
 												<!--yt2009_playlists_scrollbox-->
 											</div>
@@ -937,6 +961,8 @@
 					<!--yt2009_wayback_subscribers_slot1-->
 
 					<!--yt2009_friends_slot1-->
+
+					<!--yt2009_recentslot-->
 				</div>
 				<div class="right-column" id="main-channel-right">
 					<!--<div class="inner-box" id="user_recent_activity">

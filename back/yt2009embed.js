@@ -81,6 +81,7 @@ module.exports = function(req, res) {
     let id = req.originalUrl.split("embed/")[1].split("?")[0].substring(0, 11)
     let watchflags = "";
     let code = embed_code;
+    let live = req.query.live
 
     // authorized?
     if(utils.isAuthorized(req)) {
@@ -262,7 +263,8 @@ module.exports = function(req, res) {
     // exp_hd=1
     let videoQualities = require("./yt2009html").get_cache_video(id).qualities || []
     if(videoQualities.includes("720p")
-    || videoQualities.includes("480p")) {
+    || videoQualities.includes("480p")
+    && !live) {
         let use720p = videoQualities.includes("720p")
         code = code.replace(
             `<!--yt2009_style_hq_button-->`,
@@ -291,11 +293,44 @@ module.exports = function(req, res) {
     }
 
     // auto_additions=1
+    let autoAdditionsAdded = false;
     if(req.query.auto_additions == 1) {
         code = code.replace(
             `//yt2009-autoadditions`,
             `annotationsMain();captionsMain();`
         )
+        autoAdditionsAdded = true;
+    }
+
+    // always_annotations
+    if(req.headers.cookie
+    && req.headers.cookie.includes("always_annotations")
+    && !autoAdditionsAdded) {
+        code = code.replace(
+            `//yt2009-iv`,
+            `annotationsMain();`
+        )
+    }
+
+    // always_captions
+    if(req.headers.cookie
+    && req.headers.cookie.includes("always_captions")
+    && !autoAdditionsAdded) {
+        code = code.replace(
+            `//yt2009-cc`,
+            `captionsMain();`
+        )
+    }
+
+    // skip video download if live
+    if(live && utils.isAuthorized(req)) {
+        code = code.replace(
+            `//yt2009-live`,
+            `liveHd = true;initAsLive("${id}");`
+        )
+    } else if(live && !utils.isAuthorized(req)) {
+        res.send("live videos need authorization")
+        return;
     }
 
     // download the video if needed, also convert to ogv in case of ff<=25

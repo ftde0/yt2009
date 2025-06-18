@@ -573,6 +573,7 @@
     height: 65px;
     cursor: pointer;
     overflow: hidden;
+    z-index: 4;
 }
 
 .embed-play-btn:hover {

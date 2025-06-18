@@ -83,11 +83,12 @@ module.exports = {
             if(cached
             && cached.oldTryoutComplete
             && req.query.resetcache !== "1"
-            && !(flags || "").includes("+resetcache")) {
+            && !(flags || "").includes("+resetcache")
+            && !cached.freezeCache) {
                 writeTimingData("cache retrieve")
                 sendResponse(cached)
             } else {
-                let fetchesRequired = 2;
+                let fetchesRequired = 4;
                 let fetchesCompleted = 0;
                 let fullData = {}
 
@@ -136,6 +137,55 @@ module.exports = {
                         }
                     }
                 )
+
+                // also get live videos if there
+                this.get_direct_by_chipparam(
+                    "8gYuGixyKhImCiQ2YTUwNjI4MS0wMDAwLTJlN2MtYmYzOS1mNDAzMDQzOTIwODgoDg%3D%3D",
+                    id,
+                    (vids) => {
+                        let liveVids = vids.filter(s => {return (!s.views)})
+                        fullData.liveVideos = liveVids;
+                        writeTimingData("separate live videos fetch")
+
+                        // dont cache if at least 1 live
+                        if(liveVids.length >= 1) {
+                            fullData.freezeCache = true;
+                        }
+
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            sendResponse(fullData)
+                        }
+                    }
+                )
+
+                // community tab
+                const browseNavigation = require("./proto/popularVidsChip_pb")
+                let communityCont = new browseNavigation.vidsChip()
+                let msg = new browseNavigation.vidsChip.nestedMsg1()
+                msg.setChannelid(id)
+                msg.setChipparam("Egljb21tdW5pdHmqAwgKBFJVRkIoCvIGBAoCSgA")
+                communityCont.addMsg(msg)
+                let communityTab = encodeURIComponent(Buffer.from(
+                    communityCont.serializeBinary()
+                ).toString("base64"))
+                fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+                    "headers": yt2009constants.headers,
+                    "referrer": "https://www.youtube.com/",
+                    "referrerPolicy": "strict-origin-when-cross-origin",
+                    "body": JSON.stringify({
+                        "context": yt2009constants.cached_innertube_context,
+                        "continuation": communityTab
+                    }),
+                    "method": "POST",
+                    "mode": "cors"
+                }).then(r => {r.json().then(r => {
+                    fullData.communityPosts = yt2009utils.parseBackstageCont(r)
+                    fetchesCompleted++
+                    if(fetchesCompleted >= fetchesRequired) {
+                        sendResponse(fullData)
+                    }
+                })})
 
                 // check whether old background/banners can be used
                 this.tryout_legacy_images(id, (tryout) => {
@@ -911,6 +961,12 @@ module.exports = {
                         var currentVideo = "${video.id}";`
                     )
                 }
+
+                // playnav share link
+                code = code.replace(
+                    `playnav_share_short_link`,
+                    `http://youtu.be/${video.id}`
+                )
             } else {
                 // no videos
                 code = code.replace(
@@ -1147,6 +1203,51 @@ module.exports = {
             code = code.replace(
                 "<!--yt2009_playlists_scrollbox-->",
                 playlists_scrollbox_html
+            )
+        }
+        
+        /*
+        =======
+        live videos
+        =======
+        */
+        if(data.liveVideos && data.liveVideos.length >= 1 && !flashMode
+        && (!flags || !flags.includes("no_live"))) {
+            let liveScrollbox = templates.liveScrollboxHead
+            let i = 1;
+            data.liveVideos.forEach(vid => {
+                liveScrollbox += templates.playnavVideo(
+                    vid, i, "", "", "0", req.protocol, true
+                )
+                i++
+            })
+            liveScrollbox += templates.liveScrollboxEnd
+            code = code.replace(`<!--yt2009_live_remove_start`, "")
+            code = code.replace(`yt2009_live_remove_end-->`, "")
+            code = code.replace(
+                "<!--yt2009_live_scrollbox-->",
+                liveScrollbox
+            )
+        }
+
+        /*
+        ========
+        community posts as recent activity
+        ========
+        */
+        if(data.communityPosts && data.communityPosts.length >= 1
+        && (!flags || !flags.includes("no_community"))) {
+            let posts = data.communityPosts.slice(0,4)
+            let activityTab = templates.recentActivityHead
+            let i = 0;
+            posts.forEach(p => {
+                activityTab += templates.recentActivityPost(p, i, req)
+                i++
+            })
+            activityTab += templates.recentActivityEnd
+            code = code.replace(
+                `<!--yt2009_recentslot-->`,
+                activityTab
             )
         }
 
@@ -1939,7 +2040,8 @@ module.exports = {
                         "title": video.title.runs[0].text,
                         "views": (video.viewCountText
                               || {"simpleText": "0 views"}).simpleText,
-                        "upload": video.publishedTimeText.simpleText,
+                        "upload": (video.publishedTimeText || {"simpleText": "?"})
+                                  .simpleText,
                         "thumbnail": "http://i.ytimg.com/vi/"
                                     + video.videoId
                                     + "/hqdefault.jpg",

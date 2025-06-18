@@ -12,6 +12,10 @@ message audioTrackData {
     string vssId = 5;
     optional int32 isDefault = 6;
 }
+message numberRange {
+    int32 start = 3;
+    int32 end = 4;
+}
 message root {
     message contextType {
         string contextToken = 2;
@@ -42,6 +46,8 @@ message root {
             int32 totalBitrate = 6;
             int32 videoWidth = 7;
             int32 videoHeight = 8;
+            repeated numberRange initRange = 9;
+            repeated numberRange indexRange = 10;
             int64 lastChanged = 11;
             string videoQuality = 16;
             int32 twentyFive = 25;

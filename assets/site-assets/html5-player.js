@@ -445,6 +445,13 @@ var loadedbar = $(".video_controls .loaded");
 
 // going forward within the video
 function timeUpdate() {
+    // hide loading sprite if needed (i mean, we're progressing with the video)
+    if(document.querySelector(".html5-loading")
+                .className.indexOf("hid") == -1) {
+        $(".html5-loading").className += " hid"
+        stopLoadingRototo()
+    }
+    if(playingAsLive) return;
     elapsedbar.style.width = (video.currentTime / video.duration) * 100 + "%"
     if(video.duration <= video.currentTime) {
         // ??
@@ -496,13 +503,6 @@ function timeUpdate() {
                 annotationRender(annotation)
             }
         }
-    }
-
-    // hide loading sprite if needed (i mean, we're progressing with the video)
-    if(document.querySelector(".html5-loading")
-                .className.indexOf("hid") == -1) {
-        $(".html5-loading").className += " hid"
-        stopLoadingRototo()
     }
 
     // hide endscreen if shown while video is playing
@@ -2330,4 +2330,179 @@ function showUnrecoverableError(message) {
     } else {
         positionUnrecoverable(errorMessage)
     }
+}
+
+// patch as LIVE player
+var playingAsLive = false;
+function initAsLive(id) {
+    video.src = ""
+    if(!window.MediaSource) {
+        showUnrecoverableError(
+            "Your browser does not support playing live streams."
+        )
+        return;
+    }
+    var streamSequence = 0;
+    var iTime = 0;
+    var firstPulled = false;
+    var ms = new MediaSource();
+    var partUrl = "/stream_get_fragment?video_id=" + id
+    var vStream;
+    var aStream;
+    var vFirstAdded = false;
+    var aFirstAdded = false;
+    var vf = false;
+    var af = false;
+    var dbg = false;
+
+    if(dbg) {
+        video.addEventListener("stalled", function() {
+            console.log("dbg/stream/stalled")
+        }, false)
+        video.addEventListener("waiting", function() {
+            console.log("dbg/stream/waiting")
+        }, false)
+        video.addEventListener("suspend", function() {
+            console.log("dbg/stream/suspend")
+        }, false)
+        
+    }
+
+    var lastTimestamp = 0;
+    var lastPaused = false;
+    var liveHeartbeat = setInterval(function() {
+        if(lastTimestamp && video.currentTime == lastTimestamp
+        && !video.paused && !lastPaused && vFirstAdded && aFirstAdded) {
+            // live stuck -- reset!!
+            initAsLive(id)
+            //console.log("dbg/stream/stuck!!")
+        } else {
+            lastTimestamp = video.currentTime;
+            lastPaused = video.paused;
+        }
+    }, 3000)
+
+    video.src = URL.createObjectURL(ms);
+    function rmFar() {
+        // remove too far off segments to avoid exhausted buffer
+        try {
+            if(video.buffered.end(0) && video.buffered.start(0)
+            && video.buffered.end(0) - 120 >= video.buffered.start(0)) {
+                var o = video.buffered.end(0) - 120
+                vStream.remove(0, o)
+                aStream.remove(0, o)
+            }
+        }
+        catch(error) {}
+    }
+    function pullBoth() {
+        // actually pull and add fragments
+        if(streamSequence) {
+            streamSequence++
+        }
+        vf = false;af = false;
+        pullPart(false);pullPart(true);
+    }
+    function pullPart(isAudio) {
+        var url = partUrl;
+        if(streamSequence) {
+            url += "&sq=" + streamSequence
+        }
+        if(isAudio) {
+            url += "&type=aud"
+        } else {
+            if(!liveHd) {
+                url += "&type=360"
+            } else {
+                url += "&type=hq"
+            }
+        }
+        var r = new XMLHttpRequest();
+        r.open("GET", url)
+        r.responseType = "arraybuffer"
+        r.send(null)
+    
+        // retry request on network error
+        r.addEventListener("abort", function() {
+            pullPart(isAudio)
+        }, false)
+        r.addEventListener("error", function() {
+            pullPart(isAudio)
+        }, false)
+
+        // append data
+        r.addEventListener("load", function(e) {
+            try {
+                if(!isAudio) {
+                    vStream.appendBuffer(r.response);
+                    if(!vFirstAdded) {
+                        vFirstAdded = true;
+                        if(aFirstAdded) {
+                            video.currentTime = Math.floor(iTime / 1000) + 1
+                            video.play();
+                        }
+                    }
+                    vf = true;
+                    if(vf && af) {
+                        setTimeout(function() {
+                            pullBoth()
+                            rmFar()
+                        }, 500)
+                    }
+                } else {
+                    aStream.appendBuffer(r.response)
+                    if(!aFirstAdded) {
+                        aFirstAdded = true;
+                        if(vFirstAdded) {
+                            video.currentTime = Math.floor(iTime / 1000) + 1
+                            video.play();
+                        }
+                    }
+                   af = true;
+                    if(vf && af) {
+                        setTimeout(function() {
+                            pullBoth()
+                            rmFar()
+                        }, 500)
+                    }
+                }
+            }
+            catch(e) {
+                //console.log(e)
+            }
+        }, false)
+    }
+    // start once ready
+    function readyStart() {
+        vStream = ms.addSourceBuffer("video/mp4; codecs=\"avc1.4D4028\"")
+        aStream = ms.addSourceBuffer("audio/mp4; codecs=\"mp4a.40.2\"")
+        pullBoth()
+    }
+
+    // init -- pull first seq and pull back a little to avoid lag
+    ms.addEventListener("sourceopen", function() {
+        var r = new XMLHttpRequest();
+        r.open("GET", "/stream_get_fragment?video_id=" + id + "&type=aud")
+        r.responseType = "arraybuffer"
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            if(r.getResponseHeader("x-sequence-num")
+            && !firstPulled) {
+                firstPulled = true;
+                streamSequence = parseInt(r.getResponseHeader("x-sequence-num"))
+            }
+            if(r.getResponseHeader("x-head-time-millis")) {
+                iTime = parseInt(r.getResponseHeader("x-head-time-millis"))
+            }
+
+            streamSequence -= 5
+            iTime -= 25
+            readyStart()
+        }, false)
+        playingAsLive = true;
+    }, false)
+
+    // mark live in html5player
+    $(".video_controls .timer").innerHTML = "LIVE"
+    $(".progress_container").className += " hid"
 }

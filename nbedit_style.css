@@ -224,3 +224,20 @@ a[href="/my_videos_upload"] span {
 #watch-tab-stats-audiences-countries {
     margin-left: 250px;
 }
+
+
+#watch-live-discoverbox {
+    padding: 10px 10px;
+    padding-left: 3px;
+}
+#live-chat-t {
+    padding: 10px 10px;
+    overflow-x: hidden;
+}
+#live-chat-t td {
+    padding-top: 5px;
+}
+.live-chat-message .author-username {
+    width: 100px;
+    max-width: 100px;
+}

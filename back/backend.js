@@ -928,6 +928,15 @@ app.get("/get_video_info", (req, res) => {
             ].join("&"))
             return;
         }
+        if(data.live) {
+            res.send([
+                "status=fail",
+                "errorcode=100",
+                "suberrorcode=8",
+                "reason=live streams are currently not supported in flash"
+            ].join("&"))
+            return;
+        }
         let longVid = (data.length >= 60 * 30)
         yt2009.get_qualities(req.query.video_id, (qualities => {
             if((!qualities || qualities.length == 0) && data.qualities) {
@@ -2161,6 +2170,10 @@ app.get("/account", (req, res) => {
                 return;
             }
 
+            code = code.replace(
+                `#channel_url`,
+                `/channel/${id}`
+            )
             code = code.replace(
                 `<span class="greyText">Channel Views:</span>`,
                 ""
@@ -5333,6 +5346,13 @@ app.get("/v/*", (req, res) => {
     let video = req.originalUrl.split("/v/")[1]
     res.redirect("/embedF/" + video)
 })
+app.get("/avatar_wait", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    yt2009m.avatarWait(req, res)
+})
 
 /*
 ======
@@ -6029,6 +6049,377 @@ app.get("/pchelper_insights", (req, res) => {
 
         res.send(response)
     })
+})
+
+/*
+======
+live streams
+======
+*/
+
+let videoStream_players = {}
+app.get("/stream_get_fragment", (req, res) => {
+    const fetch = require("node-fetch")
+    const yt2009signin = require("./yt2009androidsignin")
+    const playerResponsePb = require("./proto/android_player_pb")
+    const androidHeaders = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,pl;q=0.8",
+        "content-type": "application/json",
+        "cookie": "",
+        "x-goog-authuser": "0",
+        "x-origin": "https://www.youtube.com/",
+        "user-agent": "com.google.android.youtube/20.06.39 (Linux; U; Android 14) gzip"
+    }
+
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.query.video_id || !req.query.type
+    || (req.query.type !== "360" && req.query.type !== "hq"
+    && req.query.type !== "aud")) {
+        res.sendStatus(400)
+        return;
+    }
+    let retryAttempts = 0;
+    function processPlayer() {
+        // process ANDROID player response
+        let qualities = [720, 480, 360, 240, 144]
+        if(req.headers.cookie
+        && req.headers.cookie.includes("hd_1080")) {
+            qualities = [1080, 720, 480, 360, 240, 144]
+        }
+        if(req.query.type == "360") {
+            qualities = [360, 240, 144]
+        }
+        let urls = []
+        let r = videoStream_players[v]
+        if(r.streamingData && r.streamingData.adaptiveFormats) {
+            let usable = []
+            if(req.query.type !== "aud") {
+                usable = r.streamingData.adaptiveFormats.filter(s => {
+                    return s.url 
+                        && s.videoheight
+                        && qualities.includes(s.videoheight)
+                        && s.mimetype.includes("avc1")
+                })
+                usable = usable.sort((a, b) => {
+                    return b.videoheight - a.videoheight
+                })
+                res.set("content-type", "video/mp4")
+            } else {
+                usable = r.streamingData.adaptiveFormats.filter(s => {
+                    return s.url
+                        && s.mimetype.includes("audio/mp4")
+                })
+                usable = usable.sort((a, b) => {
+                    return b.totalbitrate - a.totalbitrate
+                })
+                res.set("content-type", "audio/mp4")
+            }
+            usable.forEach(f => {
+                urls.push(f.url)
+            })
+        }
+        if(!urls[0]) {
+            // no valid format
+            res.sendStatus(404)
+            return;
+        }
+        if(req.query.sq) {
+            urls[0] += "&sq=" + req.query.sq
+        }
+        // send stream
+        fetch(urls[0], {
+            "headers": androidHeaders,
+            "method": "GET"
+        }).catch(error => {
+            console.log(error)
+            console.log("^^ retrying!!")
+            // retry request in case of network error
+            retryAttempts++
+            if(retryAttempts <= 5) {
+                processPlayer()
+            } else {
+                res.status(500).send("")
+                return;
+            }
+        }).then(r => {
+            if(r.headers.get("x-sequence-num")) {
+                res.set(
+                    "x-sequence-num",
+                    r.headers.get("x-sequence-num")
+                )
+            }
+            if(r.headers.get("x-head-time-millis")) {
+                res.set(
+                    "x-head-time-millis",
+                    r.headers.get("x-head-time-millis")
+                )
+            }
+            r.body.pipe(res)
+        })
+    }
+    let v = req.query.video_id.substring(0,11)
+    if(videoStream_players[v] && videoStream_players[v].expiry >= Date.now()) {
+        // no need to request new /player
+        processPlayer()
+    } else {
+        let rHeaders = JSON.parse(JSON.stringify(yt2009_constant.headers))
+        rHeaders["user-agent"] = "com.google.android.youtube/20.06.36 (Linux; U; Android 14) gzip"
+        if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
+            let d = yt2009signin.getData().yAuth
+            rHeaders.Authorization = `Bearer ${d}`
+        }
+        rHeaders["Content-Type"] = "application/x-protobuf"
+        rHeaders["x-goog-api-format-version"] = "2"
+        yt2009_utils.craftPlayerProto(v, (pbmsg) => {
+            fetch("https://youtubei.googleapis.com/youtubei/v1/player", {
+                "headers": rHeaders,
+                "method": "POST",
+                "body": pbmsg
+            }).then(r => {r.buffer().then(b => {
+                let resp = playerResponsePb.root.deserializeBinary(b)
+                let formats = resp.toObject().formatsList[0]
+                let bp = {} //bp -- backport
+                let expire = "0"
+                function backportFormat(f) {
+                    let a = JSON.parse(JSON.stringify(f))
+                    a.qualityLabel = f.qualitylabel;
+                    a.bitrate = f.totalbitrate;
+                    a.mimeType = f.mimetype;
+                    if(f.audiotrackList && f.audiotrackList[0]) {
+                        let at = f.audiotrackList[0]
+                        a.audioTrack = {
+                            "label": at.displayname,
+                            "vss_id": at.vssid,
+                            "audioIsDefault": Boolean(at.isdefault)
+                        }
+                    }
+                    if(f.initrangeList) {
+                        a.initRange = f.initrangeList[0]
+                    }
+                    if(f.indexrangeList) {
+                        a.indexRange = f.indexrangeList[0]
+                    }
+                    if(a.url && a.url.includes("expire=")) {
+                        expire = a.url.split("expire=")[1].split("&")[0]
+                    }
+                    return a;
+                }
+                if(!formats) {
+                    res.sendStatus(404)
+                    return;
+                }
+                if(formats.dashformatList) {
+                    if(!bp.streamingData) {
+                        bp.streamingData = {}
+                    }
+                    bp.streamingData.adaptiveFormats = []
+                    formats.dashformatList.forEach(f => {
+                        bp.streamingData.adaptiveFormats.push(
+                            backportFormat(f)
+                        )
+                    })
+                }
+                bp.expiry = parseInt(expire) * 1000
+                videoStream_players[v] = bp;
+                processPlayer()
+            })})
+        })
+    }
+})
+
+app.get("/stream_chat", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)
+    || !req.query.video_id || req.query.video_id.length < 11) {
+        res.sendStatus(400)
+        return;
+    }
+
+    const fetch = require("node-fetch")
+    let v = req.query.video_id.substring(0,11)
+
+    if(!req.query.continuation) {
+        // if no continuation data, pull and redir
+        fetch(`https://www.youtube.com/youtubei/v1/next`, {
+            "headers": yt2009_constant.headers,
+            "referrer": `https://www.youtube.com/`,
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "autonavState": "STATE_OFF",
+                "captionsRequested": false,
+                "contentCheckOk": true,
+                "context": yt2009_constant.cached_innertube_context,
+                "playbackContext": {"vis": 0, "lactMilliseconds": "1"},
+                "racyCheckOk": true,
+                "videoId": v
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            if(r.contents && r.contents.twoColumnWatchNextResults
+            && r.contents.twoColumnWatchNextResults.conversationBar) {
+                try {
+                    let c = r.contents.twoColumnWatchNextResults.conversationBar
+                             .liveChatRenderer.continuations[0]
+                             .reloadContinuationData.continuation
+                    let newUrl = [
+                        "/stream_chat",
+                        "?video_id=" + v,
+                        "&continuation=" + c,
+                        (req.query.format ? "&format=" + req.query.format : "")
+                    ].join("")
+                    res.redirect(newUrl)
+                }
+                catch(error) {
+                    console.log(error)
+                    res.sendStatus(404)
+                }
+            } else {
+                res.sendStatus(404)
+            }
+        })})
+        return;
+    }
+
+    // have continuation, request innertube
+    let body = {
+        "context": yt2009_constant.cached_innertube_context,
+        "continuation": req.query.continuation
+    }
+    if(!req.query.last) {
+        body.isInvalidationTimeoutRequest = "true"
+    } else {
+        body.invalidationPayloadLastPublishAtUsec = req.query.last
+    }
+    fetch(`https://www.youtube.com/youtubei/v1/live_chat/get_live_chat`, {
+        "headers": yt2009_constant.headers,
+        "referrer": `https://www.youtube.com/`,
+        "referrerPolicy": "strict-origin-when-cross-origin",
+        "body": JSON.stringify(body),
+        "method": "POST",
+        "mode": "cors"
+    }).then(r => {r.json().then(r => {
+        if(r.liveChatStreamingResponseExtension
+        && r.liveChatStreamingResponseExtension.lastPublishAtUsec) {
+            res.set(
+                "next-last",
+                r.liveChatStreamingResponseExtension.lastPublishAtUsec
+            )
+        }
+        if(r.continuationContents
+        && r.continuationContents.liveChatContinuation) {
+            let content = r.continuationContents.liveChatContinuation
+            try {
+                res.set(
+                    "next-cont",
+                    content.continuations[0].invalidationContinuationData
+                    .continuation
+                )
+            }
+            catch(error) {
+                console.log("continuation not set!")
+            }
+
+            let messages = []
+            try {
+                content.actions.forEach(m => {
+                    m = m.addChatItemAction.item.liveChatTextMessageRenderer
+                    let msgContent = []
+                    m.message.runs.forEach(r => {
+                        if(r.text) {
+                            msgContent.push(r.text) 
+                        } else if(r.emoji
+                        && r.emoji.emojiId
+                        && r.emoji.emojiId.length <= 5) {
+                            msgContent.push(r.emoji.emojiId)
+                        }
+                    })
+                    msgContent = msgContent.join(" ")
+                    if(msgContent) {
+                        messages.push({
+                            "authorId": m.authorExternalChannelId,
+                            "authorName": yt2009_utils.xss(
+                                m.authorName.simpleText
+                            ),
+                            "msg": yt2009_utils.xss(msgContent)
+                        })
+                    }
+                    
+                })
+            }
+            catch(error) {}
+
+            if(req.query.format == "json") {
+                res.send(messages)
+                return;
+            }
+
+            // ssr html
+            let html = ""
+            messages.forEach(msg => {
+                html += yt2009_templates.liveChatMessage(msg)
+            })
+            res.send(html)
+        }
+    })})
+})
+
+app.get("/stream_current_vc", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)
+    || !req.query.video_id || req.query.video_id.length < 11) {
+        res.sendStatus(400)
+        return;
+    }
+
+    const fetch = require("node-fetch")
+    let v = req.query.video_id.substring(0,11)
+
+    let body = {
+        "context": yt2009_constant.cached_innertube_context,
+        "videoId": v
+    }
+    if(req.query.continuation) {
+        body.continuation = req.query.continuation;
+    }
+
+    fetch(`https://www.youtube.com/youtubei/v1/updated_metadata`, {
+        "headers": yt2009_constant.headers,
+        "referrer": `https://www.youtube.com/`,
+        "referrerPolicy": "strict-origin-when-cross-origin",
+        "body": JSON.stringify(body),
+        "method": "POST",
+        "mode": "cors"
+    }).then(r => {r.json().then(r => {
+        if(r.continuation) {
+            try {
+                res.set(
+                    "next-cont",
+                    r.continuation.timedContinuationData.continuation
+                )
+            }
+            catch(error) {}
+        }
+
+        let vc = ""
+        try {
+            r.actions.forEach(a => {
+                if(a.updateViewershipAction) {
+                    vc = a.updateViewershipAction.viewCount
+                          .videoViewCountRenderer.viewCount.simpleText
+                }
+            })
+        }
+        catch(error) {}
+
+        vc = vc.split(" ")
+        vc[0] = `<span id="watch-view-count">${vc[0]}</span>`
+        vc = vc.join(" ")
+
+        res.send(vc)
+    })})
 })
 
 /*

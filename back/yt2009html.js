@@ -226,7 +226,9 @@ module.exports = {
                 console.log(`(${userToken}) ${id} z cache (${Date.now()})`)
             }
 
-            if(!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload) {
+            if(!fs.existsSync(`../assets/${id}.mp4`)
+            && !disableDownload
+            && !v.live) {
                 yt2009utils.saveMp4(id, (path => {}))
                 callback(v)
             } else {
@@ -300,10 +302,16 @@ module.exports = {
                     return;
                 }
 
-                if(videoData.videoDetails.isLive) {
+                let isLive = videoData.videoDetails.isLive
+                data.live = isLive
+                // don't cache if live playback as it could end
+                if(data.live) {
+                    data.freezeCache = true;
+                }
+                /*if(videoData.videoDetails.isLive) {
                     callback(false)
                     return;
-                }
+                }*/
 
                 // basic data
                 data.description = videoData.videoDetails.shortDescription
@@ -675,7 +683,9 @@ module.exports = {
                     videoData.streamingData = {}
                 }
                 if(!videoData.streamingData.adaptiveFormats) {
-                    videoData.streamingData.adaptiveFormats = [{"qualityLabel": "360p"}]
+                    videoData.streamingData.adaptiveFormats = [
+                        {"qualityLabel": "360p", "url": "dummy"}
+                    ]
                 }
                 videoData.streamingData.adaptiveFormats.forEach(quality => {
                     if(quality.qualityLabel) {
@@ -684,7 +694,8 @@ module.exports = {
                                                .replace("p60", "p");
                     }
                     if(quality.qualityLabel
-                    && !data.qualities.includes(quality.qualityLabel)) {
+                    && !data.qualities.includes(quality.qualityLabel)
+                    && quality.url) {
                         data.qualities.push(quality.qualityLabel)
                     }
                 })
@@ -714,16 +725,18 @@ module.exports = {
                             if(fetchesCompleted >= fetchesRequired) {
                                 callback(data)
                             }
-                            cache.write(id, data)
+                            if(!data.freezeCache) {
+                                cache.write(id, data)
+                            }
                         }
                     }
 
                     // ytdl
                     if(!waitForOgv) {
                         data.pMp4 = "/get_video?video_id=" + id + "/mp4"
-                        yt2009utils.saveMp4(id, (path => {}))
+                        if(!isLive) {yt2009utils.saveMp4(id, (path => {}))}
                         on_mp4_save_finish(`../assets/${id}`)
-                    } else {
+                    } else if(!isLive) {
                         yt2009utils.saveMp4(id, (path => {
                             on_mp4_save_finish(path)
                         }))
@@ -736,7 +749,9 @@ module.exports = {
                     if(fetchesCompleted >= fetchesRequired) {
                         callback(data)
                     }
-                    cache.write(id, data);
+                    if(!data.freezeCache) {
+                        cache.write(id, data);
+                    }
                 }
             }))
 
@@ -926,7 +941,7 @@ module.exports = {
             }
 
             // start saving in advance for quicker video load for end user
-            if(startQuality) {
+            if(startQuality && !data.live) {
                 yt2009utils.saveMp4_android(data.id, () => {}, false, startQuality)
             }
         }
@@ -1693,7 +1708,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
         code = code.replace("yt2009_ratings_count", ratings)
-        if(!useFlash) {
+        if(!useFlash && !data.live) {
             let tcData = ""
             if(config.trusted_context) {
                 tcData = "&" + yt2009trusted.generateContext(
@@ -1715,6 +1730,17 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
                 )
             }
+        } else if(!useFlash && data.live) {
+            code = code.replace(
+                `//yt2009-pmp4`,
+                `initAsLive("${data.id}");
+                initLiveChat("${data.id}");
+                document.getElementById("watch-other-vids").style.marginTop = "-25px"`
+            )
+            code = code.replace(
+                `<!--yt2009_livecard-->`,
+                yt2009templates.livechatTemplate
+            )
         }
         code = code.replace(
             "video_url",
@@ -2600,7 +2626,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         // exp_hq
         if(!useFlash
         && (qualityList.includes("720p")
-        || qualityList.includes("480p"))) {
+        || qualityList.includes("480p"))
+        && !data.live) {
             let enableConnCheck = "";
             if(req.headers.cookie
             && req.headers.cookie.includes("playback_quality=0")) {
@@ -2632,6 +2659,33 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     data.id, use720p, autoHQ, trustedContextData
                 )
                 + enableConnCheck
+            )
+
+            // 720p
+            if(use720p) {
+                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq hd"></span>`)
+            } else {
+                // 480p
+                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
+            }
+        } else if(!useFlash
+        && (qualityList.includes("720p")
+        || qualityList.includes("480p"))
+        && data.live) {
+
+            // hd buttons for live
+            let use720p = qualityList.includes("720p")
+            code = code.replace(
+                `<!--yt2009_style_hq_button-->`,
+                yt2009templates.playerCssHDBtn   
+            )
+
+            // js logic
+            code = code.replace(
+                `//yt2009-exp-hq-btn`,
+                yt2009templates.playerHDLive(
+                    data.id, use720p, autoHQ
+                )
             )
 
             // 720p

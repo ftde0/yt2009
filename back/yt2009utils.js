@@ -367,17 +367,42 @@ module.exports = {
                         })
                     }
 
+                    let live = false;
+                    if(result.badges) {
+                        result.badges.forEach(badge => {
+                            if(badge.metadataBadgeRenderer
+                            && badge.metadataBadgeRenderer.style
+                            == "BADGE_STYLE_TYPE_LIVE_NOW") {
+                                live = true;
+                            }
+                        })
+                    }
+
+                    let time = ""
+                    let viewCount = result.viewCountText.simpleText
+
+                    if(result.lengthText && result.lengthText.simpleText) {
+                        time = result.lengthText.simpleText
+                    }
+
+                    let resultType = (live && !time ? "live-video" : "video")
+
+                    if(resultType == "live-video") {
+                        time = "LIVE"
+                        viewCount = result.viewCountText.runs[0].text + " views"
+                    }
+
                     // add video
                     resultsToCallback.push({
-                        "type": "video",
+                        "type": resultType,
                         "id": result.videoId,
                         "title": result.title.runs[0].text,
-                        "views": result.viewCountText.simpleText,
+                        "views": viewCount,
                         "thumbnail": "http://i.ytimg.com/vi/"
                                     + result.videoId
                                     + "/hqdefault.jpg",
                         "description": description,
-                        "time": result.lengthText.simpleText,
+                        "time": time,
                         "author_name": result.ownerText.runs[0].text,
                         "author_url": author_url,
                         "author_handle": userHandle,
@@ -386,7 +411,9 @@ module.exports = {
                         "artist": artist
                     })
                 }
-                catch(error) {}
+                catch(error) {
+                    console.log(error)
+                }
             }
             // channel result
             else if(result.channelRenderer) {
@@ -2254,6 +2281,102 @@ module.exports = {
         }
 
         return false;
+    },
+
+    "parseBackstageCont": function(r) {
+        let posts = []
+        let mrun = this.mrun
+        let xss = this.xss
+        let saveAvatar = this.saveAvatar;
+        try {
+            r = r.continuationContents.itemSectionContinuation
+                .contents;
+            r.forEach(post => {
+                if(post.backstagePostThreadRenderer) {
+                    post = post.backstagePostThreadRenderer.post
+                            .backstagePostRenderer;
+                    try {
+                        let text = mrun(post.contentText.runs)
+                        let time = post.publishedTimeText.runs[0].text
+                        let authorText = post.authorText.runs[0].text
+                        let authorId = post.authorEndpoint.browseEndpoint.browseId
+                        let parsedPost = {
+                            "text": text,
+                            "time": time,
+                            "authorText": xss(authorText),
+                            "authorId": authorId,
+                            "authorUrl": `/channel/${authorId}`
+                        }
+                        if(post.backstageAttachment
+                        && post.backstageAttachment.videoRenderer) {
+                            let v = post.backstageAttachment.videoRenderer
+                            let id = v.videoId;
+                            let title = v.title.runs[0].text
+                            parsedPost.embedVideoId = id;
+                            parsedPost.embedVideoTitle = xss(title)
+                        }
+                        if(post.backstageAttachment
+                        && post.backstageAttachment.backstageImageRenderer) {
+                            let thumbs = post.backstageAttachment
+                                         .backstageImageRenderer
+                                         .image.thumbnails;
+                            thumbs = thumbs.sort((a,b) => {
+                                return b.width - a.width
+                            })
+                            if(thumbs && thumbs[0]) {
+                                parsedPost.imageAttachmentUrl = thumbs[0].url;
+                                parsedPost.imageAttachmentSmall = saveAvatar(
+                                    thumbs[thumbs.length - 1].url
+                                )
+                            }
+                        }
+                        
+                        posts.push(parsedPost)
+                    }
+                    catch(error) {}
+                }
+            })
+        }
+        catch(error) {
+            return []
+        }
+        return posts;
+    },
+
+    "mrun": function(runs) {
+        let a = []
+        function xss(input) {
+            return input.split("<").join("&lt;")
+                        .split(">").join("&gt;")
+        }
+        runs.forEach(run => {
+            if(run.navigationEndpoint
+            && JSON.stringify(run.navigationEndpoint).includes("/watch?v=")) {
+                let id = JSON.stringify(run.navigationEndpoint)
+                         .split("/watch?v=")[1];
+                a.push(`<a href="/watch?v=${id}">
+                ${run.text}
+                </a>`)
+            } else if(run.navigationEndpoint
+            && JSON.stringify(run.navigationEndpoint).includes("/channel/")) {
+                let id = JSON.stringify(run.navigationEndpoint)
+                         .split("/channel/")[1];
+                a.push(`<a href="/channel/${id}">
+                ${run.text}
+                </a>`)
+            } else if(run.navigationEndpoint
+            && JSON.stringify(run.navigationEndpoint).includes("/redirect?")) {
+                let url = JSON.stringify(run.navigationEndpoint)
+                          .split("&q=")[1].split("\"")[0];
+                url = decodeURIComponent(url)
+                a.push(`<a href="${url}" target="_blank">
+                ${run.text}
+                </a>`)
+            } else if(run.text) {
+                a.push(xss(run.text))
+            }
+        })
+        return a.join("")
     }
 }
 

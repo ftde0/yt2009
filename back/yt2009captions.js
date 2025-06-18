@@ -105,6 +105,11 @@ module.exports = {
                                         }
                                         r = defaults[1]
                                     }
+
+                                    if(data[langName].url.includes("kind=asr")) {
+                                        r = fixupAutoCaptions(r)
+                                    }
+
                                     callback(r)
                                     fs.writeFileSync(fName, r)
                                 })})
@@ -124,9 +129,6 @@ module.exports = {
     },
 
     "parseCaptionsJson": function(xml) {
-        function bFloat(input) {
-            return Math.floor(parseFloat(input) * 10) / 10;
-        }
         let json = {}
         xml = parser.parse(xml)
         xml.querySelectorAll("text").forEach(text => {
@@ -147,5 +149,55 @@ module.exports = {
             }
         })
         return json;
+    },
+
+    "rexmlFromJson": function(cc) {
+        let xml = `<?xml version="1.0" encoding="utf-6" ?><transcript>`
+        for(let start in cc) {
+            xml += `<text start="${start}" dur="${cc[start].duration}">`
+            xml += cc[start].text
+                   .split("&#39;").join("'")
+                   .split("&quot;").join("\"")
+                   .split("<br>").join("\n")
+                   .split("&").join("&amp;")
+                   .split("<").join("&lt;")
+                   .split(">").join("&gt;")
+            xml += "</text>"
+        }
+        xml += `</transcript>`
+        return xml;
     }
+}
+
+function bFloat(input) {
+    return Math.floor(parseFloat(input) * 10) / 10;
+}
+
+function fixupAutoCaptions(xml) {
+    // automatic captions have their durations all over the place
+    // this fixes it up for players supported by yt2009 to look sane
+    let startTimes = []
+    //let durations = []
+    let pxml = module.exports.parseCaptionsJson(xml)
+    let nj = JSON.parse(JSON.stringify(pxml))
+    for(let i in pxml) {
+        startTimes.push(bFloat(i))
+        //durations.push(pxml[i].duration)
+    }
+    startTimes = startTimes.sort((a, b) => {return a - b});
+    let i = 0;
+    startTimes.forEach(s => {
+        if(startTimes[i + 1]) {
+            let target = bFloat(
+                bFloat(startTimes[i + 1]) - bFloat(startTimes[i])
+            )
+            if(target >= 0.4) {
+                target = bFloat(target - 0.2)
+            }
+            nj[s].duration = target;
+            nj[s].end = nj[s].start + target;
+        }
+        i++
+    })
+    return module.exports.rexmlFromJson(nj);
 }

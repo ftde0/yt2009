@@ -227,10 +227,17 @@ module.exports = {
                 let resultsToCallback = []
                 resultsToCallback = yt2009utils.search_parse(r)
                 
-                cache.write(
-                    query + protoFinal,
-                    JSON.parse(JSON.stringify(resultsToCallback))
-                )
+                // cache only if no live videos
+                let liveVidCount = resultsToCallback.filter(s => {
+                    return s.type == "live-video"
+                }).length
+                if(liveVidCount == 0) {
+                    cache.write(
+                        query + protoFinal,
+                        JSON.parse(JSON.stringify(resultsToCallback))
+                    )
+                }
+                
                 callback(JSON.parse(JSON.stringify(resultsToCallback)))
             })))
         }
@@ -434,7 +441,8 @@ module.exports = {
 
         results.forEach(result => {
             switch(result.type) {
-                case "video": {
+                case "video":
+                case "live-video": {
                     let cancelled = false;
                     let video = result;
 
@@ -524,6 +532,13 @@ module.exports = {
                     viewCount = "lang_views_prefix" + yt2009utils.countBreakup(
                         parseInt(yt2009utils.bareCount(viewCount))
                     ) + "lang_views_suffix"
+
+                    // live adjustments
+                    if(result.type == "live-video") {
+                        viewCount = yt2009utils.countBreakup(
+                            parseInt(yt2009utils.bareCount(viewCount))
+                        ) + " watching"
+                    }
     
                     // apply html
                     if(!cancelled) {
