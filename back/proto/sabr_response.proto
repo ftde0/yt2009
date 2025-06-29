@@ -1,0 +1,18 @@
+syntax = "proto3";
+package sabr_response;
+
+/*chunk metadata sent before each chunk*/
+
+message root {
+    optional int32 chunkNumber = 1; /*starts with 0 for each sabr response*/
+    string videoId = 2;
+    int32 itag = 3;
+    int64 lastModified = 4;
+    int64 contentStartOffset = 6;
+    optional int32 isInitChunk = 8;
+    optional int32 totalChunkNumber = 9; /* chunkNumber without resetting */
+    optional int32 ten = 10; /* ? */
+    optional int32 chunkOffsetMs = 11; /* per-itag, WEB only? */
+    int32 partLengthMs = 12; /* WEB only? */
+    int64 contentSize = 14;
+}

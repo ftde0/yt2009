@@ -1872,6 +1872,7 @@ function captionsMain() {
     } else {
         // show ui disabled and remove previous captions
         $(".player_additions_popout .cc").className += " none"
+        $(".captions_popup").style.display = "none"
         var s = document.querySelectorAll(".caption")
         for(var e in s) {
             try {
@@ -2118,7 +2119,7 @@ function resizeCaptions() {
 
 // hover-over caption selection ui
 function captionSelectShowUi() {
-    if(!ccListLoaded) return;
+    if(!ccListLoaded || !captionsEnabled) return;
     $(".captions_popup").style.display = "block"
 }
 

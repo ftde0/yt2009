@@ -1,5 +1,5 @@
 # yt2009
-a fairly accurate 2009 youtube frontend.
+a fairly accurate 2009 youtube frontend with account features.
 
 <img src="doc-imgs/ie6-ss.png" width="400">
 <img src="doc-imgs/ie6-ss2.png" width="400">
@@ -43,12 +43,6 @@ npm install express@4.17.1
 
 if still facing issues take a look at #243.
 
-## optional after-setup steps
-
-- set up an android app by following [apk_setup.md](apk_setup.md)
-
----
-
 ## updating
 
 if you want to update your frontend instance, use
@@ -77,7 +71,10 @@ navigate to **/flags** to change settings locally. here, for example, you can se
 
 feel free to nav to **/toggle_f** to enable flash player support for old browsers, such as ie6.
 
-and just click around!
+sign in! click on the upload button or go to **/mh_pc_intro** to connect and interact with your **actual** youtube account.
+
+<img src="doc-imgs/signin-hppng.png" width="400">
+<img src="doc-imgs/signin-vidmngr.png" width="400">
 
 ---
 

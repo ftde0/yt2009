@@ -1,0 +1,88 @@
+syntax = "proto3";
+package sabr_request;
+
+message hwData {
+    fixed32 id = 12;
+}
+
+message serviceIntegrityDimensionsMsg {
+    message contents {
+        optional bytes encryptData = 1;
+        optional bytes tokenData = 2;
+    }
+    repeated contents content = 1;
+    bytes webPot = 6;
+}
+
+message clientMsg {
+    string deviceMake = 12;
+    string deviceModel = 13;
+    int32 clientNumber = 16;
+    string clientVersion = 17;
+    string osName = 18;
+    string osVersion = 19;
+    repeated hwData hw = 21;
+    string gl = 22;
+    string plreq = 25;
+    int32 screenWidth = 37;
+    int32 screenHeight = 38;
+    int32 screenWidth2 = 55;
+    int32 screenHeight2 = 56;
+    optional int32 utcOffsetMinutes = 67;
+    string timeZone = 80;
+    string deviceCodename = 92;
+}
+
+message itagData {
+    optional int32 itag = 1;
+    int64 lastModifiedTime = 2;
+    string drcString = 3; /*provided with audio itags, observed CggKA2RyYxIBMQ - 1:{1:"drc",2:"1"}*/
+}
+
+message root {
+    message timingData {
+        /*all timestamp fields are in ms*/
+        int32 absInitTime = 13; /*since page load begin -- not present on ANDROID*/
+        int32 videoHeight = 16;
+        int32 playerWidth = 18;
+        int32 playerHeight = 19;
+        int32 fiveInt = 27;
+        optional int32 startTime = 28; /*where fetched data should start*/
+        optional int32 reqInitTime = 29; /*since first sabr request?*/
+        int32 fiveInt2 = 34;
+        int32 relInitTime = 36; /*since player init*/
+
+        /*more to be reversed*/
+    }
+    repeated timingData timing = 1;
+
+    repeated itagData requestItag = 2;
+    
+    bytes config = 5; /* mediaCommonConfig -- sent in /player */
+    
+    message sourcePlayer {
+        repeated clientMsg client = 1;
+        repeated serviceIntegrityDimensionsMsg serviceIntegrityDimensions = 2; /*pot*/
+
+        message abrRequestMsg {
+            int32 height = 1;
+            int32 twentyInt = 2; /*unknown, usually observed 20*/
+            repeated itagData videoItag = 7;
+            repeated itagData audioItag = 8;
+            bytes playbackCookie = 20; /*contained within previous sabr response, empty if first*/
+        }
+        repeated abrRequestMsg abrRequest = 3;
+
+        /*unknown defs below! 4.3.1 ranges 1-5*/
+        message fourMsg {
+            message threeMsg {
+                int32 one = 1;
+            }
+            repeated threeMsg three = 3;
+        }
+        repeated fourMsg four = 4;
+    }
+    repeated sourcePlayer playerReq = 19;
+    optional int32 videoItag = 22;
+    optional int32 audioItag = 23;
+}

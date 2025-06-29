@@ -2017,7 +2017,8 @@ module.exports = {
         let file = "hqdefault.jpg"
         if(req.headers
         && req.headers.cookie
-        && req.headers.cookie.includes("autogen_thumbnails")) {
+        && req.headers.cookie.includes("autogen_thumbnails")
+        && !req.headers.cookie.includes("live_video")) {
             file = "1.jpg"
         }
         if(req.headers

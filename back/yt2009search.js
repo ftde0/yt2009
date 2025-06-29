@@ -539,6 +539,12 @@ module.exports = {
                             parseInt(yt2009utils.bareCount(viewCount))
                         ) + " watching"
                     }
+
+                    // fake flag for autogen_thumbnails to ignore live
+                    let liveVideoFlag = ""
+                    if(result.type == "live-video") {
+                        liveVideoFlag += ":live_video"
+                    }
     
                     // apply html
                     if(!cancelled) {
@@ -553,7 +559,7 @@ module.exports = {
                             video.time,
                             protocol,
                             browser,
-                            flags
+                            flags + liveVideoFlag
                         )
                     }
 

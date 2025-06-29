@@ -59,6 +59,7 @@ message root {
         }
         repeated format nondashFormat = 2;
         repeated format dashFormat = 3;
+        string serverAbrStreamingUrl = 15;
     }
     repeated playerFormats formats = 4;
     message statUrls {
@@ -148,4 +149,16 @@ message root {
     }
     repeated pbVarious22 pb22 = 22;
     string pbVarious69 = 69;
+
+
+    message playerConfig {
+        message mediaCommonConfig {
+            message mediaustreamerrequestconfig {
+                bytes mediaustreamerrequestConfig = 4;
+            }
+            repeated mediaustreamerrequestconfig mediaustreamerconfig = 2;
+        }
+        repeated mediaCommonConfig mediacommonconfigmsg = 215771584;
+    }
+    repeated playerConfig playerconfigmsg = 15;
 }

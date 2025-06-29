@@ -2780,10 +2780,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     // add old defualt "related" videos at the end
                     data.related.forEach(video => {
                         if(video.uploaded
-                        && parseInt(video.uploaded.split(" ")[0]) >= 12
+                        && parseInt(video.uploaded.split(" ")[0]) >= 15
                         && video.uploaded.includes("years")
                         && !html.includes(`data-id="${video.id}"`)) {
-                            // only 12 years or older & no repeats
+                            // only 15 years or older & no repeats
 
                             // handle flag
                             // author name flags
