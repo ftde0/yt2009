@@ -1,4 +1,4 @@
-// source: sabr.proto
+// source: sabr2.proto
 /**
  * @fileoverview
  * @enhanceable
@@ -1693,7 +1693,7 @@ proto.sabr_request.itagData.prototype.setDrcstring = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.sabr_request.root.repeatedFields_ = [1,2,19];
+proto.sabr_request.root.repeatedFields_ = [1,2,16,17,19];
 
 
 
@@ -1731,6 +1731,10 @@ proto.sabr_request.root.toObject = function(includeInstance, msg) {
     requestitagList: jspb.Message.toObjectList(msg.getRequestitagList(),
     proto.sabr_request.itagData.toObject, includeInstance),
     config: msg.getConfig_asB64(),
+    playableaudioitagList: jspb.Message.toObjectList(msg.getPlayableaudioitagList(),
+    proto.sabr_request.itagData.toObject, includeInstance),
+    playablevideoitagList: jspb.Message.toObjectList(msg.getPlayablevideoitagList(),
+    proto.sabr_request.itagData.toObject, includeInstance),
     playerreqList: jspb.Message.toObjectList(msg.getPlayerreqList(),
     proto.sabr_request.root.sourcePlayer.toObject, includeInstance),
     videoitag: jspb.Message.getFieldWithDefault(msg, 22, 0),
@@ -1784,6 +1788,16 @@ proto.sabr_request.root.deserializeBinaryFromReader = function(msg, reader) {
     case 5:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
       msg.setConfig(value);
+      break;
+    case 16:
+      var value = new proto.sabr_request.itagData;
+      reader.readMessage(value,proto.sabr_request.itagData.deserializeBinaryFromReader);
+      msg.addPlayableaudioitag(value);
+      break;
+    case 17:
+      var value = new proto.sabr_request.itagData;
+      reader.readMessage(value,proto.sabr_request.itagData.deserializeBinaryFromReader);
+      msg.addPlayablevideoitag(value);
       break;
     case 19:
       var value = new proto.sabr_request.root.sourcePlayer;
@@ -1848,6 +1862,22 @@ proto.sabr_request.root.serializeBinaryToWriter = function(message, writer) {
     writer.writeBytes(
       5,
       f
+    );
+  }
+  f = message.getPlayableaudioitagList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      16,
+      f,
+      proto.sabr_request.itagData.serializeBinaryToWriter
+    );
+  }
+  f = message.getPlayablevideoitagList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      17,
+      f,
+      proto.sabr_request.itagData.serializeBinaryToWriter
     );
   }
   f = message.getPlayerreqList();
@@ -3332,6 +3362,82 @@ proto.sabr_request.root.prototype.getConfig_asU8 = function() {
  */
 proto.sabr_request.root.prototype.setConfig = function(value) {
   return jspb.Message.setProto3BytesField(this, 5, value);
+};
+
+
+/**
+ * repeated itagData playableAudioItag = 16;
+ * @return {!Array<!proto.sabr_request.itagData>}
+ */
+proto.sabr_request.root.prototype.getPlayableaudioitagList = function() {
+  return /** @type{!Array<!proto.sabr_request.itagData>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.sabr_request.itagData, 16));
+};
+
+
+/**
+ * @param {!Array<!proto.sabr_request.itagData>} value
+ * @return {!proto.sabr_request.root} returns this
+*/
+proto.sabr_request.root.prototype.setPlayableaudioitagList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 16, value);
+};
+
+
+/**
+ * @param {!proto.sabr_request.itagData=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.sabr_request.itagData}
+ */
+proto.sabr_request.root.prototype.addPlayableaudioitag = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 16, opt_value, proto.sabr_request.itagData, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.sabr_request.root} returns this
+ */
+proto.sabr_request.root.prototype.clearPlayableaudioitagList = function() {
+  return this.setPlayableaudioitagList([]);
+};
+
+
+/**
+ * repeated itagData playableVideoItag = 17;
+ * @return {!Array<!proto.sabr_request.itagData>}
+ */
+proto.sabr_request.root.prototype.getPlayablevideoitagList = function() {
+  return /** @type{!Array<!proto.sabr_request.itagData>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.sabr_request.itagData, 17));
+};
+
+
+/**
+ * @param {!Array<!proto.sabr_request.itagData>} value
+ * @return {!proto.sabr_request.root} returns this
+*/
+proto.sabr_request.root.prototype.setPlayablevideoitagList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 17, value);
+};
+
+
+/**
+ * @param {!proto.sabr_request.itagData=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.sabr_request.itagData}
+ */
+proto.sabr_request.root.prototype.addPlayablevideoitag = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 17, opt_value, proto.sabr_request.itagData, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.sabr_request.root} returns this
+ */
+proto.sabr_request.root.prototype.clearPlayablevideoitagList = function() {
+  return this.setPlayablevideoitagList([]);
 };
 
 

@@ -164,11 +164,11 @@ module.exports = {
                 let communityCont = new browseNavigation.vidsChip()
                 let msg = new browseNavigation.vidsChip.nestedMsg1()
                 msg.setChannelid(id)
-                msg.setChipparam("Egljb21tdW5pdHmqAwgKBFJVRkIoCvIGBAoCSgA")
+                msg.setChipparam("EgVwb3N0c6oDCAoEUlVGQigK8gYECgJKAA")
                 communityCont.addMsg(msg)
                 let communityTab = encodeURIComponent(Buffer.from(
                     communityCont.serializeBinary()
-                ).toString("base64"))
+                ).toString("base64").replace("+", "-"))
                 fetch(`https://www.youtube.com/youtubei/v1/browse`, {
                     "headers": yt2009constants.headers,
                     "referrer": "https://www.youtube.com/",
@@ -181,6 +181,16 @@ module.exports = {
                     "mode": "cors"
                 }).then(r => {r.json().then(r => {
                     fullData.communityPosts = yt2009utils.parseBackstageCont(r)
+                    let newPosts = fullData.communityPosts.filter(s => {
+                        return s.time
+                            && (s.time.includes(" day")
+                            || s.time.includes(" week"))
+                    })
+                    if(newPosts.length >= 1) {
+                        // freeze cache to ensure next load also checks
+                        // for new posts
+                        fullData.freezeCache = true;
+                    }
                     fetchesCompleted++
                     if(fetchesCompleted >= fetchesRequired) {
                         sendResponse(fullData)

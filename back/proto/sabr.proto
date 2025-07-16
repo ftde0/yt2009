@@ -37,6 +37,7 @@ message itagData {
     optional int32 itag = 1;
     int64 lastModifiedTime = 2;
     string drcString = 3; /*provided with audio itags, observed CggKA2RyYxIBMQ - 1:{1:"drc",2:"1"}*/
+    /* ^^^ also used to specify audio track with xtags field if more present*/
 }
 
 message root {
@@ -82,6 +83,10 @@ message root {
         }
         repeated fourMsg four = 4;
     }
+
+    repeated itagData playableAudioItag = 16;
+    repeated itagData playableVideoItag = 17;
+
     repeated sourcePlayer playerReq = 19;
     optional int32 videoItag = 22;
     optional int32 audioItag = 23;

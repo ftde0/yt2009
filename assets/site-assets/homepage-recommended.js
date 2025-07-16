@@ -103,3 +103,25 @@ if(!isVideosPage) {
                 .style.display = "none"
     }
 }
+
+// clientside pages (used if more data is sent immediately, e.g. pchelper)
+function navClPage(pageNumber, pageCount) {
+    for (var i = 0; i < pageCount; i++) {
+        if(i == pageNumber) {
+            document.getElementById("footer-pager-for-" + i)
+                    .className = "searchFooterBox"
+            var content = document.getElementById(
+                "cs-video-grid-page-" + i
+            );
+            var className = content.className;
+            content.className = className.split(" hid").join("")
+        } else {
+            document.getElementById("footer-pager-for-" + i)
+                    .className = "searchFooterBox hid"
+            var content = document.getElementById(
+                "cs-video-grid-page-" + i
+            );
+            content.className += " hid"
+        }
+    }
+}

@@ -8,6 +8,7 @@ var languageData_EN = {
         "watch-enable-stats-countback": "dials back counters on the Statistics & Data tab for old videos.",
         "watch-exclude-cs": "hides comments you post from /comment_search",
         "watch-exp-related": "shows more related videos based on the tags of the currently watched video",
+        "watch-exp-sabr": "uses SABR technology for playback. faster starts but requires better hardware.",
         "watch-fake-upload-date": "fake 2009 upload year",
         "watch-hd-1080": "HD button in player will load 1080p instead of 720p",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",

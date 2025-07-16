@@ -5,6 +5,7 @@ const templates = require("./yt2009templates")
 const utils = require("./yt2009utils")
 const config = require("./config.json")
 const trusted = require("./yt2009trustedcontext")
+const sabrlib = require("./yt2009sabr")
 
 let ip_request_count = {}
 
@@ -81,7 +82,9 @@ module.exports = function(req, res) {
     let id = req.originalUrl.split("embed/")[1].split("?")[0].substring(0, 11)
     let watchflags = "";
     let code = embed_code;
-    let live = req.query.live
+    let live = req.query.live || false
+    let sabr = (req.headers && req.headers.cookie
+                && req.headers.cookie.includes("exp_sabr"))
 
     // authorized?
     if(utils.isAuthorized(req)) {
@@ -262,9 +265,9 @@ module.exports = function(req, res) {
 
     // exp_hd=1
     let videoQualities = require("./yt2009html").get_cache_video(id).qualities || []
-    if(videoQualities.includes("720p")
-    || videoQualities.includes("480p")
-    && !live) {
+    if((videoQualities.includes("720p")
+    || videoQualities.includes("480p"))
+    && (!live && !sabr)) {
         let use720p = videoQualities.includes("720p")
         code = code.replace(
             `<!--yt2009_style_hq_button-->`,
@@ -328,8 +331,25 @@ module.exports = function(req, res) {
             `//yt2009-live`,
             `liveHd = true;initAsLive("${id}");`
         )
+        res.send(code)
+        return;
     } else if(live && !utils.isAuthorized(req)) {
         res.send("live videos need authorization")
+        return;
+    }
+
+    // skip video download if sabr
+    if(sabr) {
+        let sabrQualities = (videoQualities && videoQualities.length >= 1
+                            ? videoQualities : ["480p", "360p"])
+        let sabrUrl = sabrlib.initPlaybackSession(id, sabrQualities)
+        code = code.replace(
+            `//yt2009-live`,
+            `var sabrHd = true;
+            var sabrBase = "${sabrUrl}&hd=1"
+            initAsSabr();`
+        )
+        res.send(code)
         return;
     }
 

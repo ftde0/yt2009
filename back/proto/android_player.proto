@@ -12,6 +12,13 @@ message audioTrackData {
     string vssId = 5;
     optional int32 isDefault = 6;
 }
+message xtags {
+    message metadata {
+        string key = 1;
+        string value = 2;
+    }
+    repeated metadata part = 1;
+}
 message numberRange {
     int32 start = 3;
     int32 end = 4;
@@ -50,12 +57,14 @@ message root {
             repeated numberRange indexRange = 10;
             int64 lastChanged = 11;
             string videoQuality = 16;
+            string xtags = 23;
             int32 twentyFive = 25;
             string qualityLabel = 26;
             repeated audioTrackData audioTrack = 28;
             int32 audioBitrate = 44;
             int32 audioSample = 45;
             int32 twoInt = 46;
+            optional int32 isDrc = 49;
         }
         repeated format nondashFormat = 2;
         repeated format dashFormat = 3;

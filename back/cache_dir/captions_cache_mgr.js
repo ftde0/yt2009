@@ -26,8 +26,23 @@ module.exports = {
             function parsePlayer(data) {
                 if(data.captions) {
                     try {
-                        data.captions.playerCaptionsTracklistRenderer
-                            .captionTracks.forEach(track => {
+                        let cc = data.captions.playerCaptionsTracklistRenderer
+                                     .captionTracks
+                        let nonasrLangs = []
+                        let nonAsr = cc.filter(s => {
+                            if(!s.kind) {
+                                nonasrLangs.push(s.languageCode)
+                            }
+                            return !s.kind
+                        })
+                        let asr = cc.filter(s => {
+                            return s.kind
+                                && !nonasrLangs.includes(s.languageCode)
+                        })
+                        let merged = []
+                        nonAsr.forEach(c => {merged.push(c)})
+                        asr.forEach(c => {merged.push(c)})
+                        merged.forEach(track => {
                             let name = track.name.simpleText || ""
                             if(track.name && track.name.runs) {
                                 name = track.name.runs[0].text

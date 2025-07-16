@@ -33,6 +33,7 @@ const yt2009_exports = require("./yt2009exports")
 const yt2009_stats = require("./yt2009statsdata")
 const yt2009_myvideos = require("./yt2009myvideos")
 const yt2009_autoshare = require("./yt2009autoshare")
+const yt2009sabr = require("./yt2009sabr")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -410,6 +411,12 @@ app.get("/watch", (req, res) => {
         })
     }
 
+    let disableDownloads = false;
+    if(req.headers.cookie
+    && req.headers.cookie.includes("exp_sabr")) {
+        disableDownloads = true
+    }
+
     yt2009.fetch_video_data(id, (data) => {
         if(devTimings) {
             console.log(t, "fetch video data done")
@@ -438,7 +445,8 @@ app.get("/watch", (req, res) => {
     }, req.headers["user-agent"],
         yt2009_utils.get_used_token(req),
         useFlash, 
-        resetCache)
+        resetCache,
+        disableDownloads)
 })
 
 
@@ -3290,6 +3298,7 @@ app.get("/yt2009_recommended", (req, res) => {
     }
     let targetVideos = 8;
     let isRecommendedPage = false;
+    let usePaging = false;
     if(req.headers.source
     && req.headers.source == "recommended_page") {
         targetVideos = 25;
@@ -3300,7 +3309,8 @@ app.get("/yt2009_recommended", (req, res) => {
 
     if(usePchelper) {
         let fReq = {
-            "headers": req.headers
+            "headers": req.headers,
+            "targetVids": 100
         }
         let fRes = {
             "set":function(name,key){},
@@ -3334,6 +3344,9 @@ app.get("/yt2009_recommended", (req, res) => {
             });createSuggestionsResponse()}
         }
         mobileHelper.handle_recommendations(fReq, fRes)
+        if(isRecommendedPage) {
+            usePaging = true;
+        }
         return;
     }
 
@@ -3388,6 +3401,49 @@ app.get("/yt2009_recommended", (req, res) => {
     function createSuggestionsResponse() {
         // get 8 random videos from videoSuggestions
         let filteredSuggestions = []
+        if(usePaging) {
+            // put ALL received videos if paging, only for recommended page
+            if(!videoSuggestions[0]) {
+                res.send("YT2009_NO_DATA")
+                return;
+            }
+            let part = 0;
+            while(part * 25 <= videoSuggestions.length) {
+                filteredSuggestions.push(videoSuggestions.slice(
+                    part * 25, (part * 25) + 25
+                ))
+                part++
+            }
+            let pagedHTML = ""
+            let i = 0;
+            filteredSuggestions.forEach(page => {
+                pagedHTML += yt2009_templates.csRecommendedPagedHeadin(i)
+                page.forEach(video => {
+                    pagedHTML += yt2009_templates.videoCell(
+                        video.id,
+                        video.title,
+                        req.protocol,
+                        video.creatorName,
+                        video.creatorUrl,
+                        video.views,
+                        req, true
+                    )
+                })
+                pagedHTML += "</div>"
+                i++
+            })
+            pagedHTML = yt2009_languages.apply_lang_to_code(pagedHTML, req)
+
+            // TODO: RECREATE SERVERSIDE
+            for (let j = 0; j < filteredSuggestions.length; j++) {
+                pagedHTML += yt2009_templates.pagerClientside(
+                    j, filteredSuggestions.length, (j !== 0)
+                )
+            }
+
+            res.send(pagedHTML)
+            return;
+        }
         while(filteredSuggestions.length !== targetVideos) {
             let randomVideo = videoSuggestions[
                 Math.floor(Math.random() * videoSuggestions.length)
@@ -5485,7 +5541,7 @@ app.get("/pchelper_related", (req, res) => {
             }
             html += yt2009_templates.relatedVideo(
                 id, title, req.protocol, length, views,
-                creatorUrl, creatorName, watchFlags
+                creatorUrl, creatorName, (watchFlags + "/pch")
             )
         });html = yt2009_languages.apply_lang_to_code(html, req);res.send(html);}
     }
@@ -6442,6 +6498,51 @@ if(zombiesVideoObject) {
     yt2009_constant.homepageCache_featured = newFeaturedCache
     fs.writeFileSync("./yt2009constants.json", JSON.stringify(yt2009_constant))
 }
+
+/*
+======
+sabr playback
+======
+*/
+
+app.get("/sabr_playback", (req, res) => {
+    if(!req.query.pid) {
+        res.sendStatus(400)
+        return;
+    }
+    let offset = 0;
+    if(req.query.offset && !isNaN(parseInt(req.query.offset))) {
+        offset = parseInt(req.query.offset)
+    }
+    yt2009sabr.handlePlayer(req.query.pid, offset, req, (result) => {
+        if(!result) {
+            // smth went wrong
+            res.sendStatus(500)
+            return;
+        }
+        res.set(
+            "content-type",
+            "application/x-yt2009-saber"
+        )
+        let partCount = 0;
+        let resp = Buffer.from("SABER-START///")
+        for(let part in result) {
+            let header = `//SPART-"${part}"-CL=${result[part].length}//`
+            resp = Buffer.concat([
+                resp,
+                Buffer.from(header),
+                result[part]
+            ])
+            partCount++
+        }
+        res.set(
+            "x-part-count",
+            partCount
+        )
+        res.send(resp)
+        //console.log("resp sent")
+    })
+})
 
 /*
 pizdec

@@ -258,6 +258,10 @@ function initPlayer(parent, fullscreenEnabled) {
             }, 250)
         }, false)
     }
+
+    setTimeout(function() {
+        createPlaybackModePickr(parent)
+    }, 50)
 }
 
 // reversed fullscreen anim
@@ -370,6 +374,9 @@ function video_show_play_btn() {
 
 function video_play() {
     //console.log("play")
+    if(window.sabrData && window.sabrData.fEnd) {
+        video.currentTime = 0;
+    }
     video.play();
     videoPauseOverride = true
 }
@@ -451,6 +458,10 @@ function timeUpdate() {
         $(".html5-loading").className += " hid"
         stopLoadingRototo()
     }
+    if(window.pickrLastState && window.pickrLastState.ongoing) {
+        video.pause()
+        return;
+    }
     if(playingAsLive) return;
     elapsedbar.style.width = (video.currentTime / video.duration) * 100 + "%"
     if(video.duration <= video.currentTime) {
@@ -460,7 +471,23 @@ function timeUpdate() {
     }
     if(video.buffered && !isNaN(video.duration)) {
         try {
-            loadedbar.style.width = (video.buffered.end(0) / video.duration)
+            var rIndex = 0;
+            if(window.sabrData) {
+                var cr = video.currentTime;
+                var ranges = video.buffered.length;
+                var i = 0;
+                while(i !== ranges) {
+                    try {
+                        if(video.buffered.end(i) >= cr
+                        && video.buffered.start(i) <= cr) {
+                            rIndex = i;
+                        }
+                    }
+                    catch(error){console.log(error,i)}
+                    i++
+                }
+            }
+            loadedbar.style.width = (video.buffered.end(rIndex) / video.duration)
                                     * 100 + "%"
         }
         catch(error) {}
@@ -572,7 +599,9 @@ var progressContainer = $(".progress_container")
 // set the width of the seekbar
 // use calc() for modern browsers, the classic pixel method for older ones
 function adjustSeekbarWidth() {
-    timeUpdate();
+    if(!window.sabrData) {
+        timeUpdate();
+    }
     if(browserModernFeatures) {
         $(".player_auto_css").innerHTML =
                                     ".progress_container {width: calc(100% - "
@@ -1797,7 +1826,9 @@ function annotationsMain() {
         // turned off annotations, cleanup
         $(".player_additions_popout .annotations")
         .className = "annotations none"
-        var s = mainElement.querySelectorAll(".annotation, .speech-point")
+        var s = mainElement.querySelectorAll(
+            ".annotation, .speech-point, .annotations_container svg"
+        )
         for(var sel in s) {
             try {s[sel].parentNode.removeChild(s[sel])}
             catch(error) {}
@@ -2210,7 +2241,9 @@ catch(error) {}
 
 // retry video load if stuck after 5 seconds
 setTimeout(function() {
-    if(!video.playing && video.buffered.length <= 0 && !videoStartedPlaying) {
+    if(!video.playing && video.buffered.length <= 0
+    && !videoStartedPlaying && !window.sabrBase
+    && !window.overrideFallbackC) {
         var src = video.src;
         if(!src) {
             src = video.querySelector("source").getAttribute("src")
@@ -2506,4 +2539,616 @@ function initAsLive(id) {
     // mark live in html5player
     $(".video_controls .timer").innerHTML = "LIVE"
     $(".progress_container").className += " hid"
+}
+
+var sabrData = false;
+function addToSabrQueue(data) {
+    if(sabrData.addedSegments.indexOf(data.id) == -1
+    || video.currentTime <= 20) {
+        sabrData.appendQueue.push(data)
+        sabrData.addedSegments.push(data.id)
+    }
+}
+function requestSabr(offset, source, force) {
+    function uint8tostring(uint8) {
+        var s = ""
+        for (var zi = 0; zi < uint8.length; zi++) {
+            s += String.fromCharCode(uint8[zi])
+        }
+        return s;
+    }
+
+    var r = new XMLHttpRequest();
+    var url = [
+        sabrBase,
+        "&offset=" + offset
+    ]
+    if(window.sabrHd) {
+        url.push("&hd=1")
+    }
+    if(force) {
+        url.push("&force_replayer=1")
+    }
+    function retryRequest(force) {
+        sabrData.lastRequestFailCount++
+        if(sabrData.lastRequestFailCount > 3) {
+            console.warn("last sabr request failed too many times! no recovery")
+            return;
+        }
+        requestSabr(offset, source, force)
+    }
+    r.open("GET", url.join(""))
+    r.responseType = "arraybuffer"
+    r.send(null)
+    r.addEventListener("timeout", function(e) {retryRequest()}, false)
+    r.addEventListener("error", function(e) {retryRequest()}, false)
+    r.addEventListener("load", function(e) {
+        if(sabrData.waitingSabrFetch) {
+            sabrData.waitingSabrFetch = false;
+        }
+        if(sabrData.timedSabrFetchAborted && source == "TIMED") {
+            sabrData.timedSabrFetchAborted = false;
+            return;
+        }
+        if(r.status >= 400) {
+            // invalid response
+            showUnrecoverableError(
+                "there was a problem with the network response."
+                +" try reloading the page."
+            )
+            return;
+        }
+
+        // parse x-yt2009-saber
+        var partsExtracted = 0;
+        var partsInResponse = parseInt(r.getResponseHeader("x-part-count"))
+        var s = r.response;
+        var cursor = 14 // SABER-START
+
+        if(partsInResponse == 0) {
+            // something might have gone terribly wrong
+            retryRequest(true)
+            return;
+        }
+
+        sabrData.lastRequestFailCount = 0;
+
+        while(partsExtracted !== partsInResponse) {
+            var partHeader = uint8tostring(
+                new Uint8Array(s.slice(cursor, cursor + 70))
+            )
+            partHeader = partHeader.split("//")[1]
+            var headerLength = ("//" + partHeader + "//").length
+
+            var partId = partHeader.split("SPART-\"")[1].split("\"")[0]
+            var plen = parseInt(partHeader.split("-CL=")[1])
+            var pdata = s.slice(cursor + headerLength, cursor + headerLength + plen)
+            var ptype = "video"
+            if(sabrData.audioItags.indexOf(parseInt(partId.split("-")[0])) !== -1) {
+                ptype = "audio"
+            }
+
+            var part = {
+                "id": partId,
+                "itag": parseInt(partId.split("-")[0]),
+                "pn": parseInt(partId.split("-")[1]),
+                "data": pdata,
+                "type": ptype
+            }
+
+            addToSabrQueue(part)
+            cursor = cursor + headerLength + plen
+
+            partsExtracted++
+        }
+    }, false)
+}
+
+function initAsSabr() {
+    if(!window.MediaSource) {
+        showUnrecoverableError(
+            "your browser does not support MediaSource. turn off the exp_sabr flag."
+        )
+        return;
+    }
+
+    var ms = new MediaSource();
+    var vStream;
+    var aStream;
+    video.src = URL.createObjectURL(ms);
+
+    sabrData = {
+        "offset": 0,
+        "addedSegments": [],
+        "audioItags": [139, 140],
+        "appendQueue": [],
+        "waitingSabrFetch": false,
+        "timedCooldown": false,
+        "timedSabrFetchAborted": false,
+        "lastRequestFailCount": 0
+    }
+
+    // start once ready
+    function readyStart() {
+        vStream = ms.addSourceBuffer("video/mp4; codecs=\"avc1.4D4028\"")
+        aStream = ms.addSourceBuffer("audio/mp4; codecs=\"mp4a.40.2\"")
+        sabrData.videoBuffer = vStream
+        sabrData.audioBuffer = aStream
+        requestSabr(0, "TIMED")
+    }
+
+    // init
+    ms.addEventListener("sourceopen", function() {
+        readyStart()
+    }, false)
+
+    // buffer queue
+    var vbq = setInterval(function() {
+        if(sabrData.appendQueue[0]) {
+            if(sabrData.appendQueue[0].type == "audio"
+            && sabrData.audioBuffer && !sabrData.audioBuffer.updating) {
+                try {
+                    sabrData.audioBuffer.appendBuffer(
+                        sabrData.appendQueue[0].data
+                    )
+                }
+                catch(error) {
+                    console.log("VID", error)
+                    clearInterval(vbq)
+                }
+                sabrData.appendQueue.shift()
+            } else if(sabrData.appendQueue[0].type == "video"
+            && sabrData.videoBuffer && !sabrData.videoBuffer.updating) {
+                try {
+                    sabrData.videoBuffer.appendBuffer(
+                        sabrData.appendQueue[0].data
+                    )
+                }
+                catch(error) {
+                    console.log("AUD", error)
+                    clearInterval(vbq)
+                }
+                sabrData.appendQueue.shift()
+            }
+        }
+    }, 250)
+
+    // watch for new buffer fetches
+    video.addEventListener("timeupdate", function() {
+        if(video.currentTime > 120
+        && !sabrData.videoBuffer.updating
+        && !sabrData.audioBuffer.updating) {
+            // don't keep much backwards buffer to not overfill
+            try {
+                sabrData.videoBuffer.remove(0, video.currentTime - 90)
+                sabrData.audioBuffer.remove(0, video.currentTime - 90)
+            }
+            catch(error){console.log(error)}
+        }
+
+        if(sabrData.waitingSabrFetch || sabrData.timedCooldown) return;
+        var c = video.currentTime;
+        var arrayedRanges = []
+        for (var k = 0; k < video.buffered.length; k++) {
+            arrayedRanges.push({
+                "start": video.buffered.start(k),
+                "end": video.buffered.end(k)
+            })
+        }
+        var currentRange = arrayedRanges.filter(function(s) {
+            return (s.start <= c && s.end >= c)
+        })[0]
+        if(currentRange && ((currentRange.end - c) < 14
+        && (currentRange.end - c) > 0.1
+        && !(video.duration - currentRange.end <= 0.3))
+        && !sabrData.appendQueue[0]) {
+            //console.log("pull more sabr", Math.floor(currentRange.end * 1000))
+            sabrData.sabrTimedCooldown = true;
+            sabrData.waitingSabrFetch = true;
+            requestSabr(Math.floor(currentRange.end * 1000), "TIMED")
+            setTimeout(function() {
+                sabrData.sabrTimedCooldown = false;
+            }, 2000)
+        }
+
+        if(video.duration - video.currentTime <= 0.4) {
+            var t = 0;
+            while(t !== 3) {
+                sabrData.fEnd = true;
+                video_pause();
+                showEndscreen()
+                t++
+            }
+        } else {
+            sabrData.fEnd = false;
+        }
+    }, false)
+
+    video.addEventListener("seeking", function(s) {
+        var vc = video.currentTime
+        var arrayedRanges = []
+        for (var k = 0; k < video.buffered.length; k++) {
+            arrayedRanges.push({
+                "start": video.buffered.start(k),
+                "end": video.buffered.end(k)
+            })
+        }
+        var currentRange = arrayedRanges.filter(function(s) {
+            return (s.start <= vc && s.end >= vc)
+        })
+        if(!currentRange[0]) {
+            // time not buffered
+            if(!sabrData.waitingSabrFetch) {
+                sabrData.waitingSabrFetch = true;
+                sabrData.addedSegments = []
+                requestSabr(Math.floor(vc * 1000), "SEEK")
+            } else {
+                // wait for current sabr fetch to end
+                var x = setInterval(function() {
+                    if(!sabrData.waitingSabrFetch) {
+                        sabrData.waitingSabrFetch = true;
+                        sabrData.addedSegments = []
+                        clearInterval(x)
+                        requestSabr(Math.floor(vc * 1000), "SEEK")
+                    }
+                }, 100)
+            }
+        }
+    }, false)
+}
+
+function sabrQualityChanged() {
+    // force refetch for new quality
+    sabrData.addedSegments = []
+    //v.pause()
+    if(sabrData.videoBuffer.updating) {
+        try {sabrData.videoBuffer.abort()}catch(error){}
+    }
+    if(sabrData.audioBuffer.updating) {
+        try {sabrData.audioBuffer.abort()}catch(error){}
+    }
+    try {
+        sabrData.videoBuffer.remove(0,video.duration)
+        sabrData.audioBuffer.remove(0,video.duration)
+    }
+    catch(error) {}
+    sabrData.waitingSabrFetch = false;
+    sabrData.timedSabrFetchAborted = true;
+    var c = video.currentTime
+    requestSabr(Math.floor(c * 1000), "FORCE")
+}
+
+var pickrLastState = {
+    "volume": video.volume,
+    "ongoing": false
+}
+var shouldShowSaberPickr = false;
+var overrideFallbackC = false;
+function markPlaybackModeDone() {
+    document.cookie = "saber_playback_mode_picked=1; " 
+                    + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                    + "SameSite=Lax"
+}
+function createPlaybackModePickr(parent) {
+    // show playback mode pickr
+    if(document.cookie.indexOf("saber_playback_mode_picked=") == -1
+    && document.cookie.indexOf("exp_sabr") !== -1) {
+        markPlaybackModeDone()
+        //return;
+    }
+
+    function createOption(title, description, onClick, first) {
+        var o = document.createElement("div")
+        o.className = "pickr-option-main"
+        if(first) {
+            o.className += " pickr-option-first"
+        }
+        var btn = document.createElement("img")
+        btn.src = "/assets/site-assets/pixel-vfl73.gif"
+        btn.className = "pickr-btn"
+        o.appendChild(btn)
+        var oc = document.createElement("div")
+        oc.className = "pickr-subs-c-container"
+        var titleE = document.createElement("h1")
+        titleE.innerHTML = title;
+        oc.appendChild(titleE)
+        var desc = document.createElement("p")
+        desc.innerHTML = description;
+        oc.appendChild(desc)
+        o.appendChild(oc)
+        o.addEventListener("click", onClick)
+        return o;
+    }
+
+    function createCheckbox(title, onClick, first) {
+        var o = document.createElement("div")
+        o.className = "pickr-checkboxs-main"
+        if(first) {
+            o.className += " pickr-checkboxs-first"
+        }
+        var c = document.createElement("img")
+        c.src = "/assets/site-assets/pixel-vfl73.gif"
+        c.className = "pickr-checkbox"
+        o.appendChild(c)
+        var titleE = document.createElement("h1")
+        titleE.className = "pickr-c-h1"
+        titleE.innerHTML = title;
+        o.appendChild(titleE)
+        o.addEventListener("click", onClick)
+        return o;
+    }
+
+    function classic_continue() {
+        markPlaybackModeDone()
+        $(".video-player-overlay").parentNode.removeChild(
+            $(".video-player-overlay")
+        )
+        pickrLastState.ongoing = false;
+        video.volume = pickrLastState.volume
+        video.play()
+    }
+
+    function modern_showSubscreen() {
+        pickrLastState.firstStateComplete = true;
+        $(".saber-pickr-container").innerHTML = ""
+        var container = $(".saber-pickr-container")
+
+        var titleLabel = document.createElement("h1")
+        titleLabel.className = "main-title"
+        titleLabel.innerHTML = "any additional preferences?"
+        container.appendChild(titleLabel)
+
+        var o1 = createCheckbox("auto-enable HD", function() {
+            if(pickrLastState.autohd == undefined
+            || pickrLastState.autohd == null) {
+                pickrLastState.autohd = false;
+            }
+            pickrLastState.autohd = !pickrLastState.autohd
+            if(pickrLastState.autohd) {
+                o1.className += " enabled"
+            } else {
+                o1.className = o1.className.split(" enabled").join("")
+            }
+        }, true)
+        container.appendChild(o1)
+
+        if(document.cookie
+        && document.cookie.indexOf("playback_quality=2") !== -1) {
+            pickrLastState.autohd = true;
+            pickrLastState.initialAutoHd = true;
+            o1.className += " enabled"
+        }
+
+        var o2 = createCheckbox("default HD to 1080p", function() {
+            if(pickrLastState.def1080 == undefined
+            || pickrLastState.def1080 == null) {
+                pickrLastState.def1080 = false;
+            }
+            pickrLastState.def1080 = !pickrLastState.def1080
+            if(pickrLastState.def1080) {
+                o2.className += " enabled"
+            } else {
+                o2.className = o2.className.split(" enabled").join("")
+            }
+        })
+        container.appendChild(o2)
+
+        if(document.cookie
+        && document.cookie.indexOf("hd_1080") !== -1) {
+            pickrLastState.def1080 = true;
+            pickrLastState.initialDef1080 = true;
+            o2.className += " enabled"
+        }
+
+        var notice = document.createElement("span")
+        notice.className = "pckr-int-notice"
+        notice.innerHTML = "recommended internet speeds: 25Mbps+ for 720p, 55Mbps+ for 1080p<br>\
+<br>\
+those can be changed at any time:<br>\
+- <a href=\"/account\" target=\"_blank\">auto-enable HD in Playback Setup tab</a>,<br>\
+- <a href=\"/yt2009_flags.htm\" target=\"_blank\">hd_1080 in flags</a>."
+        container.appendChild(notice)
+
+        var saveBtnContainer = document.createElement("div")
+        saveBtnContainer.style.textAlign = "center"
+        var saveBtn = document.createElement("a")
+        saveBtn.className = "yt-button yt-button-primary"
+        var saveSpan = document.createElement("span")
+        saveSpan.innerHTML = "save and refresh"
+        saveBtn.appendChild(saveSpan)
+        saveBtnContainer.appendChild(saveBtn)
+        container.appendChild(saveBtnContainer)
+
+        saveBtn.addEventListener("click", function() {
+            var addAutohd = (
+                pickrLastState.autohd
+                && !pickrLastState.initialAutoHd
+            )
+            var add1080 = (
+                pickrLastState.def1080
+                && !pickrLastState.initialDef1080
+            )
+            var removeAutohd = (
+                !pickrLastState.autohd
+            )
+            var remove1080 = (
+                !pickrLastState.def1080
+            )
+
+            var wf = ""
+            if(document.cookie
+            && document.cookie.indexOf("; watch_flags=") !== -1) {
+                wf = " " + document.cookie
+                     .split(" watch_flags=")[1]
+                     .split(";")[0]
+            }
+            wf += "exp_sabr:"
+            document.cookie = " watch_flags=" + wf + "; " 
+                              + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                              + "SameSite=Lax"
+
+            if(removeAutohd) {
+                document.cookie = "playback_quality=1; " 
+                                + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                                + "SameSite=Lax"
+            }
+            if(remove1080) {
+                var watchFlags = " " + document.cookie
+                                 .split(" watch_flags=")[1]
+                                 .split(";")[0]
+                watchFlags = watchFlags.replace(":hd_1080:", "")
+                watchFlags = watchFlags.replace("hd_1080:", "")
+                watchFlags = watchFlags.replace(":hd_1080", "")
+                document.cookie = "watch_flags=" + watchFlags + "; " 
+                                + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                                + "SameSite=Lax"
+            }
+            if(addAutohd) {
+                document.cookie = "playback_quality=2; " 
+                                + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                                + "SameSite=Lax"
+            }
+            if(add1080) {
+                var watchFlags = ""
+                if(document.cookie
+                && document.cookie.indexOf("watch_flags=") !== -1) {
+                    watchFlags = document.cookie
+                                    .split(" watch_flags=")[1]
+                                    .split(";")[0];
+                }
+                watchFlags += "hd_1080:"
+                document.cookie = "watch_flags=" + watchFlags + "; " 
+                                + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                                + "SameSite=Lax"
+            }
+            markPlaybackModeDone()
+            setTimeout(function() {
+                var l = location.href.split("#")[0].split("&refreshed=1").join("")
+                location.href = l + "&refreshed=1"
+            }, 500)
+        }, false)
+
+        setTimeout(function() {
+            positionPrompt2ndElements(o1, o2, parent)
+            pickrLastState.w = parent.getBoundingClientRect().width
+            var watcher = setInterval(function() {
+                if(!pickrLastState.ongoing
+                || pickrLastState.secondStateComplete) {
+                    clearInterval(watcher)
+                    return;
+                }
+                if(parent.getBoundingClientRect().width !== pickrLastState.w) {
+                    positionPrompt2ndElements(o1, o2, parent)
+                }
+                pickrLastState.w = parent.getBoundingClientRect().width
+            }, 250)
+        }, 10)
+    }
+
+    function positionPromptFirstElements(o1, o2, parent) {
+        var fw = parent.getBoundingClientRect().width
+
+        var o1w = o1.getElementsByClassName("pickr-subs-c-container")[0]
+                    .getBoundingClientRect().width
+        o1w = Math.round(o1w) + 60
+        var o1l = Math.floor((fw - o1w) / 2)
+        o1.style.left = o1l + "px"
+
+        
+        var o2w = o2.getElementsByClassName("pickr-subs-c-container")[0]
+                    .getBoundingClientRect().width
+        o2w = Math.round(o2w) + 60
+        var o2l = Math.floor((fw - o2w) / 2)
+        o2.style.left = o2l + "px"
+    }
+
+    function positionPrompt2ndElements(o1, o2, parent) {
+        var fw = parent.getBoundingClientRect().width
+
+        var o1w = o1.getElementsByTagName("h1")[0]
+                    .getBoundingClientRect().width
+        o1w = Math.round(o1w) + 35
+        var o1l = Math.floor((fw - o1w) / 2)
+        o1.style.left = o1l + "px"
+
+        
+        var o2w = o2.getElementsByTagName("h1")[0]
+                    .getBoundingClientRect().width
+        o2w = Math.round(o2w) + 35
+        var o2l = Math.floor((fw - o2w) / 2)
+        o2.style.left = o2l + "px"
+    }
+    
+    if(!playingAsLive && window.MediaSource
+    && window.MediaSource.isTypeSupported("video/mp4; codecs=\"avc1.4D4028\"")
+    && window.MediaSource.isTypeSupported("audio/mp4; codecs=\"mp4a.40.2\"")
+    && document.cookie.indexOf("saber_playback_mode_picked=") == -1
+    && document.cookie.indexOf("exp_sabr") == -1
+    && parent !== document) {
+        // show
+        video.pause()
+        video.volume = 0;
+        overrideFallbackC = true;
+        pickrLastState.ongoing = true;
+
+        // generate pickr notice
+    
+        var overlay = document.createElement("div")
+        overlay.className = "video-player-overlay"
+        mainElement.appendChild(overlay)
+
+        var container = document.createElement("div")
+        container.className = "saber-pickr-container"
+        overlay.appendChild(container)
+
+        var titleLabel = document.createElement("h1")
+        titleLabel.className = "main-title"
+        titleLabel.innerHTML = "yt2009: pick playback type"
+        container.appendChild(titleLabel)
+
+        var subtitle = document.createElement("p")
+        subtitle.innerHTML = "with the new yt2009 update, your browser can now\
+        fully stream<br>videos on watchpages, without the need to store them."
+        container.appendChild(subtitle)
+
+        var o1 = createOption(
+            "classic",
+            "all videos need to be stored on the instance locally before playing them.<br>\
+            preferable for old (approx. 2008 and older) hardware.<br>\
+            more compatible but results in longer load times.",
+            classic_continue,
+            true
+        )
+        container.appendChild(o1)
+
+        var o2 = createOption(
+            "modern -- SABR",
+            "videos are streamed directly in chunks without downloading.<br>\
+            playback will start way faster, especially for longer videos.",
+            modern_showSubscreen
+        )
+        container.appendChild(o2)
+
+        var notice = document.createElement("span")
+        notice.className = "pckr-int-notice"
+        notice.innerHTML = "this can be changed at any time with the<br>\
+<a href=\"/yt2009_flags.htm\" target=\"_blank\">exp_sabr flag.</a>"
+        container.appendChild(notice)
+
+        setTimeout(function() {
+            positionPromptFirstElements(o1, o2, parent)
+            pickrLastState.w = parent.getBoundingClientRect().width
+            var watcher = setInterval(function() {
+                if(!pickrLastState.ongoing
+                || pickrLastState.firstStateComplete) {
+                    clearInterval(watcher)
+                    return;
+                }
+                if(parent.getBoundingClientRect().width !== pickrLastState.w) {
+                    positionPromptFirstElements(o1, o2, parent)
+                }
+                pickrLastState.w = parent.getBoundingClientRect().width
+            }, 250)
+        }, 10)
+    }
 }

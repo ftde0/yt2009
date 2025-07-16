@@ -3362,6 +3362,15 @@ term='channel'/>
 					<tbody>`,
     
     "recentActivityPost": function(p, index, req) {
+        //console.log(p)
+        let imagesHTML = ""
+        if(p.attachments) {
+            p.attachments.forEach(img => {
+                if(img.imageAttachmentSmall) {
+                    imagesHTML += `<div style="float:left; margin-right: 8px;"><img class="feed-image" src="/avatar_wait?av=${encodeURIComponent(img.imageAttachmentSmall)}"/></div>`
+                }
+            })
+        }
         return `<tr id="feed_item_${index}" valign="top">
 			<td class="feed_icon"><img src="/assets/site-assets/pixel-vfl73.gif" class="icon-BUL"></td>
 			<td>
@@ -3371,8 +3380,7 @@ term='channel'/>
 					<span class="timestamp">(${p.time})</span>
 				</div>
 				<div class="centerpiece">
-                    ${p.imageAttachmentSmall ?
-                    `<div style="float:left; margin-right: 8px;"><img class="feed-image" src="/avatar_wait?av=${encodeURIComponent(p.imageAttachmentSmall)}"/></div>` : ""}
+                    ${imagesHTML}
                     ${p.embedVideoId && p.embedVideoTitle ? 
                     `<div style="float:left; margin-right: 8px;"><a href="/watch?v=${p.embedVideoId}" rel="nofollow"><img style="width: 60px; height: 45px; border: 1px solid;" src="${utils.getThumbUrl(p.embedVideoId, req)}" class="link-as-border-color"></a></div>
 					<div>
@@ -3407,5 +3415,53 @@ term='channel'/>
             </div>
         </div>
         <div class="clear"></div>
-    </div>`
+    </div>`,
+
+    "playerHDSabr": function(use720p, autoHQ) {
+        return `
+        //exp_hq
+        seekbarRemoveWidth = 245;
+        adjustSeekbarWidth();
+        var sabrHd = false;
+
+        ${autoHQ ? `
+        sabrHd = true;` : ""}
+
+        // hd/hq playback
+        $(".video_controls .hq").addEventListener("click", function() {
+            if(!sabrHd) {
+                sabrHd = true;
+                sabrQualityChanged()
+                $("video").innerHTML = "";
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
+            } else {
+                sabrHd = false;
+                sabrQualityChanged()
+                $("video").innerHTML = "";
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
+            }
+        }, false)`
+    },
+    "csRecommendedPagedHeadin": function(i) {
+        return `<div class="cs-video-grid page-${i} ${i !== 0 ? "hid" : ""}" id="cs-video-grid-page-${i}">`
+    },
+    "csRecommendedPagedA": `
+        <div class="searchFooterBox">
+            <div class="pagingDiv">
+                <span class="pagerLabel smallText label">Pages: </span>`,
+    "pagerClientside": function(pageNumber, pageCount, hidden) {
+        let html = `
+        <div class="searchFooterBox ${hidden ? "hid" : ""}" id="footer-pager-for-${pageNumber}">
+            <div class="pagingDiv">
+                <span class="pagerLabel smallText label">Pages: </span>`
+        for (let i = 0; i < pageCount; i++) {
+            if(pageNumber == i) {
+                html += `<span class="pagerCurrent">${i + 1}</span>`
+            } else {
+                html += `<a href="#" onclick="navClPage(${i}, ${pageCount})" class="pagerNotCurrent">${i + 1}</a>`
+            }
+        }
+        html += "</div></div>"
+        return html
+    }
 }

@@ -1166,7 +1166,12 @@ module.exports = {
             }
             r.streamingData.adaptiveFormats.forEach(q => {
                 if(q.mimeType.includes("audio/mp4")) {
-                    if(q.audioTrack && q.audioTrack.audioIsDefault) {
+                    if(q.isOriginal !== null && q.isOriginal !== undefined
+                    && q.isOriginal == true) {
+                        audioFormats.push(q)
+                    } else if(q.audioTrack && q.audioTrack.audioIsDefault
+                    && (q.isOriginal == null || q.isOriginal == undefined
+                    || q.isOriginal)) {
                         audioFormats.push(q)
                     } else if(!q.audioTrack) {
                         audioFormats.push(q)
@@ -1448,7 +1453,22 @@ module.exports = {
                         a.bitrate = f.totalbitrate;
                         a.mimeType = f.mimetype;
                         if(f.audiotrackList && f.audiotrackList[0]) {
+                            a.isOriginal = false
                             let at = f.audiotrackList[0]
+                            if(f.xtags) {
+                                try {
+                                    let xtagsProto = playerResponsePb.xtags
+                                                 .deserializeBinary(f.xtags);
+                                    xtagsProto = xtagsProto.toObject()
+                                    let isOg = xtagsProto.partList.filter(s => {
+                                        return s.value == "original"
+                                    })[0]
+                                    if(isOg) {
+                                        a.isOriginal = true;
+                                    }
+                                }
+                                catch(error) {}
+                            }
                             a.audioTrack = {
                                 "label": at.displayname,
                                 "vss_id": at.vssid,
@@ -2316,20 +2336,38 @@ module.exports = {
                             parsedPost.embedVideoId = id;
                             parsedPost.embedVideoTitle = xss(title)
                         }
-                        if(post.backstageAttachment
-                        && post.backstageAttachment.backstageImageRenderer) {
-                            let thumbs = post.backstageAttachment
-                                         .backstageImageRenderer
-                                         .image.thumbnails;
+                        function parseImageRenderer(t) {
+                            let img = {}
+                            let thumbs = t.image.thumbnails;
                             thumbs = thumbs.sort((a,b) => {
                                 return b.width - a.width
                             })
                             if(thumbs && thumbs[0]) {
-                                parsedPost.imageAttachmentUrl = thumbs[0].url;
-                                parsedPost.imageAttachmentSmall = saveAvatar(
+                                img.imageAttachmentUrl = thumbs[0].url;
+                                img.imageAttachmentSmall = saveAvatar(
                                     thumbs[thumbs.length - 1].url
                                 )
                             }
+                            return img;
+                        }
+                        if(post.backstageAttachment
+                        && post.backstageAttachment.backstageImageRenderer) {
+                            let imgs = []
+                            imgs.push(parseImageRenderer(
+                                post.backstageAttachment.backstageImageRenderer
+                            ))
+                            parsedPost.attachments = imgs;
+                        }
+                        if(post.backstageAttachment
+                        && post.backstageAttachment.postMultiImageRenderer) {
+                            let multiImgs = []
+                            post.backstageAttachment.postMultiImageRenderer
+                            .images.forEach(img => {
+                                multiImgs.push(parseImageRenderer(
+                                    img.backstageImageRenderer
+                                ))
+                            })
+                            parsedPost.attachments = multiImgs
                         }
                         
                         posts.push(parsedPost)

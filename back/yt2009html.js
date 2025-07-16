@@ -14,6 +14,7 @@ const yt2009exports = require("./yt2009exports")
 const yt2009signin = require("./yt2009androidsignin")
 const yt2009trusted = require("./yt2009trustedcontext")
 const yt2009mobilehelper = require("./yt2009mobilehelper")
+const yt2009sabr = require("./yt2009sabr")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
 const userid = require("./cache_dir/userid_cache")
@@ -864,6 +865,14 @@ module.exports = {
             useFlash = true;
         }
 
+        // sabr
+        let useSabr = false;
+        let sabrBaseUrl = ""
+        if(flags.includes("exp_sabr")) {
+            useSabr = true;
+            sabrBaseUrl = yt2009sabr.initPlaybackSession(data.id, data.qualities)
+        }
+
         // useragent
         let userAgent = req.headers["user-agent"]
 
@@ -941,7 +950,7 @@ module.exports = {
             }
 
             // start saving in advance for quicker video load for end user
-            if(startQuality && !data.live) {
+            if(startQuality && !data.live && !useSabr) {
                 yt2009utils.saveMp4_android(data.id, () => {}, false, startQuality)
             }
         }
@@ -1708,7 +1717,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
         code = code.replace("yt2009_ratings_count", ratings)
-        if(!useFlash && !data.live) {
+        if(!useFlash && !data.live && !useSabr) {
             let tcData = ""
             if(config.trusted_context) {
                 tcData = "&" + yt2009trusted.generateContext(
@@ -1740,6 +1749,17 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             code = code.replace(
                 `<!--yt2009_livecard-->`,
                 yt2009templates.livechatTemplate
+            )
+        } else if(!useFlash && !data.live && useSabr) {
+            code = code.replace(
+                "//yt2009-pmp4",
+                `showLoadingSprite();
+                var sabrBase = "${sabrBaseUrl}";
+                initAsSabr();`
+            )
+            code = code.replace(
+                `0:00 / 0:00`,
+                `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
             )
         }
         code = code.replace(
@@ -2627,7 +2647,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(!useFlash
         && (qualityList.includes("720p")
         || qualityList.includes("480p"))
-        && !data.live) {
+        && !data.live
+        && !useSabr) {
             let enableConnCheck = "";
             if(req.headers.cookie
             && req.headers.cookie.includes("playback_quality=0")) {
@@ -2672,7 +2693,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         && (qualityList.includes("720p")
         || qualityList.includes("480p"))
         && data.live) {
-
             // hd buttons for live
             let use720p = qualityList.includes("720p")
             code = code.replace(
@@ -2685,6 +2705,32 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 `//yt2009-exp-hq-btn`,
                 yt2009templates.playerHDLive(
                     data.id, use720p, autoHQ
+                )
+            )
+
+            // 720p
+            if(use720p) {
+                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq hd"></span>`)
+            } else {
+                // 480p
+                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
+            }
+        } else if(!useFlash
+        && (qualityList.includes("720p")
+        || qualityList.includes("480p"))
+        && useSabr) {
+            // hd buttons for sabr
+            let use720p = qualityList.includes("720p")
+            code = code.replace(
+                `<!--yt2009_style_hq_button-->`,
+                yt2009templates.playerCssHDBtn   
+            )
+
+            // js logic
+            code = code.replace(
+                `//yt2009-exp-hq-btn`,
+                yt2009templates.playerHDSabr(
+                    use720p, autoHQ
                 )
             )
 

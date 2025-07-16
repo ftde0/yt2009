@@ -29,11 +29,15 @@ function switchVideo(video) {
 
     var liveVideo = (video.className.indexOf("playnav-live-video") !== -1)
     
-    var currentIsLive = (
-        document.querySelector(".playnav-video.selected")
-        .className.indexOf("playnav-live-video") !== -1
-    )
-    $(".playnav-video.selected").className = "playnav-item playnav-video" + (currentIsLive ? " playnav-live-video" : "")
+    var currentIsLive = null;
+    try {
+        var currentIsLive = (
+            document.querySelector(".playnav-video.selected")
+            .className.indexOf("playnav-live-video") !== -1
+        )
+        $(".playnav-video.selected").className = "playnav-item playnav-video" + (currentIsLive ? " playnav-live-video" : "")
+    }
+    catch(error){}
 
     var id = video.id.split("-").splice(2, video.id.split("-").length).join("-")
 

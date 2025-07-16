@@ -62,6 +62,18 @@ valid for 5 minutes.
 ==================================
 
 `
+const blockMsg = `
+
+==================================
+
+testing sign-in requirement failed!
+**your IP might be blocked by youtube.**
+test reason provided:
+"$1"
+
+==================================
+
+`
 const errorMsg = `
 
 
@@ -139,6 +151,18 @@ if(!loginData.yExpire) {
                     gredir_work = false;
                 }, 1000 * 60 * 5)
 
+            } else if(r.playabilityStatus
+            && r.playabilityStatus.status !== "OK"
+            && r.playabilityStatus.reason) {
+                // check failed for other reason; provided by it
+                let msg = blockMsg;
+                msg = msg.replace("$1", r.playabilityStatus.reason)
+                console.log(msg)
+            } else if(r.playabilityStatus
+            && r.playabilityStatus.status !== "OK") {
+                let msg = blockMsg;
+                msg = msg.replace("$1", "(no reason provided)")
+                console.log(msg)
             }
         })
     })

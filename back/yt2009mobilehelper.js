@@ -325,6 +325,11 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     })
                 }).then(r => {r.json().then(r => {
                     let vl = []
+                    let targetVids = 25
+                    if(req.targetVids) {
+                        targetVids = req.targetVids;
+                    }
+                    let addedIds = []
                     try {
                         r = r.contents.singleColumnBrowseResultsRenderer.tabs[0]
                              .tabRenderer.content.sectionListRenderer.contents;
@@ -338,8 +343,10 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                             s = s.shelfRenderer.content.horizontalListRenderer
                                  .items;
                             s.forEach(i => {
-                                if(i.gridVideoRenderer) {
+                                if(i.gridVideoRenderer
+                                && !addedIds.includes(i.gridVideoRenderer.videoId)) {
                                     vl.push(i.gridVideoRenderer)
+                                    addedIds.push(i.gridVideoRenderer.videoId)
                                 }
                             })
                         }
@@ -347,7 +354,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     })
 
 
-                    vl.slice(0, 25).forEach(v => {
+                    vl.slice(0, targetVids).forEach(v => {
                         if(!v.shortBylineText || !v.lengthText
                         || !v.viewCountText) return;
                         let a = v.shortBylineText.runs[0]
@@ -1324,6 +1331,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 length = length.split("(")[length.split("(").length - 1]
                                .split(" ")[0]
                 length = length.replace(/[^0-9+\:]/g, "")
+
+                if(utils.time_to_seconds(length) >= 7200) return;
 
                 let upload = v.split(" ago")[0]
                 upload = upload.split(" · ")[upload.split(" · ").length - 1]
