@@ -300,7 +300,7 @@ module.exports = function(req, res) {
     if(req.query.auto_additions == 1) {
         code = code.replace(
             `//yt2009-autoadditions`,
-            `annotationsMain();captionsMain();`
+            `annotationsMain();captionsMain('auto');`
         )
         autoAdditionsAdded = true;
     }
@@ -321,7 +321,7 @@ module.exports = function(req, res) {
     && !autoAdditionsAdded) {
         code = code.replace(
             `//yt2009-cc`,
-            `captionsMain();`
+            `captionsMain('auto');`
         )
     }
 

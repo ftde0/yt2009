@@ -73,6 +73,7 @@
     background-position: 0px -49px;
     width: 16px;
     height: 16px;
+    z-index: 2;
 }
 
 .video_controls .seek_btn.hovered {
@@ -908,4 +909,36 @@
 
 .pckr-int-notice a, .pckr-int-notice a:hover, .pckr-int-notice:visited {
     color: white;
+}
+
+.chapters-container {
+    position: absolute;
+    width: 100%;
+    top: 9px;
+    height: 7px;
+}
+
+.chapters-container .chapter {
+    position: absolute;
+    top: 0px;
+    width: 5px;
+    height: 7px;
+    border-left: 1px #808080 solid;
+    border-right: 1px #808080 solid;
+    border-bottom: 1px #808080 solid;
+    background-color: white;
+    cursor: pointer;
+}
+
+.chapter-popout {
+    background-color: black;
+    box-shadow: 0px 0px 2px white;
+    /*border: 1px white solid;*/
+    padding: 2px 3px;
+    border-radius: 3px;
+    position: absolute;
+    bottom: 28px;
+    color: white;
+    font-size: 11px;
+    z-index: 7;
 }

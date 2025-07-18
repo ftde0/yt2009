@@ -417,6 +417,10 @@ app.get("/watch", (req, res) => {
         disableDownloads = true
     }
 
+    // start ryd early
+    ryd.fetch(id, (d) => {})
+
+    // actual handling
     yt2009.fetch_video_data(id, (data) => {
         if(devTimings) {
             console.log(t, "fetch video data done")

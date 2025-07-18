@@ -183,7 +183,9 @@ module.exports = {
                     fullData.communityPosts = yt2009utils.parseBackstageCont(r)
                     let newPosts = fullData.communityPosts.filter(s => {
                         return s.time
-                            && (s.time.includes(" day")
+                            && (s.time.includes(" minute")
+                            || s.time.includes(" hour")
+                            || s.time.includes(" day")
                             || s.time.includes(" week"))
                     })
                     if(newPosts.length >= 1) {

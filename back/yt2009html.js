@@ -65,6 +65,22 @@ module.exports = {
     "innertube_get_data": function(id, callback) {
         let useAndroidPlayer = true;
 
+        let timer = 0;
+        let timingInterval;
+        if(devTimings) {
+            timingInterval = setInterval(() => {
+                timer += 0.1
+                if(timer >= 2) {
+                    clearInterval(timingInterval)
+                }
+            }, 100)
+        }
+        function stopTimer() {
+            if(devTimings) {
+                clearInterval(timingInterval)
+            }
+        }
+
         if(JSON.stringify(innertube_context) == "{}") {
             innertube_context = constants.cached_innertube_context
             api_key = this.get_api_key()
@@ -122,12 +138,14 @@ module.exports = {
                 callbacksMade++
                 if(callbacksMade == callbacksRequired) {
                     callback(combinedResponse)
+                    stopTimer()
                 }
             })}catch(error){
                 console.log(error)
                 callbacksMade++
                 if(callbacksMade == callbacksRequired) {
                     callback(combinedResponse)
+                    stopTimer()
                 }
             }})
         }
@@ -149,12 +167,16 @@ module.exports = {
             "method": "POST",
             "mode": "cors"
         }).then(r => {r.json().then(r => {
+            if(devTimings) {
+                console.log("/next received", timer)
+            }
             for(let i in r) {
                 combinedResponse[i] = r[i]
             }
             callbacksMade++
             if(callbacksMade == callbacksRequired) {
                 callback(combinedResponse)
+                stopTimer()
             }
         })})
 
@@ -187,6 +209,9 @@ module.exports = {
             "method": "POST",
             "mode": "cors"
         }).then(r => {r.json().then(r => {
+            if(devTimings) {
+                console.log("/player received", timer)
+            }
             if(useAndroidPlayer) {
                 if(r.streamingData) {
                     yt2009exports.extendWrite("players", id, r)
@@ -206,6 +231,7 @@ module.exports = {
             callbacksMade++
             if(callbacksMade == callbacksRequired) {
                 callback(combinedResponse)
+                stopTimer()
             }
         })})
     },
@@ -890,6 +916,39 @@ module.exports = {
         }
 
         code = require("./yt2009loginsimulate")(flags, code, true)
+
+        // chapter time marks
+        let chapters = []
+        let chapterLabels = []
+        let disableChapters = false;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("disable_chapters")) {
+            disableChapters = true;
+        }
+        data.description.split("\n").forEach(line => {
+            let timestamps = line.split(" ").filter(s => {
+                return s.includes(":")
+                    && !isNaN(parseInt(s.split(":")[0]))
+                    && !isNaN(parseInt(s.split(":")[1]))
+                    && s.split(":")[0] == s.split(":")[0].replace(/[^0-9\,]/g, "")
+                    && s.split(":")[1] == s.split(":")[1].replace(/[^0-9\,]/g, "")
+                    && (line.trim().startsWith(s) || line.trim().endsWith(s))
+            })
+            if(timestamps.length >= 1) {
+                timestamps.forEach(t => {
+                    chapters.push(yt2009utils.time_to_seconds(t))
+                    chapterLabels.push(line.split("\"").join("&quot;"))
+                })
+            }
+        })
+        if(chapters.length >= 1 && !useFlash && !disableChapters) {
+            let timestamps = JSON.stringify(chapters)
+            let labels = JSON.stringify(chapterLabels)
+            code = code.replace(
+                `//yt2009-html5-chapters`,
+                `initChapterMarks(${timestamps},${data.length},${labels})`
+            )
+        }
 
         // handling flag
         
@@ -2330,7 +2389,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let useRydRating = "4.5"
         let endRating = "4.5"
         requiredCallbacks++;
-        yt2009ryd.fetch(data.id, (rating) => {
+        yt2009ryd.readWait(data.id, (rating) => {
             if(!rating.toString().includes(".5")) {
                 rating = rating.toString() + ".0"
             }
@@ -2612,6 +2671,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 // 2005 players: &l param containing video length in seconds
                 // this enables seeking in those
                 flash_url += "&l=" + data.length
+
+                // chapters for 2009
+                if(flash_url.includes("/watch.swf")
+                && chapters.length >= 1
+                && !disableChapters) {
+                    flash_url += "&markers=" + chapters.join(",")
+                }
                 
                 flash_url += render_endscreen_f()
 
@@ -2771,7 +2837,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(flags.includes("always_captions") && !useFlash) {
             code = code.replace(
                 "//yt2009-always-captions",
-                "captionsMain();"
+                "captionsMain('auto');"
             )
         }
 

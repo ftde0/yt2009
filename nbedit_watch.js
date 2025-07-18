@@ -457,7 +457,7 @@ playlisty
 
 if(document.querySelector("#watch-playlist-videos-panel")) {
     // następny film
-    $("video").addEventListener("ended", function() {
+    function nextVideo() {
         var videoElements = []
         var currentVideoIndex = 0;
         var tempIndex = 0;
@@ -483,7 +483,18 @@ if(document.querySelector("#watch-playlist-videos-panel")) {
 
 
         window.location = $(".playlist-entry-video-next .video-thumb-link").href
-    }, false)
+    }
+    try {$("video").addEventListener("ended", nextVideo, false)}
+    catch(error) {}
+
+    // sabr never fires "ended"
+    setTimeout(function() {
+        if(window.sabrData) {
+            window.sabrData.fEndCallback = function() {
+                nextVideo()
+            }
+        }
+    }, 100)
 
     // refetch jak nie ma filmów zapisanych
     if(document.querySelector(".yt2009_marking_fetch_playlist_client")) {

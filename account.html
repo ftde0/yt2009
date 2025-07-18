@@ -308,8 +308,8 @@
                         </div>
 						<div class="body">
 							<div class="section-tabs">
-								<div class="section current section-playback" onclick="toggleExpander('playback', 'playback')">
-									<div class="tab">
+								<div class="section current section-playback">
+									<div class="tab" onclick="toggleExpander('playback', 'playback')">
 										<div class="fl">
 											<div class="bullet" style="background-position: -78px 0px;"></div><a href="javascript:;">Video Playback Quality</a>
 										</div>
@@ -330,8 +330,8 @@
 										</div>
 									</div>
 								</div>
-								<div class="section section-captions" onclick="toggleExpander('playback', 'captions')">
-									<div class="tab">
+								<div class="section section-captions">
+									<div class="tab" onclick="toggleExpander('playback', 'captions')">
 										<div class="fl">
 											<div class="bullet"></div><a href="javascript:;">Captions</a>
 										</div>
@@ -348,8 +348,8 @@
 										</div>
 									</div>
 								</div>
-								<div class="section last section-annotations" onclick="toggleExpander('playback', 'annotations')">
-									<div class="tab">
+								<div class="section section-annotations">
+									<div class="tab" onclick="toggleExpander('playback', 'annotations')">
 										<div class="fl">
 											<div class="bullet"></div><a href="javascript:;">Annotations</a>
 										</div>
@@ -362,6 +362,27 @@
 											<div class="playback-annotation-ref">
 												<input id="playback-annotation-enable" type="checkbox" class="playback-annotation-enable" onclick="markAnnotationsChanged();">
 												<label for="playback-annotation-enable">Show annotations</label><br>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="section last section-modern">
+									<div class="tab" onclick="toggleExpander('playback', 'modern')">
+										<div class="fl">
+											<div class="bullet"></div><a href="javascript:;">Modern Feature Settings</a>
+										</div>
+										<div class="dirty-indicator fr" style="display: none;">[changed]</div>
+										<div class="cb"></div>
+									</div>
+									<div class="page hid" id="page">
+										<div class="page">
+											<div class="playback-chapters-ref">
+												<input id="playback-chapters-disable" type="checkbox" class="playback-chapters-disable" onclick="markChaptersChanged();">
+												<label for="playback-chapters-disable">Hide chapter time marks</label><br>
+											</div>
+											<div class="playback-autocc-ref">
+												<input id="playback-autocc-disable" type="checkbox" class="playback-autocc-disable" onclick="markAutoccChanged();">
+												<label for="playback-autocc-disable">Don't automatically enable auto-generated captions</label><br>
 											</div>
 										</div>
 									</div>

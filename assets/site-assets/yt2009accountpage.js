@@ -227,7 +227,8 @@ function savePlayback() {
     }, 5000)
 
     var globalFlags = ""
-    if(playbackAnnotationsChanged || playbackCCChanged) {
+    if(playbackAnnotationsChanged || playbackCCChanged
+    || chaptersChanged || autoccChanged) {
         try {
             globalFlags = document.cookie.split("global_flags=")[1].split(";")[0]
         }
@@ -251,7 +252,26 @@ function savePlayback() {
             globalFlags += "always_captions:"
         }
     }
-    if(playbackAnnotationsChanged || playbackCCChanged) {
+    if(chaptersChanged) {
+        var enabled = document.getElementById("playback-chapters-disable").checked
+        if(!enabled && globalFlags.indexOf("disable_chapters") !== -1) {
+            globalFlags = globalFlags.replace("disable_chapters:", "")
+                          .replace("disable_chapters", "")
+        } else if(enabled && globalFlags.indexOf("disable_chapters") == -1) {
+            globalFlags += "disable_chapters:"
+        }
+    }
+    if(autoccChanged) {
+        var enabled = document.getElementById("playback-autocc-disable").checked
+        if(!enabled && globalFlags.indexOf("disable_autocc") !== -1) {
+            globalFlags = globalFlags.replace("disable_autocc:", "")
+                          .replace("disable_autocc", "")
+        } else if(enabled && globalFlags.indexOf("disable_autocc") == -1) {
+            globalFlags += "disable_autocc:"
+        }
+    }
+    if(playbackAnnotationsChanged || playbackCCChanged
+    || chaptersChanged || autoccChanged) {
         var cookie = [
             "global_flags=" + globalFlags + "; ",
             "Path=/; ",
@@ -277,6 +297,12 @@ function pullPlaybackSettings() {
     }
     if(document.cookie.indexOf("always_captions") !== -1) {
         document.getElementById("playback-cc-enable").checked = true;
+    }
+    if(document.cookie.indexOf("disable_chapters") !== -1) {
+        document.getElementById("playback-chapters-disable").checked = true;
+    }
+    if(document.cookie.indexOf("disable_autocc") !== -1) {
+        document.getElementById("playback-autocc-disable").checked = true;
     }
 }
 
@@ -465,4 +491,18 @@ for(var s in services) {
 // profile setup (wip)
 function saveProfile() {
     document.getElementById("pchelper-profile-setup-form").submit()
+}
+
+// modern features -- playback setup
+var chaptersChanged = false;
+var autoccChanged = false;
+var alttrackChanged = false;
+function markChaptersChanged() {
+    chaptersChanged = true;
+}
+function markAutoccChanged() {
+    autoccChanged = true;
+}
+function markAlttrack() {
+    alttrackChanged = true;
 }
