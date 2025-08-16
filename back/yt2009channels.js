@@ -10,11 +10,13 @@ const yt2009doodles = require("./yt2009doodles")
 const yt2009trusted = require("./yt2009trustedcontext")
 const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
+const yt2009mobilehelper = require("./yt2009mobilehelper")
 const wayback_channel = require("./cache_dir/wayback_channel")
 const templates = require("./yt2009templates")
 const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
 const overrideBgs = require("./channel_backgrounds.json")
+const customChannel = require("./proto/yt2009_channel_pb")
 const devTimings = false;
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
@@ -26,6 +28,9 @@ try {
     featured_channels = require("./cache_dir/public_channel_listing.json")
 }
 catch(error) {}
+
+let earlyProgressPulls = []
+let sups = []
 
 setTimeout(function() {
     if(!yt2009html.v) {
@@ -76,6 +81,9 @@ module.exports = {
                 res.send(`[yt2009] channel not found`)
                 return;
             }
+            if(req.query && req.query.earlyPull) {
+                earlyProgressPulls.push(id)
+            }
             writeTimingData("userid get")
             let cached = n_impl_yt2009channelcache.read("main")[id]
                       || n_impl_yt2009channelcache.read("main")[url]
@@ -87,6 +95,9 @@ module.exports = {
             && !cached.freezeCache) {
                 writeTimingData("cache retrieve")
                 sendResponse(cached)
+                earlyProgressPulls = earlyProgressPulls.filter(
+                    s => {return s !== id}
+                )
             } else {
                 let fetchesRequired = 4;
                 let fetchesCompleted = 0;
@@ -110,6 +121,9 @@ module.exports = {
                     this.parse_main_response(r, flags, (data) => {
                         if(!data) {
                             res.send(`[yt2009] channel not found`)
+                            earlyProgressPulls = earlyProgressPulls.filter(
+                                s => {return s !== id}
+                            )
                             return;
                         }
                         for(let property in data) {
@@ -219,6 +233,11 @@ module.exports = {
 
             function sendResponse(data) {
                 // send raw json data or full HTML
+                if(req.query && req.query.earlyPull) {
+                    earlyProgressPulls = earlyProgressPulls.filter(
+                        s => {return s !== id}
+                    )
+                }
                 if(sendRawData) {
                     res.send(data)
                     if(timing) {clearInterval(timing)}
@@ -558,8 +577,13 @@ module.exports = {
         let code = channel_code;
         let stepsRequiredToCallback = 1;
         let videosSource = data.videos;
+        let overrideFirstVideo = false;
+        let videoUploadDates = {}
+        let waitForOverrideFirst = false;
+        let autoplayFirstVideo = true;
         let stepsTaken = 0;
         let channelCommentCount = 0;
+        let showInfoBoxes = []
 
         let time = 0;
         let x;
@@ -570,6 +594,739 @@ module.exports = {
                     clearInterval(x)
                 }
             }, 100)
+        }
+
+        // check for custom yt2009 codi
+        let custCode = false;
+        let custIdentifier = "-- x-yt2009-custom"
+        let clearDescription = false
+        let pchelperPutSubscriptions = false;
+        if(data.properties && data.properties.description
+        && data.properties.description.includes(custIdentifier)) {
+            // grab customization code from channel description
+            custCode = data.properties.description.split(custIdentifier)[1]
+                           .split("<br>")[1]
+            clearDescription = data.properties.description.replace(custCode, "")
+            let op = clearDescription.split(custIdentifier)[1]
+                     .split("\n")[0]
+            op = custIdentifier + op;
+            clearDescription = clearDescription.replace(op, "")
+            clearDescription = clearDescription.split("<br>")
+            while(clearDescription[clearDescription.length - 1] == ""
+            && clearDescription.length >= 1) {
+                clearDescription.pop()
+            }
+            clearDescription = clearDescription.join("<br>")
+            try {
+                custCode = customChannel.root.deserializeBinary(custCode)
+                           .toObject()
+            }
+            catch(error) {
+                console.log(error)
+            }
+        }
+        if(custCode && typeof(custCode) !== "string" && custCode.font) {
+
+            let propertiesToSafe = [
+                "backgroundcolor", "wrappercolor", "wrappertextcolor",
+                "wrapperlinkcolor", "custombackgroundid",
+                "innerboxbackgroundcolor", "innerboxtitletextcolor",
+                "innerboxlinkcolor", "altdefaultvidid"
+            ]
+            propertiesToSafe.forEach(p => {
+                if(custCode[p]) {
+                    custCode[p] = yt2009utils.xss(custCode[p])
+                                  .split("\"").join("")
+                                  .split(";").join("")
+                }
+            })
+
+            // channel customization apply
+            //console.log(custCode)
+            let wrapperOpacity = parseInt(custCode.wrapperopacity)
+            wrapperOpacity = wrapperOpacity.toString("16")
+            let innerboxOpacity = 255 - parseInt(custCode.innerboxopacity)
+            innerboxOpacity = innerboxOpacity.toString("16")
+            let customizedCss = "<style>"
+            if(custCode.custombackgroundid
+            && custCode.custombackgroundid.length == 24) {
+                let cbid = custCode.custombackgroundid
+                customizedCss += `#channel-body {
+                    background-image: url("/cbg_proxie?id=${cbid}");
+                }`
+            }
+            if(custCode.repeatcustombackground) {
+                customizedCss += `#channel-body {
+                    background-repeat: repeat;
+                }`
+            } else {
+                customizedCss += `#channel-body {
+                    background-repeat: no-repeat;
+                }`
+            }
+            if(custCode.hidebanner) {
+                customizedCss += `#user_banner {display: none;}`
+            }
+            customizedCss += "</style>"
+            if(custCode.title) {
+                code = code.split("yt2009_channel_title").join(
+                    yt2009utils.xss(custCode.title).split("+").join(" ")
+                )
+            }
+            code = code.split("yt2009_text_color").join(
+                custCode.innerboxbodytextcolor
+            )
+            code = code.split("yt2009_title_text_color").join(
+                custCode.innerboxtitletextcolor
+            )
+            code = code.split("yt2009_wrapper_title_text_color").join(
+                custCode.wrappertextcolor
+            )
+            code = code.split("yt2009_link_color").join(
+                custCode.innerboxlinkcolor
+            )
+            code = code.split("yt2009_innerbox_main_bg").join(
+                custCode.innerboxbackgroundcolor + innerboxOpacity
+            )
+            code = code.split("yt2009_darker_bg").join(
+                custCode.wrappercolor + innerboxOpacity
+            )
+            code = code.split("yt2009_main_bg").join(
+                custCode.backgroundcolor + wrapperOpacity
+            )
+
+            let fontsTable = [
+                `"Arial", sans-serif`, //fallback on 0
+                `"Times New Roman", serif`,
+                `"Arial", sans-serif`,
+                `"Verdana", system-ui`,
+                `"Georgia", serif`,
+                `"Courier New", monospace`
+            ]
+            if(fontsTable[custCode.font]) {
+                code = code.replace(
+                    "font-family: arial",
+                    `font-family: ${fontsTable[custCode.font]}`
+                )
+            }
+
+            if(custCode.subscriberList
+            && custCode.subscriberList.length >= 1) {
+                code = code.replace(
+                    `<!--yt2009_subscribers_slot1-->`,
+                    render_section(
+                        "subscribers",
+                        custCode.subscriberList,
+                        true,
+                        false
+                    )
+                )
+                code = code.replace(
+                    `(yt2009_subscribers_count)`, ""
+                )
+            }
+
+            if(custCode.subscriptionList
+            && custCode.subscriptionList.length >= 1) {
+                pchelperPutSubscriptions = true;
+                code = code.replace(
+                    `<!--yt2009_friends_slot2-->`,
+                    render_section(
+                        "subscriptions",
+                        custCode.subscriptionList,
+                        true,
+                        true
+                    )
+                )
+                code = code.replace(
+                    `(yt2009_subscriptions_count)`, ""
+                )
+                code = code.replace(
+                    `yt2009-subscriptions-mark`,
+                    `yt2009-subscriptions-mark hid`
+                )
+                code = code.replace(
+                    `yt2009-default-friends-mark`,
+                    `yt2009-default-friends-mark hid`
+                )
+            }
+
+            if(custCode.hidebanner) {
+                code = code.replace(
+                    `<!--yt2009_banner-->`,
+                    ""
+                )
+            }
+
+            function removeByMarkername(marker) {
+                let mHtml = code.split(`<!--yt2009_marker_${marker}-->`)[1]
+                                .split(`<!--yt2009_marker_${marker}_end-->`)[0]
+                code = code.replace(mHtml, "")
+            }
+
+            let modules = custCode.shownmodules
+            if(!modules.includes("c")) {
+                removeByMarkername("comments")
+            }
+            if(!modules.includes("r")) {
+                removeByMarkername("activity")
+            }
+            if(!modules.includes("o")) {
+                removeByMarkername("friends")
+            }
+
+            let scrollboxes = custCode.showncontent
+            if(!scrollboxes.includes("a")) {
+                removeByMarkername("all_scrollbox")
+                removeByMarkername("all_scrollbox_btn")
+            }
+            if(!scrollboxes.includes("u")) {
+                removeByMarkername("uploads_scrollbox")
+                removeByMarkername("vids_scrollbox_btn")
+                removeByMarkername("live_scrollbox_btn")
+                code = code.replace("<!--yt2009_live_scrollbox-->", "")
+            }
+            if(!scrollboxes.includes("p")) {
+                removeByMarkername("pls_scrollbox_btn")
+                code = code.replace("<!--yt2009_playlists_scrollbox-->", "")
+            }
+            if(!scrollboxes.includes("f")) {
+                removeByMarkername("favs_scrollbox_btn")
+            }
+            if(!scrollboxes.includes("a") && !scrollboxes.includes("u")) {
+                videosSource = []
+            }
+
+
+            if(custCode.altdefaultvidid && custCode.altdefaultvidid.length == 11) {
+                waitForOverrideFirst = true;
+                stepsRequiredToCallback++
+                yt2009html.fetch_video_data(custCode.altdefaultvidid, (vd) => {
+                    try {
+                        overrideFirstVideo = {
+                            "id": vd.id,
+                            "views": vd.viewCount,
+                            "title": vd.title,
+                            "authorName": vd.author_name
+                        }
+                        videoUploadDates[vd.id] = vd.upload
+                        saved_channel_comments[vd.id] = vd.comments
+                    }
+                    catch(error){}
+                    setTimeout(() => {videosRender()}, 10)
+                    stepsTaken++
+                    setTimeout(function() {
+                        if(stepsRequiredToCallback == stepsTaken) {
+                            try {callback(code)}catch(error) {}
+                        }
+                    }, 100)
+                }, "", yt2009utils.get_used_token(req), false, false, true)
+            }
+
+            autoplayFirstVideo = custCode.enableautoplay
+
+            code = code.replace(
+                "<!--yt2009_customized_css-->",
+                customizedCss
+            )
+        }
+
+        // check with pchelper if channel belongs to visitor
+        function checkPchelperLogin() {
+            if(yt2009mobilehelper.hasLogin(req)) {
+                stepsRequiredToCallback++
+                yt2009mobilehelper.openBrowseId(req, (id) => {
+                    if(data.id == id) {
+                        // apply own-channel specific things
+                        let file = "/assets/site-assets/yt2009_pchelper_channel_edits.js"
+                        code = code.replace(
+                            `<!--yt2009_pchelper_owned-->`,
+                            `<script src="${file}"></script>`
+                        )
+                        code = code.replace(
+                            `<!--yt2009_channel_customizr-->`,
+                            fs.readFileSync("../channel_edit_panel.html").toString()
+                        )
+                        let ownUrl = `http://www.youtube.com/channel/${id}`
+                        if(data.handle) {
+                            ownUrl = `http://www.youtube.com/${data.handle}`
+                        }
+                        code = code.replace(
+                            `yt2009_own_url`,
+                            ownUrl
+                        )
+                        if(custCode && custCode.title) {
+                            code = code.replace(
+                                `yt2009_current_name`,
+                                yt2009utils.xss(custCode.title)
+                                .split("+").join(" ")
+                            )
+                        } else {
+                            code = code.replace(
+                                `yt2009_current_name`,
+                                data.name
+                            )
+                        }
+                        code = code.replace(
+                            `yt2009-own-channel-marker hid`,
+                            `yt2009-own-channel-marker`
+                        )
+                        code = code.replace(
+                            `div style="position:relative;width:170px;"`,
+                            `div style="position:relative;width:170px;display:none;"`
+                        )
+
+                        // if has customized their channel, apply to customizr
+
+                        // channel type
+                        if(custCode.type
+                        && custCode.type.length == 1
+                        && code.includes(`<option value="${custCode.type}">`)) {
+                            code = code.replace(
+                                `<option selected="" value="u">`,
+                                `<option value="u">`
+                            )
+                            code = code.replace(
+                                `<option value="${custCode.type}">`,
+                                `<option selected="" value="${custCode.type}">`
+                            )
+                        }
+
+                        // tags
+                        if(custCode.tags) {
+                            code = code.replace(
+                                `</textarea>`,
+                                `${yt2009utils.xss(custCode.tags)}</textarea>`
+                            )
+                        }
+
+                        let themes = [
+                            "", "default", "blue", "red", "sunlight", "forest",
+                            "8bit", "princess", "fire", "stealth", "clean",
+                            "custom"
+                        ]
+                        let theme = themes[custCode.themeid]
+                        if(theme && theme !== "custom") {
+                            code = code.replace(
+                                `class="theme_selector_div theme_selected"`,
+                                `class="theme_selector_div"`
+                            )
+                            code = code.replace(
+                                `id="${theme}" class="theme_selector_div"`,
+                                `id="${theme}" class="theme_selector_div theme_selected"`,
+                            )
+                        } else if(theme && theme == "custom") {
+                            code = code.replace(
+                                `class="theme_selector_div theme_selected"`,
+                                `class="theme_selector_div"`
+                            )
+                            code = code.replace(
+                                `<!--yt2009_placement_cust-->`,
+                                templates.genericThemePickrCustomSelected
+                            )
+                        }
+
+                        if(theme) {
+                            code = code.replace(
+                                `<!--yt2009_placement_picked-->`,
+                                `<script>
+                                    setTimeout(function() {
+                                    set_theme_obj("${theme}")
+                                    }, 200)
+                                </script>`
+                            )
+                        }
+
+                        let fullColorsJs = ""
+                        let refreshPickers = []
+                        let optionUpdates = []
+                        if(custCode.backgroundcolor) {
+                            code = code.replace(
+                                `name="background_color" value="#CCCCCC"`,
+                                `name="background_color"
+                                value="${custCode.backgroundcolor}"`
+                            )
+                            refreshPickers.push("background_color")
+                        }
+                        if(custCode.wrappercolor) {
+                            code = code.replace(
+                                `name="wrapper_color" value="#999999"`,
+                                `name="wrapper_color"
+                                value="${custCode.wrappercolor}"`
+                            )
+                            refreshPickers.push("wrapper_color")
+                        }
+                        if(custCode.wrappertextcolor) {
+                            code = code.replace(
+                                `name="wrapper_text_color" value="#000000"`,
+                                `name="wrapper_text_color"
+                                value="${custCode.wrappertextcolor}"`
+                            )
+                            refreshPickers.push("wrapper_text_color")
+                        }
+                        if(custCode.wrapperlinkcolor) {
+                            code = code.replace(
+                                `name="wrapper_link_color" value="#0000cc"`,
+                                `name="wrapper_link_color"
+                                value="${custCode.wrapperlinkcolor}"`
+                            )
+                            refreshPickers.push("wrapper_link_color")
+                        }
+                        if(custCode.wrapperopacity) {
+                            code = code.replace(
+                                `<option data-owner="wrapper_opacity" value="${custCode.wrapperopacity}">`,
+                                `<option 
+                                data-owner="wrapper_opacity"
+                                value="${custCode.wrapperopacity}"
+                                selected>`
+                            )
+                            optionUpdates.push([
+                                "wrapper_opacity", custCode.wrapperopacity
+                            ])
+                        }
+                        if(custCode.custombackgroundid) {
+                            code = code.replace(
+                                `id="background_image" value=""`,
+                                `id="background_image"
+                                value="${custCode.custombackgroundid}"`
+                            )
+                            code = code.replace(
+                                `<!--yt2009_uploaded_bg_notice-->`,
+                                `<div class="smallText" id="uploaded-notice"
+                                style="color:#666;padding:3px;width:240px">
+                                You already have a background picture uploaded
+                                and used. Uploading a new one will change your
+                                current image.
+                                <a href="#" onclick="removeBgChoice();">(remove current)</a></div>`
+                            )
+                        }
+                        if(custCode.repeatcustombackground) {
+                            code = code.replace(
+                                `id="background_repeat_check"`,
+                                `id="background_repeat_check" checked=""`
+                            )
+                        }
+                        if(custCode.hidebanner) {
+                            code = code.replace(
+                                `id="hide_def_banner_check"`,
+                                `id="hide_def_banner_check" checked=""`
+                            )
+                        }
+                        if(custCode.innerboxbackgroundcolor) {
+                            code = code.replace(
+                                `name="box_background_color" value="#eeeeff"`,
+                                `name="box_background_color"
+                                value="${custCode.innerboxbackgroundcolor}"`
+                            )
+                            refreshPickers.push("box_background_color")
+                        }
+                        if(custCode.innerboxtitletextcolor) {
+                            code = code.replace(
+                                `name="title_text_color" value="#000000"`,
+                                `name="title_text_color"
+                                value="${custCode.innerboxtitletextcolor}"`
+                            )
+                            refreshPickers.push("title_text_color")
+                        }
+                        if(custCode.innerboxlinkcolor) {
+                            code = code.replace(
+                                `name="link_color" value="#0000cc"`,
+                                `name="link_color"
+                                value="${custCode.innerboxlinkcolor}"`
+                            )
+                            refreshPickers.push("link_color")
+                        }
+                        if(custCode.innerboxbodytextcolor) {
+                            code = code.replace(
+                                `name="body_text_color" value="#333333"`,
+                                `name="body_text_color"
+                                value="${custCode.innerboxbodytextcolor}"`
+                            )
+                            refreshPickers.push("body_text_color")
+                        }
+                        if(custCode.innerboxopacity) {
+                            code = code.replace(
+                                `<option data-owner="box_opacity" value="${custCode.wrapperOpacity}">`,
+                                `<option 
+                                data-owner="box_opacity"
+                                value="${custCode.innerboxopacity}"
+                                selected>`
+                            )
+                            optionUpdates.push([
+                                "wrapper_opacity", custCode.wrapperOpacity
+                            ])
+                        }
+
+
+                        refreshPickers.forEach(p => {
+                            fullColorsJs += `applyColorPreview("${p}");`
+                        })
+                        optionUpdates.forEach(p => {
+                            fullColorsJs += `edit_main_theme("${p[0]};", ${p[1]})`
+                        })
+
+                        fullColorsJs = `<script>setTimeout(function() {
+                        ${fullColorsJs};edit_main_theme();
+                        }, 200)</script>`
+                        code = code.replace(
+                            `<!--yt2009_colors_apply_all-->`,
+                            fullColorsJs
+                        )
+
+
+                        switch(custCode.font) {
+                            case 1: {
+                                code = code.replace(
+                                    `<option value="Times New Roman">`,
+                                    `<option value="Times New Roman" selected="">`
+                                )
+                                break;
+                            }
+                            case 2: {
+                                code = code.replace(
+                                    `<option value="Arial">`,
+                                    `<option value="Arial" selected="">`
+                                )
+                                break;
+                            }
+                            case 3: {
+                                code = code.replace(
+                                    `<option value="Verdana">`,
+                                    `<option value="Verdana" selected="">`
+                                )
+                                break;
+                            }
+                            case 4: {
+                                code = code.replace(
+                                    `<option value="Georgia">`,
+                                    `<option value="Georgia" selected="">`
+                                )
+                                break;
+                            }
+                            case 5: {
+                                code = code.replace(
+                                    `<option value="Courier New">`,
+                                    `<option value="Courier New" selected="">`
+                                )
+                                break;
+                            }
+                        }
+
+
+                        // shown modules
+                        let modules = (custCode && custCode.shownmodules)
+                                    ? custCode.shownmodules.split("")
+                                    : ""
+                        if(!modules.includes("c")) {
+                            code = code.replace(
+                                `value="user_comments" type="checkbox" checked="">`,
+                                `value="user_comments" type="checkbox">`
+                            )
+                        }
+                        if(!modules.includes("r")) {
+                            code = code.replace(
+                                `value="user_recent_activity" type="checkbox" checked=""`,
+                                `value="user_recent_activity" type="checkbox"`
+                            )
+                        }
+                        if(!modules.includes("o")) {
+                            code = code.replace(
+                                `value="user_hubber_links" type="checkbox" checked=""`,
+                                `value="user_hubber_links" type="checkbox"`
+                            )
+                        }
+                        if(modules.includes("s")) {
+                            code = code.replace(
+                                `value="user_subscribers" type="checkbox"`,
+                                `value="user_subscribers" type="checkbox" checked=""`
+                            )
+                        }
+                        if(modules.includes("z")) {
+                            code = code.replace(
+                                `value="user_subscriptions" type="checkbox"`,
+                                `value="user_subscriptions" type="checkbox" checked=""`
+                            )
+                        }
+
+                        // default to grid
+                        if(custCode.defaultgrid) {
+                            code = code.replace(
+                                `//[yt2009-hook-autogrid]`,
+                                `playnav_view("grid");`
+                            )
+                        }
+
+                        // default view: uploads
+                        if(custCode.altdefaultset == 2) {
+                            code = code.replace(
+                                `//[yt2009-hook-altview]`,
+                                `switchTab(
+                                    'uploads', 
+                                    document.getElementById('playnav-navbar-tab-uploads')
+                                );`
+                            )
+                        }
+                        // default view: favorites
+                        else if(custCode.altdefaultset == 3) {
+                            code = code.replace(
+                                `//[yt2009-hook-altview]`,
+                                `openPlaylist(
+                                    document.querySelector(
+                                        '.yt2009_favorites_id_div'
+                                    ),
+                                    'favorites'
+                                );`
+                            )
+                        }
+
+                        // shown content
+                        let cnt = custCode.showncontent || "";
+                        if(!cnt.includes("a")) {
+                            code = code.replace(
+                                `value="all" checked=""`,
+                                `value="all"`
+                            )
+                        }
+                        if(!cnt.includes("u")) {
+                            code = code.replace(
+                                `value="uploads" checked=""`,
+                                `value="uploads"`
+                            )
+                        }
+                        if(!cnt.includes("f")) {
+                            code = code.replace(
+                                `value="favorites" checked=""`,
+                                `value="favorites"`
+                            )
+                        }
+                        if(!cnt.includes("p")) {
+                            code = code.replace(
+                                `value="playlists" checked=""`,
+                                `value="playlists"`
+                            )
+                        }
+
+                        // remaining settings
+                        if(custCode.defaultgrid) {
+                            code = code.replace(
+                                `id="view_play" selected=""`,
+                                `id="view_play"`
+                            )
+                            code = code.replace(
+                                `id="view_grid"`,
+                                `id="view_grid" selected=""`
+                            )
+                        }
+                        switch(custCode.altdefaultset) {
+                            case 2: {
+                                code = code.replace(
+                                    `id="feature_all" selected=""`,
+                                    `id="feature_all"`
+                                )
+                                code = code.replace(
+                                    `id="feature_uploads"`,
+                                    `id="feature_uploads" selected=""`
+                                )
+                                break;
+                            }
+                            case 3: {
+                                code = code.replace(
+                                    `id="feature_all" selected=""`,
+                                    `id="feature_all"`
+                                )
+                                code = code.replace(
+                                    `id="feature_favorites"`,
+                                    `id="feature_favorites" selected=""`
+                                )
+                                break;
+                            }
+                        }
+
+                        if(custCode.altdefaultvidid) {
+                            code = code.replace(
+                                `value="00000000000" selected=""`,
+                                `value="00000000000"`
+                            )
+                            code = code.replace(
+                                `value="OTHER111111"`,
+                                `value="OTHER111111" selected=""`
+                            )
+                            code = code.replace(
+                                `class="playnav-edit-field hid"`,
+                                `class="playnav-edit-field"`
+                            )
+                            let v = custCode.altdefaultvidid
+                            code = code.replace(
+                                `Copy and paste a video URL here`,
+                                `http://www.youtube.com/watch?v=${v}`
+                            )
+                        }
+
+                        if(!custCode.enableautoplay) {
+                            code = code.replace(
+                                `name="autoplay" checked=""`,
+                                `name="autoplay"`
+                            )
+                        }
+                    }
+                    stepsTaken++
+                    if(devTimings) {
+                        let progress = `${stepsTaken}/${stepsRequiredToCallback}`
+                        console.log(`pchelper login checked (${progress})`, time)
+                    }
+                    setTimeout(function() {
+                        if(stepsRequiredToCallback <= stepsTaken) {
+                            try {callback(code)}catch(error) {}
+                        }
+                    }, 100)
+                })
+            }
+        }
+        checkPchelperLogin()
+
+        // show infos -- future use
+        if(sups.includes(data.id)) {
+            showInfoBoxes.push(["#", "# yt2009 Supporter ♥"])
+        }
+
+        if(showInfoBoxes.length >= 1) {
+            let showBoxesHTML = templates.channelShowinfoBegin;
+            showInfoBoxes.forEach(sb => {
+                showBoxesHTML += templates.channelShowinfoRow(sb[1], sb[0])
+            })
+            showBoxesHTML += templates.channelShowinfoEnd
+            code = code.replace(
+                `<!--yt2009_show_info-->`,
+                showBoxesHTML
+            )
+        }
+
+        // check for /account channel setup
+        let customPchelperProperties = {}
+        let pchelperSetupDelimiter = "═"
+        if(data.properties && data.properties.description
+        && data.properties.description.includes(pchelperSetupDelimiter)) {
+            // has done pchelper user setup
+            let tempd = data.properties.description.split("<br>").join("\n")
+            let part = tempd.split(
+                "\n\n" + pchelperSetupDelimiter
+            )[1].split("\n\n")[0]
+            part = pchelperSetupDelimiter + part
+            part.split("\n" + pchelperSetupDelimiter).forEach(c => {
+                let key = c.split(": ")[0]
+                           .replace(pchelperSetupDelimiter + " ", "")
+                           .split("\n").join("").trim()
+                let value = c.split(": ")
+                value.shift()
+                value = value.join(": ")
+                value = value.split("\n")
+                while(typeof(value[value.length - 1]) == "string"
+                && value[value.length - 1] == "") {
+                    value.pop()
+                }
+                value = value.join("\n").trim()
+                customPchelperProperties[key] = value;
+            })
         }
 
         // wayback_features init
@@ -612,6 +1369,7 @@ module.exports = {
                                     .split("#")[0]
             channelName = yt2009utils.xss(channelName)
         }
+        code = code.split("yt2009_channel_title").join(channelName)
         code = code.split("yt2009_channel_name").join(channelName)
 
         // channel avatar
@@ -694,7 +1452,7 @@ module.exports = {
         =======
         */
         let scrollbox_all_html = ``
-        let videoUploadDates = {}
+        //let videoUploadDates = {}
         let video_index = 0;
         let watch_url = "/watch.swf"
         let watch_arg = "video_id"
@@ -816,8 +1574,8 @@ module.exports = {
             header video
             =======
             */
-            if(videosSource[0]) {
-                let video = videosSource[0]
+            if(overrideFirstVideo || videosSource[0]) {
+                let video = overrideFirstVideo || videosSource[0]
                 let views = yt2009utils.viewFlags(video.views, flags)
                                     .replace(" views", "")
                 let rating_est = yt2009utils.estRating(views)
@@ -835,12 +1593,28 @@ module.exports = {
                             .splice(0, 3)
                             .join("<br>")
                 )
+
+                let author = video.authorName || data.name;
                 code = code.replace(
-                    "yt2009_head_video_upload",
-                    yt2009utils.relativeTimeCreate(
+                    `yt2009_featured_uploader`,
+                    yt2009utils.xss(author)
+                )
+
+                let uploadTime = ""
+                if(videoUploadDates[video.id]
+                && !videoUploadDates[video.id].includes(" ")) {
+                    uploadTime = yt2009utils.unixToRelative(new Date(
+                        videoUploadDates[video.id]
+                    ).getTime())
+                } else {
+                    uploadTime = yt2009utils.relativeTimeCreate(
                         videoUploadDates[video.id],
                         yt2009languages.get_language(req)
                     )
+                }
+                code = code.replace(
+                    "yt2009_head_video_upload",
+                    uploadTime
                 )
 
                 // use video comments as channel comments
@@ -877,7 +1651,9 @@ module.exports = {
                                     comment.authorUrl,
                                     authorAvatar,
                                     authorName,
-                                    yt2009utils.fakeDateSmall(count),
+                                    (flags.includes("fake_dates")
+                                    ? yt2009utils.fakeDateSmall(count)
+                                    : comment.time),
                                     comment.content.split("\n")[0]
                                 )
                                 count++;
@@ -900,7 +1676,9 @@ module.exports = {
                 if(!flashMode) {
                     code = code.replace(
                         "<!--yt2009_player-->",
-                        templates.html5Embed(video.id, "yt2009_playhead")
+                        templates.html5Embed(
+                            video.id, "yt2009_playhead", !autoplayFirstVideo
+                        )
                     )
                 } else {
                     // fmode~!!
@@ -1009,6 +1787,8 @@ module.exports = {
                     `<div class="alignC">There are no comments for this user.</div>`
                 )
 
+                checkPchelperLogin()
+
                 if(!wayback_settings.includes("comments")) {
                     if(devTimings) {
                         let progress = `${stepsTaken}/${stepsRequiredToCallback}`
@@ -1024,7 +1804,7 @@ module.exports = {
             }
         }
 
-        if(!flags.includes("only_old")) {
+        if(!flags.includes("only_old") && !waitForOverrideFirst) {
             videosRender();
         }
 
@@ -1083,17 +1863,49 @@ module.exports = {
             "subscribers": "lang_channel_subscribers",
             "description": "lang_channel_field_description"
         }
+        for(let z in customPchelperProperties) {
+            let leadin = pchelperSetupDelimiter + " " + z + ": "
+            if(clearDescription.includes(leadin)) {
+                let rest = clearDescription.split(leadin)[1]
+                clearDescription = clearDescription.replace(
+                    leadin + rest, ""
+                )
+            }
+        }
         for(let p in data.properties) {
-            let p_uppercase = yt2009utils.firstUppercase(p)
             let value = data.properties[p]
             if(p == "name") {
                 value = yt2009utils.xss(value)
             }
+            if(p == "description" && typeof(clearDescription) == "string") {
+                value = clearDescription;
+            }
             let valueMarkup = yt2009utils.markupDescription(value)
+
+            if(p == "name" && customPchelperProperties["Name"]) {
+                valueMarkup = yt2009utils.xss(customPchelperProperties["Name"])
+            }
 
             properties_html += templates.channelProperty(
                 swapTable[p], valueMarkup
             )
+        }
+
+        const pchelperPropertiesWhitelist = [
+            "Website", "Gender", "Relationship", "Hometown",
+            "City", "Country", "Zip", "Occupation", "Companies", "Schools",
+            "Hobbies", "Movies", "Music", "Books", "Pronouns"
+        ]
+        for(let z in customPchelperProperties) {
+            let zc = z.toLowerCase().trim()
+            if(zc && pchelperPropertiesWhitelist.includes(z)) {
+                let key = yt2009utils.xss(z.trim())
+                let value = yt2009utils.markupDescription(
+                    yt2009utils.xss(customPchelperProperties[z])
+                               .split("\n").join("<br>")
+                )
+                properties_html += templates.channelProperty(key, value)
+            }
         }
         if(!wayback_settings.includes("fields")) {
             code = code.replace(
@@ -1108,7 +1920,8 @@ module.exports = {
         */
         let subscriptions_count = 0;
         let friends_count = 0;
-        if(data.friends && !wayback_settings.includes("sections")) {
+        if(data.friends && !wayback_settings.includes("sections")
+        && !pchelperPutSubscriptions) {
             let friends = data.friends
             let subscriptions_html = ``
             let friends_html = ``
@@ -1331,7 +2144,7 @@ module.exports = {
         wayback_features render section
         =======
         */
-        function wayback_render_section(
+        function render_section(
             sectionName, sectionArray, fullHTML, useSixColumn
         ) {
             let html = ``
@@ -1344,12 +2157,21 @@ module.exports = {
                     realCount = user.count;
                     return;
                 }
-                html += `\n${templates.channelUserPeep(
-                    user.link.split("/")[user.link.split("/").length - 1],
-                    user.link.split("youtube.com")[1],
-                    user.icon,
-                    useSixColumn
-                )}`
+                if(user.id) {
+                    html += `\n${templates.channelUserPeep(
+                        user.name,
+                        "/channel/" + user.id,
+                        "/minipicty?channel=" + user.id,
+                        useSixColumn
+                    )}`
+                } else {
+                    html += `\n${templates.channelUserPeep(
+                        user.link.split("/")[user.link.split("/").length - 1],
+                        user.link.split("youtube.com")[1],
+                        user.icon,
+                        useSixColumn
+                    )}`
+                }
             })
             if(fullHTML) {
                 html += `\n${templates.channelSectionHTMLEnd()}`
@@ -1485,7 +2307,7 @@ module.exports = {
                         }
                         code = code.replace(
                             `<!--${slot}-->`,
-                            wayback_render_section(
+                            render_section(
                                 "friends",
                                 waybackData.friends,
                                 true,
@@ -1512,7 +2334,7 @@ module.exports = {
                     && waybackData.subscriptions.length > 0) {
                         code = code.replace(
                             `<!--yt2009_subs-->`,
-                            wayback_render_section(
+                            render_section(
                                 "subscriptions",
                                 waybackData.subscriptions,
                                 false
@@ -1532,14 +2354,14 @@ module.exports = {
                     if(waybackData.subscribers
                     && waybackData.subscribers.length > 0) {
                         let useSixColumnRender = false;
-                        let slot = "yt2009_wayback_subscribers_slot1"
+                        let slot = "yt2009_subscribers_slot1"
                         if(waybackData.subscribers.length >= 6) {
-                            slot = "yt2009_wayback_subscribers_slot2"
+                            slot = "yt2009_subscribers_slot2"
                             useSixColumnRender = true;
                         }
                         code = code.replace(
                             `<!--${slot}-->`,
-                            wayback_render_section(
+                            render_section(
                                 "subscribers",
                                 waybackData.subscribers,
                                 true,
@@ -1724,10 +2546,16 @@ module.exports = {
                     code = code.split(`yt2009_main_bg`).join(
                         yt2009utils.createRgb([200, 200, 200])
                     )
+                    code = code.split(`yt2009_innerbox_main_bg`).join(
+                        yt2009utils.createRgb([200, 200, 200])
+                    )
                     code = code.split(`yt2009_darker_bg`).join(
                         yt2009utils.createRgb([135, 135, 135])
                     )
                     code = code.split("yt2009_text_color").join("black")
+                    code = code.split("yt2009_title_text_color").join("black")
+                    code = code.split("yt2009_wrapper_title_text_color").join("black")
+                    code = code.split("yt2009_link_color").join("black")
                     code = code.split("yt2009_black").join("icon_black")
                     ac()
                 }
@@ -1749,10 +2577,16 @@ module.exports = {
                 code = code.split(`yt2009_main_bg`).join(
                     yt2009utils.createRgb([200, 200, 200])
                 )
+                code = code.split(`yt2009_innerbox_main_bg`).join(
+                    yt2009utils.createRgb([200, 200, 200])
+                )
                 code = code.split(`yt2009_darker_bg`).join(
                     yt2009utils.createRgb([135, 135, 135])
                 )
                 code = code.split("yt2009_text_color").join("black")
+                code = code.split("yt2009_title_text_color").join("black")
+                code = code.split("yt2009_wrapper_title_text_color").join("black")
+                code = code.split("yt2009_link_color").join("black")
                 code = code.split("yt2009_black").join("icon_black")
                 ac()
             }
@@ -1760,6 +2594,10 @@ module.exports = {
 
         function applyColor(color) {
             code = code.split(`yt2009_main_bg`).join(
+                oBg && oBg.primaryBg
+                ? oBg.primaryBg : yt2009utils.createRgb(color)
+            )
+            code = code.split(`yt2009_innerbox_main_bg`).join(
                 oBg && oBg.primaryBg
                 ? oBg.primaryBg : yt2009utils.createRgb(color)
             )
@@ -1773,9 +2611,15 @@ module.exports = {
             if(brighterBg[0] + brighterBg[1] >= 340
             || (oBg && oBg.blackText)) {
                 code = code.split("yt2009_text_color").join("black")
+                code = code.split("yt2009_title_text_color").join("black")
+                code = code.split("yt2009_wrapper_title_text_color").join("black")
+                code = code.split("yt2009_link_color").join("black")
                 code = code.split("yt2009_black").join("icon_black")
             } else {
                 code = code.split("yt2009_text_color").join("white")
+                code = code.split("yt2009_title_text_color").join("white")
+                code = code.split("yt2009_wrapper_title_text_color").join("white")
+                code = code.split("yt2009_link_color").join("white")
             }
             // callback
             ac()
@@ -2317,5 +3161,47 @@ module.exports = {
                 })
             })})
         }
+    },
+
+    "mainWithEarly": function(id, callback) {
+        //console.log("early channel wait")
+
+        if(earlyProgressPulls.includes(id)) {
+            //console.log("called when in progress")
+            let successful = false;
+            let x = setInterval(() => {
+                if(!earlyProgressPulls.includes(id)) {
+                    successful = true;
+                    //console.log("early reported done")
+                    clearInterval(x)
+                    callback(n_impl_yt2009channelcache.read("main")[id])
+                }
+            }, 100)
+            // timeout after 5s
+            setTimeout(() => {
+                if(!successful) {
+                    //console.log("early timed out")
+                    clearInterval(x)
+                    callback(false)
+                }
+            }, 5000)
+        } else if(n_impl_yt2009channelcache.read("main")[id]) {
+            // already done, callback as is
+            //console.log("called when done")
+            callback(n_impl_yt2009channelcache.read("main")[id])
+        } else {
+            // ??
+            //console.log("uncalled?")
+            module.exports.main({"path": "/channel/" + id, 
+            "headers": {"cookie": ""},
+            "query": {"f": 0}}, 
+            {"send": function(data) {
+                callback(data)
+            }}, "", true)
+        }
+    },
+
+    "setSupData": function(channelIds) {
+        sups = channelIds
     }
 }

@@ -1,0 +1,538 @@
+<div id="edit_controls" class="edit_controls_outer" style="background-color: rgb(239, 239, 239);">
+    <form id="hidden_main_submiteto" action="/pchelper_customize" method="POST">
+        <input type="hidden" id="submiteto-data" name="data">
+    </form>
+	<div class="edit_controls_top_border">&nbsp;</div>
+	<div id="edit-save-messages" style="display:none">&nbsp;</div>
+	<div class="channel_tabs">
+		<div class="channel_settings_tab no-bg">
+			Edit Channel
+		</div>
+		<div class="channel_tabs_inner">
+			<div id="channel_tab_info" class="channel_settings_tab" onclick="channel_edit_tab('info')">
+				Settings
+			</div>
+			<div id="channel_tab_colors" class="channel_settings_tab" onclick="channel_edit_tab('colors')">
+				Themes and Colors
+			</div>
+			<div id="channel_tab_layout" class="channel_settings_tab" onclick="channel_edit_tab('layout')">
+				Modules
+			</div>
+			<div id="channel_tab_playnav" class="channel_settings_tab" onclick="channel_edit_tab('playnav')">
+				Videos and Playlists
+			</div>
+		</div>
+		<div class="hLink floatR" onclick="channel_edit_tab('close')" id="channel_edit_close" style="padding-top:0.75em;font-size:11px;display:none">Close</div>
+		<div class="spacer">&nbsp;</div>
+		<div id="tab_contents_info" style="display:none;" class="channel_tab_content">
+			<div id="info-messages" style="display:none"></div>
+			<form name="settings" id="channel_settings" onsubmit="return false">
+				<table width="100%">
+					<tbody>
+						<tr>
+							<td width="50%" style="padding: 10px 10px 7px 10px;border-right:1px dotted #bbb" valign="top">
+								<div style="float:right"><a href="#">yt2009_own_url</a></div>
+								<div>URL:</div>
+								<div class="settings_separator">&nbsp;</div>
+								<div style="float:right"><input name="title" id="channel_title_input" value="yt2009_current_name" style="width:200px" onkeypress="return length_check(event, this, 30)"></div>
+								<div>Title:</div>
+								<div class="settings_separator">&nbsp;</div>
+								<div style="float:right"> <span>
+										<select id="channel_type" name="channel_type" onchange="">
+											<option selected="" value="u">YouTuber</option>
+											<option value="d">Director</option>
+											<option value="m">Musician</option>
+											<option value="c">Comedian</option>
+											<option value="g">Guru</option>
+											<option value="j">Reporter</option>
+										</select>
+									</span>
+								</div>
+								<div>Channel Type:</div>
+							</td>
+							<td width="50%" style="padding: 10px 10px 7px 10px" valign="top">
+								<div style="float:right"><textarea id="keywords" name="keywords" rows="4" cols="250" style="width:350px" onkeypress="return length_check(event, this, 100)"></textarea><br>
+									<span style="font-size:90%;color:#333">Tags are keywords used to help people find your channel.</span>
+								</div>
+								<div>Channel Tags:
+									<div style="font-size:80%;color:#666">(space separated)</div>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="settings_separator_save">&nbsp;</div>
+				<div class="channel_settings_save">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="save_all();return false;"><span>Save Changes</span></a>
+					or
+					<a href="#" onclick="channel_edit_tab('close', true);return false">cancel</a>
+					<div class="save_overlay">
+						<center><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif"></center>
+					</div>
+				</div>
+				<div class="cb">&nbsp;</div>
+			</form>
+		</div>
+		<div id="tab_contents_colors" style="display:none;" class="channel_tab_content">
+			<div id="colors-messages" style="display:none"></div>
+			<div id="theme_container">
+				<div id="default" class="theme_selector_div theme_selected" style="font-family:arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #CCCCCC;color:#333333;padding: 3px;line-height:120%">
+						<div style="background-color: #999999;color: #000000;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#eeeeff;font-size:9px;padding-left:1px;color:#333333"><span style="color:#000000;font-size:120%">A</span> &nbsp;<span style="color:#0000cc;text-decoration:underline">url</span><br>abc</div><span style="color:#0000cc;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Grey</span></div>
+				</div>
+				<div id="blue" class="theme_selector_div" style="font-family:arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #003366;color:#ffffff;padding: 3px;line-height:120%">
+						<div style="background-color: #0066CC;color: #ffffff;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#3D8BD8;font-size:9px;padding-left:1px;color:#ffffff"><span style="color:#ffffff;font-size:120%">A</span> &nbsp;<span style="color:#99C2EB;text-decoration:underline">url</span><br>abc</div><span style="color:#0000CC;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Blue</span></div>
+				</div>
+				<div id="red" class="theme_selector_div" style="font-family:arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #660000;color:#FFFFFF;padding: 3px;line-height:120%">
+						<div style="background-color: #990000;color: #FFFFFF;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#660000;font-size:9px;padding-left:1px;color:#FFFFFF"><span style="color:#FFFFFF;font-size:120%">A</span> &nbsp;<span style="color:#FF0000;text-decoration:underline">url</span><br>abc</div><span style="color:#FF0000;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Red</span></div>
+				</div>
+				<div id="sunlight" class="theme_selector_div" style="font-family:arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #FFE599;color:#E69138;padding: 3px;line-height:120%">
+						<div style="background-color: #E69138;color: #FFFFFF;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#FFD966;font-size:9px;padding-left:1px;color:#E69138"><span style="color:#E69138;font-size:120%">A</span> &nbsp;<span style="color:#E69138;text-decoration:underline">url</span><br>abc</div><span style="color:#FFD966;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Sunlight</span></div>
+				</div>
+				<div id="forest" class="theme_selector_div" style="font-family:Arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #274E13;color:#274E13;padding: 3px;line-height:120%">
+						<div style="background-color: #38761D;color: #ffffff;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#6AA84F;font-size:9px;padding-left:1px;color:#274E13"><span style="color:#274E13;font-size:120%">A</span> &nbsp;<span style="color:#38761D;text-decoration:underline">url</span><br>abc</div><span style="color:#FFFFFF;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Forest</span></div>
+				</div>
+				<div id="8bit" class="theme_selector_div" style="font-family:Courier New" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #666666;color:#666666;padding: 3px;line-height:120%">
+						<div style="background-color: #444444;color: #FFFFFF;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#000000;font-size:9px;padding-left:1px;color:#666666"><span style="color:#AAAAAA;font-size:120%">A</span> &nbsp;<span style="color:#FF0000;text-decoration:underline">url</span><br>abc</div><span style="color:#FF0000;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">8-bit</span></div>
+				</div>
+				<div id="princess" class="theme_selector_div" style="font-family:arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #ff99cc;color:#333366;padding: 3px;line-height:120%">
+						<div style="background-color: #aa66cc;color: #ffffff;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#ffffff;font-size:9px;padding-left:1px;color:#333366"><span style="color:#8a2c87;font-size:120%">A</span> &nbsp;<span style="color:#351C75;text-decoration:underline">url</span><br>abc</div><span style="color:#351C75;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Princess</span></div>
+				</div>
+				<div id="fire" class="theme_selector_div" style="font-family:arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #660000;color:#ffffff;padding: 3px;line-height:120%">
+						<div style="background-color: #FF0000;color: #ffffff;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#FF9900;font-size:9px;padding-left:1px;color:#ffffff"><span style="color:#FFFF00;font-size:120%">A</span> &nbsp;<span style="color:#FFDBA6;text-decoration:underline">url</span><br>abc</div><span style="color:#FFFF00;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Fire</span></div>
+				</div>
+				<div id="stealth" class="theme_selector_div" style="font-family:arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #000000;color:#444444;padding: 3px;line-height:120%">
+						<div style="background-color: #444444;color: #000000;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#666666;font-size:9px;padding-left:1px;color:#444444"><span style="color:#000000;font-size:120%">A</span> &nbsp;<span style="color:#444444;text-decoration:underline">url</span><br>abc</div><span style="color:#CCCCCC;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Stealth</span></div>
+				</div>
+				<div id="clean" class="theme_selector_div" style="font-family:Arial" onclick="set_theme_obj(this.id);">
+					<div style="background-color: #FFF;color:#000;padding: 3px;line-height:120%">
+						<div style="background-color: #D6D6D6;color: #666;padding:3px;font-size:10px">
+							<div style="float:right;width:4em;background-color:#FFF;font-size:9px;padding-left:1px;color:#000"><span style="color:#666;font-size:120%">A</span> &nbsp;<span style="color:#03C;text-decoration:underline">url</span><br>abc</div><span style="color:#03C;text-decoration:underline">url</span><br>abc
+						</div>
+					</div>
+					<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Clean</span></div>
+				</div>
+				<!--yt2009_placement_picked-->
+				<!--yt2009_colors_apply_all-->
+				<!--yt2009_placement_cust-->
+			</div>
+			<div class="cb">&nbsp;</div>
+			<div style="background-color:#eee;margin:0.5em;-moz-border-radius:3px;border-radius:3px;zoom:1">
+				<div style="float:right;padding:0.7em;position:relative">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="save_all();return false;"><span>Save Changes</span></a>
+					or
+					<a href="#" onclick="channel_edit_tab('close', true);return false">cancel</a>
+					<div class="save_overlay" style="top:7px;padding: 5px;left:7px;width:85%;">
+						<center><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif"></center>
+					</div>
+				</div>
+				<div style="float:left;padding:0.6em;font-size:14pt">
+					"<input type="text" size="30" style="width:8em;display:none;border:0;font-size:14pt" id="theme_edit_name" value=""><span id="theme_display_name" style="display: inline;">Default</span>"
+				</div>
+				<div id="theme_edit_link" style="float:left;padding:1em"><a class="hLink" href="#" onclick="open_theme_editor();return false;">show advanced options</a></div>
+				<div id="delete_link_text" style="display:none">delete</div>
+				<div id="are_you_sure_you_want_to_delete_text" style="display:none">Are you sure you want to remove this?</div>
+				<div id="theme_edit_link_hide" style="float:left;padding:1em;display:none"><a class="hLink" href="#" onclick="hide_theme_editor();return false;">hide advanced options</a></div>
+				<div id="theme_new_link" style="float:left;padding:1em"><a class="hLink" href="#" onclick="create_new_theme();return false;">new theme</a></div>
+				<div style="float:left;padding:1.25em 0 0 1.5em;">
+					<div id="theme_progress_bar" style="display:none;background-color:#f8f8f8;border:1px solid #ccc;height:8px;font-size:1px;line-height:1px;width:80px">
+						<div id="theme_progress_inner" style="background-color: #d0d0f8;width:0%;font-size:1px;line-height:1px;height:8px"></div>
+					</div>
+				</div>
+				<div class="cb"></div>
+			</div>
+			<div>
+				<table id="theme_advanced_editor" style="display:none">
+					<tbody>
+						<tr>
+							<td width="460" align="left" valign="top" style="border-right:1px dotted #ddd;">
+								<div style="padding: 0.5em 2em">
+									<div style="font-size:130%">General</div>
+									<div id="font_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Font</div>
+										<select name="font" id="font" style="float:right" onchange="edit_main_theme('font', this.value);">
+											<option value="Times New Roman">Times New Roman</option>
+											<option value="Arial">Arial</option>
+											<option value="Verdana">Verdana</option>
+											<option value="Georgia">Georgia</option>
+											<option value="Courier New">Courier New</option>
+										</select>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="background_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Background color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="background_color" name="background_color" value="#CCCCCC" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('background_color')">
+											<div id="background_color-preview" style="width:13px;height:13px;background-color:#CCCCCC">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="wrapper_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Wrapper color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="wrapper_color" name="wrapper_color" value="#999999" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('wrapper_color')">
+											<div id="wrapper_color-preview" style="width:13px;height:13px;background-color:#999999">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="wrapper_text_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Wrapper text color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="wrapper_text_color" name="wrapper_text_color" value="#000000" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('wrapper_text_color')">
+											<div id="wrapper_text_color-preview" style="width:13px;height:13px;background-color:#000000">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="wrapper_link_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Wrapper link color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="wrapper_link_color" name="wrapper_link_color" value="#0000cc" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('wrapper_link_color')">
+											<div id="wrapper_link_color-preview" style="width:13px;height:13px;background-color:#0000cc">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="wrapper_opacity_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Wrapper transparency</div>
+										<select name="wrapper_opacity" id="wrapper_opacity" style="float:right" onchange="edit_main_theme('wrapper_opacity', this.value);">
+											<option data-owner="wrapper_opacity" value="255">None</option>
+											<option data-owner="wrapper_opacity" value="229">10%</option>
+											<option data-owner="wrapper_opacity" value="204">20%</option>
+											<option data-owner="wrapper_opacity" value="178">30%</option>
+											<option data-owner="wrapper_opacity" value="153">40%</option>
+											<option data-owner="wrapper_opacity" value="127">50%</option>
+											<option data-owner="wrapper_opacity" value="102">60%</option>
+											<option data-owner="wrapper_opacity" value="76">70%</option>
+											<option data-owner="wrapper_opacity" value="51">80%</option>
+											<option data-owner="wrapper_opacity" value="25">90%</option>
+											<option data-owner="wrapper_opacity" value="0">100%</option>
+										</select>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<script>
+										window.background_image_counter = 1;
+									</script>
+									<div id="background_image_option" style="padding:2px;">
+										<div style="float:left;padding:4px">Background Image:</div>
+										<div id="background_upload_div" style="float:right">
+											<input type="hidden" name="background_image" id="background_image" value="">
+											<iframe src="/my_profile_theme_background_frame" id="background_frame" name="background_frame" frameborder="0" scrolling="no" width="245" height="40"></iframe><br>
+											<!--yt2009_uploaded_bg_notice-->
+											<div class="smallText" style="color:#666;padding:3px;width:240px">Upload an image that will display as a background on your channel (maximum 256K).<br>By uploading a background you agree to the <a target="_blank" href="//orzeszek.website/yt2009_cbg_uploadr_terms.txt">terms of use</a>.</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="background_repeat_option" style="padding:2px;">
+										<div style="float:left;padding:4px">Repeat Background:</div>
+										<div style="float:right">
+											<input type="checkbox" name="background_repeat_check" id="background_repeat_check" onchange="edit_main_theme()">
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+                                    <div id="hide_def_yt_banner_option" style="padding:2px;">
+										<div style="float:left;padding:4px">Hide YouTube banner:</div>
+										<div style="float:right">
+											<input type="checkbox" name="hide_def_banner_check" id="hide_def_banner_check" onchange="edit_main_theme()">
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+								</div>
+							</td>
+							<td width="460" valign="top" id="css_options_parent" style="padding:0.5em 0 0.1em 2em">
+								<div style="font-size:130%">Color Palettes</div>
+								<select onchange="set_palette(this.value)" style="display:none">
+									<option value="default" selected="">Default</option>
+								</select>
+								<div id="palette_colors" style="padding-left: 1em;">
+									<div id="box_background_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Background color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="box_background_color" name="box_background_color" value="#eeeeff" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('box_background_color')">
+											<div id="box_background_color-preview" style="width:13px;height:13px;background-color:#eeeeff">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="title_text_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Title text color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="title_text_color" name="title_text_color" value="#000000" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('title_text_color')">
+											<div id="title_text_color-preview" style="width:13px;height:13px;background-color:#000000">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="link_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Link color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="link_color" name="link_color" value="#0000cc" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('link_color')">
+											<div id="link_color-preview" style="width:13px;height:13px;background-color:#0000cc">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="body_text_color_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Body text color</div>
+										<input type="text" style="float:right;width:50px;font-size:10px;margin-left:2px" id="body_text_color" name="body_text_color" value="#333333" onfocus="this.__old_value = this.value;" onblur="blur_color_picker(this);" onkeypress="return color_picker_keypress(this, event);">
+										<div class="color_selector" onclick="popup_color_grid('body_text_color')">
+											<div id="body_text_color-preview" style="width:13px;height:13px;background-color:#333333">&nbsp;</div>
+										</div>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+									<div id="box_opacity_option" style="padding:2px;">
+										<div style="float:left;padding:4px;">Transparency</div>
+										<select name="box_opacity" id="box_opacity" style="float:right" onchange="edit_main_theme('box_opacity', this.value);">
+											<option data-owner="box_opacity" value="255">None</option>
+											<option data-owner="box_opacity" value="229">10%</option>
+											<option data-owner="box_opacity" value="204">20%</option>
+											<option data-owner="box_opacity" value="178">30%</option>
+											<option data-owner="box_opacity" value="153">40%</option>
+											<option data-owner="box_opacity" value="127">50%</option>
+											<option data-owner="box_opacity" value="102">60%</option>
+											<option data-owner="box_opacity" value="76">70%</option>
+											<option data-owner="box_opacity" value="51">80%</option>
+											<option data-owner="box_opacity" value="25">90%</option>
+											<option data-owner="box_opacity" value="0">100%</option>
+										</select>
+										<div class="settings_separator_light">&nbsp;</div>
+									</div>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="popup_color_grid" style="display:none">
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#000000;cursor:pointer" onclick="select_popup_color('#000000');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#444444;cursor:pointer" onclick="select_popup_color('#444444');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#666666;cursor:pointer" onclick="select_popup_color('#666666');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#999999;cursor:pointer" onclick="select_popup_color('#999999');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#CCCCCC;cursor:pointer" onclick="select_popup_color('#CCCCCC');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#EEEEEE;cursor:pointer" onclick="select_popup_color('#EEEEEE');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#F3F3F3;cursor:pointer" onclick="select_popup_color('#F3F3F3');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FFFFFF;cursor:pointer" onclick="select_popup_color('#FFFFFF');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FF0000;cursor:pointer" onclick="select_popup_color('#FF0000');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FF9900;cursor:pointer" onclick="select_popup_color('#FF9900');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FFFF00;cursor:pointer" onclick="select_popup_color('#FFFF00');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#00FF00;cursor:pointer" onclick="select_popup_color('#00FF00');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#00FFFF;cursor:pointer" onclick="select_popup_color('#00FFFF');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#0000FF;cursor:pointer" onclick="select_popup_color('#0000FF');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#9900FF;cursor:pointer" onclick="select_popup_color('#9900FF');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FF00FF;cursor:pointer" onclick="select_popup_color('#FF00FF');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FFCCCC;cursor:pointer" onclick="select_popup_color('#FFCCCC');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FCE5CD;cursor:pointer" onclick="select_popup_color('#FCE5CD');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FFF2CC;cursor:pointer" onclick="select_popup_color('#FFF2CC');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#D9EAD3;cursor:pointer" onclick="select_popup_color('#D9EAD3');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#D0E0E3;cursor:pointer" onclick="select_popup_color('#D0E0E3');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#CFE2F3;cursor:pointer" onclick="select_popup_color('#CFE2F3');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#D9D2E9;cursor:pointer" onclick="select_popup_color('#D9D2E9');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#EAD1DC;cursor:pointer" onclick="select_popup_color('#EAD1DC');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#EA9999;cursor:pointer" onclick="select_popup_color('#EA9999');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#F9CB9C;cursor:pointer" onclick="select_popup_color('#F9CB9C');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FFE599;cursor:pointer" onclick="select_popup_color('#FFE599');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#B6D7A8;cursor:pointer" onclick="select_popup_color('#B6D7A8');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#A2C4C9;cursor:pointer" onclick="select_popup_color('#A2C4C9');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#9FC5E8;cursor:pointer" onclick="select_popup_color('#9FC5E8');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#B4A7D6;cursor:pointer" onclick="select_popup_color('#B4A7D6');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#D5A6BD;cursor:pointer" onclick="select_popup_color('#D5A6BD');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#E06666;cursor:pointer" onclick="select_popup_color('#E06666');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#F6B26B;cursor:pointer" onclick="select_popup_color('#F6B26B');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#FFD966;cursor:pointer" onclick="select_popup_color('#FFD966');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#93C47D;cursor:pointer" onclick="select_popup_color('#93C47D');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#76A5AF;cursor:pointer" onclick="select_popup_color('#76A5AF');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#6FA8DC;cursor:pointer" onclick="select_popup_color('#6FA8DC');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#8E7CC3;cursor:pointer" onclick="select_popup_color('#8E7CC3');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#C27BA0;cursor:pointer" onclick="select_popup_color('#C27BA0');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#CC0000;cursor:pointer" onclick="select_popup_color('#CC0000');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#E69138;cursor:pointer" onclick="select_popup_color('#E69138');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#F1C232;cursor:pointer" onclick="select_popup_color('#F1C232');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#6AA84F;cursor:pointer" onclick="select_popup_color('#6AA84F');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#45818E;cursor:pointer" onclick="select_popup_color('#45818E');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#3D85C6;cursor:pointer" onclick="select_popup_color('#3D85C6');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#674EA7;cursor:pointer" onclick="select_popup_color('#674EA7');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#A64D79;cursor:pointer" onclick="select_popup_color('#A64D79');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#990000;cursor:pointer" onclick="select_popup_color('#990000');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#B45F06;cursor:pointer" onclick="select_popup_color('#B45F06');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#BF9000;cursor:pointer" onclick="select_popup_color('#BF9000');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#38761D;cursor:pointer" onclick="select_popup_color('#38761D');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#134F5C;cursor:pointer" onclick="select_popup_color('#134F5C');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#0B5394;cursor:pointer" onclick="select_popup_color('#0B5394');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#351C75;cursor:pointer" onclick="select_popup_color('#351C75');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#741B47;cursor:pointer" onclick="select_popup_color('#741B47');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#660000;cursor:pointer" onclick="select_popup_color('#660000');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#783F04;cursor:pointer" onclick="select_popup_color('#783F04');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#7F6000;cursor:pointer" onclick="select_popup_color('#7F6000');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#274E13;cursor:pointer" onclick="select_popup_color('#274E13');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#0C343D;cursor:pointer" onclick="select_popup_color('#0C343D');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#073763;cursor:pointer" onclick="select_popup_color('#073763');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#20124D;cursor:pointer" onclick="select_popup_color('#20124D');">&nbsp;</div>
+				<div style="float:left;margin:2px;width:12px;height:12px;background-color:#4C1130;cursor:pointer" onclick="select_popup_color('#4C1130');">&nbsp;</div>
+				<div class="cb">&nbsp;</div>
+			</div>
+		</div>
+		<div id="tab_contents_layout" style="display:none;" class="channel_tab_content">
+			<div id="layout-messages" style="display:none"></div>
+			<form name="channel_layout" id="channel_layout" onsubmit="return false">
+				<div style="font-size:110%;padding: 5px;float:left;width:300px">
+					<label>
+						<input name="box_status" id="box_status_user_comments" value="user_comments" type="checkbox" checked="">
+						Comments &nbsp;&nbsp;
+					</label>
+				</div>
+				<div style="font-size:110%;padding: 5px;float:left;width:300px">
+					<label>
+						<input name="box_status" id="box_status_user_hubber_links" value="user_hubber_links" type="checkbox" checked="">
+						Other Channels &nbsp;&nbsp;
+					</label>
+				</div>
+				<div style="font-size:110%;padding: 5px;float:left;width:300px">
+					<label>
+						<input name="box_status" id="box_status_user_recent_activity" value="user_recent_activity" type="checkbox" checked="">
+						Recent Activity &nbsp;&nbsp;
+					</label>
+				</div>
+				<div style="font-size:110%;padding: 5px;float:left;width:300px">
+					<label>
+						<input name="box_status" id="box_status_user_subscribers" value="user_subscribers" type="checkbox">
+						Subscribers &nbsp;&nbsp;
+					</label>
+				</div>
+				<div style="font-size:110%;padding: 5px;float:left;width:300px">
+					<label>
+						<input name="box_status" id="box_status_user_subscriptions" value="user_subscriptions" type="checkbox">
+						Subscriptions &nbsp;&nbsp;
+					</label>
+				</div>
+				<div class="cb"></div>
+				<div id="box_removed_message" style="padding:0.5em;margin:0.25em 5em;background-color:#FFFFEE;display:none">
+					Even though you removed this information from your channel, it may still be available to others in your Recent Activity feed. To manage your privacy settings, please visit your <a href="/account">privacy page</a>.
+				</div>
+				<div class="cb">&nbsp;</div>
+				<div class="settings_separator_save">&nbsp;</div>
+				<div class="channel_settings_save">
+					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="save_all();return false;"><span>Save Changes</span></a>
+					or
+					<a href="#" onclick="channel_edit_tab('close', true);return false">cancel</a>
+					<div class="save_overlay">
+						<center><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif"></center>
+					</div>
+				</div>
+				<div class="cb">&nbsp;</div>
+			</form>
+		</div>
+		<div id="tab_contents_playnav" style="display:none;" class="channel_tab_content">
+			<div id="playnav-messages" style="display:none"></div>
+			<form name="edit_form_user_playlist_navigator" id="edit_form_user_playlist_navigator">
+				<div id="playnav_settings">
+					<div id="display_settings">
+						<div>Which content would you like to display?</div>
+						<div style="width:92%;padding:0.5em;border:1px solid #ccc;overflow:auto;background-color:#fff">
+							<label>
+								<input id="display_uploads" type="checkbox" name="display_lists" value="uploads" checked="">My Uploaded Videos </label><br>
+							<label>
+								<input id="display_favorites" type="checkbox" name="display_lists" value="favorites" checked="">My Favorites </label><br>
+							<label>
+								<input id="display_playlists" type="checkbox" name="display_lists" value="playlists" checked="">Playlists </label>
+						</div>
+						<div style="padding:0.25em" id="display_all_container">
+							<label>
+								<input id="display_all" type="checkbox" name="display_lists" value="all" checked="">Also show "All" view </label>
+						</div>
+					</div>
+					<div id="featured_content">
+						<div>
+							Featured layout<br>
+							<select name="default_view" class="playnav-edit-field" id="default_view">
+								<option value="play" id="view_play" selected="">Player View</option>
+								<option value="grid" id="view_grid">Grid View</option>
+							</select>
+						</div>
+						<div style="padding-top: 1em">
+							Featured content set<br>
+							<select name="default_set" class="playnav-edit-field" id="default_set">
+								<option value="all" id="feature_all" selected="">All my stuff</option>
+								<option value="uploads" id="feature_uploads">My Uploaded Videos</option>
+								<option value="favorites" id="feature_favorites">My Favorites</option>
+								<option value="shows" id="feature_shows" style="display:none">My Shows</option>
+								<optgroup label="Playlists" id="feature_playlists" style="display:none">
+									<option value="playlists" style="display:none" disabled="">All Playlists</option>
+								</optgroup>
+							</select>
+						</div>
+						<div style="padding-top: 1em">
+							Featured video<br>
+							<div id="featured_vid_select_box">
+								<select name="featured_video_id" id="featured_video_id" style="width:200px" onchange="if (this.value=='OTHER111111') {_showdiv('featured_video_url')} else {_hidediv('featured_video_url')}">
+									<option value="00000000000" selected="">Use the most recent video from my featured set</option>
+									<option value="OTHER111111">Other</option>
+								</select>
+							</div>
+							<input type="text" id="featured_video_url" name="featured_video_url" value="Copy and paste a video URL here" style="color:#999;margin-top:6px" class="playnav-edit-field hid">
+						</div>
+						<div style="padding-top:0.6em">
+							<label><input type="checkbox" id="enable_autoplay" name="autoplay" checked="" value="True">Autoplay featured video
+							</label>
+						</div>
+					</div>
+					<div id="arrange_playlists" style="display:none">
+						<div>Which of your playlists would you like to display?</div>
+						<div style="width:90%;height:80px;padding:0.5em;border:1px solid #ccc;overflow:auto;background-color:#fff">
+						</div>
+					</div>
+					<div class="cb">&nbsp;</div>
+					<div class="settings_separator_save">&nbsp;</div>
+					<div class="channel_settings_save">
+						<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="save_all();return false;"><span>Save Changes</span></a>
+						or
+						<a href="#" onclick="channel_edit_tab('close', true);return false">cancel</a>
+						<div class="save_overlay">
+							<center><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif"></center>
+						</div>
+					</div>
+					<div class="cb">&nbsp;</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div class="edit_controls_bottom_border">&nbsp;</div>
+</div>

@@ -18,4 +18,8 @@ message root {
     repeated contextType context = 1;
     string browseId = 2;
     repeated stringUpdateMsg avatarBlob = 9;
+    message channelAboutTab {
+        string description = 3;
+    }
+    repeated channelAboutTab about = 11;
 }

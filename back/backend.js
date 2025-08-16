@@ -249,6 +249,14 @@ if(!config.disableWs) {
                         }
                         break;
                     }
+                    case "c-sup-data": {
+                        yt2009_channels.setSupData(m.channels)
+                        break;
+                    }
+                    case "w-sup-data": {
+                        yt2009.setSupData(m.channels)
+                        break;
+                    }
                 }
             })
             w.addEventListener("error", () => {
@@ -323,6 +331,12 @@ app.get('/', (req,res) => {
             "path": "/",
             "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
         })
+        if(config.default_f) {
+            res.cookie("f_mode", "on", {
+                "path": "/",
+                "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+            })
+        }
     }
 
     if(req.headers.cookie
@@ -409,6 +423,12 @@ app.get("/watch", (req, res) => {
             "path": "/",
             "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
         })
+        if(config.default_f) {
+            res.cookie("f_mode", "on", {
+                "path": "/",
+                "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+            })
+        }
     }
 
     let disableDownloads = false;
@@ -450,7 +470,9 @@ app.get("/watch", (req, res) => {
         yt2009_utils.get_used_token(req),
         useFlash, 
         resetCache,
-        disableDownloads)
+        disableDownloads,
+        true
+    )
 })
 
 
@@ -1739,11 +1761,23 @@ app.get("/channel_get_playlist", (req, res) => {
 app.get("/refetch_playlist_watch", (req, res) => {
     let videosHTML = ``
     let playlistId = req.headers.source.split("list=")[1].split("&")[0].split("#")[0]
+    let sourceVideo = ""
+    try {
+        sourceVideo = req.headers.source
+                      .split("v=")[1]
+                      .split("&")[0]
+                      .split("#")[0]
+    }
+    catch(error) {}
     yt2009_playlists.parsePlaylist(playlistId, (list) => {
         let video_index = 0;
+        if(!list || !list.videos) {
+            res.send("REFETCH_INTERNAL_ERROR")
+            return;
+        }
         list.videos.forEach(video => {
             videosHTML += `
-            <div class="video-entry ${video.id == req.headers.source.split("v=")[1].split("&")[0].split("#")[0] ? "watch-ppv-vid" : ""}">
+            <div class="video-entry ${video.id == sourceVideo ? "watch-ppv-vid" : ""}">
                 <div class="v90WideEntry">
                     <div class="v90WrapperOuter">
                         <div class="v90WrapperInner">
@@ -1768,7 +1802,7 @@ app.get("/refetch_playlist_watch", (req, res) => {
         })
 
         res.send(videosHTML)
-    })
+    }, sourceVideo)
 })
 
 
@@ -2183,6 +2217,14 @@ app.get("/account", (req, res) => {
             }
 
             code = code.replace(
+                `class="bold" id="pchelper-notice"`,
+                `class="bold hid" id="pchelper-notice"`
+            )
+            code = code.replace(
+                `id="pchelper-profile-setup-form" class="hid"`,
+                `id="pchelper-profile-setup-form"`
+            )
+            code = code.replace(
                 `#channel_url`,
                 `/channel/${id}`
             )
@@ -2249,15 +2291,34 @@ app.get("/account", (req, res) => {
                         )
                     }
                 }
+
+                let countries = require("./geo/country-codes.json")
+                let countriesHTML = ""
+                for(let name in countries) {
+                    let code = countries[name]
+                    countriesHTML += `<option value="${code}">${name}</option>`
+                }
+                code = code.replace(
+                    `<!--yt2009_insert_countries-->`,
+                    countriesHTML
+                )
+
+
                 if(about.description && typeof(about.description) == "string") {
                     code = code.replace(
                         `yt2009_channel_description`,
                         about.description
                     )
+                    code = yt2009_templates.applyAboutProperties(
+                        code, about.description
+                    )
                 } else if(about.description && about.description.simpleText) {
                     code = code.replace(
                         `yt2009_channel_description`,
                         about.description.simpleText
+                    )
+                    code = yt2009_templates.applyAboutProperties(
+                        code, about.description.simpleText
                     )
                 } else {
                     code = code.replace(`yt2009_channel_description`, "")
@@ -3303,10 +3364,27 @@ app.get("/yt2009_recommended", (req, res) => {
     let targetVideos = 8;
     let isRecommendedPage = false;
     let usePaging = false;
+    let listStyle = false;
     if(req.headers.source
     && req.headers.source == "recommended_page") {
         targetVideos = 25;
         isRecommendedPage = true;
+    }
+    if(req.headers.cookie
+    && req.headers.cookie.includes("reco_homepage_style=list")
+    && !isRecommendedPage) {
+        listStyle = true;
+    }
+    if(req.headers.cookie
+    && req.headers.cookie.includes("reco_homepage_count=")
+    && (hc = req.headers.cookie.split("reco_homepage_count=")[1].split(";")[0])
+    && (hc = parseInt(hc))
+    && !isNaN(hc) && hc >= 1 && hc <= 5
+    && !isRecommendedPage) {
+        let hc = parseInt(
+            req.headers.cookie.split("reco_homepage_count=")[1].split(";")[0]
+        )
+        targetVideos = (listStyle ? hc : (hc * 4))
     }
     let processedVideos = 0;
     let videoSuggestions = []
@@ -3438,7 +3516,6 @@ app.get("/yt2009_recommended", (req, res) => {
             })
             pagedHTML = yt2009_languages.apply_lang_to_code(pagedHTML, req)
 
-            // TODO: RECREATE SERVERSIDE
             for (let j = 0; j < filteredSuggestions.length; j++) {
                 pagedHTML += yt2009_templates.pagerClientside(
                     j, filteredSuggestions.length, (j !== 0)
@@ -3488,7 +3565,17 @@ app.get("/yt2009_recommended", (req, res) => {
                     req, true
                 )
             } else {
-                response += yt2009_templates.recommended_videoCell(video, req)
+                if(!listStyle) {
+                    response += yt2009_templates.recommended_videoCell(video, req)
+                } else {
+                    response += yt2009_templates.searchVideo(
+                        video.id, video.title, "", video.creatorUrl,
+                        video.creatorName, video.upload, video.views,
+                        video.length, req.protocol, "chrome",
+                        (req.headers.cookie || "")
+                    )
+                }
+                
             }
         })
 
@@ -6546,6 +6633,199 @@ app.get("/sabr_playback", (req, res) => {
         res.send(resp)
         //console.log("resp sent")
     })
+})
+
+/*
+======
+pchelper channel customization
+======
+*/
+const cbg_uploadr = fs.readFileSync("../cbg_uploadr.html").toString()
+app.get("/my_profile_theme_background_frame", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    res.send(cbg_uploadr)
+})
+app.post("/my_profile_theme_post", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+
+    // jpeg without exif data
+    let jpgUnexifHead = Buffer.from([
+        255, 216, 255, 224, 0, 16, 74, 70, 73, 70
+    ])
+    // jpeg with exif data
+    let jpgExifHead = Buffer.from([
+        255, 216, 255, 124, 244, 69, 120, 105, 102
+    ])
+    // png
+    let pngHead = Buffer.from([
+        137, 80, 78, 71, 13, 10, 26, 10
+    ])
+    // webp
+    let webpHead = Buffer.from([
+        82, 73, 70, 70, 238, 248, 3, 0, 87, 69, 66, 80
+    ])
+
+
+    let jpgUnexifIndex = req.body.indexOf(jpgUnexifHead)
+    let jpgExifIndex = req.body.indexOf(jpgExifHead)
+    let pngIndex = req.body.indexOf(pngHead)
+    let webpIndex = req.body.indexOf(webpHead)
+    let index = 0;
+    let fileType = false;
+
+    if((jpgUnexifIndex >= 10 && jpgUnexifIndex <= 1000)
+    || (jpgExifIndex >= 10 && jpgExifHead <= 1000)) {
+        fileType = "jpg"
+        index = Math.max(jpgUnexifIndex, jpgExifIndex)
+    } else if(pngIndex >= 10 && pngIndex <= 1000) {
+        fileType = "png"
+        index = pngIndex
+    } else if(webpIndex >= 10 && webpIndex <= 1000) {
+        fileType = "webp"
+        index = webpIndex
+    }
+
+    let file = Buffer.from(req.body.slice(index))
+    
+    if(!fileType) {
+        let url = [
+            "/my_profile_theme_background_frame",
+            "?status=error",
+            "&etype=funsupported",
+            "&nc=" + Date.now()
+        ]
+        res.redirect(url.join(""))
+        return;
+    }
+
+    let maxSize = (256 * 1024)
+    if(file.length >= maxSize) {
+        let url = [
+            "/my_profile_theme_background_frame",
+            "?status=error",
+            "&etype=size",
+            "&nc=" + Date.now()
+        ]
+        res.redirect(url.join(""))
+        return;
+    }
+
+    const fetch = require("node-fetch")
+    fetch("http://orzeszek.website:4091/upload_raw", {
+        "method": "POST",
+        "body": file
+    }).then(r => {
+        if(r.status == 200) {
+            let url = [
+                "/my_profile_theme_background_frame",
+                "?status=success",
+                "&fileid=" + r.headers.get("x-file"),
+                "&nc=" + Date.now()
+            ]
+            res.redirect(url.join(""))
+        } else {
+            let url = [
+                "/my_profile_theme_background_frame",
+                "?status=error",
+                "&nc=" + Date.now()
+            ]
+            res.redirect(url.join(""))
+        }
+    })
+})
+app.post("/pchelper_customize", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)
+    || !mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.body) {
+        res.sendStatus(400)
+        return;
+    }
+    let params = false;
+    try {
+        params = JSON.parse(decodeURIComponent(
+            req.body.toString().split("data=")[1]
+        ))
+    }
+    catch(error) {
+        res.sendStatus(400)
+        return;
+    }
+
+    mobileHelper.createCustomization(req, params, res)
+})
+app.get("/cbg_proxie", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.query.id || req.query.id.length !== 24) {
+        res.sendStatus(400)
+        return;
+    }
+    const fetch = require("node-fetch")
+    let url = [
+        "http://orzeszek.website:4091",
+        "/get_file?file_id=" + req.query.id
+    ]
+    fetch(url.join(""), {
+        "method": "GET"
+    }).then(r => {
+        res.set("content-type", r.headers.get("content-type"))
+        r.buffer().then(z => {
+            res.send(z)
+        })
+    })
+})
+app.get("/minipicty", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.query.channel
+    || req.query.channel.length !== 24
+    || !req.query.channel.startsWith("UC")) {
+        res.sendStatus(400)
+        return;
+    }
+
+    yt2009_channels.main({
+        "path": "/channel/" + req.query.channel,
+        "headers": req.headers,
+        "query": {}
+    },
+    {"send": function(data) {
+        try {
+            if(data && data.avatar) {
+                res.redirect(data.avatar)
+            } else {
+                res.redirect("/assets/site-assets/default.png")
+            }
+        }
+        catch(error) {
+            console.log(error)
+        }
+    }}, "", true)
+})
+app.post("/pchelper_profile_setup", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)
+    || !mobileHelper.hasLogin(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.body) {
+        res.sendStatus(400)
+        return;
+    }
+    mobileHelper.applyProfileSetup(req, res)
 })
 
 /*

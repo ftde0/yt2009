@@ -215,3 +215,103 @@ if(moduleSetup.indexOf("insmap") !== -1
         }
     }
 }
+
+// recommended edit tab
+function recommended_edit_show() {
+    document.getElementById("REC-options").className = "opt-pane"
+    rec_renderPrefs()
+}
+function recommended_edit_hide() {
+    document.getElementById("REC-options").className = "opt-pane hid"
+}
+function homepageRecSet(opt) {
+    document.getElementById("REC-loading-msg").style.display = "block"
+    switch(opt) {
+        case "list": {
+            var cookie = [
+                "reco_homepage_style=list; ",
+                "Path=/; ",
+                "Expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            ]
+            document.cookie = cookie.join("")
+            var msg = "Number of videos to display:"
+            document.getElementById("reco-opt-num-picker").innerHTML = msg
+            rec_renderPrefs()
+            break;
+        }
+        case "grid": {
+            var cookie = [
+                "reco_homepage_style=grid; ",
+                "Path=/; ",
+                "Expires=Fri, 31 Dec 2008 23:59:59 GMT"
+            ]
+            document.cookie = cookie.join("")
+            var msg = "Number of rows to display:"
+            document.getElementById("reco-opt-num-picker").innerHTML = msg
+            rec_renderPrefs()
+            break;
+        }
+        case "rows": {
+            var numrows = 2;
+            var options = document.getElementById("REC-options-num")
+                                .getElementsByTagName("option");
+            for(var o in options) {
+                if(options[o] && options[o].tagName
+                && options[o].getAttribute("value")
+                && options[o].selected) {
+                    numrows = options[o].getAttribute("value")
+                }
+            }
+
+            var cookie = [
+                "reco_homepage_count=" + numrows + "; ",
+                "Path=/; ",
+                "Expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            ]
+            document.cookie = cookie.join("")
+            break;
+        }
+    }
+
+    setTimeout(function() {
+        document.getElementById("REC-loading-msg").style.display = "none"
+        if(window.hpReload) {
+            window.hpReload()
+        }
+    }, 200)
+}
+function rec_renderPrefs() {
+    if(document.cookie
+    && document.cookie.indexOf("reco_homepage_style=list") !== -1) {
+        document.getElementById("rec-style-list").className = "homepage-ajax-sprite btn-listview-on"
+        document.getElementById("rec-style-grid").className = "homepage-ajax-sprite btn-gridview-off"
+    } else {
+        document.getElementById("rec-style-list").className = "homepage-ajax-sprite btn-listview-off"
+        document.getElementById("rec-style-grid").className = "homepage-ajax-sprite btn-gridview-on"
+    }
+
+    if(document.cookie
+    && document.cookie.indexOf("reco_homepage_count=") !== -1) {
+        var hpCount = parseInt(
+            document.cookie.split("reco_homepage_count=")[1].split(";")[0]
+        )
+        if(!isNaN(hpCount) && hpCount >= 1 && hpCount <= 5) {
+            var options = document.getElementById("REC-options-num")
+                                .getElementsByTagName("option");
+            for(var o in options) {
+                if(options[o] && options[o].tagName
+                && options[o].getAttribute("value")
+                && options[o].selected) {
+                    options[o].selected = false;
+                }
+            }
+            for(var o in options) {
+                if(options[o] && options[o].tagName
+                && options[o].getAttribute("value")
+                && options[o].getAttribute("value") == hpCount) {
+                    options[o].selected = true;
+                }
+            }
+        }
+    }
+}

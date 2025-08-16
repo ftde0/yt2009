@@ -554,8 +554,8 @@ module.exports = {
     "flashObject": function(url) {
         return `<object width="640" height="385" class="fl flash-video" id="watch-player-div"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" id="movie_player" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
     },
-    "html5Embed": function(id, elementId) {
-        return `<iframe id="${elementId}" allowfullscreen src="/embed/${id}"></iframe>`
+    "html5Embed": function(id, elementId, disableAutoplay) {
+        return `<iframe id="${elementId}" allowfullscreen src="/embed/${id}${disableAutoplay ? "?autoplay=0" : ""}"></iframe>`
     },
     "playlist": function(name, id) {
         return `<div class="subfolder" data-id=${id}" onclick="show_playlist(this)"><a class="name" href="#">${name}</a></div>`
@@ -577,6 +577,10 @@ module.exports = {
         </div>`
     },
     "searchPlaylistEntry": function(id, protocol, videos, name, videoCount, a, flags) {
+        let navUrl = `/playlist?list=${id}`
+        if(id.startsWith("RD") && videos[0] && videos[0].id) {
+            navUrl = `/watch?v=${videos[0].id}&list=${id}`
+        }
         return `
         <div class="playlist-cell" style="width:24.5%">
             <div class="playlist-entry yt-uix-hovercard">
@@ -584,7 +588,7 @@ module.exports = {
                     <div class="vCluster120WideEntry">
                         <div class="vCluster120WrapperOuter playlist-thumbnail">
                             <div class="vCluster120WrapperInner">
-                                <a href="/playlist?list=${id}" rel="nofollow">${videos[0] ? `<img src="${utils.getThumbUrl(videos[0].id, flags)}" class="vimgCluster120 yt-uix-hovercard-target">` : (a ? `<img src="${a}" class="vimgCluster120 yt-uix-hovercard-target"/>` : "")}</a>
+                                <a href="${navUrl}" rel="nofollow">${videos[0] ? `<img src="${utils.getThumbUrl(videos[0].id, flags)}" class="vimgCluster120 yt-uix-hovercard-target">` : (a ? `<img src="${a}" class="vimgCluster120 yt-uix-hovercard-target"/>` : "")}</a>
                                 ${videos[0] ? `<div class="video-corner-text"><span>${videos[0].length}</span></div>` : ""}
                             </div>
                         </div>
@@ -593,7 +597,7 @@ module.exports = {
                 <div class="playlist-main-content" id="playlist-main-content-${id}">
                     <div class="playlist-title playlist-title-results">
                         <div class="playlist-long-title">
-                            <a href="/playlist?list=${id}" class="yt-uix-hovercard-target" rel="nofollow">${name}</a>
+                            <a href="${navUrl}" class="yt-uix-hovercard-target" rel="nofollow">${name}</a>
                             <span class="playlist-video-count">${videoCount}lang_results_playlist_video_suffix</span>
                         </div>
                     </div>
@@ -1395,7 +1399,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                                     <a href="#">lang_hp_learnmore</a>
                                 </div>
                                 <div class="feedmodule-updown">
-                                    <span id="medit-REC" class="iyt-edit-link iyt-edit-link-gray">lang_hp_edit</span>
+                                    <span id="medit-REC" class="iyt-edit-link iyt-edit-link-gray" onclick="recommended_edit_show();">lang_hp_edit</span>
                                     <span id="mup-REC" class="up-button" onclick="moveUp('rec')">
                                         <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif">
                                     </span>
@@ -1411,6 +1415,51 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                     </div>
                     <div class="clear feedmodule-border-gray yt-rounded" id="feed_recommended-content">
                         <div id="REC-data" class="feedmodule-data">
+                            <div id="REC-options" class="opt-pane hid">
+                                <div class="opt-box-top">
+                                    <img class="homepage-ajax-sprite img-php-opt-box-caret" src="/assets/site-assets/pixel-vfl73.gif">
+                                </div>
+                                <div class="opt-banner">
+                                    <div class="opt-links">
+                                        <div class="opt-edit grayText">Editing: Recommended for You</div>
+                                        <div class="opt-close opt-close-text iyt-edit-link" onclick="recommended_edit_hide();">close</div>
+                                        <div id="REC-loading-msg" class="opt-loading-msg" style="display: none;">
+                                            Saving...
+                                        </div>
+                                        <div class="clear"></div>
+                                    </div>
+                                </div>
+                                <div class="opt-main">
+                                    <div class="opt-divider">
+                                        <table class="opt-tbl">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="opt-name">
+                                                        Display as:
+                                                    </td>
+                                                    <td class="opt-val opt-sel">
+                                                        <div id="REC-options-SIN" class="opt-form-type-btns">
+                                                            <img src="/assets/site-assets/pixel-vfl73.gif" class="homepage-ajax-sprite btn-listview-off" title="List View" alt="List View" id="rec-style-list" onclick="homepageRecSet('list')"><img src="/assets/site-assets/pixel-vfl73.gif" id="rec-style-grid" class="homepage-ajax-sprite btn-gridview-on" title="Grid View" alt="Grid View" onclick="homepageRecSet('grid')">
+                                                        </div>
+                                                    </td>
+                                                    <td class="opt-name" id="reco-opt-num-picker">
+                                                        Number of rows to display:
+                                                    </td>
+                                                    <td class="opt-val">
+                                                        <select id="REC-options-num" name="REC-options-num" onchange="homepageRecSet('rows')">
+                                                            <option value="1">1</option>
+                                                            <option value="2" selected>2</option>
+                                                            <option value="3">3</option>
+                                                            <option value="4">4</option>
+                                                            <option value="5">5</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                             <div id="logged_out_rec_learn_more_box" class="yt-rounded side-announcement-box" style="margin: 5px 10px 5px 5px; padding: 5px; display: none;">
                                 <div style="cursor: pointer; display:inline; float: right;" id="yt2009-rec-more-close"><img class="img-php-close-button master-sprite" style="background-position: -57px -712px;" src="/assets/site-assets/pixel-vfl73.gif"></div>
                                 <div style="color: black; padding-left: 5px;">
@@ -1420,7 +1469,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                                     lang_hp_rec_desc_p3
                                 </div>
                             </div>
-                            <div class="feedmodule-body grid-view">
+                            <div class="feedmodule-body grid-view" id="REC-feedmodule-body">
                                 <div id="recommended-loading-sprite"><img src="/assets/site-assets/icn_loading_animated-vfl24663.gif" style="margin-left: 310px;margin-top: 30px;margin-bottom: 30px;"></div>
                                 <div class="clearL yt2009-cells-container" id="yt2009-recommended-cells-container">
                                     
@@ -1716,7 +1765,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     "banner": function(url) {return `<div id="user_banner" class="profile-banner-box"><img src="${url}" class="" width="960" height="150"></div>`},
     "watchBanner": function(link, img) {
     return `<div id="watch-channel-brand-cap">
-        <a href="${link}"><img src="${img}" width="300" height="50" border="0"></a>
+        <a href="${link}"><img src="${img}" onerror="document.getElementById('watch-channel-brand-cap').style.display = 'none';" width="300" height="50" border="0"></a>
     </div>`},
     "sidebarSub": function(sub) {return `<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="${sub.url}"><a class="name" href="#">${sub.name.trim()}</a></div>`},
     "langPickerBase": `
@@ -2960,7 +3009,8 @@ term='channel'/>
             <content type='application/atom+xml;type=feed' src='http://${config.ip}:${config.port}/feeds/api/users/${fname}/videos'/>
             <link rel='edit' href='http://${config.ip}:${config.port}/edit'/>
             <yt:username>${fname}</yt:username>
-            <y9id>${id}</y9id>
+            <y9id>${id}</y9id>${avatar ? `
+            <y9av>${avatar}</y9av>` : ""}
         </entry>`
     },
 
@@ -3463,5 +3513,124 @@ term='channel'/>
         }
         html += "</div></div>"
         return html
+    },
+    "genericThemePickrCustomSelected": `<div id="custom" class="theme_selector_div theme_selected" style="font-family:Arial" onclick="set_theme_obj(this.id);">
+	<div style="background-color: #FFF;color:#000;padding: 3px;line-height:120%">
+		<div style="background-color: #D6D6D6;color: #666;padding:3px;font-size:10px">
+			<div style="float:right;width:4em;background-color:#FFF;font-size:9px;padding-left:1px;color:#000"><span style="color:#666;font-size:120%">A</span> &nbsp;<span style="color:#03C;text-decoration:underline">url</span><br>abc</div><span style="color:#03C;text-decoration:underline">url</span><br>abc
+		</div>
+	</div>
+	<div style="text-align:center;"><span class="theme_title" style="padding:2px;height:2em;overflow:hidden">Custom</span></div>
+</div>`,
+    "channelShowinfoBegin": `<div class="show_info" style="padding-top: 8px;border:0">
+        <table id="user-profile-honors" cellpadding="0" cellspacing="0">
+            <tbody>
+                <tr>
+                    <td width="20" valign="top"><img src="//s.ytimg.com/yt/img/icn_award_17x24-vfl10931.gif" border="0"></td>
+                    <td valign="top" style="font-size: 12px;">
+                        <span id="BeginvidDeschonors" style="" class="">`,
+    "channelShowinfoRow": function(text, link) {
+        return `<a href="${link}">${text}</a><br>`
+    },
+    "channelShowinfoEnd": `
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>`,
+    "watchSupIcon": `<span class="yt2009-sup-icon" title="yt2009 Supporter">♥</span>`,
+    "applyAboutProperties": function(code, description) {
+        let delim = "═"
+
+        // textbox-based properties
+        let textboxProperties = {
+            "Website": "website",
+            "Gender": "gender",
+            "Relationship": "relationship",
+            "Hometown": "hometown",
+            "City": "current-city",
+            "Country": "country",
+            "Zip": "zip-code",
+            "Occupation": "occupations",
+            "Companies": "companies",
+            "Schools": "schools",
+            "Hobbies": "interests",
+            "Movies": "fav-movies",
+            "Music": "fav-music",
+            "Books": "fav-books",
+            "Pronouns": "pronouns"
+        }
+        let textareaProperties = [
+            "occupations", "companies", "schools", "interests", "fav-movies",
+            "fav-music", "fav-books"
+        ]
+        for(let p in textboxProperties) {
+            if(description.includes(`${delim} ${p}: `)) {
+                let key = textboxProperties[p]
+                let value = description.split(`${delim} ${p}: `)[1]
+                                       .split(`\n${delim}`)[0]
+                                       .split("\n\n")[0];
+                if(textareaProperties.includes(key)) {
+                    code = code.replace(
+                        `<textarea name="${key}">`,
+                        `<textarea name="${key}">${utils.xss(value)}`
+                    )
+                } else {
+                    code = code.replace(
+                        `name="${key}" spellcheck="false" autocomplete="off">`,
+                        `name="${key}" spellcheck="false" autocomplete="off" value="${value.split("\"").join("&quot;")}">`
+                    )
+                }
+                /*description = description.replace(
+                    `${delim} ${p}: ${value}`, ""
+                )*/
+            }
+        }
+        
+        // custom handling for name
+        if(description.includes(`${delim} Name: `)) {
+            let value = description.split(`${delim} Name: `)[1]
+                                   .split(`\n${delim}`)[0]
+                                   .split("\n\n")[0].split(" ")
+            let last = value.pop()
+            let first = value.join(" ")
+            code = code.replace(
+                `name="first-name" spellcheck="false" autocomplete="off"`,
+                `name="first-name" value="${first.split("\"").join("&quot;")}" spellcheck="false" autocomplete="off"`
+            )
+            code = code.replace(
+                `name="last-name" spellcheck="false" autocomplete="off"`,
+                `name="last-name" value="${last.split("\"").join("&quot;")}" spellcheck="false" autocomplete="off"`
+            )
+        }
+
+        // dropdown-based properties
+        let dropdownValues = {
+            "Gender": {
+                "Male": "m",
+                "Female": "f"
+            },
+            "Relationship": {
+                "Single": "s",
+                "Taken": "t",
+                "Open": "o"
+            },
+            "Country": require("./geo/country-codes.json")
+        }
+        for(let p in dropdownValues) {
+            if(description.includes(`${delim} ${p}: `)) {
+                let value = description.split(`${delim} ${p}: `)[1]
+                                       .split(`\n${delim}`)[0]
+                                       .split("\n\n")[0];
+                value = dropdownValues[p][value]
+                code = code.replace(
+                    `<option value="${value}">`,
+                    `<option value="${value}" selected="">`
+                )
+            }
+        }
+
+        return code;
     }
 }

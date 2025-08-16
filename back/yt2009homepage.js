@@ -139,6 +139,12 @@ module.exports = function(req, res) {
         switch(m) {
             case "rec": {
                 moduleHTML += templates.homepage_recommended
+                if((req.headers.cookie || "").includes("login_simulate")) {
+                    moduleHTML = moduleHTML.replace(
+                        "iyt-edit-link iyt-edit-link-gray",
+                        "iyt-edit-link"
+                    )
+                }
                 break;
             }
             case "watched": {

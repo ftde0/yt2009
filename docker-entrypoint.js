@@ -147,6 +147,18 @@ if(process.env.YT2009_FILE_LIMIT
     cfg.file_limit = parseInt(process.env.YT2009_FILE_LIMIT);
 }
 
+// set defaultf
+switch (process.env.YT2009_DEFAULTF) {
+    case 'true':
+        cfg.default_f = true;
+        break;
+    case 'false':
+        cfg.default_f = false;
+        break;
+    default:
+        throw new Error('invalid YT2009_DEFAULTF')
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

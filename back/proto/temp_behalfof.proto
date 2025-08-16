@@ -1,0 +1,11 @@
+syntax = "proto3";
+package temp_behalfof;
+
+message behalf {
+    string channelId = 1;
+    string empty2 = 2;
+}
+
+message root {
+    repeated behalf beh = 170;
+}

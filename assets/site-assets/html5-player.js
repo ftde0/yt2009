@@ -2823,6 +2823,16 @@ function initAsSabr() {
             }
         }
     }, false)
+
+    video.addEventListener("waiting", function() {
+        showLoadingSprite()
+
+        setTimeout(function() {
+            if(Math.floor(video.currentTime) == Math.floor(video.duration)) {
+                video_pause()
+            }
+        }, 1000)
+    })
 }
 
 function sabrQualityChanged() {

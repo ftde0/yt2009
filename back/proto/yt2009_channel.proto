@@ -1,0 +1,92 @@
+syntax = "proto3";
+package yt2009_channel_customizations;
+
+message featuredChannel {
+    string id = 1;
+    string name = 2;
+    string pictureUrl = 3; /*unused*/
+}
+
+message root {
+    string title = 1;
+    string type = 2;
+    /* ^^^
+    u = YouTuber
+    d = Director
+    m = Musician
+    c = Comedian
+    g = Guru
+    j = Reporter*/
+    string tags = 3;
+    optional int32 themeId = 4;
+    /* ^^^
+    1 - Grey
+    2 - Blue
+    3 - Red
+    4 - Sunlight
+    5 - Forest
+    6 - 8-bit
+    7 - Princess
+    8 - Fire
+    9 - Stealth
+    10 - Clean
+    11 - custom
+    */
+    optional int32 font = 5;
+    /* ^^^
+    1 - Times New Roman // serif
+    2 - Arial
+    3 - Verdana
+    4 - Georgia
+    5 - Courier New
+    */
+
+    /*all color values in hex, without the leading #*/
+    /*opacity values 0-255*/
+    string backgroundColor = 6;
+    string wrapperColor = 7;
+    string wrapperTextColor = 8;
+    string wrapperLinkColor = 9;
+    optional int32 wrapperOpacity = 10;
+    string customBackgroundId = 11;
+    bool repeatCustomBackground = 12;
+    
+    string innerboxBackgroundColor = 13;
+    string innerboxTitleTextColor = 14;
+    string innerboxLinkColor = 15;
+    string innerboxBodyTextColor = 16;
+    optional int32 innerboxOpacity = 17;
+
+    string shownModules = 18;
+    /*shownModules = single characters indicating what modules should be shown
+    
+    c = comments
+    r = recent activity
+    s = subscribers
+    z = subscriptions
+    o = other channels
+    
+    s and z are partially exposed into 19 and 20 once allowed*/
+    repeated featuredChannel subscriber = 19;
+    repeated featuredChannel subscription = 20;
+
+    string shownContent = 21;
+    /*shownContent - single characters:
+    
+    u = uploaded
+    f = favorites
+    p = playlists
+    a = "all"*/
+
+    bool defaultGrid = 22;
+    int32 altDefaultSet = 23;
+    /* ^^^
+    2 - uploaded
+    3 - favorites*/
+
+    string altDefaultVidId = 24;
+
+    bool hideBanner = 25;
+
+    bool enableAutoplay = 26;
+}

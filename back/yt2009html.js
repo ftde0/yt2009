@@ -60,9 +60,10 @@ let oldCommentsWrite = setInterval(function() {
         JSON.stringify(oldCommentsCache)
     )
 }, 1000 * 60 * 60)
+let sups = []
 
 module.exports = {
-    "innertube_get_data": function(id, callback) {
+    "innertube_get_data": function(id, callback, pullChannelEarly) {
         let useAndroidPlayer = true;
 
         let timer = 0;
@@ -225,6 +226,21 @@ module.exports = {
                 combinedResponse.freezeSync = true;
                 // ^ overriden when category pull done successfully
             }
+            if(r.videoDetails
+            && r.videoDetails.channelId
+            && pullChannelEarly) {
+                const yt2009channels = require("./yt2009channels")
+                yt2009channels.main({
+                    "path": "/channel/" + r.videoDetails.channelId,
+                    "headers": {"cookie": ""},
+                    "query": {"f": 0, "earlyPull": true}
+                }, 
+                {"send": function(data) {
+                    if(devTimings) {
+                        console.log("early channel fetch success", timer)
+                    }
+                }}, "", true)
+            }
             for(let i in r) {
                 combinedResponse[i] = r[i]
             }
@@ -236,7 +252,10 @@ module.exports = {
         })})
     },
 
-    "fetch_video_data": function(id, callback, userAgent, userToken, useFlash, resetCache, disableDownload) {
+    "fetch_video_data": function(
+        id, callback, userAgent, userToken, useFlash,
+        resetCache, disableDownload, pullChannelEarly
+    ) {
         let waitForOgv = false;
 
         // if firefox<=25 wait for ogg, otherwise callback mp4
@@ -319,7 +338,15 @@ module.exports = {
                             displayError = videoData.playabilityStatus
                                            .errorScreen
                                            .playerErrorMessageRenderer
-                                           .subreason.simpleText
+                            if(displayError.subreason) {
+                                displayError = displayError.subreason
+                                                           .simpleText;
+                            } else if(videoData.playabilityStatus.reason) {
+                                displayError = videoData.playabilityStatus
+                                                        .reason
+                            } else {
+                                displayError = defaultError
+                            }
                         }
                         catch(error) {}
                     }
@@ -402,7 +429,9 @@ module.exports = {
                 catch(error) {
                     data.author_img = "default"
                 }
-                if(videoData.microformat) {
+                if(videoData.microformat
+                && videoData.microformat.playerMicroformatRenderer
+                && videoData.microformat.playerMicroformatRenderer.uploadDate) {
                     data.upload = videoData.microformat.playerMicroformatRenderer
                                            .uploadDate
                 } else if(videoData.publishDate) {
@@ -561,7 +590,8 @@ module.exports = {
                         catch(error){}
                         if(!time
                         || time.toLowerCase().includes("live")
-                        || time.toLowerCase().includes("short")) return;
+                        || time.toLowerCase().includes("short")
+                        || time.toLowerCase().includes("premier")) return;
                         data.related.push({
                             "id": id,
                             "title": title,
@@ -615,7 +645,9 @@ module.exports = {
                     || video.lengthText.simpleText.toLowerCase()
                             .includes("live")
                     || video.lengthText.simpleText.toLowerCase()
-                            .includes("short")) return;
+                            .includes("short")
+                    || video.lengthText.simpleText.toLowerCase()
+                            .includes("premier")) return;
                     if(video.viewCountText && video.viewCountText.simpleText
                     && video.viewCountText.simpleText.includes("No ")) {
                         video.viewCountText.simpleText = "0 views"
@@ -780,7 +812,7 @@ module.exports = {
                         cache.write(id, data);
                     }
                 }
-            }))
+            }), pullChannelEarly)
 
             // fetch comments
             const pb = require("./proto/cmts_pb")
@@ -2855,6 +2887,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         }
 
+        // sup icon
+        if(sups.includes(data.author_id)) {
+            code = code.replace(`<!--sup-->`, yt2009templates.watchSupIcon)
+        } else {
+            code = code.replace(`<!--sup-->`, "")
+        }
+
         // exp_related
         if(flags.includes("exp_related")) {
             requiredCallbacks++;
@@ -3438,10 +3477,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             if(resetcache) {
                 identif += "+resetcache"
             }
-            yt2009channels.main({"path": channelUrl, 
+            /*yt2009channels.main({"path": channelUrl, 
             "headers": {"cookie": ""},
             "query": {"f": 0}}, 
-            {"send": function(data) {
+            {"send": function(data) {*/
+            yt2009channels.mainWithEarly(data.author_id, (data) => {
+                if(!data) {
+                    callback(null)
+                    return;
+                }
                 if(devTimings) {
                     console.log("default banner data pulled")
                 }
@@ -3453,7 +3497,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     dataSent = true
                     callback(null)
                 }
-            }}, identif, true)
+            })
+            /*}}, identif, true)*/
             setTimeout(() => {
                 if(!dataSent) {
                     callback(null)
@@ -3511,6 +3556,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
     "valid": function() {
         return validationRan;
+    },
+
+    "setSupData": function(s) {
+        sups = s;
     }
 }
 

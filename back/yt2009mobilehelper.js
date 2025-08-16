@@ -11,6 +11,7 @@ const protobufNextReq = require("./proto/android_next_pb")
 const protoAnalytics = require("./proto/analytics_screen_request_pb")
 const metadataUpdate = require("./proto/android_metadata_update_pb")
 const userMetadata = require("./proto/android_user_metadata_pb")
+const customChannel = require("./proto/yt2009_channel_pb")
 const androidHeaders = {
     "Accept": "*/*",
     "Accept-Language": "en-US;q=0.7,en;q=0.3",
@@ -202,6 +203,7 @@ module.exports = {
                 return;
             }
 
+            let dataSent = false;
             refreshTube(device, () => {
                 pullAllYouTubeAccounts(userdata[device], (data) => {
                     if(req.headers.mode == "pchelper") {
@@ -209,9 +211,22 @@ module.exports = {
                         res.send(t)
                         return;
                     }
+                    dataSent = true;
                     res.send(data)
                 })
             })
+            
+            setTimeout(() => {
+                if(!dataSent && req.headers.mode == "pchelper") {
+                    const joinedMsg = [
+                        "timed out waiting for your accounts.",
+                        "try refreshing this page. if it doesn't work,",
+                        "try removing your pchelper_user cookie",
+                        "and readding your account."
+                    ].join(" ")
+                    try {res.send(joinedMsg)}catch(error) {}
+                }
+            }, 5000)
         })
 
         app.post("/gsign_set", (req, res) => {
@@ -501,7 +516,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         catch(error){}
                         if(!id) return;
                         fullRes += templates.gdata_subscriptionChannel(
-                            name, avatar, id, handle
+                            name, (req.withAvatars ? avatar : ""), id, handle
                         )
                     }
                     catch(error){console.log(error)}
@@ -963,35 +978,55 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
             commentToken.serializeBinary()
         ).toString("base64"))
 
+        let cachedName = userdata[deviceId].cachedName
+
+        // fill cachedName in if not here
+        function pullCachedName(callback) {
+            if(!userdata[deviceId].cachedName) {
+                pullAllYouTubeAccounts(userdata[deviceId], (data) => {
+                    data.forEach(a => {
+                        if(a.selected) {
+                            cachedName = a.handle || a.name || "."
+                        }
+                    })
+                    callback(cachedName.replace("@", ""))
+                })
+            } else {
+                callback(cachedName)
+            }
+        }
+        
         // post comment
         setupYouTube(deviceId, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/comment/create_comment", {
-                "method": "POST",
-                "headers": h,
-                "body": JSON.stringify({
-                    "context": androidContext,
-                    "commentText": content,
-                    "createCommentParams": token
-                })
-            }).then(r => {r.json().then(r => {
-                res.set("content-type", "application/atom+xml")
-                if(!userdata[deviceId].cachedComments) {
-                    userdata[deviceId].cachedComments = []
-                }
-                userdata[deviceId].cachedComments.push([
-                    id,
-                    userdata[deviceId].cachedName,
-                    content,
-                    new Date().toISOString()
-                ])
-                res.send(templates.gdata_feedComment(
-                    id,
-                    userdata[deviceId].cachedName,
-                    content,
-                    new Date().toISOString()
-                ))
-                fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
-            })})
+            pullCachedName((name) => {
+                fetch("https://www.youtube.com/youtubei/v1/comment/create_comment", {
+                    "method": "POST",
+                    "headers": h,
+                    "body": JSON.stringify({
+                        "context": androidContext,
+                        "commentText": content,
+                        "createCommentParams": token
+                    })
+                }).then(r => {r.json().then(r => {
+                    res.set("content-type", "application/atom+xml")
+                    if(!userdata[deviceId].cachedComments) {
+                        userdata[deviceId].cachedComments = []
+                    }
+                    userdata[deviceId].cachedComments.push([
+                        id,
+                        name,
+                        content,
+                        new Date().toISOString()
+                    ])
+                    res.send(templates.gdata_feedComment(
+                        id,
+                        name,
+                        content,
+                        new Date().toISOString()
+                    ))
+                    fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+                })})
+            })
         })
     },
 
@@ -2108,6 +2143,531 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 })
             })
         }
+    },
+
+    "createCustomization": function(req, params, res) {
+        let t = this;
+        let fetchesRequired = 0;
+        let fetchesCompleted = 0;
+
+        if(!params.fields) {
+            params.fields = {}
+        }
+        if(!params.checkboxes) {
+            params.checkboxes = {}
+        }
+        if(!params.themeName) {
+            params.themeName = "custom"
+        }
+        let msg = new customChannel.root()
+        msg.setTitle(params.fields.channel_title_input)
+        let validTypes = ["u", "d", "m", "c", "g", "j"]
+        if(params.fields.channel_type
+        && validTypes.includes(params.fields.channel_type)) {
+            msg.setType(params.fields.channel_type)
+        }
+        msg.setTags(params.fields.keywords)
+
+        let themes = {
+            "default": 1,
+            "blue": 2,
+            "red": 3,
+            "sunlight": 4,
+            "forest": 5,
+            "8bit": 6,
+            "princess": 7,
+            "fire": 8,
+            "stealth": 9,
+            "clean": 10,
+            "custom": 11
+        }
+        msg.setThemeid(themes[params.themeName] || 1)
+
+        let fonts = {
+            "Times New Roman": 1,
+            "Arial": 2,
+            "Verdana": 3,
+            "Georgia": 4,
+            "Courier New": 5
+        }
+        msg.setFont(fonts[params.fields.font.split("+").join(" ")] || 2)
+
+        msg.setBackgroundcolor(params.fields.background_color || "CCCCCC")
+        msg.setWrappercolor(params.fields.wrapper_color || "999999")
+        msg.setWrappertextcolor(params.fields.wrapper_text_color || "000000")
+        msg.setWrapperlinkcolor(params.fields.wrapper_link_color || "0000cc")
+        msg.setInnerboxbackgroundcolor(
+            params.fields.box_background_color || "eeeeff"
+        )
+        msg.setInnerboxtitletextcolor(
+            params.fields.title_text_color || "000000"
+        )
+        msg.setInnerboxlinkcolor(params.fields.link_color || "0000cc")
+        msg.setInnerboxbodytextcolor(params.fields.body_text_color || "333333")
+        if(params.fields.background_image
+        && params.fields.background_image.length == 24) {
+            msg.setCustombackgroundid(params.fields.background_image)
+        }
+
+        if(params.fields.wrapper_opacity
+        && !isNaN(parseInt(params.fields.wrapper_opacity))
+        && parseInt(params.fields.wrapper_opacity) >= 0
+        && parseInt(params.fields.wrapper_opacity) <= 255) {
+            msg.setWrapperopacity(parseInt(params.fields.wrapper_opacity))
+        }
+
+        if(params.fields.innerbox_opacity
+        && !isNaN(parseInt(params.fields.innerbox_opacity))
+        && parseInt(params.fields.innerbox_opacity) >= 0
+        && parseInt(params.fields.innerbox_opacity) <= 255) {
+            msg.setInnerboxopacity(parseInt(params.fields.innerbox_opacity))
+        }
+
+        msg.setHidebanner(params.checkboxes.hide_def_banner_check)
+        msg.setRepeatcustombackground(
+            params.checkboxes.background_repeat_check
+        )
+
+        let shownModulesString = ""
+        if(params.checkboxes.box_status_user_comments) {
+            shownModulesString += "c"
+        }
+        if(params.checkboxes.box_status_user_recent_activity) {
+            shownModulesString += "r"
+        }
+        if(params.checkboxes.box_status_user_hubber_links) {
+            shownModulesString += "o"
+        }
+        if(params.checkboxes.box_status_user_subscribers) {
+            shownModulesString += "s"
+            fetchesRequired++
+            this.getSubscribers(req, (data) => {
+                if(data) {
+                    data.slice(0,6).forEach(d => {
+                        let c = new customChannel.featuredChannel()
+                        c.setId(d.id)
+                        c.setName(d.name)
+                        msg.addSubscriber(c)
+                    })
+                }
+                fetchesCompleted++
+                if(fetchesCompleted == fetchesRequired) {
+                    t.applyCustomization(msg.serializeBinary(), res, req)
+                }
+            })
+        }
+        if(params.checkboxes.box_status_user_subscriptions) {
+            shownModulesString += "z"
+            fetchesRequired++
+            //req.withAvatars = true;
+            this.getSubscriptions(req, {
+                "set": function(a,b) {},
+                "send": function(data) {
+                    data.split("<entry>").slice(0,7).forEach(e => {
+                        if(e.includes("<feed")) return;
+                        let name = e.split("<yt:username>")[1]
+                                    .split("</yt:usernam")[0]
+                                    .split("&").join("")
+                                    .split(";").join("")
+                                    .split(":").join("")
+                        let id = e.split("<y9id>")[1].split("</y9id>")[0]
+                        let c = new customChannel.featuredChannel()
+                        c.setId(id)
+                        c.setName(name)
+                        msg.addSubscription(c)
+                    })
+                    fetchesCompleted++
+                    if(fetchesCompleted == fetchesRequired) {
+                        t.applyCustomization(msg.serializeBinary(), res, req)
+                    }
+                }
+            })
+        }
+        msg.setShownmodules(shownModulesString)
+
+        
+        let shownContentString = ""
+        if(params.checkboxes.display_uploads) {
+            shownContentString += "u"
+        }
+        if(params.checkboxes.display_favorites) {
+            shownContentString += "f"
+        }
+        if(params.checkboxes.display_playlists) {
+            shownContentString += "p"
+        }
+        if(params.checkboxes.display_all) {
+            shownContentString += "a"
+        }
+        msg.setShowncontent(shownContentString)
+        
+        msg.setEnableautoplay(params.checkboxes.enable_autoplay)
+
+        if(params.fields.default_view == "grid") {
+            msg.setDefaultgrid(true)
+        }
+        switch(params.fields.default_set || "") {
+            case "uploads": {
+                msg.setAltdefaultset(2)
+                break;
+            }
+            case "favorites": {
+                msg.setAltdefaultset(3)
+                break;
+            }
+        }
+
+        if(params.fields.featured_video_id == "OTHER111111") {
+            let altVideoId = false;
+            let vurl = params.fields.featured_video_url
+            if(vurl && vurl.includes("youtu.be/")) {
+                altVideoId = vurl.split("youtu.be/")[1]
+                                 .split("?")[0]
+                                 .split("#")[0];
+                altVideoId = altVideoId.substring(0,11)
+            } else if(vurl.includes("/watch") && vurl.includes("v=")) {
+                altVideoId = vurl.split("v=")[1].substring(0,11)
+            }
+            if(altVideoId) {
+                msg.setAltdefaultvidid(altVideoId)
+            }
+        }
+
+        if(fetchesCompleted == fetchesRequired) {
+            this.applyCustomization(msg.serializeBinary(), res, req)
+        }
+    },
+
+    "updateChannelDescription": function(req, description, id, callback) {
+        // craft description update proto
+        let root = new userMetadata.root()
+        let context = new userMetadata.root.contextType()
+        let client = new userMetadata.root.contextType.clientType()
+        client.setClientnumber(3)
+        client.setClientversion("19.02.39")
+        client.setOsname("Android")
+        client.setOsversion("14")
+        client.setAndroidsdkversion(34)
+        context.addClient(client)
+        root.addContext(context)
+
+        root.setBrowseid(id)
+
+        let upd = new userMetadata.root.channelAboutTab()
+        upd.setDescription(description)
+        root.addAbout(upd)
+        
+        let pbmsg = root.serializeBinary()
+
+        // send request
+        setupYouTube(pullDeviceId(req), (h) => {
+            h["Content-Type"] = "application/x-protobuf"
+            h["x-goog-api-format-version"] = "2"
+            let url = [
+                "https://youtubei.googleapis.com",
+                "/youtubei/v1/channel_edit",
+                "/update_channel_page_settings"
+            ].join("")
+            fetch(url, {
+                "method": "POST",
+                "headers": h,
+                "body": pbmsg
+            }).then(r => {
+                callback()
+            })
+        })
+    },
+
+    "applyCustomization": function(proto, res, req) {
+        //console.log(Buffer.from(proto).toString("base64"))
+        const identif = "-- x-yt2009-custom"
+        const warning = [
+            " -- channel customization code for yt2009"
+        ].join("")
+        this.openBrowseId(req, (id) => {
+            require("./yt2009channels").aboutChannel(id, (data) => {
+                // put customiation code to channel description
+                let description = data.description || ""
+                if(description
+                && description.includes(identif)) {
+                    let customizi = description.split(identif)[1]
+                                    .split("\n")[1];
+                    description = description.replace(customizi, "")
+                    let descriptiLine = description.split(identif)[1]
+                                        .split("\n")[0]
+                    description = description.replace(
+                        identif + descriptiLine, ""
+                    )
+                }
+                
+                description += identif + warning + "\n"
+                description += Buffer.from(proto).toString("base64").split("+").join("-")
+
+                // craft description update proto
+                this.updateChannelDescription(req, description, id, () => {
+                    setTimeout(() => {
+                        let ownUrl = [
+                            "/channel/" + id,
+                            "?resetcache=1",
+                            "&nc=" + Date.now()
+                        ].join("")
+                        res.redirect(ownUrl)
+                    }, 1000)
+                })
+                /*let root = new userMetadata.root()
+                let context = new userMetadata.root.contextType()
+                let client = new userMetadata.root.contextType.clientType()
+                client.setClientnumber(3)
+                client.setClientversion("19.02.39")
+                client.setOsname("Android")
+                client.setOsversion("14")
+                client.setAndroidsdkversion(34)
+                context.addClient(client)
+                root.addContext(context)
+
+                root.setBrowseid(id)
+
+                let upd = new userMetadata.root.channelAboutTab()
+                upd.setDescription(description)
+                root.addAbout(upd)
+                
+                let pbmsg = root.serializeBinary()
+
+                // send request
+                setupYouTube(pullDeviceId(req), (h) => {
+                    h["Content-Type"] = "application/x-protobuf"
+                    h["x-goog-api-format-version"] = "2"
+                    let url = [
+                        "https://youtubei.googleapis.com",
+                        "/youtubei/v1/channel_edit",
+                        "/update_channel_page_settings"
+                    ].join("")
+                    fetch(url, {
+                        "method": "POST",
+                        "headers": h,
+                        "body": pbmsg
+                    }).then(r => {
+                        setTimeout(() => {
+                            let ownUrl = [
+                                "/channel/" + id,
+                                "?resetcache=1",
+                                "&nc=" + Date.now()
+                            ].join("")
+                            res.redirect(ownUrl)
+                        }, 1000)
+                    })
+                })*/
+            })
+        })
+    },
+
+    "getSubscribers": function(req, callback) {
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            callback([])
+            return;
+        }
+
+        this.openBrowseId(req, (id) => {
+            const tempBehalf = require("./proto/temp_behalfof_pb")
+            let pmsg = new tempBehalf.root()
+            let pimsg = new tempBehalf.behalf()
+            pimsg.setChannelid(id)
+            pimsg.setEmpty2("")
+            pmsg.addBeh(pimsg)
+            let behalfOf = Buffer.from(
+                pmsg.serializeBinary()
+            ).toString("base64")
+
+            setupYouTube(device, (h) => {
+                fetch("https://www.youtube.com/youtubei/v1/browse", {
+                    "method": "POST",
+                    "headers": h,
+                    "body": JSON.stringify({
+                        "context": androidContext,
+                        "browseId": "FEsubscriber_list",
+                        "params": behalfOf
+                    })
+                }).then(r => {r.json().then(r => {
+                    let subList = []
+                    try {
+                        let a = r.contents.singleColumnBrowseResultsRenderer
+                                 .tabs[0].tabRenderer.content
+                                 .sectionListRenderer.contents
+                        a.forEach(b => {
+                            try {
+                                b = b.itemSectionRenderer.contents
+                                b.forEach(c => {
+                                    c = c.elementRenderer.newElement.type
+                                         .componentType.model
+                                         .subscriptionsChannelPageListItemModel
+                                         .channelListItemData
+                                    let userId = false;
+                                    try {
+                                        function put(browseEndpoint) {
+                                            if(browseEndpoint) {
+                                                let d = browseEndpoint
+                                                userId = d.browseId;
+                                            }
+                                        }
+                                        let command = c.command.innertubeCommand
+                                        if(command.commandExecutorCommand) {
+                                            command.commandExecutorCommand
+                                            .commands.forEach(d => {
+                                                if(d.browseEndpoint) {
+                                                    put(d.browseEndpoint)
+                                                }
+                                            })
+                                        } else if(command.browseEndpoint) {
+                                            put(command.browseEndpoint)
+                                        }
+                                        
+                                    }
+                                    catch(error){}
+                                    let name = c.channelName.content
+                                    if(userId) {
+                                        subList.push({
+                                            "id": userId,
+                                            "name": name
+                                        })
+                                    }
+                                })
+                            }
+                            catch(error) {}
+                        })
+                    }
+                    catch(error) {
+                        console.log("failed to pull subscribers list!", error)
+                    }
+                    
+
+                    callback(subList)
+                })})
+            }, req)
+        })
+    },
+
+    "applyProfileSetup": function(req, res) {
+        let delimiter = "═"
+        let whitelistedProperties = [
+            "website", "first-name", "last-name", "gender", "relationship",
+            "hometown", "current-city", "zip-code", "country", "occupations",
+            "companies", "schools", "interests", "fav-movies", "fav-music",
+            "fav-books", "channel-description", "pronouns"
+        ]
+        let data = {}
+        let raw = req.body.toString().split("&")
+        let propertyNames = {
+            "website": "Website",
+            "name": "Name",
+            "gender": "Gender",
+            "relationship": "Relationship",
+            "hometown": "Hometown",
+            "current-city": "City",
+            "country": "Country",
+            "zip-code": "Zip",
+            "occupations": "Occupation",
+            "companies": "Companies",
+            "schools": "Schools",
+            "interests": "Hobbies",
+            "fav-movies": "Movies",
+            "fav-music": "Music",
+            "fav-books": "Books",
+            "pronouns": "Pronouns"
+        }
+        let dropdownValues = {
+            "Gender": {
+                "m": "Male",
+                "f": "Female"
+            },
+            "Relationship": {
+                "s": "Single",
+                "t": "Taken",
+                "o": "Open"
+            },
+            "Country": {}
+        }
+        let countries = require("./geo/country-codes.json")
+        let reversedCountries = {}
+        for(let name in countries) {
+            reversedCountries[countries[name]] = name;
+        }
+        dropdownValues.Country = reversedCountries;
+
+        raw.forEach(p => {
+            let key = p.split("=")[0]
+            let value = decodeURIComponent(p.split("=")[1]).split("\r").join("")
+            if(whitelistedProperties.includes(key)) {
+                data[propertyNames[key] || key] = value;
+            }
+        })
+
+        /*if(data.country && data.country.length == 2
+        && reversedCountries[data.country]) {
+            data.country = reversedCountries[data.country]
+        }*/
+
+        for(let prop in dropdownValues) {
+            let value = data[prop]
+            //console.log(prop, value, dropdownValues[prop])
+            if(value && dropdownValues[prop][value]) {
+                data[prop] = dropdownValues[prop][value]
+            } else {
+                data[prop] = ""
+            }
+        }
+
+        if(data["first-name"] || data["last-name"]) {
+            data["Name"] = `${data["first-name"] || ""} ${data["last-name"] || ""}`
+            delete data["first-name"]
+            delete data["last-name"]
+        }
+
+        let completeDescription = ""
+        if(data["channel-description"]) {
+            completeDescription = data["channel-description"].split("+").join(" ")
+            delete data["channel-description"]
+        }
+        if(completeDescription.includes(delimiter)) {
+            // remove previous properties
+            let part = completeDescription.split("\n\n" + delimiter + " ")[1]
+                       .split("\n\n")[0]
+            completeDescription = completeDescription.replace(
+                "\n\n" + delimiter + " " + part, ""
+            )
+        }
+
+        if(completeDescription.includes("-- x-yt2009-custom")) {
+            // has channel customization, put before
+            completeDescription = completeDescription.replace(
+                "\n\n-- x-yt2009-custom",
+                "\n\n//properties-insert\n\n-- x-yt2009-custom"
+            )
+        } else {
+            // put at the end
+            completeDescription += "\n\n//properties-insert"
+        }
+
+        // craft properties
+        let textData = []
+        for(let p in data) {
+            if(data[p] && data[p].length >= 1) {
+                textData.push(`${delimiter} ${p}: ${data[p]}`)
+            }
+        }
+        textData = textData.join("\n")
+
+        completeDescription = completeDescription.replace(
+            "//properties-insert", textData
+        )
+
+        this.openBrowseId(req, (id) => {
+            this.updateChannelDescription(req, completeDescription, id, () => {
+                setTimeout(() => {
+                    res.redirect(`/channel/${id}?resetcache=1&nc=${Math.random()}`)
+                }, 250)
+            })
+        })
     }
 }
 

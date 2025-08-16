@@ -1,0 +1,57 @@
+<html>
+<head>
+	<title></title>
+    <style>
+        #error-msg {
+            position: absolute;
+            color: black;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            font-size: 10px;
+            font-family: "Arial", sans-serif;
+        }
+        #overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+<form action="/my_profile_theme_post" method="post" enctype="multipart/form-data" id="imageUploadForm">
+<input type="submit" style="display:none;">
+<input name="body_background_image_path" id="body_background_image_path" type="file" onchange="uploadBackgroundImage();" accept="image/jpeg, image/jpg, image/png, image/webp">
+</form>
+<script>
+if(location.href.indexOf("status=success") !== -1) {
+    document.body.innerHTML = "Upload successful!"
+    var p = window.parent.document
+    p.getElementById("background_image").value = location.href.split("fileid=")[1].split("&")[0].split("#")[0]
+} else if(location.href.indexOf("status=error") !== -1) {
+    var errorText = "An error has occurred. Try again."
+    if(location.href.indexOf("etype=funsupported") !== -1) {
+        errorText = "File not supported. JPG, PNG, WEBP."
+    } else if(location.href.indexOf("etype=size") !== -1) {
+        errorText = "Maximum file size is 256K."
+    }
+    var msg = document.createElement("span")
+    msg.id = "error-msg"
+    msg.innerHTML = errorText
+    document.body.appendChild(msg)
+    setTimeout(function() {
+        document.body.removeChild(msg)
+    }, 2500)
+}
+function uploadBackgroundImage() {
+    document.getElementById("imageUploadForm").submit()
+    var o = document.createElement("div")
+    o.id = "overlay"
+    document.body.appendChild(o)
+}
+</script>
+</body>
+</html>

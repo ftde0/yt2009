@@ -158,7 +158,7 @@
 		}
 
 		.panel-tab-selected a {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.outer-box-color-as-border-color {
@@ -166,15 +166,15 @@
 		}
 
 		.outer-box a {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.outer-box-bg-color a {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.outer-box-link-color {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.outer-box-link-as-border-color {
@@ -186,12 +186,12 @@
 		}
 
 		.title-text-color {
-			color: yt2009_text_color !important;
+			color: yt2009_title_text_color !important;
 		}
 
 		a.title-text-color,
 		.title-text-color a {
-			color: yt2009_text_color !important;
+			color: yt2009_link_color !important;
 		}
 
 		#playnav-navbar a.navbar-tab-selected,
@@ -200,7 +200,11 @@
 		}
 
 		.title-text {
-			color: yt2009_text_color !important;
+			color: yt2009_title_text_color !important;
+		}
+
+		.wrapper-title-text {
+			color: yt2009_wrapper_title_text_color !important;
 		}
 
 		title-text-as-border-color {
@@ -219,15 +223,15 @@
 
 		.outer-box .inner-box a,
 		.outer-box .inner-box-colors a {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.outer-box .inner-box-bg-color a {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.outer-box .inner-box-link-color {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.channel-cmd {
@@ -239,7 +243,7 @@
 		}
 
 		.view-button .a {
-			background-color: yt2009_text_color;
+			background-color: yt2009_link_color;
 		}
 
 		/*.view-button .tri {
@@ -272,19 +276,19 @@
 		}
 
 		a.inner-box-color-as-link {
-			color: yt2009_text_color;
+			color: yt2009_link_color;
 		}
 
 		.inner-box {
-			background-color: yt2009_main_bg;
+			background-color: yt2009_innerbox_main_bg;
 		}
 
 		.inner-box-colors {
-			background-color: yt2009_main_bg;
+			background-color: yt2009_innerbox_main_bg;
 		}
 
 		.inner-box-bg-color {
-			background-color: yt2009_main_bg;
+			background-color: yt2009_innerbox_main_bg;
 		}
 
 		.inner-box-bg-as-border-color {
@@ -333,8 +337,16 @@
 			height: auto;
 		}
 
+
+		.theme_selector_div {
+			height: 71px;
+		}
+		#edit_controls .save_overlay {
+  			width: 155px;
+		}
 	</style>
 
+	<!--yt2009_customized_css-->
 	<!--yt2009_wayback_channel_custom_css-->
 	
 	<style>
@@ -440,6 +452,8 @@
 
 	</div>
 
+	<!--yt2009_channel_customizr-->
+
 	<div id="channel-body" class="jsloaded">
 		<div id="channel-base-div">
 			<!--yt2009_banner-->
@@ -485,10 +499,10 @@
 							</div>
 
 							<div style="float:left;padding:0.4em;">
-								<div class="channel-title outer-box-color" id="channel_title">
-									yt2009_channel_name
+								<div class="channel-title outer-box-color wrapper-title-text" id="channel_title">
+									yt2009_channel_title
 								</div>
-								<div class="channel-title outer-box-color" style="font-size: 11px;" id="channel_base_title">lang_channel_headername_prefix yt2009_channel_namelang_channel_headername_suffix</div>
+								<div class="channel-title outer-box-color wrapper-title-text" style="font-size: 11px;" id="channel_base_title">lang_channel_headername_prefix yt2009_channel_namelang_channel_headername_suffix</div>
 							</div>
 
 							<div style="float:left;padding-top:10px;_display:inline" id="subscribe-buttons">
@@ -508,11 +522,11 @@
 						<table>
 							<tbody>
 								<tr>
-									<td><a class="navbar-tab inner-box-link-color navbar-tab-selected" id="playnav-navbar-tab-all" onclick="switchTab('all', this)">lang_playnav_all</a></td>
-									<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-uploads" onclick="switchTab('uploads', this)">lang_playnav_videos</a></td>
-									<!--yt2009_live_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-live" onclick="switchTab('live', this)">lang_playnav_livevids</a></td>yt2009_live_remove_end-->
-									<!--yt2009_favorites_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-favorites" onclick="openPlaylist(document.querySelector('.yt2009_favorites_id_div'), 'favorites')">lang_playnav_favorites</a><div class="hid yt2009_favorites_id_div" data-id="yt2009_favorites_id_value"></div></td>yt2009_favorites_remove_end-->
-									<!--yt2009_playlists_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-playlists" onclick="switchTab('playlists', this)">lang_playnav_playlists_top</a></td>yt2009_playlists_remove_end-->
+									<!--yt2009_marker_all_scrollbox_btn--><td><a class="navbar-tab inner-box-link-color navbar-tab-selected" id="playnav-navbar-tab-all" onclick="switchTab('all', this)">lang_playnav_all</a></td><!--yt2009_marker_all_scrollbox_btn_end-->
+									<!--yt2009_marker_vids_scrollbox_btn--><td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-uploads" onclick="switchTab('uploads', this)">lang_playnav_videos</a></td><!--yt2009_marker_vids_scrollbox_btn_end-->
+									<!--yt2009_marker_live_scrollbox_btn--><!--yt2009_live_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-live" onclick="switchTab('live', this)">lang_playnav_livevids</a></td>yt2009_live_remove_end--><!--yt2009_marker_live_scrollbox_btn_end-->
+									<!--yt2009_marker_favs_scrollbox_btn--><!--yt2009_favorites_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-favorites" onclick="openPlaylist(document.querySelector('.yt2009_favorites_id_div'), 'favorites')">lang_playnav_favorites</a><div class="hid yt2009_favorites_id_div" data-id="yt2009_favorites_id_value"></div></td>yt2009_favorites_remove_end--><!--yt2009_marker_favs_scrollbox_btn_end-->
+									<!--yt2009_marker_pls_scrollbox_btn--><!--yt2009_playlists_remove_start<td><a class="navbar-tab inner-box-link-color" id="playnav-navbar-tab-playlists" onclick="switchTab('playlists', this)">lang_playnav_playlists_top</a></td>yt2009_playlists_remove_end--><!--yt2009_marker_pls_scrollbox_btn_end-->
 								</tr>
 							</tbody>
 						</table>
@@ -698,7 +712,7 @@
 												</div>
 												<div id="playnav-curvideo-info-line">
 
-													lang_playnav_from <span id="playnav-curvideo-channel-name">yt2009_channel_name</span>&nbsp;|
+													lang_playnav_from <span id="playnav-curvideo-channel-name">yt2009_featured_uploader</span>&nbsp;|
 													yt2009_head_video_upload&nbsp;|
 													<span id="playnav-curvideo-view-count">lang_views_prefix yt2009_head_video_views lang_views_suffix</span>
 												</div>
@@ -774,6 +788,7 @@
 									<div id="playnav-play-all-scrollbox" class="scrollbox-wrapper inner-box-colors">
 										<div class="scrollbox-content playnav-playlist-all">
 											<div class="scrollbox-body" style="height: 585px;">
+												<!--yt2009_marker_all_scrollbox-->
 												<div class="outer-scrollbox yt2009-scrollbox scrollbox-all">
 													<div id="playnav-play-all-items" class="inner-scrollbox">
 														<div class="playnav-all-header">
@@ -793,7 +808,9 @@
 
 													</div>
 												</div>
+												<!--yt2009_marker_all_scrollbox_end-->
 
+												<!--yt2009_marker_uploads_scrollbox-->
 												<div class="outer-scrollbox yt2009-scrollbox scrollbox-uploads hid">
 													<div id="playnav-play-all-items" class="inner-scrollbox">
 														<div class="playnav-playlist-header">
@@ -828,6 +845,7 @@
 
 													</div>
 												</div>
+												<!--yt2009_marker_uploads_scrollbox_end-->
 
 												<!--yt2009_live_scrollbox-->
 
@@ -885,6 +903,9 @@
 						</div>
 						<div style="float:left;width:170px">
 							<div class="box-title yt2009-name title-text-color" style="float:none;padding-left:4px;margin-top:-2px;width:170px;overflow:hidden;font-size:150%">yt2009_channel_name</div>
+							<div class="yt2009-own-channel-marker hid opacity70" style="padding-left: 8px;width:170px">
+								Your channel viewers will see links here, including "subscribe" and "add as friend".
+							</div>
 							<div style="position:relative;width:170px;">
 								<div>
 									<div id="subscribe_user_profile" class="subscribe-div yt2009-subscribe-button-hook" onclick="subscribe();">
@@ -921,6 +942,7 @@
 								<!--yt2009_properties-->
 								<!--yt2009_wayback_properties-->
 							</div>
+							<!--yt2009_show_info-->
 
 						</div>
 						<div class="cb"></div>
@@ -958,14 +980,14 @@
 						<div class="clear"></div>
 					</div>
 
-					<!--yt2009_wayback_subscribers_slot1-->
+					<!--yt2009_subscribers_slot1-->
 
 					<!--yt2009_friends_slot1-->
 
 					<!--yt2009_recentslot-->
 				</div>
 				<div class="right-column" id="main-channel-right">
-					<!--<div class="inner-box" id="user_recent_activity">
+					<!--yt2009_marker_activity--><!--<div class="inner-box" id="user_recent_activity">
 						<div style="zoom:1">
 							<div class="box-title title-text-color">
 								Recent Activity &nbsp;
@@ -979,12 +1001,12 @@
 						<div id="user_recent_activity-messages" style="color:#333;margin:1em;padding:1em;display:none">
 						</div>
 						<div class="clear"></div> 
-					</div>-->
+					</div>--><!--yt2009_marker_activity_end-->
 
-					<!--yt2009_wayback_subscribers_slot2-->
+					<!--yt2009_subscribers_slot2-->
 					<!--yt2009_friends_slot2-->
 
-					<div class="inner-box yt2009-default-friends-mark" id="user_friends">
+					<!--yt2009_marker_friends--><div class="inner-box yt2009-default-friends-mark" id="user_friends">
 						<div style="zoom:1">
 							<div class="box-title title-text-color">lang_channel_friends (yt2009_friends_count)</div>
 							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
@@ -1009,9 +1031,9 @@
 							</div>
 						</div>
 						<div class="clear"></div>
-					</div>
+					</div><!--yt2009_marker_friends_end-->
 
-					<div class="inner-box yt2009-comments-mark" id="user_comments">
+					<!--yt2009_marker_comments--><div class="inner-box yt2009-comments-mark" id="user_comments">
 						<div style="zoom:1">
 							<div class="box-title title-text-color">lang_channel_comments <!--(yt2009_channel_comment_count)--></div>
 							<div style="float:right;zoom:1;_display:inline;white-space:nowrap">
@@ -1034,7 +1056,7 @@
 							<div id="user-comments-login-add-comment" style="font-size: 12px; margin-top: 10px" class="alignC"><a href="#">lang_channel_comment_add</a></div>
 						</div>
 						<div class="clear"></div>
-					</div>
+					</div><!--yt2009_marker_comments_end-->
 
 				</div>
 				<div class="cb"></div>
@@ -1055,9 +1077,13 @@
 
 	<script>
 		//[yt2009-hook-no-videos]
+
+		//[yt2009-hook-autogrid]
+		//[yt2009-hook-altview]
 	</script>
 
 	<script src="/assets/site-assets/search-suggestions.js"></script>
+	<!--yt2009_pchelper_owned-->
 </body>
 
 </html>

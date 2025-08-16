@@ -490,8 +490,8 @@
                             </div>
                         </div>
 						<div class="body">
-							soon!
-							<form action="/pchelper_profile_setup" id="pchelper-profile-setup-form" class="hid" style="display: none;" method="POST">
+							<p class="bold" id="pchelper-notice">add a pchelper account to see and edit your profile. <a href="/mh_pc_intro">add pchelper</a></p>
+							<form action="/pchelper_profile_setup" id="pchelper-profile-setup-form" class="hid" method="POST">
 								<div class="section-tabs">
 									<div class="section current section-about">
 										<div class="tab" onclick="toggleExpander('profile', 'about')">
@@ -500,7 +500,7 @@
 											</div>
 											<div class="cb"></div>
 										</div>
-										<div class="page" id="page" style="height: 200px;">
+										<div class="page" id="page">
 											<div style="display:inline-block;width:300px;">
 												<div id="user-profile-picture">
 													<div class="user-thumb-large fl">
@@ -541,6 +541,10 @@
 												<div class="field line">
 													<span>Last Name:</span><br>
 													<input type="text" name="last-name" spellcheck="false" autocomplete="off">
+												</div>
+												<div class="field line">
+													<span>Pronouns:</span><br>
+													<input type="text" name="pronouns" spellcheck="false" autocomplete="off">
 												</div>
 												<div class="field">
 													<span>Gender:</span><br>

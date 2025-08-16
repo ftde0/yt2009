@@ -499,13 +499,13 @@ if(document.querySelector("#watch-playlist-videos-panel")) {
     // refetch jak nie ma filmów zapisanych
     if(document.querySelector(".yt2009_marking_fetch_playlist_client")) {
         // request
-        var r = new XMLHttpRequest();
-        r.open("GET", "/refetch_playlist_watch")
-        r.setRequestHeader("source", location.href)
-        r.send(null)
-        r.addEventListener("load", function(e) {
+        var vr = new XMLHttpRequest();
+        vr.open("GET", "/refetch_playlist_watch?ac=" + Math.random())
+        vr.setRequestHeader("source", location.href)
+        vr.send(null)
+        vr.addEventListener("load", function(e) {
             // dopełnianie htmla wysłanego z serwera
-            $("#watch-playlist-discoverbox").innerHTML += r.responseText
+            $("#watch-playlist-discoverbox").innerHTML += vr.responseText
         }, false)
     }
 }
