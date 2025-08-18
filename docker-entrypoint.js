@@ -155,8 +155,6 @@ switch (process.env.YT2009_DEFAULTF) {
     case 'false':
         cfg.default_f = false;
         break;
-    default:
-        throw new Error('invalid YT2009_DEFAULTF')
 }
 
 // set ssl
