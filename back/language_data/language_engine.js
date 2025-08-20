@@ -4,6 +4,7 @@ const langs = {
     "h": require("./h.json"),
     "sr-RS": require("./sr-RS.json"),
     "sr-Latn-RS": require("./sr-Latn-RS.json"),
+    "ja-jp": require("./ja-jp.json"),
     "ru": require("./ru.json"),
     "de": require("./de.json"),
     "tr": require("./tr.json")
