@@ -81,25 +81,57 @@ module.exports = {
     },
 
 
-    "comments_viewmodel_parser": function(response, comment_flags) {
+    "comments_viewmodel_parser": function(response, comment_flags, includeContinuation) {
         devlog("[dev] using comments_viewmodel_parser instead")
         let firstPinned = false;
+        let commentsWithReplies = {}
+        let continuationItems = []
         try {
             response.onResponseReceivedEndpoints.forEach(e => {
                 if(e.reloadContinuationItemsCommand
-                && e.reloadContinuationItemsCommand.continuationItems
-                && e.reloadContinuationItemsCommand.continuationItems[0]
-                && e.reloadContinuationItemsCommand.continuationItems[0]
-                .commentThreadRenderer) {
-                    let first = e.reloadContinuationItemsCommand
-                                 .continuationItems[0]
-                                 .commentThreadRenderer
-                                 .commentViewModel
-                                 .commentViewModel;
-                    if(first.pinnedText) {
-                        firstPinned = true;
+                && e.reloadContinuationItemsCommand.continuationItems) {
+                    continuationItems = e.reloadContinuationItemsCommand
+                                         .continuationItems
+                } else if(e.appendContinuationItemsAction
+                && e.appendContinuationItemsAction.continuationItems) {
+                    continuationItems = e.appendContinuationItemsAction
+                                         .continuationItems
+                }
+            })
+        }
+        catch(error) {}
+        try {
+            if(continuationItems[0]
+            && continuationItems[0].commentThreadRenderer) {
+                let first =  continuationItems[0]
+                             .commentThreadRenderer
+                             .commentViewModel
+                             .commentViewModel;
+                if(first.pinnedText) {
+                    firstPinned = true;
+                }
+            }
+
+            continuationItems.forEach(z => {
+                try {
+                    let y = z.commentThreadRenderer.commentViewModel
+                             .commentViewModel
+                    let cId = y.commentId
+                    if(z.commentThreadRenderer.replies) {
+                        let r = z.commentThreadRenderer.replies
+                                 .commentRepliesRenderer
+                        let viewString = r.viewReplies.buttonRenderer
+                                          .text.runs[0].text;
+                        r = r.contents[0].continuationItemRenderer
+                             .continuationEndpoint.continuationCommand
+                             .token
+                        let rCount = this.bareCount(viewString)
+                        if(r && viewString) {
+                            commentsWithReplies[cId] = [r, rCount]
+                        }
                     }
                 }
+                catch(error) {}
             })
         }
         catch(error) {}
@@ -113,6 +145,11 @@ module.exports = {
                     let content = m.properties.content.content.replace(
                         /\p{Other_Symbol}/gui, ""
                     )
+                    let repliesData = false
+                    try {
+                        repliesData = commentsWithReplies[m.properties.commentId]
+                    }
+                    catch(error) {}
                     comments.push({
                         "authorAvatar": m.author.avatarThumbnailUrl,
                         "authorName": m.author.displayName.replace("@", ""),
@@ -125,25 +162,49 @@ module.exports = {
                         "likes": parseInt(m.toolbar.likeCountA11y.replace(
                             /[^0-9]/g, ""
                         )),
-                        "pinned": (i == 0 && firstPinned)
+                        "pinned": (i == 0 && firstPinned),
+                        "commentId": m.properties.commentId,
+                        "r": repliesData
                     })
                     i++
                 }
             })
 
+            if(includeContinuation
+            && continuationItems.length >= 1) {
+                let last = continuationItems[continuationItems.length - 1]
+                if(last.continuationItemRenderer) {
+                    let token = last.continuationItemRenderer
+                    if(token.continuationEndpoint) {
+                        token = token.continuationEndpoint.continuationCommand
+                                     .token
+                    } else if(token.button) {
+                        token = token.button.buttonRenderer.command
+                                     .continuationCommand.token
+                    } else {
+                        token = false;
+                    }
+                    comments.push({
+                        "continuation": token
+                    })
+                }
+            }
+
             return comments;
         }
         catch(error) {
+            console.log(error)
             return []
         }
     },
 
     
-    "comments_parser": function(response, comment_flags) {
+    "comments_parser": function(response, comment_flags, includeContinuation) {
         if(response.frameworkUpdates) {
-            // parse new viewmodel comments, don't remove old code yet as old
-            // commentRenderers are still common.
-            return this.comments_viewmodel_parser(response, comment_flags)
+            // parse viewmodel comments
+            return this.comments_viewmodel_parser(
+                response, comment_flags, includeContinuation
+            )
         }
         // parse comments from json response
         comment_flags = comment_flags.replace("#", "").split(";")
@@ -1130,7 +1191,7 @@ module.exports = {
     },
 
     "testF18": function(url, callback) {
-        const newHeaders = { ...androidHeaders };
+        const newHeaders = JSON.parse(JSON.stringify(androidHeaders));
         newHeaders.headers.range = `bytes=0-1`;
         fetch(url, newHeaders).then(r => {
             callback(r.status !== 403)
@@ -1433,7 +1494,7 @@ module.exports = {
             rHeaders.Authorization = `Bearer ${d}`
         }
 
-        const formatRequestMode = "protobuf"
+        const formatRequestMode = (!this.isUnsupportedNode() ? "protobuf" : "json")
 
         if(formatRequestMode == "protobuf") {
             rHeaders["Content-Type"] = "application/x-protobuf"
@@ -1532,6 +1593,10 @@ module.exports = {
             "method": "POST",
             "mode": "cors"
         }).then(r => {r.json().then(r => {
+            if(r.streamingData && r.streamingData.adaptiveFormats) {
+                // adaptiveformats dont work with this request method
+                r.streamingData.adaptiveFormats = []
+            }
             parseResponse(r);
         })})
     },
@@ -1597,11 +1662,30 @@ module.exports = {
             }
         }
         const stream = fs.createWriteStream(out, {flags: "w"});
+        let lastPartFailCount = 0;
+        let partFailMax = 5;
         function fetchNextPart() {
             adjustPartsize()
-            const newHeaders = { ...androidHeaders };
+            const newHeaders = JSON.parse(JSON.stringify(androidHeaders));
             newHeaders.headers.range = `bytes=${startB}-${startB + partSize}`;
-            fetch(url, newHeaders).then(r => {
+            fetch(url, newHeaders).catch(e => {
+                lastPartFailCount++
+                let failFriendly = `(${lastPartFailCount}/${partFailMax})`
+                if(lastPartFailCount > partFailMax) {
+                    devlog(`part ${startB}b failed too many times! rejecting`)
+                    stream.end()
+                    try {fs.unlinkSync(out)}catch(error){
+                        try {fs.writeFileSync(out, "")}
+                        catch(error){}
+                    }
+                    callback("RETRY")
+                    return;
+                }
+                devlog(`part ${startB}b failed! retrying ${failFriendly}`)
+                setTimeout(() => {
+                    fetchNextPart()
+                }, 500)
+            }).then(r => {
                 if(r.status == 403) {
                     stream.end()
                     try {fs.unlinkSync(out)}catch(error){
@@ -2416,6 +2500,17 @@ module.exports = {
             }
         })
         return a.join("")
+    },
+
+    "isUnsupportedNode": function() {
+        let major = 10;
+        try {
+            major = parseInt(process.version.replace("v", "").split(".")[0])
+        }
+        catch(error) {
+            major = 10;
+        }
+        return (major < 10)
     }
 }
 

@@ -23,6 +23,14 @@ module.exports = {
             )
         }
 
+        if(utils.isUnsupportedNode()
+        && site.includes(`var usesUnsupportedNode = false;`)) {
+            site = site.replace(
+                `var usesUnsupportedNode = false;`,
+                `var usesUnsupportedNode = true;`
+            )
+        }
+
         const config = require("./config.json")
         site = site.split(
             `yt2009_http_root_url`

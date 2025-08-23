@@ -462,6 +462,9 @@ function timeUpdate() {
         video.pause()
         return;
     }
+    if(window.usingModifiers && !window.modifiersAdded) {
+        loadModifierTags()
+    }
     if(playingAsLive) return;
     elapsedbar.style.width = (video.currentTime / video.duration) * 100 + "%"
     if(video.duration <= video.currentTime) {
@@ -577,10 +580,31 @@ function annotation43force() {
     if(!document.querySelector(".annotations_container")) return;
     fourthree = true
     var vWidth = video.getBoundingClientRect().width
+    if((window.modifierTags
+    && window.modifierTags.indexOf("yt:crop=16:9") !== -1)
+    && mainElement.getBoundingClientRect) {
+        vWidth = Math.floor(mainElement.getBoundingClientRect().width)
+    }
     var width = vWidth / (4 / 3)
     $(".annotations_container").style.width = width + "px"
     var left = (vWidth - width) / 2
     $(".annotations_container").style.left = left + "px"
+
+    if(window.modifierTags
+    && window.modifierTags.indexOf("yt:stretch=16:9") !== -1) {
+        $(".annotations_container").style.left = "0px"
+    }
+
+    if(window.modifierTags
+    && window.modifierTags.indexOf("yt:crop=16:9") !== -1
+    && video.videoWidth) {
+        var scale = (
+            video.videoWidth / (video.videoWidth / video.videoHeight) * (16 / 9)
+        )
+        scale = (scale / video.videoWidth)
+        scale = scale.toFixed(2)
+        $(".annotations_container").style.transform = "scale(" + scale + ")"
+    }
 }
 
 // fix video height if old browser
@@ -2204,6 +2228,9 @@ function showLoadingSprite() {
     $(".html5-loading").className = className.replace("hid", "")
     if(!$(".html5-loading").style.left) {
         var vidBounds = video.getBoundingClientRect()
+        if(modifiersAdded && mainElement.getBoundingClientRect) {
+            vidBounds = mainElement.getBoundingClientRect()
+        }
         $(".html5-loading").style.left = vidBounds.width / 2 - 16 + "px";
         $(".html5-loading").style.top = vidBounds.height / 2 - 16 + "px";
     }
@@ -2870,7 +2897,8 @@ function markPlaybackModeDone() {
 function createPlaybackModePickr(parent) {
     // show playback mode pickr
     if(document.cookie.indexOf("saber_playback_mode_picked=") == -1
-    && document.cookie.indexOf("exp_sabr") !== -1) {
+    && document.cookie.indexOf("exp_sabr") !== -1
+    && window.sabrHostUnsupported) {
         markPlaybackModeDone()
         //return;
     }
@@ -3243,4 +3271,89 @@ function initChapterMarks(timeStamps, duration, labels) {
         stamps.appendChild(c)
         i++
     })
+}
+
+
+// tag support
+var modifierTags = ""
+var usingModifiers = false;
+var modifiersAdded = false;
+// initModifiers is initially called and marks some values
+// to apply mods on timeupdate (video is playing by then)
+// otherwise videoWidth and videoHeight are 0 and can't apply mods
+function initModifiers(modifiers) {
+    modifierTags = modifiers;
+    usingModifiers = true;
+}
+function loadModifierTags() {
+    if(!video.videoWidth
+    || !video.videoHeight) return;
+    var modifiers = modifierTags.split(",")
+    modifiersAdded = true;
+    var vw = video.videoWidth;
+    var vh = video.videoHeight;
+    
+    var transforms = []
+    modifiers.forEach(function(tag) {
+        switch(tag.split("#")[0]) {
+            case "yt:stretch=4:3": {
+                // squishes the vid to 4:3
+                var newWidthPx = vh * (4 / 3)
+                var scale = ((newWidthPx) / vw)
+                scale = scale.toFixed(2)
+                transforms.push("scaleX(" + scale + ")")
+                break;
+            }
+            case "yt:stretch=16:9": {
+                // stretches a vid to 16:9
+                var newWidthPx = vh * (16 / 9)
+                var scale = ((newWidthPx) / vw)
+                scale = scale.toFixed(2)
+                transforms.push("scaleX(" + scale + ")")
+                break;
+            }
+            case "yt:crop=16:9": {
+                // crops a 4:3 to fill the entire 16:9 view
+                var newWidthPx = vw / (vw / vh) * (16 / 9)
+                var scale = (newWidthPx / vw)
+                scale = scale.toFixed(2)
+                transforms.push("scale(" + scale + ")")
+                break;
+            }
+            case "yt:cc=on": {
+                // autoenable captions
+                if(!captionsEnabled) {
+                    captionsMain()
+                }
+                break;
+            }
+            case "yt:quality=high": {
+                // auto switch to high quality
+                if((!window.hqPlaying
+                && mainElement.querySelector(".hq")
+                && !playingAsLive
+                && !window.sabrData)
+                || (window.sabrData && !window.sabrHd)) {
+                    // normal playback
+                    try {
+                        $(".video_controls .hq").click()
+                    }
+                    catch(error) {}
+                }
+                break;
+            }
+            case "yt:bgcolor=": {
+                // set video element's bgcolor
+                var ttag = tag;
+                var colorHex = ttag.split("=#")[1]
+                if(colorHex.length > 8) return;
+                video.style.backgroundColor = "#" + colorHex
+                break;
+            }
+        }
+    })
+
+    if(transforms.length >= 1) {
+        video.style.transform = transforms.join(" ")
+    }
 }

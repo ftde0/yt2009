@@ -1,3 +1,7 @@
+if(window.usesUnsupportedNode) {
+    alert("this yt2009 instance uses an unsupported version of node. things WILL break.")
+}
+
 var r;
 if (window.XMLHttpRequest) {
     r = new XMLHttpRequest()

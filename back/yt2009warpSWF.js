@@ -194,9 +194,9 @@ module.exports = {
         // get a flv file needed by flash
         let ffmpegCommandFlv = [
             "ffmpeg",
-            `-i ${__dirname}/../assets/${id}.mp4`,
+            `-i "${__dirname}/../assets/${id}.mp4"`,
             ` -b 1500k -ab 128000`,
-            `${__dirname}/../assets/${id}.flv`
+            `"${__dirname}/../assets/${id}.flv"`
         ]
 
         // have flv?

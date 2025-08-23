@@ -38,7 +38,8 @@ module.exports = {
     },
 
     "handlePlayer": function(playbackSession, offset, req, callback) {
-        if(!playbackSessions[playbackSession]) {
+        if(!playbackSessions[playbackSession]
+        || yt2009utils.isUnsupportedNode()) {
             callback(false)
             return;
         }
@@ -349,13 +350,11 @@ module.exports = {
         // https://github.com/LuanRT/googlevideo/blob/main/src/core/ChunkedDataBuffer.ts
         // copy of the license available at ./LICENSE-GOOGLEVIDEO
         class chunkedDataBuffer {
-            chunks = [];
-            currentChunkOffset = 0;
-            currentChunkIndex = 0;
-            currentDataView = null;
-            totalLength = 0;
-
             constructor(initChunks) {
+                this.chunks = []
+                this.currentChunkOffset = 0;
+                this.currentDataView = null;
+                this.totalLength = 0;
                 this.currentChunkIndex = 0;
                 if(initChunks && initChunks.length == 1) {
                     this.append(initChunks[0])
@@ -465,8 +464,6 @@ module.exports = {
         }
 
         class ump {
-            chunkedDataBuffer = undefined;
-
             constructor(c) {
                 this.chunkedDataBuffer = c;
             }

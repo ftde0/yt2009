@@ -570,7 +570,7 @@ module.exports = {
                     let channel = result;
                     results_html += yt2009templates.searchChannel(
                         channel.url,
-                        channel.avatar,
+                        "/avatar_wait?av=" + channel.avatar,
                         channel.name,
                         channel.subscribers
                     )

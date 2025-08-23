@@ -45,13 +45,24 @@ const yt2009m = require("./yt2009m")
 const yt2009trusted = require("./yt2009trustedcontext")
 const mobileHelper = require("./yt2009mobilehelper")
 const devTimings = false;
-const package = require("../package.json")
-const version = package.version;
+const p = require("../package.json")
+const version = p.version;
 
 const https = require("https")
 const fs = require("fs")
 const app = express();
 
+// nodejs v5 patches
+try {
+	if(!Array.prototype.includes) {
+		Array.prototype.includes = function(i) {
+			return this.indexOf(i) !== -1;
+		}
+	}
+}
+catch(error) {}
+
+// file limits, server init
 let fileLimit = 10;
 if(config.file_limit && !isNaN(parseInt(config.file_limit))) {
     fileLimit = parseInt(config.file_limit)
@@ -125,6 +136,17 @@ if(!config.data_api_key) {
     while playback will work,
     not all video data may be accurate.
     recommended to set with config.data_api_key.
+
+
+`)
+}
+if(yt2009_utils.isUnsupportedNode()) {
+    console.log(`
+        
+        
+    running with an old version of node!
+    some features will not be available.
+    recommended: node v10+
 
 
 `)
@@ -300,14 +322,6 @@ app.get("/.git/*", (req, res) => {
 })
 
 app.get('/', (req,res) => {
-    if(req.query.gvf && req.query.f) {
-        let url = "/gvf?f=" + encodeURIComponent(req.query.f)
-        if(req.query.range) {
-            url += encodeURIComponent("&range=" + req.query.range)
-        }
-        res.redirect(url)
-        return;
-    }
     if(!yt2009_utils.isAuthorized(req)) {
         if(yt2009_utils.isTemplocked(req)) {
             res.redirect("/t.htm")
@@ -331,6 +345,12 @@ app.get('/', (req,res) => {
             "path": "/",
             "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
         })
+        if(config.default_fh264) {
+            res.cookie("f_h264", "on", {
+                "path": "/",
+                "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+            })
+        }
         if(config.default_f) {
             res.cookie("f_mode", "on", {
                 "path": "/",
@@ -423,6 +443,12 @@ app.get("/watch", (req, res) => {
             "path": "/",
             "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
         })
+        if(config.default_fh264) {
+            res.cookie("f_h264", "on", {
+                "path": "/",
+                "expires": new Date("Fri, 31 Dec 2066 23:59:59 GMT")
+            })
+        }
         if(config.default_f) {
             res.cookie("f_mode", "on", {
                 "path": "/",
@@ -984,11 +1010,7 @@ app.get("/get_video_info", (req, res) => {
             if(req.query.html5) {
                 addUrlEncoded = true;
             }
-            let waitForDash = false;
             let dashData = ""
-            /*if(req.query.exp_html5_dash == 1) {
-                waitForDash = true;
-            }*/
             qualities.forEach(quality => {
                 switch(quality) {
                     case "1080p": {
@@ -1086,7 +1108,7 @@ app.get("/get_video_info", (req, res) => {
             function sendData() {
                 res.send(`status=ok
 length_seconds=${data.length}
-keywords=a
+keywords=${data.tags.join(",").split("&").join("")}
 vq=None
 muted=0
 avg_rating=5.0
@@ -1108,122 +1130,11 @@ author=${data.author_name.split("&").join("")}
 title=${data.title.split("&").join("")}
 video_id=${req.query.video_id}
 fmt_list=${encodeURIComponent(fmt_list)}
-fmt_stream_map=${encodeURIComponent(fmt_stream_map)}${urlStreams}${dashData}`.split("\n").join("&"))
+fmt_stream_map=${encodeURIComponent(fmt_stream_map)}${urlStreams}`.split("\n").join("&"))
             }
-            if(!waitForDash) {
-                sendData()
-                return;
-            }
-
-            // dash data
-            pullDash(req.query.video_id, (data) => {
-                dashData = data;
-                sendData();
-            })
+            sendData()
         }))
     }), "", "", false, false)
-})
-
-let currentIp = ""
-function pullDash(id, callback) {
-    let dashData = ""
-    yt2009_utils.pullBarePlayer(id, (data) => {
-        if(data.streamingData && data.streamingData.adaptiveFormats) {
-            let f = data.streamingData.adaptiveFormats.filter(s => (
-                s.mimeType.includes("avc1")
-             || s.mimeType.includes("mp4a")
-            ));
-            let fData = []
-            f.forEach(format => {
-                if(format.url.includes("&ip=")) {
-                    currentIp = format.url.split("&ip=")[1].split("&")[0]
-                }
-                let url = [
-                    "/gvf?f=" + encodeURIComponent(
-                        format.url.replace(currentIp, "redacted_ip")
-                    )
-                ].join("")
-                let d = [
-                    "itag=" + format.itag,
-                    "projection_type=1",
-                    "type=" + encodeURIComponent(format.mimeType),
-                    "url=" + encodeURIComponent(url),
-                    "lmt=" + format.lastModified || "1",
-                    "clen=" + format.contentLength,
-                    "bitrate=" + format.bitrate,
-                    "index=" + format.indexRange.start + "-" + format.indexRange.end,
-                    "init=" + format.initRange.start + "-" + format.initRange.end
-                ]
-                if(format.fps) {
-                    d.push("fps=" + format.fps)
-                }
-                if(format.qualityLabel) {
-                    d.push("quality_label=" + format.qualityLabel)
-                }
-                if(format.width) {
-                    d.push("size=" + format.width + "x" + format.height)
-                }
-                if(format.quality) {
-                    d.push("quality=" + format.quality)
-                }
-                fData.push(d.join("&"))
-            })
-
-            if(fData.length >= 1) {
-                dashData = `\nadaptive_fmts=${encodeURIComponent(fData.join(","))}`
-            }
-
-            callback(dashData)
-        }
-    })
-}
-
-let cachedResponses = {}
-app.get("/gvf", (req, res) => {
-    if(req.query.f) {
-        req.query.f = decodeURIComponent(req.query.f)
-    }
-    if(!req.query.f
-    || !req.query.f.includes(".googlevideo.com/videoplayback")
-    || !req.query.f.includes("sparams=expire")
-    || !req.query.f.includes("https://")
-    || !req.query.f.includes("redacted_ip")) {
-        res.sendStatus(400)
-        return;
-    }
-    let url = req.originalUrl.split("?f=")[1]
-    url = url.replace("redacted_ip", currentIp)
-    url = decodeURIComponent(url)
-    while(url.includes("https%3A") || url.includes("%2C")) {
-        url = decodeURIComponent(url)
-    }
-    const fetch = require("node-fetch")
-    if(cachedResponses[url]) {
-        res.send(cachedResponses[url])
-        return;
-    }
-    fetch(url, {
-        "headers": {
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9,pl;q=0.8",
-            "content-type": "application/json",
-            "cookie": "",
-            "x-goog-authuser": "0",
-            "x-origin": "https://www.youtube.com/",
-            "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
-        },
-        "method": "GET"
-    }).then(r => {
-        let mime = decodeURIComponent(url.split("&mime=")[1].split("&")[0])
-        res.status(r.status)
-        res.set("content-type", mime)
-        res.set("range", r.headers.get("range"))
-        r.buffer().then(b => {
-            //console.log(url, r.status)
-            res.send(b)
-            cachedResponses[url] = b;
-        })
-    })
 })
 
 app.get("/get_video_metadata", (req, res) => {
@@ -1342,7 +1253,7 @@ app.get("/generate_gradient", (req, res) => {
             "magick",
             "-size 1x25",
             `gradient:"#ffffff"-"#${color}"`,
-            `${__dirname}/../player-imgs/embed-bgs/user-gen/${color}.png`
+            `"${__dirname}/../player-imgs/embed-bgs/user-gen/${color}.png"`
         ]
         child_process.exec(generateCommand.join(" "), (error, stdout, stderr) => {
             res.redirect(`/player-imgs/embed-bgs/user-gen/${color}.png`)
@@ -1682,7 +1593,7 @@ function ffmpegEncodeBaseline(req, res) {
         ]
 
         child_process.exec(
-            `ffmpeg -i ${stdFile} ${ffmpegOptions.join(" ")} ${targetFile}`,
+            `ffmpeg -i "${stdFile}" ${ffmpegOptions.join(" ")} "${targetFile}"`,
             (e, stdout, stderr) => {
                 sendFile()
             }
@@ -1822,7 +1733,7 @@ app.get("/get_more_comments", (req, res) => {
         id = req.headers.source
                 .split("v=")[1].split("&")[0].split("#")[0]
     }
-    let pageNumber = parseInt(req.headers.page)
+    let pageNumber = parseInt(req.headers.page || 1)
     let flags = ""
     try {
         if(req.headers.cookie
@@ -1834,56 +1745,135 @@ app.get("/get_more_comments", (req, res) => {
     }
     catch(error) {}
 
+    let theoreticalIndex = (pageNumber - 1) * 20
+    let continuation = false;
     let comment_html = "";
 
-    yt2009.comment_paging(id, pageNumber, flags, (data) => {
-        let theoreticalIndex = (pageNumber - 1) * 20
-        data.forEach(comment => {
-            if(!comment.continuation && !comment.pinned) {
-                let commentId = yt2009.commentId(comment.authorUrl, comment.content)
-                let likes = comment.likes ? comment.likes : 0
-                let customRating = 0;
-                let customData = yt2009.hasComment(id, commentId)
-                if(customData) {
-                    likes += customData.rating
-                    let token = yt2009_utils.get_used_token(req)
-                    token == "" ? token = "dev" : ""
-                    if(customData.ratingSources[token]) {
-                        customRating = customData.ratingSources[token]
-                    }
-                }
-
-                let commentHTML = yt2009_templates.videoComment(
-                    comment.authorUrl,
-                    comment.authorName,
-                    flags.includes("fake_dates")
-                    ? yt2009_utils.fakeDateSmall(theoreticalIndex)
-                    : comment.time,
-                    comment.content.split("<br><br>").join("<br>"),
-                    flags,
-                    false,
-                    likes,
-                    commentId
-                )
-
-                if(customRating == 1) {
-                    commentHTML = commentHTML.replace(
-                        "watch-comment-up-hover",
-                        "watch-comment-up-on"
-                    )
-                } else if(customRating == -1) {
-                    commentHTML = commentHTML.replace(
-                        "watch-comment-down-hover",
-                        "watch-comment-down-on"
-                    )
-                }
-
-                comment_html += commentHTML
-                theoreticalIndex++
+    function addComment(comment) {
+        if(comment.pinned) return;
+        if(comment.continuation) {
+            continuation = comment.continuation;
+            return;
+        }
+        let commentId = comment.commentId || yt2009.commentId(
+            comment.authorUrl, comment.content
+        )
+        let likes = comment.likes ? comment.likes : 0
+        let customRating = 0;
+        let customData = yt2009.hasComment(id, commentId)
+        if(customData) {
+            likes += customData.rating
+            let token = yt2009_utils.get_used_token(req)
+            token == "" ? token = "dev" : ""
+            if(customData.ratingSources[token]) {
+                customRating = customData.ratingSources[token]
             }
+        }
+
+        let commentHTML = yt2009_templates.videoComment(
+            comment.authorUrl,
+            comment.authorName,
+            flags.includes("fake_dates")
+            ? yt2009_utils.fakeDateSmall(theoreticalIndex)
+            : comment.time,
+            comment.content.split("<br><br>").join("<br>"),
+            flags,
+            true,
+            likes,
+            commentId
+        )
+
+        if(customRating == 1) {
+            commentHTML = commentHTML.replace(
+                "watch-comment-up-hover",
+                "watch-comment-up-on"
+            )
+        } else if(customRating == -1) {
+            commentHTML = commentHTML.replace(
+                "watch-comment-down-hover",
+                "watch-comment-down-on"
+            )
+        }
+
+        comment_html += commentHTML
+        
+    }
+
+    // continuation token based
+    if(req.headers.continuation) {
+        yt2009.request_continuation(
+            req.headers.continuation, id, flags, (data => {
+                data.forEach(c => {
+                    addComment(c)
+                })
+                if(continuation) {
+                    comment_html += `;yt_continuation=${continuation}`
+                }
+                res.send(yt2009_languages.apply_lang_to_code(
+                    comment_html, req
+                ))
+            }), true
+        )
+        return;
+    }
+
+    // page-based (no continuation token)
+    yt2009.comment_paging(id, pageNumber, flags, (data) => {
+        data.forEach(comment => {
+            addComment(comment)
         })
-        res.send(comment_html)
+        if(continuation) {
+            comment_html += `;yt_continuation=${continuation}`
+        }
+        res.send(yt2009_languages.apply_lang_to_code(comment_html, req))
     })
+})
+
+app.get("/comment_get_replies", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let id = ""
+    try {
+        id = req.headers.source
+                .split("watch?v=")[1]
+                .split("&")[0].split("#")[0]
+    }
+    catch(e) {
+        id = req.headers.source
+                .split("v=")[1].split("&")[0].split("#")[0]
+    }
+    let flags = ""
+    try {
+        if(req.headers.cookie
+        && req.headers.cookie.includes("global_flags=")) {
+            flags += req.headers.cookie
+                     .split("global_flags=")[1]
+                     .split(";")[0]
+        }
+    }
+    catch(error) {}
+    if(!id || !req.headers.continuation
+    || !req.headers["original-comment"]) {
+        res.sendStatus(400)
+        return;
+    }
+
+    let commentsHTML = ""
+    yt2009.request_continuation(req.headers.continuation, id, flags, (data) => {
+        data.forEach(c => {
+            if(c.continuation) {
+                commentsHTML += yt2009_templates.replyHoldReplyCode(
+                    c.continuation, req.headers["original-comment"]
+                )
+            } else {
+                commentsHTML += yt2009_templates.commentReply(c)
+            }
+            
+        })
+        res.send(yt2009_languages.apply_lang_to_code(commentsHTML, req))
+    }, true)
 })
 
 /*

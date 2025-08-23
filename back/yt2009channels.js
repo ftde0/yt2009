@@ -913,7 +913,7 @@ module.exports = {
                             )
                             code = code.replace(
                                 `id="${theme}" class="theme_selector_div"`,
-                                `id="${theme}" class="theme_selector_div theme_selected"`,
+                                `id="${theme}" class="theme_selector_div theme_selected"`
                             )
                         } else if(theme && theme == "custom") {
                             code = code.replace(
@@ -2941,7 +2941,6 @@ module.exports = {
             r.onResponseReceivedActions.forEach(action => {
                 if(action.reloadContinuationItemsCommand.slot
                 == "RELOAD_CONTINUATION_SLOT_BODY") {
-                    videosTabAvailable = true
                     createVideosFromChip(
                         action.reloadContinuationItemsCommand
                               .continuationItems

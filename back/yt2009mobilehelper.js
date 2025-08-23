@@ -1057,14 +1057,14 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                 body.split(`<yt:videoid>`)[1].split(`</yt:videoid>`)[0]
             )
         }
-        let private = body.includes("<yt:private")
+        let isPrivate = body.includes("<yt:private")
         setupYouTube(deviceId, (h) => {
             fetch("https://www.youtube.com/youtubei/v1/playlist/create", {
                 "headers": h,
                 "method": "POST",
                 "body": JSON.stringify({
                     "context": androidContext,
-                    "privacyStatus": private ? "PRIVATE" : "PUBLIC",
+                    "privacyStatus": isPrivate ? "PRIVATE" : "PUBLIC",
                     "title": name,
                     "videoIds": addVideos
                 })

@@ -157,6 +157,16 @@ switch (process.env.YT2009_DEFAULTF) {
         break;
 }
 
+// set defaultfh264
+switch (process.env.YT2009_DEFAULTFH264) {
+    case 'true':
+        cfg.default_fh264 = true;
+        break;
+    case 'false':
+        cfg.default_fh264 = false;
+        break;
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

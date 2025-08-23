@@ -23,6 +23,7 @@ const fetch = require("node-fetch")
 const dbg = false;
 
 function getBrowseData(proto, callback, outputAll) {
+    console.log(search_proto.root.deserializeBinary(proto).toObject())
     const child_process = require("child_process")
     let f = `tmp_${Date.now()}`
     fs.writeFileSync(`./${f}`, proto)

@@ -32,4 +32,5 @@ other params you can set:
 - `tc_override_key` - a key for mp4 requests to bypass trusted context. more in yt2009trustedcontext.js.
 - `data_api_key` - accepts a google data api v3 for proper categories to show in video descriptions.
 - `file_limit` - a number in MB of max upload size. (default: 10)
-- `default_f` - should flash mode be enabled by default for new sessions. true/false.
+- `default_f` - should flash mode be enabled by default for new sessions. `true/false`
+- `default_fh264` - should H264 be enabled with flash by default for new sessions. `true/false`

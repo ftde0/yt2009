@@ -369,9 +369,9 @@ module.exports = {
         // download
         let ffmpegCommand = [
             "ffmpeg",
-            `-i ${__dirname}/../assets/${id}.mp4`,
+            `-i "${__dirname}/../assets/${id}.mp4"`,
             ` -b 1500k -ab 128000 -speed 2`,
-            `${__dirname}/../assets/${id}.ogg`
+            `"${__dirname}/../assets/${id}.ogg"`
         ]
         if(fs.existsSync(`../assets/${id}.mp4`)
         && !fs.existsSync(`../assets/${id}.ogg`)

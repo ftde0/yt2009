@@ -8,7 +8,7 @@ const config = require("./config.json")
 const langs = require("./language_data/language_engine")
 
 module.exports = {
-    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes, id) {
+    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes, id, replyData) {
         if(commentTime.includes("in playlist")) {
             commentTime = commentTime.split("in playlist")[0]
         }
@@ -49,6 +49,20 @@ module.exports = {
             }
         })
         content = content.split("$").join("&#36;")
+        let replyCode = ""
+        let replyHolderCode = ""
+        if(replyData && replyData.length == 2) {
+            let continuation = replyData[0]
+            let count = replyData[1]
+            let replyString = "View " + count + " repl" + (count >= 2 ? "ies" : "y")
+            if(useLanguage && count == 1) {
+                replyString = "lang_watch_replies_single"
+            } else if(useLanguage) {
+                replyString = "lang_watch_replies_plural_prefix" + count + "lang_watch_replies_plural_suffix"
+            }
+            replyCode = `<a href="javascript:void(0)" onclick="loadReplies('${continuation}', this, '${id}');return false;" class="watch-replies-show-link">» ${replyString}</a>`
+            replyHolderCode = `<div id="yt2009-reply-holder-${id}"></div>`
+        }
         let dislikeCode = `onclick="sendCmtRating('${id}', 'dislike');return false;"`
         let likeCode = `onclick="sendCmtRating('${id}', 'like');return false;"`
         return `<div class="watch-comment-entry" ${id ? `id="comment-${id}"` : ""}>
@@ -80,8 +94,8 @@ module.exports = {
                     </div>
                 </div>
                 <div></div>
-            </div>
-        </div>`
+            </div>${replyCode}
+        </div>${replyHolderCode}`
     },
     "relatedVideo": function(id, title, protocol, length, viewCount, creatorUrl, creatorName, flags, playlistId) {
         if(creatorName.startsWith("by ")) {
@@ -497,7 +511,7 @@ module.exports = {
                         </div>`
     },
     "createFffmpegOgg": function(id) {
-        return `ffmpeg -i ${__dirname}/../assets/${id}.mp4 -b 1500k -ab 128000 -speed 2 ${__dirname}/../assets/${id}.ogg`
+        return `ffmpeg -i "${__dirname}/../assets/${id}.mp4" -b 1500k -ab 128000 -speed 2 "${__dirname}/../assets/${id}.ogg"`
     },
     "morefromEntry": function(name) {
         return `
@@ -3632,5 +3646,36 @@ term='channel'/>
         }
 
         return code;
+    },
+
+    "commentReply": function(c) {
+        let sanitizedContent = utils.xss(c.content).split("$").join("&#36;")
+        if(sanitizedContent.length == 0) return "";
+        return `<div id="${c.commentId}" class="watch-comment-entry">
+	<div class="watch-comment-entry-reply">
+		<div class="watch-comment-head">
+			<div class="watch-comment-info">
+				<a class="watch-comment-auth" href="/channel/${c.authorId}" rel="nofollow">${utils.xss(c.authorName)}</a>
+				<span class="watch-comment-time"> (${c.time}) </span>
+				<a id="show_link_${c.commentId}" class="watch-comment-head-link" onclick="displayHideCommentLink('${c.commentId}')">Show</a>
+				<a id="hide_link_${c.commentId}" class="watch-comment-head-link" onclick="displayShowCommentLink('${c.commentId}')">Hide</a>
+			</div>
+			<span id="comment_spam_bug_${c.commentId}" class="watch-comment-spam-bug">Marked as spam</span>
+			<div id="reply_comment_form_id_${c.commentId}" class="watch-comment-action">
+			</div>
+			<div class="clearL"></div>
+		</div>
+		<div id="comment_body_${c.commentId}">
+			<div class="watch-comment-body">
+				<div>${sanitizedContent}</div>
+			</div>
+			<div id="div_comment_form_id_${c.commentId}"></div>
+		</div>
+	</div>
+</div>`
+    },
+
+    "replyHoldReplyCode": function(continuation, commentId) {
+        return `<a href="javascript:void(0)" onclick="loadReplies('${continuation}', this, '${commentId}');return false;" class="watch-replies-show-link">» lang_watch_replies_more</a>`
     }
 }

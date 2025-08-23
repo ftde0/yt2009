@@ -417,10 +417,36 @@ module.exports = {
                         return s.videoSecondaryInfoRenderer
                     })[0]
                     if(secondary) {
-                        data.author_img = secondary.videoSecondaryInfoRenderer
-                                          .owner.videoOwnerRenderer.thumbnail
-                                          .thumbnails[1].url;
-                        data.author_img = yt2009utils.saveAvatar(data.author_img)
+                        // has a renderer to try and get an avatar from
+                        let owner = secondary.videoSecondaryInfoRenderer.owner
+                                             .videoOwnerRenderer
+                        if(owner.thumbnail) {
+                            // normal avatar
+                            data.author_img = owner.thumbnail
+                                                   .thumbnails[1].url;
+                            data.author_img = yt2009utils.saveAvatar(
+                                data.author_img
+                            )
+                        } else if(owner.avatarStack
+                        && owner.avatarStack.avatarStackViewModel
+                        && owner.avatarStack.avatarStackViewModel.avatars) {
+                            // avatarStack comes up instead of thumbnail
+                            // if multiple creators are "authors" of the video
+                            // example: http://youtu.be/Ut41eePtfBk
+                            try { 
+                                let f = owner.avatarStack.avatarStackViewModel
+                                             .avatars[0]
+                                data.author_img = f.avatarViewModel.image
+                                                    .sources[0].url
+                            }
+                            catch(error) {
+                                console.log(error)
+                                data.author_img = "default"
+                            }
+                        } else {
+                            // otherwise put a default avatar
+                            data.author_img = "default"
+                        }
                     } else {
                         data.author_img = "default"
                     }
@@ -738,6 +764,15 @@ module.exports = {
 
                 // qualities
                 data.qualities = []
+
+                if(yt2009utils.isUnsupportedNode()
+                && videoData.streamingData
+                && videoData.streamingData.adaptiveFormats) {
+                    // unsupported node can't load adaptiveFormats
+                    // so don't even try
+                    videoData.streamingData.adaptiveFormats = []
+                }
+
                 if(!videoData.streamingData) {
                     videoData.streamingData = {}
                 }
@@ -845,7 +880,7 @@ module.exports = {
                     if(fetchesCompleted >= fetchesRequired) {
                         callback(data)
                     }
-                }
+                }, true
             )
         }
     },
@@ -874,7 +909,7 @@ module.exports = {
 
         // basic data
         // flags
-        flags = ""
+        let flags = ""
         try {
             if(req.query.flags) {
                 flags += decodeURIComponent(req.query.flags)
@@ -929,6 +964,35 @@ module.exports = {
         if(flags.includes("exp_sabr")) {
             useSabr = true;
             sabrBaseUrl = yt2009sabr.initPlaybackSession(data.id, data.qualities)
+        }
+
+        // disable playback mode picker on unsupported node hosts
+        if(yt2009utils.isUnsupportedNode()) {
+            code = code.replace(
+                `//yt2009-unsupport`,
+                `var sabrHostUnsupported = true;`
+            )
+        }
+
+        // put tags whereeever needed in html5 for custom params
+        let html5PlayerTags = [
+            "yt:crop=16:9",
+            "yt:stretch=4:3",
+            "yt:stretch=16:9",
+            "yt:bgcolor=#",
+            "yt:cc=on",
+            "yt:quality=high"
+        ]
+        let playerModifyingTags = data.tags.filter(s => {
+            return (html5PlayerTags.includes(s) && !s.includes("\"")
+                 || s.startsWith("yt:bgcolor="))
+        })
+        if(playerModifyingTags.length >= 1 && !useFlash) {
+            let modifiersCode = playerModifyingTags.join(",")
+            code = code.replace(
+                `//yt2009-html5-modifiers`,
+                `try{window.initModifiers("${modifiersCode}")}catch(error){}`
+            )
         }
 
         // useragent
@@ -1988,7 +2052,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 if(isNaN(presentedLikeCount)) {presentedLikeCount = 0;}
 
                 // comment id
-                let id = commentId(comment.authorUrl, comment.content)
+                let id = comment.commentId || commentId(
+                    comment.authorUrl, comment.content
+                )
 
                 let customRating = 0;
                 let customData = hasComment(data.id, id)
@@ -2011,7 +2077,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     flags,
                     true,
                     presentedLikeCount,
-                    id
+                    id,
+                    comment.r
                 )
 
                 if(customRating == 1) {
@@ -2710,6 +2777,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 && !disableChapters) {
                     flash_url += "&markers=" + chapters.join(",")
                 }
+
+                // 2009: pass keywords to enable player settings
+                // such as yt:stretch=16:9
+                if(flash_url.includes("/watch.swf")
+                && data.tags && data.tags.length >= 1) {
+                    let keywords = data.tags.join(",").split("&").join("")
+                    flash_url += "&keywords=" + keywords
+                }
                 
                 flash_url += render_endscreen_f()
 
@@ -3123,7 +3198,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
 
 
-    "request_continuation": function(token, id, comment_flags, callback) {
+    "request_continuation": function(token, id, comment_flags, callback, useContinuation) {
         // continuation na komentarze
         if(!token) {
             callback([])
@@ -3158,12 +3233,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 "mode": "cors"
             }).then(r => {
                 r.json().then(response => {
-                    callback(
-                        yt2009utils.comments_parser(response, comment_flags)
+                    let comments = yt2009utils.comments_parser(
+                        response, comment_flags, useContinuation
                     )
-                    continuations_cache[token] = JSON.parse(JSON.stringify(
-                        yt2009utils.comments_parser(response, comment_flags)
-                    ))
+                    callback(comments)
+                    continuations_cache[token] = JSON.parse(
+                        JSON.stringify(comments)
+                    )
                 })
             })
         }

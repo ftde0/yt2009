@@ -33,6 +33,7 @@
 	<!-- end masthead section -->
 	<div id="baseDiv" class="date-20091111 video-info ">
 		<!-- begin top section -->
+		<noscript><span class="bold">this site (along with a large chunk of yt2009) requires javascript to be enabled.</span></noscript>
 		<a href="/toggle_f.htm">[pl]</a>
 
 		<h1>"f"</h1>
@@ -181,7 +182,8 @@
 					}
 				}
 				var labelText = label.getAttribute("title")
-				target.setAttribute("title", labelText)
+				try {target.setAttribute("title", labelText)}
+				catch(error) {}
 			}
 		}
 

@@ -41,6 +41,7 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_DATA_API_KEY` accepts a google data api v3 key for proper categories to show in video descriptions.
 - `YT2009_FILE_LIMIT` sets a number in MB of max upload size. (default: 10)
 - `YT2009_DEFAULTF` sets whether new browsing sessions should have fmode enabled by default. (default: `false`)
+- `YT2009_DEFAULTFH264` sets whether new browsing sessions should have h264 enabled for flash. (default: `false`)
 
 ## troubleshooting
 #### reading auth tokens from a running container

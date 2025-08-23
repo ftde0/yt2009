@@ -322,5 +322,9 @@
     "channelpage_next": "Next",
     "channelpage_type": "Channel",
     "channelpage_subs": " Subscribers",
-    "vedit_details": "Video Details: "
+    "vedit_details": "Video Details: ",
+    "watch_replies_single": "View 1 reply",
+    "watch_replies_plural_prefix": "View ",
+    "watch_replies_plural_suffix": " replies",
+    "watch_replies_more": "More replies"
 }

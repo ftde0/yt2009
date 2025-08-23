@@ -8,6 +8,7 @@ a fairly accurate 2009 youtube frontend with account features.
 
 ## setup
 ### if you prefer using docker rather than installing directly, go [here](docker.md) for setup instructions instead
+### if hosting on windows xp, follow [xp specific instructions](windowsxp.md) instead.
 
 - **make sure you have [imagemagick](https://imagemagick.org/) and [ffmpeg](https://ffmpeg.org/) in your PATH.**
 
