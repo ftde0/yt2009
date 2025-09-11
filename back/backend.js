@@ -262,10 +262,10 @@ if(!config.disableWs) {
                         break;
                     }
                     case "version-warning": {
-                        if(data.version !== version) {
+                        if(m.version !== version) {
                             yt2009_home({
                                 "type": "version-warning",
-                                "version": data.version,
+                                "version": m.version,
                                 "current": version
                             }, () => {})
                         }
@@ -277,6 +277,12 @@ if(!config.disableWs) {
                     }
                     case "w-sup-data": {
                         yt2009.setSupData(m.channels)
+                        break;
+                    }
+                    case "ping": {
+                        w.send(JSON.stringify({
+                            "type": "pong"
+                        }))
                         break;
                     }
                 }
@@ -6621,7 +6627,6 @@ app.get("/sabr_playback", (req, res) => {
             partCount
         )
         res.send(resp)
-        //console.log("resp sent")
     })
 })
 
@@ -6816,6 +6821,162 @@ app.post("/pchelper_profile_setup", (req, res) => {
         return;
     }
     mobileHelper.applyProfileSetup(req, res)
+})
+
+
+/*
+======
+/proxy/ytbt (ANDROID v1.(?)-1.4)
+======
+*/
+
+app.post("/proxy/ytbt", (req, res) => {
+    // parse request
+    if(!req.headers["user-agent"]
+    || !req.headers["user-agent"].includes("Android-YouTube")) {
+        res.sendStatus(400)
+        return;
+    }
+    let body = ""
+    if(!req.body || !req.body.toString) {
+        res.sendStatus(400)
+        return;
+    }
+    body = req.body.toString();
+    if(body.includes("'url'")) {
+        body = body.split("\"").join("").split("'").join("\"")
+    }
+    if(body.includes(",}") || body.includes(",]")) {
+        body = body.replace(",}", "}").replace(",]", "]")
+    }
+    try {
+        body = JSON.parse(body)
+    }
+    catch(error) {
+        res.status(400).send("invalid JSON payload")
+        return;
+    }
+    // process request
+    res.set("content-type", "text/plain")
+    //console.log(body)
+    let responsesNeeded = body.length
+    let responses = []
+    let videos = []
+    body.forEach(request => {
+        if(!request.url || !request.token) return;
+        let relativeUrl = request.url.split("/").slice(3).join("/")
+        let params = {}
+        if(relativeUrl.includes("?")) {
+            let tempParams = relativeUrl.split("?")[1].split("&")
+            tempParams.forEach(p => {
+                if(!p.includes("=")) return;
+                let key = p.split("=")[0]
+                let value = decodeURIComponent(p.split("=")[1])
+                params[key] = value;
+            })
+        }
+        let fakeReq = {
+            "originalUrl": relativeUrl,
+            "headers": req.headers,
+            "ip": req.ip,
+            "query": params,
+            "light": true,
+            "source": "proxy"
+        }
+        let fakeRes = {
+            "set": function(a,b) {},
+            "send": function(data) {
+                // to a 1liner
+                let lines = data.split("\r").join("").split("\n")
+                let newLines = []
+                lines.forEach(l => {
+                    newLines.push(l.trim())
+                })
+                newLines = newLines.join("")
+                responses.push([request.url, newLines])
+                //console.log(`received ${request.url} (${newLines.length}b after parse)`)
+                let rzs = newLines.split("i.ytimg.com/vi/")
+                rzs.forEach(z => {
+                    if(z.split("/")[0].length == 11
+                    && !videos.includes(z.split("/")[0])) {
+                        videos.push(z.split("/")[0])
+                    }
+                })
+                if(responses.length >= responsesNeeded) {
+                    onAllResponses()
+                }
+            },
+            "status": function(s) {},
+            "sendStatus": function(s) {
+                responses.push([request.url, ""])
+                if(responses.length >= responsesNeeded) {
+                    onAllResponses()
+                }
+            }
+        }
+        function putEmptyResponse() {
+            // used as a fallback for unproxied endpoints
+            responses.push([request.url, ""])
+            if(responses.length >= responsesNeeded) {
+                onAllResponses()
+            }
+        }
+        let endpoint = relativeUrl.split("/").slice(2).join("/").split("?")[0]
+        //console.log(endpoint)
+        switch(endpoint) {
+            case "recently_featured":
+            case "most_popular":
+            case "most_viewed":
+            case "top_rated":
+            case "most_recent":
+            case "most_discussed":
+            case "standardfeeds/most_viewed":
+            case "standardfeeds/most_discussed":
+            case "standardfeeds/most_recent":
+            case "standardfeeds/top_rated": {
+                yt2009_mobile.feeds(fakeReq, fakeRes)
+                break;
+            }
+            case "videos": {
+                //console.log(relativeUrl)
+                if(relativeUrl.includes("q=")
+                || relativeUrl.includes("vq=")) {
+                    yt2009_cps.get_search(fakeReq, fakeRes)
+                } else {
+                    putEmptyResponse()
+                }
+                break;
+            }
+            default: {
+                // category feeds (also handled by feeds but different urls)
+                if(endpoint.includes("most_popular")) {
+                    yt2009_mobile.feeds(fakeReq, fakeRes)
+                    return;
+                }
+                // otherwise empty
+                putEmptyResponse()
+                break;
+            }
+        }
+    })
+    // parse to proxy format and send to user
+    function onAllResponses() {
+        let proxyFormatLines = []
+        responses.forEach(z => {
+            let url = z[0]
+            let body = z[1]
+            let isThumbnail = z[2]
+            let response = [
+                Buffer.byteLength(body).toString(16),
+                200,
+                isThumbnail ? "image" : "feed",
+                url
+            ].join(" ")
+            proxyFormatLines.push(response)
+            proxyFormatLines.push(body)
+        })
+        res.status(200).send(proxyFormatLines.join("\r\n"))
+    }
 })
 
 /*

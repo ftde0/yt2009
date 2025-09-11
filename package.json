@@ -1,6 +1,6 @@
 {
   "name": "yt2009",
-  "version": "1.23.1",
+  "version": "1.23.2",
   "description": "2009 frontend for youtube",
   "main": "back/backend.js",
   "scripts": {

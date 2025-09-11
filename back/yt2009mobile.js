@@ -260,16 +260,26 @@ module.exports = {
                 this.processTask(id, tasks, index + 1, res, callback)
                 return;
             }
-            let command = task.join(" ")
-                          .replace("$1", baseFile)
-                          .replace("$2", output)
-            child_process.exec(command, (err, stdout, stderr) => {
-                // go with the next task
-                if(!tasks[index + 1]) return;
-                this.processTask(id, tasks, index + 1, res, callback)
-                return;
-            })
-            taskFilled = true
+            let t = this;
+            function onCanPerformTask() {
+                let command = task.join(" ")
+                              .replace("$1", baseFile)
+                              .replace("$2", output)
+                child_process.exec(command, (err, stdout, stderr) => {
+                    // go with the next task
+                    if(!tasks[index + 1]) return;
+                    t.processTask(id, tasks, index + 1, res, callback)
+                    return;
+                })
+                taskFilled = true
+            }
+            if(fs.existsSync(baseFile)) {
+                onCanPerformTask()
+            } else {
+                utils.saveMp4(id, () => {
+                    onCanPerformTask()
+                })
+            }
         }
         if(task == "rtsp") {
             // rtsp setup task
@@ -532,6 +542,32 @@ module.exports = {
                                .split("\"")[0];
             mobileflags.write_session(req.ip, deviceId)
         }
+        // rewrite urls of standardfeeds for very old android vers
+        if(req.headers["user-agent"]
+        && req.headers["user-agent"].includes("Android-YouTube/1.1")) {
+            let endpoint = req.originalUrl.split("?")[0].split("#")[0]
+            endpoint = endpoint.split("/")
+            endpoint = endpoint[endpoint.length - 1]
+            /*if(config.env == "dev") {
+                console.log(req.originalUrl)
+            }*/
+            switch(endpoint.toLowerCase()) {
+                case "most_viewed":
+                case "top_rated": {
+                    req.originalUrl = req.originalUrl.replace(
+                        endpoint, "most_popular"
+                    )
+                    break;
+                }
+                case "most_discussed":
+                case "most_recent": {
+                    req.originalUrl = req.originalUrl.replace(
+                        endpoint, "recently_featured"
+                    )
+                    break;
+                }
+            }
+        }
         // handle category feeds in a separate function
         if(req.originalUrl.includes("most_viewed_")
         || req.originalUrl.includes("most_discussed_")
@@ -579,7 +615,7 @@ module.exports = {
                         video.author_handle || utils.asciify(authorName),
                         utils.bareCount(video.views),
                         utils.time_to_seconds(data.length || 0),
-                        data.description,
+                        (!req.light ? data.description : ""),
                         data.upload,
                         (data.tags || []).join(),
                         data.category,
@@ -626,7 +662,7 @@ module.exports = {
                             || utils.asciify(video.uploaderName),
                             utils.bareCount(video.views),
                             utils.time_to_seconds(data.length || 0),
-                            data.description,
+                            (!req.light ? data.description : ""),
                             data.upload,
                             (data.tags || []).join(),
                             data.category,

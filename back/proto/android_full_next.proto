@@ -1,6 +1,12 @@
 syntax = "proto3";
 package android_full_next;
 
+message navigationData {
+    message navData {
+        string navId = 1;
+    }
+    optional navData navProperties = 48687757;
+}
 message textRuns {
     message textRun {
         string text = 1;
@@ -26,29 +32,37 @@ message nextRequest {
 message simpleText {
     string text = 4;
 }
-message authorRendererData {
-    repeated thumbnails avatars = 1;
-    repeated textRuns name = 2;
-    message navigation {
-        message endpoints {
-            string browseId = 2;
-            string canonicalBaseUrl = 4;
-        }
-        repeated endpoints endpointData = 48687626;
+message browseNavigation {
+    message browseData {
+        string browseId = 2;
+        string params = 3;
+        string canonicalBaseUrl = 4;
     }
-    repeated navigation naviData = 4;
-    repeated textRuns subscribeCount = 5;
+    repeated browseData data = 48687626;
+}
+message authorData {
+    message authorDataContent {
+        string authorDisplayName = 1;
+        optional browseNavigation navigation = 5;
+    }
+    optional authorDataContent ac = 1;
+}
+message authorRendererData {
+    optional thumbnails avatars = 1;
+    optional textRuns name = 2;
+    optional browseNavigation naviData = 4;
+    optional textRuns subscribeCount = 5;
     message subscribeButtonData {
         message subContents {
-            repeated textRuns subscribeButton = 1;
+            optional textRuns subscribeButton = 1;
             optional int32 int3 = 3;
             optional int32 int4 = 4;
             optional int32 int6 = 6;
             string channelId = 7;
             optional int32 int8 = 8;
-            repeated textRuns subscribedLabel = 12;
-            repeated textRuns subscribeLabel = 13;
-            repeated textRuns unsubscribeLabel = 16;
+            optional textRuns subscribedLabel = 12;
+            optional textRuns subscribeLabel = 13;
+            optional textRuns unsubscribeLabel = 16;
             message subAction {
                 message sub1 {
                     string id = 1;
@@ -69,37 +83,34 @@ message authorRendererData {
     repeated subscribeButtonData subscribeButton = 6;
 }
 message videoMetadataRenderer {
-    repeated textRuns title = 1;
-    repeated textRuns viewCount = 2;
-    repeated textRuns likeText1 = 3;
-    repeated textRuns dislikeText1 = 4;
-    repeated textRuns description = 5;
-    repeated textRuns likeText2 = 6;
-    repeated textRuns dislikeText2 = 7;
-    optional int32 int8 = 8;
-    optional int32 int9 = 9;
-    repeated textRuns publishDate = 10;
+    optional textRuns title = 1;
+    optional textRuns viewCount = 2;
+    optional textRuns likeText1 = 3;
+    optional textRuns dislikeText1 = 4;
+    optional textRuns description = 5;
+    optional textRuns likeText2 = 6;
+    optional textRuns dislikeText2 = 7;
+    optional int32 allowRatings = 8;
+    /*optional int32 int9 = 9;*/
+    optional textRuns publishDate = 10;
     optional int32 likeStatus = 11;
     string videoId = 12;
     message pbVarious13 {
         message pbVarious {
-            repeated textRuns videoId = 1;
+            optional textRuns videoId = 1;
             optional int32 int2 = 2;
             optional int32 int3 = 3;
-            message contain {
-                repeated textRuns count = 1;
-            }
             repeated simpleText count1 = 4;
-            repeated contain count2 = 5;
+            repeated simpleText count2 = 5;
             optional int32 int13 = 13;
             optional int32 int23 = 23;
         }
         repeated pbVarious pb = 60091038;
     }
     repeated pbVarious13 pb13 = 13;
-    repeated textRuns string17 = 17;
-    repeated textRuns shortViewCount = 18;
-    optional int32 int24 = 24;
+    optional textRuns string17 = 17;
+    optional textRuns shortViewCount = 18;
+    optional int32 isLimitedState = 24;
     message pbVarious25 {
         message unk1 {
             optional int32 int1 = 2;
@@ -110,7 +121,7 @@ message videoMetadataRenderer {
     message videoActions {
         message container {
             optional int32 int3 = 3;
-            repeated textRuns actionName = 5;
+            optional textRuns actionName = 5;
             message pb8 {
                 optional int32 int1 = 1;
             }
@@ -121,13 +132,7 @@ message videoMetadataRenderer {
             repeated pb10 proto10 = 10;
             message pb19 {
                 message targetDataEntry {
-                    message targetInfo {
-                        message targetData {
-                            string videoId = 1;
-                        }
-                        repeated targetData targetD = 48687757;
-                    }
-                    repeated targetInfo targetI = 2;
+                    optional navigationData targetId = 2;
                 }
                 repeated targetDataEntry targetEntry = 49706687;
             }
@@ -136,77 +141,23 @@ message videoMetadataRenderer {
         repeated container c = 65153809;
     }
     repeated videoActions videoAction = 31;
-    repeated textRuns str33 = 33;
-    repeated textRuns str37 = 37;
+    optional textRuns str33 = 33;
+    optional textRuns str37 = 37;
     optional int32 pb38 = 38;
     optional int32 pb43 = 43;
 }
 message compactVideoRenderer {
     string videoId = 1;
-    repeated thumbnails thumblist = 2;
-    repeated textRuns titleData = 3;
-    message authorData {
-        message authorDataContent {
-            string authorDisplayName = 1;
-            message authorNavigationData {
-                message navigationEndpoint {
-                    string browseId = 2;
-                    string canonicalBaseUrl = 4;
-                }
-                repeated navigationEndpoint authorEndpoint = 48687626;
-            }
-            repeated authorNavigationData navigation = 5;
-        }
-        repeated authorDataContent ac = 1;
-    }
-    repeated authorData author = 4;
-    repeated textRuns publishedTimeText = 5;
-    repeated textRuns viewCountText = 6;
-    repeated textRuns lengthText = 7;
-    message navigationData {
-        message navType {
-            int32 i1 = 1;
-            int32 i2 = 2;
-            int32 i3 = 3;
-            string source = 11;
-            message navExtraType {
-                int32 i2 = 2;
-                int32 i3 = 3;
-            }
-            repeated navExtraType navExtra = 19;
-        }
-        repeated navType nav = 1;
-        message navData {
-            string navId = 1;
-        }
-        repeated navData navProperties = 48687757;
-    }
-    repeated navigationData navData = 8;
-    message longAuthorData {
-        message laDataContainer {
-            string displayName = 1;
-            message navigation {
-                message navigationEndpoint {
-                    string browseId = 2;
-                    string canonicalBaseUrl = 4;
-                }
-                repeated navigationEndpoint laNaviEndpoint = 48687626;
-            }
-            repeated navigation laNavi = 5;
-        }
-        repeated laDataContainer laDataContent = 1;
-    }
-    repeated longAuthorData laData = 10;
-    message authorAvatarType {
-        message aaContain {
-            string url = 1;
-            int32 width = 2;
-            int32 height = 3;
-        }
-        repeated aaContain aaData = 1;
-    }
-    repeated authorAvatarType authorAvatar = 14;
-    repeated textRuns shortViewCounts = 23;
+    optional thumbnails thumblist = 2;
+    optional textRuns titleData = 3;
+    optional authorData shortAuthorData = 4;
+    optional textRuns publishedTimeText = 5;
+    optional textRuns viewCountText = 6;
+    optional textRuns lengthText = 7;
+    optional navigationData navData = 8;
+    optional authorData longAuthorData = 10;
+    optional thumbnails authorAvatar = 14;
+    optional textRuns shortViewCounts = 23;
 }
 message root {
     message contents {
@@ -235,18 +186,10 @@ message root {
         repeated singleColumnWatchNextResults nextResults = 51779735;
     }
     repeated contents content = 7;
-    message bData {
-        message pbVarious {
-            string id = 1;
-        }
-        repeated pbVarious msg3 = 48687757;
+    optional navigationData navigationEndpoint = 9;
+    message playerOverlays {
+        message playerOverlaysRenderer {}
+        optional playerOverlaysRenderer overlay = 78882851;
     }
-    repeated bData pbExtra = 9;
-    message fData {
-        message pbVarious {
-            
-        }
-        repeated pbVarious pb1 = 78882851;
-    }
-    repeated fData pbExtra14 = 14;
+    optional playerOverlays poverlays = 14;
 }

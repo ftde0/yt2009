@@ -1415,6 +1415,7 @@ module.exports = {
                     `-i "${__dirname}/${audioFile}"`,
                     `-c:v copy -c:a copy`,
                     `-map 0:v -map 1:a`,
+                    `-movflags +faststart`,
                     `"${__dirname}/../assets/${fname}.mp4"`
                 ].join(" ")
 
@@ -1686,6 +1687,7 @@ module.exports = {
                     fetchNextPart()
                 }, 500)
             }).then(r => {
+                if(!r) return;
                 if(r.status == 403) {
                     stream.end()
                     try {fs.unlinkSync(out)}catch(error){

@@ -25,9 +25,9 @@ message numberRange {
 }
 message root {
     message contextType {
-        string contextToken = 2;
+        string visitorData = 2;
         message clientType {
-            int32 clientSmth = 1;
+            int32 service = 1;
             message clientParam {
                 string name = 1;
                 string value = 2;
@@ -35,17 +35,17 @@ message root {
             repeated clientParam param = 2;
         }
         repeated clientType client = 6;
-        int32 hundredInt = 7;
+        int32 maxAgeSeconds = 7;
     }
     repeated contextType context = 1;
-    message playbackInts {
-        optional int32 int1 = 1;
-        optional int32 int9 = 9;
-        string str31 = 31;
+    message playabilityStatus {
+        optional int32 status = 1;
+        optional int32 playableInEmbed = 9;
+        string contentParams = 31;
     }
-    repeated playbackInts pInts = 2;
+    repeated playabilityStatus playability = 2;
     message playerFormats {
-        int32 someInt = 1;
+        int32 expiresInSeconds = 1;
         message format {
             int32 formatId = 1;
             string url = 2;
@@ -63,7 +63,7 @@ message root {
             repeated audioTrackData audioTrack = 28;
             int32 audioBitrate = 44;
             int32 audioSample = 45;
-            int32 twoInt = 46;
+            int32 audioChannels = 46;
             optional int32 isDrc = 49;
         }
         repeated format nondashFormat = 2;
@@ -94,14 +94,14 @@ message root {
                 string trackName = 11;
             }
             repeated captionTrack track = 1;
-            message data {
+            message audioTracks {
                 optional int32 int2 = 2;
                 optional int32 int3 = 3;
                 optional int32 int5 = 5;
                 optional int32 int6 = 6;
             }
-            repeated data pb2 = 2;
-            optional int32 int4 = 4;
+            repeated audioTracks audioTrack = 2;
+            optional int32 defaultAudioTrackIndex = 4;
         }
         repeated contents content = 51621377;
         message v6Field {
@@ -129,12 +129,12 @@ message root {
         repeated thumbList thumbnails = 25;
         string viewCount = 32;
         string authorName = 33;
-        optional int32 zero1 = 20;
-        optional int32 zero2 = 22;
-        optional int32 zero3 = 31;
-        optional int32 zero4 = 37;
-        optional int32 zero5 = 38;
-        optional int32 zero6 = 41;
+        optional int32 isOwnerViewing = 20;
+        optional int32 isCrawlable = 22;
+        optional int32 allowRatings = 31;
+        optional int32 isPrivate = 37;
+        optional int32 isUnpluggedCorpus = 38;
+        optional int32 isLiveContent = 41;
     }
     repeated metadata videoMetadata = 11;
     message storyboardData {
@@ -150,13 +150,13 @@ message root {
         optional int32 int2 = 2;
     }
     repeated pbVarious21 pb21 = 21;
-    message pbVarious22 {
-        message pbVarious1 {
-            string data = 1;
+    message attestationMsg {
+        message playerAttestationRenderer {
+            string challenge = 1;
         }
-        repeated pbVarious1 pb1 = 59961494;
+        repeated playerAttestationRenderer attest = 59961494;
     }
-    repeated pbVarious22 pb22 = 22;
+    optional attestationMsg attestation = 22;
     string pbVarious69 = 69;
 
 

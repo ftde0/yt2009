@@ -1,0 +1,8 @@
+syntax = "proto3";
+package android_search_request;
+import "search_request_params.proto";
+
+message root {
+    string query = 2;
+    optional com.youtube.innertube.request.SearchRequestParams params = 11;
+}

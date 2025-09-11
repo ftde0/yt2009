@@ -21,34 +21,22 @@ var global =
     (function () { return this; }).call(null) ||
     Function('return this')();
 
+goog.exportSymbol('proto.android_full_next.authorData', null, global);
+goog.exportSymbol('proto.android_full_next.authorData.authorDataContent', null, global);
 goog.exportSymbol('proto.android_full_next.authorRendererData', null, global);
-goog.exportSymbol('proto.android_full_next.authorRendererData.navigation', null, global);
-goog.exportSymbol('proto.android_full_next.authorRendererData.navigation.endpoints', null, global);
 goog.exportSymbol('proto.android_full_next.authorRendererData.subscribeButtonData', null, global);
 goog.exportSymbol('proto.android_full_next.authorRendererData.subscribeButtonData.subContents', null, global);
 goog.exportSymbol('proto.android_full_next.authorRendererData.subscribeButtonData.subContents.subAction', null, global);
 goog.exportSymbol('proto.android_full_next.authorRendererData.subscribeButtonData.subContents.subAction.sub1', null, global);
 goog.exportSymbol('proto.android_full_next.authorRendererData.subscribeButtonData.subContents.subAction.sub2', null, global);
+goog.exportSymbol('proto.android_full_next.browseNavigation', null, global);
+goog.exportSymbol('proto.android_full_next.browseNavigation.browseData', null, global);
 goog.exportSymbol('proto.android_full_next.compactVideoRenderer', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.authorAvatarType', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.authorData', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.authorData.authorDataContent', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.longAuthorData', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.navigationData', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.navigationData.navData', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.navigationData.navType', null, global);
-goog.exportSymbol('proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType', null, global);
+goog.exportSymbol('proto.android_full_next.navigationData', null, global);
+goog.exportSymbol('proto.android_full_next.navigationData.navData', null, global);
 goog.exportSymbol('proto.android_full_next.nextRequest', null, global);
 goog.exportSymbol('proto.android_full_next.nextRequest.continuationData', null, global);
 goog.exportSymbol('proto.android_full_next.root', null, global);
-goog.exportSymbol('proto.android_full_next.root.bData', null, global);
-goog.exportSymbol('proto.android_full_next.root.bData.pbVarious', null, global);
 goog.exportSymbol('proto.android_full_next.root.contents', null, global);
 goog.exportSymbol('proto.android_full_next.root.contents.singleColumnWatchNextResults', null, global);
 goog.exportSymbol('proto.android_full_next.root.contents.singleColumnWatchNextResults.contents', null, global);
@@ -56,8 +44,8 @@ goog.exportSymbol('proto.android_full_next.root.contents.singleColumnWatchNextRe
 goog.exportSymbol('proto.android_full_next.root.contents.singleColumnWatchNextResults.contents.results.contents', null, global);
 goog.exportSymbol('proto.android_full_next.root.contents.singleColumnWatchNextResults.contents.results.contents.itemSectionRenderer', null, global);
 goog.exportSymbol('proto.android_full_next.root.contents.singleColumnWatchNextResults.contents.results.contents.itemSectionRenderer.contents', null, global);
-goog.exportSymbol('proto.android_full_next.root.fData', null, global);
-goog.exportSymbol('proto.android_full_next.root.fData.pbVarious', null, global);
+goog.exportSymbol('proto.android_full_next.root.playerOverlays', null, global);
+goog.exportSymbol('proto.android_full_next.root.playerOverlays.playerOverlaysRenderer', null, global);
 goog.exportSymbol('proto.android_full_next.simpleText', null, global);
 goog.exportSymbol('proto.android_full_next.textRuns', null, global);
 goog.exportSymbol('proto.android_full_next.textRuns.textRun', null, global);
@@ -66,7 +54,6 @@ goog.exportSymbol('proto.android_full_next.thumbnails.thumbnail', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.pbVarious13', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious', null, global);
-goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.pbVarious25', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.pbVarious25.unk1', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions', null, global);
@@ -74,9 +61,49 @@ goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions.co
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions.container.pb10', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry', null, global);
-goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo', null, global);
-goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData', null, global);
 goog.exportSymbol('proto.android_full_next.videoMetadataRenderer.videoActions.container.pb8', null, global);
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.android_full_next.navigationData = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, 500, null, null);
+};
+goog.inherits(proto.android_full_next.navigationData, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.android_full_next.navigationData.displayName = 'proto.android_full_next.navigationData';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.android_full_next.navigationData.navData = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.android_full_next.navigationData.navData, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.android_full_next.navigationData.navData.displayName = 'proto.android_full_next.navigationData.navData';
+}
 /**
  * Generated by JsPbCodeGenerator.
  * @param {Array=} opt_data Optional initial data array, typically from a
@@ -234,6 +261,90 @@ if (goog.DEBUG && !COMPILED) {
  * @extends {jspb.Message}
  * @constructor
  */
+proto.android_full_next.browseNavigation = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.browseNavigation.repeatedFields_, null);
+};
+goog.inherits(proto.android_full_next.browseNavigation, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.android_full_next.browseNavigation.displayName = 'proto.android_full_next.browseNavigation';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.android_full_next.browseNavigation.browseData = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.android_full_next.browseNavigation.browseData, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.android_full_next.browseNavigation.browseData.displayName = 'proto.android_full_next.browseNavigation.browseData';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.android_full_next.authorData = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.android_full_next.authorData, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.android_full_next.authorData.displayName = 'proto.android_full_next.authorData';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.android_full_next.authorData.authorDataContent = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.android_full_next.authorData.authorDataContent, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.android_full_next.authorData.authorDataContent.displayName = 'proto.android_full_next.authorData.authorDataContent';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
 proto.android_full_next.authorRendererData = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.authorRendererData.repeatedFields_, null);
 };
@@ -244,48 +355,6 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.android_full_next.authorRendererData.displayName = 'proto.android_full_next.authorRendererData';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.authorRendererData.navigation = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.authorRendererData.navigation.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.authorRendererData.navigation, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.authorRendererData.navigation.displayName = 'proto.android_full_next.authorRendererData.navigation';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.authorRendererData.navigation.endpoints = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.android_full_next.authorRendererData.navigation.endpoints, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.authorRendererData.navigation.endpoints.displayName = 'proto.android_full_next.authorRendererData.navigation.endpoints';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -465,27 +534,6 @@ if (goog.DEBUG && !COMPILED) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.displayName = 'proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
 proto.android_full_next.videoMetadataRenderer.pbVarious25 = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.videoMetadataRenderer.pbVarious25.repeatedFields_, null);
 };
@@ -634,7 +682,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.repeatedFields_, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
 goog.inherits(proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -654,50 +702,8 @@ if (goog.DEBUG && !COMPILED) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.displayName = 'proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.displayName = 'proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
 proto.android_full_next.compactVideoRenderer = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.compactVideoRenderer.repeatedFields_, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
 goog.inherits(proto.android_full_next.compactVideoRenderer, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -706,300 +712,6 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.android_full_next.compactVideoRenderer.displayName = 'proto.android_full_next.compactVideoRenderer';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.authorData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.compactVideoRenderer.authorData.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.authorData, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.authorData.displayName = 'proto.android_full_next.compactVideoRenderer.authorData';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.authorData.authorDataContent, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.displayName = 'proto.android_full_next.compactVideoRenderer.authorData.authorDataContent';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.displayName = 'proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.displayName = 'proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.navigationData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.compactVideoRenderer.navigationData.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.navigationData, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.navigationData.displayName = 'proto.android_full_next.compactVideoRenderer.navigationData';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.compactVideoRenderer.navigationData.navType.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.navigationData.navType, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.navigationData.navType.displayName = 'proto.android_full_next.compactVideoRenderer.navigationData.navType';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.displayName = 'proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.navigationData.navData, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.navigationData.navData.displayName = 'proto.android_full_next.compactVideoRenderer.navigationData.navData';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.compactVideoRenderer.longAuthorData.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.longAuthorData, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.longAuthorData.displayName = 'proto.android_full_next.compactVideoRenderer.longAuthorData';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.displayName = 'proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.displayName = 'proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.displayName = 'proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_full_next.compactVideoRenderer.authorAvatarType.repeatedFields_, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.authorAvatarType, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.authorAvatarType.displayName = 'proto.android_full_next.compactVideoRenderer.authorAvatarType';
-}
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.displayName = 'proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -1179,16 +891,16 @@ if (goog.DEBUG && !COMPILED) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.android_full_next.root.bData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.root.bData.repeatedFields_, null);
+proto.android_full_next.root.playerOverlays = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, 500, null, null);
 };
-goog.inherits(proto.android_full_next.root.bData, jspb.Message);
+goog.inherits(proto.android_full_next.root.playerOverlays, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
   /**
    * @public
    * @override
    */
-  proto.android_full_next.root.bData.displayName = 'proto.android_full_next.root.bData';
+  proto.android_full_next.root.playerOverlays.displayName = 'proto.android_full_next.root.playerOverlays';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -1200,59 +912,298 @@ if (goog.DEBUG && !COMPILED) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.android_full_next.root.bData.pbVarious = function(opt_data) {
+proto.android_full_next.root.playerOverlays.playerOverlaysRenderer = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.android_full_next.root.bData.pbVarious, jspb.Message);
+goog.inherits(proto.android_full_next.root.playerOverlays.playerOverlaysRenderer, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
   /**
    * @public
    * @override
    */
-  proto.android_full_next.root.bData.pbVarious.displayName = 'proto.android_full_next.root.bData.pbVarious';
+  proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.displayName = 'proto.android_full_next.root.playerOverlays.playerOverlaysRenderer';
 }
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
 /**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
  */
-proto.android_full_next.root.fData = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, 500, proto.android_full_next.root.fData.repeatedFields_, null);
+proto.android_full_next.navigationData.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.navigationData.toObject(opt_includeInstance, this);
 };
-goog.inherits(proto.android_full_next.root.fData, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.root.fData.displayName = 'proto.android_full_next.root.fData';
-}
+
+
 /**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.android_full_next.navigationData} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.android_full_next.root.fData.pbVarious = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+proto.android_full_next.navigationData.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    navproperties: (f = msg.getNavproperties()) && proto.android_full_next.navigationData.navData.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
 };
-goog.inherits(proto.android_full_next.root.fData.pbVarious, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  /**
-   * @public
-   * @override
-   */
-  proto.android_full_next.root.fData.pbVarious.displayName = 'proto.android_full_next.root.fData.pbVarious';
 }
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.android_full_next.navigationData}
+ */
+proto.android_full_next.navigationData.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.android_full_next.navigationData;
+  return proto.android_full_next.navigationData.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.android_full_next.navigationData} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.android_full_next.navigationData}
+ */
+proto.android_full_next.navigationData.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 48687757:
+      var value = new proto.android_full_next.navigationData.navData;
+      reader.readMessage(value,proto.android_full_next.navigationData.navData.deserializeBinaryFromReader);
+      msg.setNavproperties(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.android_full_next.navigationData.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.android_full_next.navigationData.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.android_full_next.navigationData} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.navigationData.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getNavproperties();
+  if (f != null) {
+    writer.writeMessage(
+      48687757,
+      f,
+      proto.android_full_next.navigationData.navData.serializeBinaryToWriter
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.android_full_next.navigationData.navData.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.navigationData.navData.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.android_full_next.navigationData.navData} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.navigationData.navData.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    navid: jspb.Message.getFieldWithDefault(msg, 1, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.android_full_next.navigationData.navData}
+ */
+proto.android_full_next.navigationData.navData.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.android_full_next.navigationData.navData;
+  return proto.android_full_next.navigationData.navData.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.android_full_next.navigationData.navData} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.android_full_next.navigationData.navData}
+ */
+proto.android_full_next.navigationData.navData.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setNavid(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.android_full_next.navigationData.navData.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.android_full_next.navigationData.navData.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.android_full_next.navigationData.navData} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.navigationData.navData.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getNavid();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string navId = 1;
+ * @return {string}
+ */
+proto.android_full_next.navigationData.navData.prototype.getNavid = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_full_next.navigationData.navData} returns this
+ */
+proto.android_full_next.navigationData.navData.prototype.setNavid = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional navData navProperties = 48687757;
+ * @return {?proto.android_full_next.navigationData.navData}
+ */
+proto.android_full_next.navigationData.prototype.getNavproperties = function() {
+  return /** @type{?proto.android_full_next.navigationData.navData} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.navigationData.navData, 48687757));
+};
+
+
+/**
+ * @param {?proto.android_full_next.navigationData.navData|undefined} value
+ * @return {!proto.android_full_next.navigationData} returns this
+*/
+proto.android_full_next.navigationData.prototype.setNavproperties = function(value) {
+  return jspb.Message.setWrapperField(this, 48687757, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.navigationData} returns this
+ */
+proto.android_full_next.navigationData.prototype.clearNavproperties = function() {
+  return this.setNavproperties(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.navigationData.prototype.hasNavproperties = function() {
+  return jspb.Message.getField(this, 48687757) != null;
+};
+
+
 
 /**
  * List of repeated fields within this message type.
@@ -2379,7 +2330,689 @@ proto.android_full_next.simpleText.prototype.setText = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.android_full_next.authorRendererData.repeatedFields_ = [1,2,4,5,6];
+proto.android_full_next.browseNavigation.repeatedFields_ = [48687626];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.android_full_next.browseNavigation.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.browseNavigation.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.android_full_next.browseNavigation} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.browseNavigation.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    dataList: jspb.Message.toObjectList(msg.getDataList(),
+    proto.android_full_next.browseNavigation.browseData.toObject, includeInstance)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.android_full_next.browseNavigation}
+ */
+proto.android_full_next.browseNavigation.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.android_full_next.browseNavigation;
+  return proto.android_full_next.browseNavigation.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.android_full_next.browseNavigation} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.android_full_next.browseNavigation}
+ */
+proto.android_full_next.browseNavigation.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 48687626:
+      var value = new proto.android_full_next.browseNavigation.browseData;
+      reader.readMessage(value,proto.android_full_next.browseNavigation.browseData.deserializeBinaryFromReader);
+      msg.addData(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.android_full_next.browseNavigation.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.android_full_next.browseNavigation.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.android_full_next.browseNavigation} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.browseNavigation.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getDataList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      48687626,
+      f,
+      proto.android_full_next.browseNavigation.browseData.serializeBinaryToWriter
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.browseNavigation.browseData.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.android_full_next.browseNavigation.browseData} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.browseNavigation.browseData.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    params: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    canonicalbaseurl: jspb.Message.getFieldWithDefault(msg, 4, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.android_full_next.browseNavigation.browseData}
+ */
+proto.android_full_next.browseNavigation.browseData.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.android_full_next.browseNavigation.browseData;
+  return proto.android_full_next.browseNavigation.browseData.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.android_full_next.browseNavigation.browseData} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.android_full_next.browseNavigation.browseData}
+ */
+proto.android_full_next.browseNavigation.browseData.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBrowseid(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setParams(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCanonicalbaseurl(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.android_full_next.browseNavigation.browseData.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.android_full_next.browseNavigation.browseData} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.browseNavigation.browseData.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getBrowseid();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getParams();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getCanonicalbaseurl();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string browseId = 2;
+ * @return {string}
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.getBrowseid = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_full_next.browseNavigation.browseData} returns this
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.setBrowseid = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string params = 3;
+ * @return {string}
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.getParams = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_full_next.browseNavigation.browseData} returns this
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.setParams = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string canonicalBaseUrl = 4;
+ * @return {string}
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.getCanonicalbaseurl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_full_next.browseNavigation.browseData} returns this
+ */
+proto.android_full_next.browseNavigation.browseData.prototype.setCanonicalbaseurl = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * repeated browseData data = 48687626;
+ * @return {!Array<!proto.android_full_next.browseNavigation.browseData>}
+ */
+proto.android_full_next.browseNavigation.prototype.getDataList = function() {
+  return /** @type{!Array<!proto.android_full_next.browseNavigation.browseData>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.browseNavigation.browseData, 48687626));
+};
+
+
+/**
+ * @param {!Array<!proto.android_full_next.browseNavigation.browseData>} value
+ * @return {!proto.android_full_next.browseNavigation} returns this
+*/
+proto.android_full_next.browseNavigation.prototype.setDataList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 48687626, value);
+};
+
+
+/**
+ * @param {!proto.android_full_next.browseNavigation.browseData=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.android_full_next.browseNavigation.browseData}
+ */
+proto.android_full_next.browseNavigation.prototype.addData = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 48687626, opt_value, proto.android_full_next.browseNavigation.browseData, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.android_full_next.browseNavigation} returns this
+ */
+proto.android_full_next.browseNavigation.prototype.clearDataList = function() {
+  return this.setDataList([]);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.android_full_next.authorData.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.authorData.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.android_full_next.authorData} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.authorData.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    ac: (f = msg.getAc()) && proto.android_full_next.authorData.authorDataContent.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.android_full_next.authorData}
+ */
+proto.android_full_next.authorData.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.android_full_next.authorData;
+  return proto.android_full_next.authorData.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.android_full_next.authorData} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.android_full_next.authorData}
+ */
+proto.android_full_next.authorData.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.android_full_next.authorData.authorDataContent;
+      reader.readMessage(value,proto.android_full_next.authorData.authorDataContent.deserializeBinaryFromReader);
+      msg.setAc(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.android_full_next.authorData.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.android_full_next.authorData.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.android_full_next.authorData} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.authorData.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getAc();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.android_full_next.authorData.authorDataContent.serializeBinaryToWriter
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.android_full_next.authorData.authorDataContent.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.authorData.authorDataContent.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.android_full_next.authorData.authorDataContent} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.authorData.authorDataContent.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    authordisplayname: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    navigation: (f = msg.getNavigation()) && proto.android_full_next.browseNavigation.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.android_full_next.authorData.authorDataContent}
+ */
+proto.android_full_next.authorData.authorDataContent.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.android_full_next.authorData.authorDataContent;
+  return proto.android_full_next.authorData.authorDataContent.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.android_full_next.authorData.authorDataContent} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.android_full_next.authorData.authorDataContent}
+ */
+proto.android_full_next.authorData.authorDataContent.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setAuthordisplayname(value);
+      break;
+    case 5:
+      var value = new proto.android_full_next.browseNavigation;
+      reader.readMessage(value,proto.android_full_next.browseNavigation.deserializeBinaryFromReader);
+      msg.setNavigation(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.android_full_next.authorData.authorDataContent.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.android_full_next.authorData.authorDataContent.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.android_full_next.authorData.authorDataContent} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.android_full_next.authorData.authorDataContent.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getAuthordisplayname();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getNavigation();
+  if (f != null) {
+    writer.writeMessage(
+      5,
+      f,
+      proto.android_full_next.browseNavigation.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional string authorDisplayName = 1;
+ * @return {string}
+ */
+proto.android_full_next.authorData.authorDataContent.prototype.getAuthordisplayname = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_full_next.authorData.authorDataContent} returns this
+ */
+proto.android_full_next.authorData.authorDataContent.prototype.setAuthordisplayname = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional browseNavigation navigation = 5;
+ * @return {?proto.android_full_next.browseNavigation}
+ */
+proto.android_full_next.authorData.authorDataContent.prototype.getNavigation = function() {
+  return /** @type{?proto.android_full_next.browseNavigation} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.browseNavigation, 5));
+};
+
+
+/**
+ * @param {?proto.android_full_next.browseNavigation|undefined} value
+ * @return {!proto.android_full_next.authorData.authorDataContent} returns this
+*/
+proto.android_full_next.authorData.authorDataContent.prototype.setNavigation = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.authorData.authorDataContent} returns this
+ */
+proto.android_full_next.authorData.authorDataContent.prototype.clearNavigation = function() {
+  return this.setNavigation(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.authorData.authorDataContent.prototype.hasNavigation = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional authorDataContent ac = 1;
+ * @return {?proto.android_full_next.authorData.authorDataContent}
+ */
+proto.android_full_next.authorData.prototype.getAc = function() {
+  return /** @type{?proto.android_full_next.authorData.authorDataContent} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.authorData.authorDataContent, 1));
+};
+
+
+/**
+ * @param {?proto.android_full_next.authorData.authorDataContent|undefined} value
+ * @return {!proto.android_full_next.authorData} returns this
+*/
+proto.android_full_next.authorData.prototype.setAc = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.authorData} returns this
+ */
+proto.android_full_next.authorData.prototype.clearAc = function() {
+  return this.setAc(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.authorData.prototype.hasAc = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.android_full_next.authorRendererData.repeatedFields_ = [6];
 
 
 
@@ -2412,14 +3045,10 @@ proto.android_full_next.authorRendererData.prototype.toObject = function(opt_inc
  */
 proto.android_full_next.authorRendererData.toObject = function(includeInstance, msg) {
   var f, obj = {
-    avatarsList: jspb.Message.toObjectList(msg.getAvatarsList(),
-    proto.android_full_next.thumbnails.toObject, includeInstance),
-    nameList: jspb.Message.toObjectList(msg.getNameList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    navidataList: jspb.Message.toObjectList(msg.getNavidataList(),
-    proto.android_full_next.authorRendererData.navigation.toObject, includeInstance),
-    subscribecountList: jspb.Message.toObjectList(msg.getSubscribecountList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
+    avatars: (f = msg.getAvatars()) && proto.android_full_next.thumbnails.toObject(includeInstance, f),
+    name: (f = msg.getName()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    navidata: (f = msg.getNavidata()) && proto.android_full_next.browseNavigation.toObject(includeInstance, f),
+    subscribecount: (f = msg.getSubscribecount()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
     subscribebuttonList: jspb.Message.toObjectList(msg.getSubscribebuttonList(),
     proto.android_full_next.authorRendererData.subscribeButtonData.toObject, includeInstance)
   };
@@ -2461,22 +3090,22 @@ proto.android_full_next.authorRendererData.deserializeBinaryFromReader = functio
     case 1:
       var value = new proto.android_full_next.thumbnails;
       reader.readMessage(value,proto.android_full_next.thumbnails.deserializeBinaryFromReader);
-      msg.addAvatars(value);
+      msg.setAvatars(value);
       break;
     case 2:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addName(value);
+      msg.setName(value);
       break;
     case 4:
-      var value = new proto.android_full_next.authorRendererData.navigation;
-      reader.readMessage(value,proto.android_full_next.authorRendererData.navigation.deserializeBinaryFromReader);
-      msg.addNavidata(value);
+      var value = new proto.android_full_next.browseNavigation;
+      reader.readMessage(value,proto.android_full_next.browseNavigation.deserializeBinaryFromReader);
+      msg.setNavidata(value);
       break;
     case 5:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addSubscribecount(value);
+      msg.setSubscribecount(value);
       break;
     case 6:
       var value = new proto.android_full_next.authorRendererData.subscribeButtonData;
@@ -2512,33 +3141,33 @@ proto.android_full_next.authorRendererData.prototype.serializeBinary = function(
  */
 proto.android_full_next.authorRendererData.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getAvatarsList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getAvatars();
+  if (f != null) {
+    writer.writeMessage(
       1,
       f,
       proto.android_full_next.thumbnails.serializeBinaryToWriter
     );
   }
-  f = message.getNameList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getName();
+  if (f != null) {
+    writer.writeMessage(
       2,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getNavidataList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getNavidata();
+  if (f != null) {
+    writer.writeMessage(
       4,
       f,
-      proto.android_full_next.authorRendererData.navigation.serializeBinaryToWriter
+      proto.android_full_next.browseNavigation.serializeBinaryToWriter
     );
   }
-  f = message.getSubscribecountList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getSubscribecount();
+  if (f != null) {
+    writer.writeMessage(
       5,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -2552,326 +3181,6 @@ proto.android_full_next.authorRendererData.serializeBinaryToWriter = function(me
       proto.android_full_next.authorRendererData.subscribeButtonData.serializeBinaryToWriter
     );
   }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.authorRendererData.navigation.repeatedFields_ = [48687626];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.authorRendererData.navigation.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.authorRendererData.navigation.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.authorRendererData.navigation} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.authorRendererData.navigation.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    endpointdataList: jspb.Message.toObjectList(msg.getEndpointdataList(),
-    proto.android_full_next.authorRendererData.navigation.endpoints.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.authorRendererData.navigation}
- */
-proto.android_full_next.authorRendererData.navigation.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.authorRendererData.navigation;
-  return proto.android_full_next.authorRendererData.navigation.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.authorRendererData.navigation} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.authorRendererData.navigation}
- */
-proto.android_full_next.authorRendererData.navigation.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 48687626:
-      var value = new proto.android_full_next.authorRendererData.navigation.endpoints;
-      reader.readMessage(value,proto.android_full_next.authorRendererData.navigation.endpoints.deserializeBinaryFromReader);
-      msg.addEndpointdata(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.authorRendererData.navigation.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.authorRendererData.navigation.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.authorRendererData.navigation} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.authorRendererData.navigation.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getEndpointdataList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      48687626,
-      f,
-      proto.android_full_next.authorRendererData.navigation.endpoints.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.authorRendererData.navigation.endpoints.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.authorRendererData.navigation.endpoints} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    canonicalbaseurl: jspb.Message.getFieldWithDefault(msg, 4, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.authorRendererData.navigation.endpoints}
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.authorRendererData.navigation.endpoints;
-  return proto.android_full_next.authorRendererData.navigation.endpoints.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.authorRendererData.navigation.endpoints} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.authorRendererData.navigation.endpoints}
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setBrowseid(value);
-      break;
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCanonicalbaseurl(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.authorRendererData.navigation.endpoints.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.authorRendererData.navigation.endpoints} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getBrowseid();
-  if (f.length > 0) {
-    writer.writeString(
-      2,
-      f
-    );
-  }
-  f = message.getCanonicalbaseurl();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string browseId = 2;
- * @return {string}
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.prototype.getBrowseid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.authorRendererData.navigation.endpoints} returns this
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.prototype.setBrowseid = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string canonicalBaseUrl = 4;
- * @return {string}
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.prototype.getCanonicalbaseurl = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.authorRendererData.navigation.endpoints} returns this
- */
-proto.android_full_next.authorRendererData.navigation.endpoints.prototype.setCanonicalbaseurl = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * repeated endpoints endpointData = 48687626;
- * @return {!Array<!proto.android_full_next.authorRendererData.navigation.endpoints>}
- */
-proto.android_full_next.authorRendererData.navigation.prototype.getEndpointdataList = function() {
-  return /** @type{!Array<!proto.android_full_next.authorRendererData.navigation.endpoints>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.authorRendererData.navigation.endpoints, 48687626));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.authorRendererData.navigation.endpoints>} value
- * @return {!proto.android_full_next.authorRendererData.navigation} returns this
-*/
-proto.android_full_next.authorRendererData.navigation.prototype.setEndpointdataList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 48687626, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.authorRendererData.navigation.endpoints=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.authorRendererData.navigation.endpoints}
- */
-proto.android_full_next.authorRendererData.navigation.prototype.addEndpointdata = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 48687626, opt_value, proto.android_full_next.authorRendererData.navigation.endpoints, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.authorRendererData.navigation} returns this
- */
-proto.android_full_next.authorRendererData.navigation.prototype.clearEndpointdataList = function() {
-  return this.setEndpointdataList([]);
 };
 
 
@@ -3003,7 +3312,7 @@ proto.android_full_next.authorRendererData.subscribeButtonData.serializeBinaryTo
  * @private {!Array<number>}
  * @const
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.repeatedFields_ = [1,12,13,16,18];
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.repeatedFields_ = [18];
 
 
 
@@ -3036,19 +3345,15 @@ proto.android_full_next.authorRendererData.subscribeButtonData.subContents.proto
  */
 proto.android_full_next.authorRendererData.subscribeButtonData.subContents.toObject = function(includeInstance, msg) {
   var f, obj = {
-    subscribebuttonList: jspb.Message.toObjectList(msg.getSubscribebuttonList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
+    subscribebutton: (f = msg.getSubscribebutton()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
     int3: jspb.Message.getFieldWithDefault(msg, 3, 0),
     int4: jspb.Message.getFieldWithDefault(msg, 4, 0),
     int6: jspb.Message.getFieldWithDefault(msg, 6, 0),
     channelid: jspb.Message.getFieldWithDefault(msg, 7, ""),
     int8: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    subscribedlabelList: jspb.Message.toObjectList(msg.getSubscribedlabelList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    subscribelabelList: jspb.Message.toObjectList(msg.getSubscribelabelList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    unsubscribelabelList: jspb.Message.toObjectList(msg.getUnsubscribelabelList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
+    subscribedlabel: (f = msg.getSubscribedlabel()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    subscribelabel: (f = msg.getSubscribelabel()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    unsubscribelabel: (f = msg.getUnsubscribelabel()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
     actionList: jspb.Message.toObjectList(msg.getActionList(),
     proto.android_full_next.authorRendererData.subscribeButtonData.subContents.subAction.toObject, includeInstance),
     identifier: jspb.Message.getFieldWithDefault(msg, 31, "")
@@ -3091,7 +3396,7 @@ proto.android_full_next.authorRendererData.subscribeButtonData.subContents.deser
     case 1:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addSubscribebutton(value);
+      msg.setSubscribebutton(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt32());
@@ -3116,17 +3421,17 @@ proto.android_full_next.authorRendererData.subscribeButtonData.subContents.deser
     case 12:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addSubscribedlabel(value);
+      msg.setSubscribedlabel(value);
       break;
     case 13:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addSubscribelabel(value);
+      msg.setSubscribelabel(value);
       break;
     case 16:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addUnsubscribelabel(value);
+      msg.setUnsubscribelabel(value);
       break;
     case 18:
       var value = new proto.android_full_next.authorRendererData.subscribeButtonData.subContents.subAction;
@@ -3166,9 +3471,9 @@ proto.android_full_next.authorRendererData.subscribeButtonData.subContents.proto
  */
 proto.android_full_next.authorRendererData.subscribeButtonData.subContents.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSubscribebuttonList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getSubscribebutton();
+  if (f != null) {
+    writer.writeMessage(
       1,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -3209,25 +3514,25 @@ proto.android_full_next.authorRendererData.subscribeButtonData.subContents.seria
       f
     );
   }
-  f = message.getSubscribedlabelList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getSubscribedlabel();
+  if (f != null) {
+    writer.writeMessage(
       12,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getSubscribelabelList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getSubscribelabel();
+  if (f != null) {
+    writer.writeMessage(
       13,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getUnsubscribelabelList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getUnsubscribelabel();
+  if (f != null) {
+    writer.writeMessage(
       16,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -3785,40 +4090,39 @@ proto.android_full_next.authorRendererData.subscribeButtonData.subContents.subAc
 
 
 /**
- * repeated textRuns subscribeButton = 1;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * optional textRuns subscribeButton = 1;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getSubscribebuttonList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 1));
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getSubscribebutton = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 1));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
 */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setSubscribebuttonList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setSubscribebutton = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.addSubscribebutton = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearSubscribebuttonList = function() {
-  return this.setSubscribebuttonList([]);
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearSubscribebutton = function() {
+  return this.setSubscribebutton(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.hasSubscribebutton = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
@@ -3985,116 +4289,113 @@ proto.android_full_next.authorRendererData.subscribeButtonData.subContents.proto
 
 
 /**
- * repeated textRuns subscribedLabel = 12;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * optional textRuns subscribedLabel = 12;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getSubscribedlabelList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 12));
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getSubscribedlabel = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 12));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
 */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setSubscribedlabelList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 12, value);
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setSubscribedlabel = function(value) {
+  return jspb.Message.setWrapperField(this, 12, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.addSubscribedlabel = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearSubscribedlabelList = function() {
-  return this.setSubscribedlabelList([]);
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearSubscribedlabel = function() {
+  return this.setSubscribedlabel(undefined);
 };
 
 
 /**
- * repeated textRuns subscribeLabel = 13;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getSubscribelabelList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 13));
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.hasSubscribedlabel = function() {
+  return jspb.Message.getField(this, 12) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
-*/
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setSubscribelabelList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 13, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional textRuns subscribeLabel = 13;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.addSubscribelabel = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getSubscribelabel = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 13));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
- */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearSubscribelabelList = function() {
-  return this.setSubscribelabelList([]);
-};
-
-
-/**
- * repeated textRuns unsubscribeLabel = 16;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getUnsubscribelabelList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 16));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
 */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setUnsubscribelabelList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 16, value);
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setSubscribelabel = function(value) {
+  return jspb.Message.setWrapperField(this, 13, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.addUnsubscribelabel = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 16, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
  */
-proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearUnsubscribelabelList = function() {
-  return this.setUnsubscribelabelList([]);
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearSubscribelabel = function() {
+  return this.setSubscribelabel(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.hasSubscribelabel = function() {
+  return jspb.Message.getField(this, 13) != null;
+};
+
+
+/**
+ * optional textRuns unsubscribeLabel = 16;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.getUnsubscribelabel = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 16));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
+ * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
+*/
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.setUnsubscribelabel = function(value) {
+  return jspb.Message.setWrapperField(this, 16, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.authorRendererData.subscribeButtonData.subContents} returns this
+ */
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.clearUnsubscribelabel = function() {
+  return this.setUnsubscribelabel(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.authorRendererData.subscribeButtonData.subContents.prototype.hasUnsubscribelabel = function() {
+  return jspb.Message.getField(this, 16) != null;
 };
 
 
@@ -4193,154 +4494,150 @@ proto.android_full_next.authorRendererData.subscribeButtonData.prototype.clearCo
 
 
 /**
- * repeated thumbnails avatars = 1;
- * @return {!Array<!proto.android_full_next.thumbnails>}
+ * optional thumbnails avatars = 1;
+ * @return {?proto.android_full_next.thumbnails}
  */
-proto.android_full_next.authorRendererData.prototype.getAvatarsList = function() {
-  return /** @type{!Array<!proto.android_full_next.thumbnails>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.thumbnails, 1));
+proto.android_full_next.authorRendererData.prototype.getAvatars = function() {
+  return /** @type{?proto.android_full_next.thumbnails} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.thumbnails, 1));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.thumbnails>} value
+ * @param {?proto.android_full_next.thumbnails|undefined} value
  * @return {!proto.android_full_next.authorRendererData} returns this
 */
-proto.android_full_next.authorRendererData.prototype.setAvatarsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+proto.android_full_next.authorRendererData.prototype.setAvatars = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.thumbnails=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.thumbnails}
- */
-proto.android_full_next.authorRendererData.prototype.addAvatars = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.thumbnails, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.authorRendererData} returns this
  */
-proto.android_full_next.authorRendererData.prototype.clearAvatarsList = function() {
-  return this.setAvatarsList([]);
+proto.android_full_next.authorRendererData.prototype.clearAvatars = function() {
+  return this.setAvatars(undefined);
 };
 
 
 /**
- * repeated textRuns name = 2;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.authorRendererData.prototype.getNameList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 2));
+proto.android_full_next.authorRendererData.prototype.hasAvatars = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.authorRendererData} returns this
-*/
-proto.android_full_next.authorRendererData.prototype.setNameList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 2, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional textRuns name = 2;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.authorRendererData.prototype.addName = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.authorRendererData.prototype.getName = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 2));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.authorRendererData} returns this
- */
-proto.android_full_next.authorRendererData.prototype.clearNameList = function() {
-  return this.setNameList([]);
-};
-
-
-/**
- * repeated navigation naviData = 4;
- * @return {!Array<!proto.android_full_next.authorRendererData.navigation>}
- */
-proto.android_full_next.authorRendererData.prototype.getNavidataList = function() {
-  return /** @type{!Array<!proto.android_full_next.authorRendererData.navigation>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.authorRendererData.navigation, 4));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.authorRendererData.navigation>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.authorRendererData} returns this
 */
-proto.android_full_next.authorRendererData.prototype.setNavidataList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 4, value);
+proto.android_full_next.authorRendererData.prototype.setName = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.authorRendererData.navigation=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.authorRendererData.navigation}
- */
-proto.android_full_next.authorRendererData.prototype.addNavidata = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.android_full_next.authorRendererData.navigation, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.authorRendererData} returns this
  */
-proto.android_full_next.authorRendererData.prototype.clearNavidataList = function() {
-  return this.setNavidataList([]);
+proto.android_full_next.authorRendererData.prototype.clearName = function() {
+  return this.setName(undefined);
 };
 
 
 /**
- * repeated textRuns subscribeCount = 5;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.authorRendererData.prototype.getSubscribecountList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 5));
+proto.android_full_next.authorRendererData.prototype.hasName = function() {
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * optional browseNavigation naviData = 4;
+ * @return {?proto.android_full_next.browseNavigation}
+ */
+proto.android_full_next.authorRendererData.prototype.getNavidata = function() {
+  return /** @type{?proto.android_full_next.browseNavigation} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.browseNavigation, 4));
+};
+
+
+/**
+ * @param {?proto.android_full_next.browseNavigation|undefined} value
  * @return {!proto.android_full_next.authorRendererData} returns this
 */
-proto.android_full_next.authorRendererData.prototype.setSubscribecountList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
+proto.android_full_next.authorRendererData.prototype.setNavidata = function(value) {
+  return jspb.Message.setWrapperField(this, 4, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.authorRendererData.prototype.addSubscribecount = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.authorRendererData} returns this
  */
-proto.android_full_next.authorRendererData.prototype.clearSubscribecountList = function() {
-  return this.setSubscribecountList([]);
+proto.android_full_next.authorRendererData.prototype.clearNavidata = function() {
+  return this.setNavidata(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.authorRendererData.prototype.hasNavidata = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional textRuns subscribeCount = 5;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.authorRendererData.prototype.getSubscribecount = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 5));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
+ * @return {!proto.android_full_next.authorRendererData} returns this
+*/
+proto.android_full_next.authorRendererData.prototype.setSubscribecount = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.authorRendererData} returns this
+ */
+proto.android_full_next.authorRendererData.prototype.clearSubscribecount = function() {
+  return this.setSubscribecount(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.authorRendererData.prototype.hasSubscribecount = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
@@ -4388,7 +4685,7 @@ proto.android_full_next.authorRendererData.prototype.clearSubscribebuttonList = 
  * @private {!Array<number>}
  * @const
  */
-proto.android_full_next.videoMetadataRenderer.repeatedFields_ = [1,2,3,4,5,6,7,10,13,17,18,25,31,33,37];
+proto.android_full_next.videoMetadataRenderer.repeatedFields_ = [13,25,31];
 
 
 
@@ -4421,41 +4718,28 @@ proto.android_full_next.videoMetadataRenderer.prototype.toObject = function(opt_
  */
 proto.android_full_next.videoMetadataRenderer.toObject = function(includeInstance, msg) {
   var f, obj = {
-    titleList: jspb.Message.toObjectList(msg.getTitleList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    viewcountList: jspb.Message.toObjectList(msg.getViewcountList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    liketext1List: jspb.Message.toObjectList(msg.getLiketext1List(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    disliketext1List: jspb.Message.toObjectList(msg.getDisliketext1List(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    descriptionList: jspb.Message.toObjectList(msg.getDescriptionList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    liketext2List: jspb.Message.toObjectList(msg.getLiketext2List(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    disliketext2List: jspb.Message.toObjectList(msg.getDisliketext2List(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    int8: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    int9: jspb.Message.getFieldWithDefault(msg, 9, 0),
-    publishdateList: jspb.Message.toObjectList(msg.getPublishdateList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
+    title: (f = msg.getTitle()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    viewcount: (f = msg.getViewcount()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    liketext1: (f = msg.getLiketext1()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    disliketext1: (f = msg.getDisliketext1()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    description: (f = msg.getDescription()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    liketext2: (f = msg.getLiketext2()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    disliketext2: (f = msg.getDisliketext2()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    allowratings: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    publishdate: (f = msg.getPublishdate()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
     likestatus: jspb.Message.getFieldWithDefault(msg, 11, 0),
     videoid: jspb.Message.getFieldWithDefault(msg, 12, ""),
     pb13List: jspb.Message.toObjectList(msg.getPb13List(),
     proto.android_full_next.videoMetadataRenderer.pbVarious13.toObject, includeInstance),
-    string17List: jspb.Message.toObjectList(msg.getString17List(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    shortviewcountList: jspb.Message.toObjectList(msg.getShortviewcountList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    int24: jspb.Message.getFieldWithDefault(msg, 24, 0),
+    string17: (f = msg.getString17()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    shortviewcount: (f = msg.getShortviewcount()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    islimitedstate: jspb.Message.getFieldWithDefault(msg, 24, 0),
     pb25List: jspb.Message.toObjectList(msg.getPb25List(),
     proto.android_full_next.videoMetadataRenderer.pbVarious25.toObject, includeInstance),
     videoactionList: jspb.Message.toObjectList(msg.getVideoactionList(),
     proto.android_full_next.videoMetadataRenderer.videoActions.toObject, includeInstance),
-    str33List: jspb.Message.toObjectList(msg.getStr33List(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    str37List: jspb.Message.toObjectList(msg.getStr37List(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
+    str33: (f = msg.getStr33()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    str37: (f = msg.getStr37()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
     pb38: jspb.Message.getFieldWithDefault(msg, 38, 0),
     pb43: jspb.Message.getFieldWithDefault(msg, 43, 0)
   };
@@ -4497,50 +4781,46 @@ proto.android_full_next.videoMetadataRenderer.deserializeBinaryFromReader = func
     case 1:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addTitle(value);
+      msg.setTitle(value);
       break;
     case 2:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addViewcount(value);
+      msg.setViewcount(value);
       break;
     case 3:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addLiketext1(value);
+      msg.setLiketext1(value);
       break;
     case 4:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addDisliketext1(value);
+      msg.setDisliketext1(value);
       break;
     case 5:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addDescription(value);
+      msg.setDescription(value);
       break;
     case 6:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addLiketext2(value);
+      msg.setLiketext2(value);
       break;
     case 7:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addDisliketext2(value);
+      msg.setDisliketext2(value);
       break;
     case 8:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setInt8(value);
-      break;
-    case 9:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setInt9(value);
+      msg.setAllowratings(value);
       break;
     case 10:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addPublishdate(value);
+      msg.setPublishdate(value);
       break;
     case 11:
       var value = /** @type {number} */ (reader.readInt32());
@@ -4558,16 +4838,16 @@ proto.android_full_next.videoMetadataRenderer.deserializeBinaryFromReader = func
     case 17:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addString17(value);
+      msg.setString17(value);
       break;
     case 18:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addShortviewcount(value);
+      msg.setShortviewcount(value);
       break;
     case 24:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setInt24(value);
+      msg.setIslimitedstate(value);
       break;
     case 25:
       var value = new proto.android_full_next.videoMetadataRenderer.pbVarious25;
@@ -4582,12 +4862,12 @@ proto.android_full_next.videoMetadataRenderer.deserializeBinaryFromReader = func
     case 33:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addStr33(value);
+      msg.setStr33(value);
       break;
     case 37:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addStr37(value);
+      msg.setStr37(value);
       break;
     case 38:
       var value = /** @type {number} */ (reader.readInt32());
@@ -4626,57 +4906,57 @@ proto.android_full_next.videoMetadataRenderer.prototype.serializeBinary = functi
  */
 proto.android_full_next.videoMetadataRenderer.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getTitleList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getTitle();
+  if (f != null) {
+    writer.writeMessage(
       1,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getViewcountList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getViewcount();
+  if (f != null) {
+    writer.writeMessage(
       2,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getLiketext1List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getLiketext1();
+  if (f != null) {
+    writer.writeMessage(
       3,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getDisliketext1List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getDisliketext1();
+  if (f != null) {
+    writer.writeMessage(
       4,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getDescriptionList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getDescription();
+  if (f != null) {
+    writer.writeMessage(
       5,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getLiketext2List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getLiketext2();
+  if (f != null) {
+    writer.writeMessage(
       6,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getDisliketext2List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getDisliketext2();
+  if (f != null) {
+    writer.writeMessage(
       7,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -4689,16 +4969,9 @@ proto.android_full_next.videoMetadataRenderer.serializeBinaryToWriter = function
       f
     );
   }
-  f = /** @type {number} */ (jspb.Message.getField(message, 9));
+  f = message.getPublishdate();
   if (f != null) {
-    writer.writeInt32(
-      9,
-      f
-    );
-  }
-  f = message.getPublishdateList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+    writer.writeMessage(
       10,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -4726,17 +4999,17 @@ proto.android_full_next.videoMetadataRenderer.serializeBinaryToWriter = function
       proto.android_full_next.videoMetadataRenderer.pbVarious13.serializeBinaryToWriter
     );
   }
-  f = message.getString17List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getString17();
+  if (f != null) {
+    writer.writeMessage(
       17,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getShortviewcountList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getShortviewcount();
+  if (f != null) {
+    writer.writeMessage(
       18,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -4765,17 +5038,17 @@ proto.android_full_next.videoMetadataRenderer.serializeBinaryToWriter = function
       proto.android_full_next.videoMetadataRenderer.videoActions.serializeBinaryToWriter
     );
   }
-  f = message.getStr33List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getStr33();
+  if (f != null) {
+    writer.writeMessage(
       33,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getStr37List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getStr37();
+  if (f != null) {
+    writer.writeMessage(
       37,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -4926,7 +5199,7 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.serializeBinaryToWrite
  * @private {!Array<number>}
  * @const
  */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.repeatedFields_ = [1,4,5];
+proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.repeatedFields_ = [4,5];
 
 
 
@@ -4959,14 +5232,13 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.to
  */
 proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.toObject = function(includeInstance, msg) {
   var f, obj = {
-    videoidList: jspb.Message.toObjectList(msg.getVideoidList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
+    videoid: (f = msg.getVideoid()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
     int2: jspb.Message.getFieldWithDefault(msg, 2, 0),
     int3: jspb.Message.getFieldWithDefault(msg, 3, 0),
     count1List: jspb.Message.toObjectList(msg.getCount1List(),
     proto.android_full_next.simpleText.toObject, includeInstance),
     count2List: jspb.Message.toObjectList(msg.getCount2List(),
-    proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.toObject, includeInstance),
+    proto.android_full_next.simpleText.toObject, includeInstance),
     int13: jspb.Message.getFieldWithDefault(msg, 13, 0),
     int23: jspb.Message.getFieldWithDefault(msg, 23, 0)
   };
@@ -5008,7 +5280,7 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.deserializeB
     case 1:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addVideoid(value);
+      msg.setVideoid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
@@ -5024,8 +5296,8 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.deserializeB
       msg.addCount1(value);
       break;
     case 5:
-      var value = new proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain;
-      reader.readMessage(value,proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.deserializeBinaryFromReader);
+      var value = new proto.android_full_next.simpleText;
+      reader.readMessage(value,proto.android_full_next.simpleText.deserializeBinaryFromReader);
       msg.addCount2(value);
       break;
     case 13:
@@ -5065,9 +5337,9 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.se
  */
 proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getVideoidList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getVideoid();
+  if (f != null) {
+    writer.writeMessage(
       1,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -5100,7 +5372,7 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.serializeBin
     writer.writeRepeatedMessage(
       5,
       f,
-      proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.serializeBinaryToWriter
+      proto.android_full_next.simpleText.serializeBinaryToWriter
     );
   }
   f = /** @type {number} */ (jspb.Message.getField(message, 13));
@@ -5120,201 +5392,40 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.serializeBin
 };
 
 
-
 /**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
+ * optional textRuns videoId = 1;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.repeatedFields_ = [1];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.toObject(opt_includeInstance, this);
+proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.getVideoid = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 1));
 };
 
 
 /**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    countList: jspb.Message.toObjectList(msg.getCountList(),
-    proto.android_full_next.textRuns.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain;
-  return proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.android_full_next.textRuns;
-      reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addCount(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCountList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      1,
-      f,
-      proto.android_full_next.textRuns.serializeBinaryToWriter
-    );
-  }
-};
-
-
-/**
- * repeated textRuns count = 1;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.prototype.getCountList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 1));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain} returns this
-*/
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.prototype.setCountList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.prototype.addCount = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain} returns this
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain.prototype.clearCountList = function() {
-  return this.setCountList([]);
-};
-
-
-/**
- * repeated textRuns videoId = 1;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.getVideoidList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 1));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious} returns this
 */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.setVideoidList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.setVideoid = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.addVideoid = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious} returns this
  */
-proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.clearVideoidList = function() {
-  return this.setVideoidList([]);
+proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.clearVideoid = function() {
+  return this.setVideoid(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.hasVideoid = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
@@ -5429,17 +5540,17 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.cl
 
 
 /**
- * repeated contain count2 = 5;
- * @return {!Array<!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain>}
+ * repeated simpleText count2 = 5;
+ * @return {!Array<!proto.android_full_next.simpleText>}
  */
 proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.getCount2List = function() {
-  return /** @type{!Array<!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain, 5));
+  return /** @type{!Array<!proto.android_full_next.simpleText>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.simpleText, 5));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain>} value
+ * @param {!Array<!proto.android_full_next.simpleText>} value
  * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious} returns this
 */
 proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.setCount2List = function(value) {
@@ -5448,12 +5559,12 @@ proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.se
 
 
 /**
- * @param {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain=} opt_value
+ * @param {!proto.android_full_next.simpleText=} opt_value
  * @param {number=} opt_index
- * @return {!proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain}
+ * @return {!proto.android_full_next.simpleText}
  */
 proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.prototype.addCount2 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.videoMetadataRenderer.pbVarious13.pbVarious.contain, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.simpleText, opt_index);
 };
 
 
@@ -6012,7 +6123,7 @@ proto.android_full_next.videoMetadataRenderer.videoActions.serializeBinaryToWrit
  * @private {!Array<number>}
  * @const
  */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.repeatedFields_ = [5,8,10,19];
+proto.android_full_next.videoMetadataRenderer.videoActions.container.repeatedFields_ = [8,10,19];
 
 
 
@@ -6046,8 +6157,7 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.t
 proto.android_full_next.videoMetadataRenderer.videoActions.container.toObject = function(includeInstance, msg) {
   var f, obj = {
     int3: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    actionnameList: jspb.Message.toObjectList(msg.getActionnameList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
+    actionname: (f = msg.getActionname()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
     proto8List: jspb.Message.toObjectList(msg.getProto8List(),
     proto.android_full_next.videoMetadataRenderer.videoActions.container.pb8.toObject, includeInstance),
     proto10List: jspb.Message.toObjectList(msg.getProto10List(),
@@ -6097,7 +6207,7 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.deserialize
     case 5:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addActionname(value);
+      msg.setActionname(value);
       break;
     case 8:
       var value = new proto.android_full_next.videoMetadataRenderer.videoActions.container.pb8;
@@ -6150,9 +6260,9 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.serializeBi
       f
     );
   }
-  f = message.getActionnameList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getActionname();
+  if (f != null) {
+    writer.writeMessage(
       5,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
@@ -6586,13 +6696,6 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.serial
 
 
 
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.repeatedFields_ = [2];
-
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -6624,8 +6727,7 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.target
  */
 proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.toObject = function(includeInstance, msg) {
   var f, obj = {
-    targetiList: jspb.Message.toObjectList(msg.getTargetiList(),
-    proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.toObject, includeInstance)
+    targetid: (f = msg.getTargetid()) && proto.android_full_next.navigationData.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -6663,9 +6765,9 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.target
     var field = reader.getFieldNumber();
     switch (field) {
     case 2:
-      var value = new proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo;
-      reader.readMessage(value,proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.deserializeBinaryFromReader);
-      msg.addTargeti(value);
+      var value = new proto.android_full_next.navigationData;
+      reader.readMessage(value,proto.android_full_next.navigationData.deserializeBinaryFromReader);
+      msg.setTargetid(value);
       break;
     default:
       reader.skipField();
@@ -6696,342 +6798,51 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.target
  */
 proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getTargetiList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getTargetid();
+  if (f != null) {
+    writer.writeMessage(
       2,
       f,
-      proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.repeatedFields_ = [48687757];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    targetdList: jspb.Message.toObjectList(msg.getTargetdList(),
-    proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo;
-  return proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 48687757:
-      var value = new proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData;
-      reader.readMessage(value,proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.deserializeBinaryFromReader);
-      msg.addTargetd(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getTargetdList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      48687757,
-      f,
-      proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    videoid: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData;
-  return proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setVideoid(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getVideoid();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
+      proto.android_full_next.navigationData.serializeBinaryToWriter
     );
   }
 };
 
 
 /**
- * optional string videoId = 1;
- * @return {string}
+ * optional navigationData targetId = 2;
+ * @return {?proto.android_full_next.navigationData}
  */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.prototype.getVideoid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.getTargetid = function() {
+  return /** @type{?proto.android_full_next.navigationData} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.navigationData, 2));
 };
 
 
 /**
- * @param {string} value
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData} returns this
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData.prototype.setVideoid = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * repeated targetData targetD = 48687757;
- * @return {!Array<!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData>}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.prototype.getTargetdList = function() {
-  return /** @type{!Array<!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData, 48687757));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData>} value
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo} returns this
-*/
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.prototype.setTargetdList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 48687757, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.prototype.addTargetd = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 48687757, opt_value, proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.targetData, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo} returns this
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo.prototype.clearTargetdList = function() {
-  return this.setTargetdList([]);
-};
-
-
-/**
- * repeated targetInfo targetI = 2;
- * @return {!Array<!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo>}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.getTargetiList = function() {
-  return /** @type{!Array<!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo, 2));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo>} value
+ * @param {?proto.android_full_next.navigationData|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry} returns this
 */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.setTargetiList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 2, value);
+proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.setTargetid = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.addTargeti = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.targetInfo, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry} returns this
  */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.clearTargetiList = function() {
-  return this.setTargetiList([]);
+proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.clearTargetid = function() {
+  return this.setTargetid(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.videoActions.container.pb19.targetDataEntry.prototype.hasTargetid = function() {
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
@@ -7110,40 +6921,39 @@ proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.h
 
 
 /**
- * repeated textRuns actionName = 5;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * optional textRuns actionName = 5;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.getActionnameList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 5));
+proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.getActionname = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 5));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container} returns this
 */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.setActionnameList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
+proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.setActionname = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.addActionname = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer.videoActions.container} returns this
  */
-proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.clearActionnameList = function() {
-  return this.setActionnameList([]);
+proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.clearActionname = function() {
+  return this.setActionname(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.videoActions.container.prototype.hasActionname = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
@@ -7300,276 +7110,269 @@ proto.android_full_next.videoMetadataRenderer.videoActions.prototype.clearCList 
 
 
 /**
- * repeated textRuns title = 1;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * optional textRuns title = 1;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getTitleList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 1));
+proto.android_full_next.videoMetadataRenderer.prototype.getTitle = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 1));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setTitleList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setTitle = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addTitle = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearTitleList = function() {
-  return this.setTitleList([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearTitle = function() {
+  return this.setTitle(undefined);
 };
 
 
 /**
- * repeated textRuns viewCount = 2;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getViewcountList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 2));
+proto.android_full_next.videoMetadataRenderer.prototype.hasTitle = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
-*/
-proto.android_full_next.videoMetadataRenderer.prototype.setViewcountList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 2, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional textRuns viewCount = 2;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.addViewcount = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.videoMetadataRenderer.prototype.getViewcount = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 2));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
- */
-proto.android_full_next.videoMetadataRenderer.prototype.clearViewcountList = function() {
-  return this.setViewcountList([]);
-};
-
-
-/**
- * repeated textRuns likeText1 = 3;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.getLiketext1List = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 3));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setLiketext1List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 3, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setViewcount = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addLiketext1 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearLiketext1List = function() {
-  return this.setLiketext1List([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearViewcount = function() {
+  return this.setViewcount(undefined);
 };
 
 
 /**
- * repeated textRuns dislikeText1 = 4;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getDisliketext1List = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 4));
+proto.android_full_next.videoMetadataRenderer.prototype.hasViewcount = function() {
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
-*/
-proto.android_full_next.videoMetadataRenderer.prototype.setDisliketext1List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 4, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional textRuns likeText1 = 3;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.addDisliketext1 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.videoMetadataRenderer.prototype.getLiketext1 = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 3));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
- */
-proto.android_full_next.videoMetadataRenderer.prototype.clearDisliketext1List = function() {
-  return this.setDisliketext1List([]);
-};
-
-
-/**
- * repeated textRuns description = 5;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.getDescriptionList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 5));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setDescriptionList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setLiketext1 = function(value) {
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addDescription = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearDescriptionList = function() {
-  return this.setDescriptionList([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearLiketext1 = function() {
+  return this.setLiketext1(undefined);
 };
 
 
 /**
- * repeated textRuns likeText2 = 6;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getLiketext2List = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 6));
+proto.android_full_next.videoMetadataRenderer.prototype.hasLiketext1 = function() {
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
-*/
-proto.android_full_next.videoMetadataRenderer.prototype.setLiketext2List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 6, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional textRuns dislikeText1 = 4;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.addLiketext2 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.videoMetadataRenderer.prototype.getDisliketext1 = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 4));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
- */
-proto.android_full_next.videoMetadataRenderer.prototype.clearLiketext2List = function() {
-  return this.setLiketext2List([]);
-};
-
-
-/**
- * repeated textRuns dislikeText2 = 7;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.getDisliketext2List = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 7));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setDisliketext2List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 7, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setDisliketext1 = function(value) {
+  return jspb.Message.setWrapperField(this, 4, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addDisliketext2 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearDisliketext2List = function() {
-  return this.setDisliketext2List([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearDisliketext1 = function() {
+  return this.setDisliketext1(undefined);
 };
 
 
 /**
- * optional int32 int8 = 8;
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.hasDisliketext1 = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional textRuns description = 5;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.getDescription = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 5));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
+ * @return {!proto.android_full_next.videoMetadataRenderer} returns this
+*/
+proto.android_full_next.videoMetadataRenderer.prototype.setDescription = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.videoMetadataRenderer} returns this
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.clearDescription = function() {
+  return this.setDescription(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.hasDescription = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional textRuns likeText2 = 6;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.getLiketext2 = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 6));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
+ * @return {!proto.android_full_next.videoMetadataRenderer} returns this
+*/
+proto.android_full_next.videoMetadataRenderer.prototype.setLiketext2 = function(value) {
+  return jspb.Message.setWrapperField(this, 6, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.videoMetadataRenderer} returns this
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.clearLiketext2 = function() {
+  return this.setLiketext2(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.hasLiketext2 = function() {
+  return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional textRuns dislikeText2 = 7;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.getDisliketext2 = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 7));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
+ * @return {!proto.android_full_next.videoMetadataRenderer} returns this
+*/
+proto.android_full_next.videoMetadataRenderer.prototype.setDisliketext2 = function(value) {
+  return jspb.Message.setWrapperField(this, 7, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.videoMetadataRenderer} returns this
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.clearDisliketext2 = function() {
+  return this.setDisliketext2(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.hasDisliketext2 = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional int32 allowRatings = 8;
  * @return {number}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getInt8 = function() {
+proto.android_full_next.videoMetadataRenderer.prototype.getAllowratings = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
 };
 
@@ -7578,7 +7381,7 @@ proto.android_full_next.videoMetadataRenderer.prototype.getInt8 = function() {
  * @param {number} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.setInt8 = function(value) {
+proto.android_full_next.videoMetadataRenderer.prototype.setAllowratings = function(value) {
   return jspb.Message.setField(this, 8, value);
 };
 
@@ -7587,7 +7390,7 @@ proto.android_full_next.videoMetadataRenderer.prototype.setInt8 = function(value
  * Clears the field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearInt8 = function() {
+proto.android_full_next.videoMetadataRenderer.prototype.clearAllowratings = function() {
   return jspb.Message.setField(this, 8, undefined);
 };
 
@@ -7596,35 +7399,36 @@ proto.android_full_next.videoMetadataRenderer.prototype.clearInt8 = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.hasInt8 = function() {
+proto.android_full_next.videoMetadataRenderer.prototype.hasAllowratings = function() {
   return jspb.Message.getField(this, 8) != null;
 };
 
 
 /**
- * optional int32 int9 = 9;
- * @return {number}
+ * optional textRuns publishDate = 10;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getInt9 = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+proto.android_full_next.videoMetadataRenderer.prototype.getPublishdate = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 10));
 };
 
 
 /**
- * @param {number} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
- */
-proto.android_full_next.videoMetadataRenderer.prototype.setInt9 = function(value) {
-  return jspb.Message.setField(this, 9, value);
+*/
+proto.android_full_next.videoMetadataRenderer.prototype.setPublishdate = function(value) {
+  return jspb.Message.setWrapperField(this, 10, value);
 };
 
 
 /**
- * Clears the field making it undefined.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearInt9 = function() {
-  return jspb.Message.setField(this, 9, undefined);
+proto.android_full_next.videoMetadataRenderer.prototype.clearPublishdate = function() {
+  return this.setPublishdate(undefined);
 };
 
 
@@ -7632,46 +7436,8 @@ proto.android_full_next.videoMetadataRenderer.prototype.clearInt9 = function() {
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.hasInt9 = function() {
-  return jspb.Message.getField(this, 9) != null;
-};
-
-
-/**
- * repeated textRuns publishDate = 10;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.getPublishdateList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 10));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
-*/
-proto.android_full_next.videoMetadataRenderer.prototype.setPublishdateList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 10, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addPublishdate = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 10, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.videoMetadataRenderer} returns this
- */
-proto.android_full_next.videoMetadataRenderer.prototype.clearPublishdateList = function() {
-  return this.setPublishdateList([]);
+proto.android_full_next.videoMetadataRenderer.prototype.hasPublishdate = function() {
+  return jspb.Message.getField(this, 10) != null;
 };
 
 
@@ -7768,86 +7534,84 @@ proto.android_full_next.videoMetadataRenderer.prototype.clearPb13List = function
 
 
 /**
- * repeated textRuns string17 = 17;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * optional textRuns string17 = 17;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getString17List = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 17));
+proto.android_full_next.videoMetadataRenderer.prototype.getString17 = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 17));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setString17List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 17, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setString17 = function(value) {
+  return jspb.Message.setWrapperField(this, 17, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addString17 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 17, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearString17List = function() {
-  return this.setString17List([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearString17 = function() {
+  return this.setString17(undefined);
 };
 
 
 /**
- * repeated textRuns shortViewCount = 18;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getShortviewcountList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 18));
+proto.android_full_next.videoMetadataRenderer.prototype.hasString17 = function() {
+  return jspb.Message.getField(this, 17) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * optional textRuns shortViewCount = 18;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.getShortviewcount = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 18));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setShortviewcountList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 18, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setShortviewcount = function(value) {
+  return jspb.Message.setWrapperField(this, 18, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addShortviewcount = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 18, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearShortviewcountList = function() {
-  return this.setShortviewcountList([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearShortviewcount = function() {
+  return this.setShortviewcount(undefined);
 };
 
 
 /**
- * optional int32 int24 = 24;
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.hasShortviewcount = function() {
+  return jspb.Message.getField(this, 18) != null;
+};
+
+
+/**
+ * optional int32 isLimitedState = 24;
  * @return {number}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getInt24 = function() {
+proto.android_full_next.videoMetadataRenderer.prototype.getIslimitedstate = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 24, 0));
 };
 
@@ -7856,7 +7620,7 @@ proto.android_full_next.videoMetadataRenderer.prototype.getInt24 = function() {
  * @param {number} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.setInt24 = function(value) {
+proto.android_full_next.videoMetadataRenderer.prototype.setIslimitedstate = function(value) {
   return jspb.Message.setField(this, 24, value);
 };
 
@@ -7865,7 +7629,7 @@ proto.android_full_next.videoMetadataRenderer.prototype.setInt24 = function(valu
  * Clears the field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearInt24 = function() {
+proto.android_full_next.videoMetadataRenderer.prototype.clearIslimitedstate = function() {
   return jspb.Message.setField(this, 24, undefined);
 };
 
@@ -7874,7 +7638,7 @@ proto.android_full_next.videoMetadataRenderer.prototype.clearInt24 = function() 
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.hasInt24 = function() {
+proto.android_full_next.videoMetadataRenderer.prototype.hasIslimitedstate = function() {
   return jspb.Message.getField(this, 24) != null;
 };
 
@@ -7956,78 +7720,76 @@ proto.android_full_next.videoMetadataRenderer.prototype.clearVideoactionList = f
 
 
 /**
- * repeated textRuns str33 = 33;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * optional textRuns str33 = 33;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getStr33List = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 33));
+proto.android_full_next.videoMetadataRenderer.prototype.getStr33 = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 33));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setStr33List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 33, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setStr33 = function(value) {
+  return jspb.Message.setWrapperField(this, 33, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addStr33 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 33, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearStr33List = function() {
-  return this.setStr33List([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearStr33 = function() {
+  return this.setStr33(undefined);
 };
 
 
 /**
- * repeated textRuns str37 = 37;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.videoMetadataRenderer.prototype.getStr37List = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 37));
+proto.android_full_next.videoMetadataRenderer.prototype.hasStr33 = function() {
+  return jspb.Message.getField(this, 33) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * optional textRuns str37 = 37;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.getStr37 = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 37));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
 */
-proto.android_full_next.videoMetadataRenderer.prototype.setStr37List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 37, value);
+proto.android_full_next.videoMetadataRenderer.prototype.setStr37 = function(value) {
+  return jspb.Message.setWrapperField(this, 37, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.videoMetadataRenderer.prototype.addStr37 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 37, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.videoMetadataRenderer} returns this
  */
-proto.android_full_next.videoMetadataRenderer.prototype.clearStr37List = function() {
-  return this.setStr37List([]);
+proto.android_full_next.videoMetadataRenderer.prototype.clearStr37 = function() {
+  return this.setStr37(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.videoMetadataRenderer.prototype.hasStr37 = function() {
+  return jspb.Message.getField(this, 37) != null;
 };
 
 
@@ -8104,13 +7866,6 @@ proto.android_full_next.videoMetadataRenderer.prototype.hasPb43 = function() {
 
 
 
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.repeatedFields_ = [2,3,4,5,6,7,8,10,14,23];
-
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -8143,26 +7898,16 @@ proto.android_full_next.compactVideoRenderer.prototype.toObject = function(opt_i
 proto.android_full_next.compactVideoRenderer.toObject = function(includeInstance, msg) {
   var f, obj = {
     videoid: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    thumblistList: jspb.Message.toObjectList(msg.getThumblistList(),
-    proto.android_full_next.thumbnails.toObject, includeInstance),
-    titledataList: jspb.Message.toObjectList(msg.getTitledataList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    authorList: jspb.Message.toObjectList(msg.getAuthorList(),
-    proto.android_full_next.compactVideoRenderer.authorData.toObject, includeInstance),
-    publishedtimetextList: jspb.Message.toObjectList(msg.getPublishedtimetextList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    viewcounttextList: jspb.Message.toObjectList(msg.getViewcounttextList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    lengthtextList: jspb.Message.toObjectList(msg.getLengthtextList(),
-    proto.android_full_next.textRuns.toObject, includeInstance),
-    navdataList: jspb.Message.toObjectList(msg.getNavdataList(),
-    proto.android_full_next.compactVideoRenderer.navigationData.toObject, includeInstance),
-    ladataList: jspb.Message.toObjectList(msg.getLadataList(),
-    proto.android_full_next.compactVideoRenderer.longAuthorData.toObject, includeInstance),
-    authoravatarList: jspb.Message.toObjectList(msg.getAuthoravatarList(),
-    proto.android_full_next.compactVideoRenderer.authorAvatarType.toObject, includeInstance),
-    shortviewcountsList: jspb.Message.toObjectList(msg.getShortviewcountsList(),
-    proto.android_full_next.textRuns.toObject, includeInstance)
+    thumblist: (f = msg.getThumblist()) && proto.android_full_next.thumbnails.toObject(includeInstance, f),
+    titledata: (f = msg.getTitledata()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    shortauthordata: (f = msg.getShortauthordata()) && proto.android_full_next.authorData.toObject(includeInstance, f),
+    publishedtimetext: (f = msg.getPublishedtimetext()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    viewcounttext: (f = msg.getViewcounttext()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    lengthtext: (f = msg.getLengthtext()) && proto.android_full_next.textRuns.toObject(includeInstance, f),
+    navdata: (f = msg.getNavdata()) && proto.android_full_next.navigationData.toObject(includeInstance, f),
+    longauthordata: (f = msg.getLongauthordata()) && proto.android_full_next.authorData.toObject(includeInstance, f),
+    authoravatar: (f = msg.getAuthoravatar()) && proto.android_full_next.thumbnails.toObject(includeInstance, f),
+    shortviewcounts: (f = msg.getShortviewcounts()) && proto.android_full_next.textRuns.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -8206,52 +7951,52 @@ proto.android_full_next.compactVideoRenderer.deserializeBinaryFromReader = funct
     case 2:
       var value = new proto.android_full_next.thumbnails;
       reader.readMessage(value,proto.android_full_next.thumbnails.deserializeBinaryFromReader);
-      msg.addThumblist(value);
+      msg.setThumblist(value);
       break;
     case 3:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addTitledata(value);
+      msg.setTitledata(value);
       break;
     case 4:
-      var value = new proto.android_full_next.compactVideoRenderer.authorData;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.authorData.deserializeBinaryFromReader);
-      msg.addAuthor(value);
+      var value = new proto.android_full_next.authorData;
+      reader.readMessage(value,proto.android_full_next.authorData.deserializeBinaryFromReader);
+      msg.setShortauthordata(value);
       break;
     case 5:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addPublishedtimetext(value);
+      msg.setPublishedtimetext(value);
       break;
     case 6:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addViewcounttext(value);
+      msg.setViewcounttext(value);
       break;
     case 7:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addLengthtext(value);
+      msg.setLengthtext(value);
       break;
     case 8:
-      var value = new proto.android_full_next.compactVideoRenderer.navigationData;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.navigationData.deserializeBinaryFromReader);
-      msg.addNavdata(value);
+      var value = new proto.android_full_next.navigationData;
+      reader.readMessage(value,proto.android_full_next.navigationData.deserializeBinaryFromReader);
+      msg.setNavdata(value);
       break;
     case 10:
-      var value = new proto.android_full_next.compactVideoRenderer.longAuthorData;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.longAuthorData.deserializeBinaryFromReader);
-      msg.addLadata(value);
+      var value = new proto.android_full_next.authorData;
+      reader.readMessage(value,proto.android_full_next.authorData.deserializeBinaryFromReader);
+      msg.setLongauthordata(value);
       break;
     case 14:
-      var value = new proto.android_full_next.compactVideoRenderer.authorAvatarType;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.authorAvatarType.deserializeBinaryFromReader);
-      msg.addAuthoravatar(value);
+      var value = new proto.android_full_next.thumbnails;
+      reader.readMessage(value,proto.android_full_next.thumbnails.deserializeBinaryFromReader);
+      msg.setAuthoravatar(value);
       break;
     case 23:
       var value = new proto.android_full_next.textRuns;
       reader.readMessage(value,proto.android_full_next.textRuns.deserializeBinaryFromReader);
-      msg.addShortviewcounts(value);
+      msg.setShortviewcounts(value);
       break;
     default:
       reader.skipField();
@@ -8289,2559 +8034,86 @@ proto.android_full_next.compactVideoRenderer.serializeBinaryToWriter = function(
       f
     );
   }
-  f = message.getThumblistList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getThumblist();
+  if (f != null) {
+    writer.writeMessage(
       2,
       f,
       proto.android_full_next.thumbnails.serializeBinaryToWriter
     );
   }
-  f = message.getTitledataList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getTitledata();
+  if (f != null) {
+    writer.writeMessage(
       3,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getAuthorList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getShortauthordata();
+  if (f != null) {
+    writer.writeMessage(
       4,
       f,
-      proto.android_full_next.compactVideoRenderer.authorData.serializeBinaryToWriter
+      proto.android_full_next.authorData.serializeBinaryToWriter
     );
   }
-  f = message.getPublishedtimetextList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getPublishedtimetext();
+  if (f != null) {
+    writer.writeMessage(
       5,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getViewcounttextList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getViewcounttext();
+  if (f != null) {
+    writer.writeMessage(
       6,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getLengthtextList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getLengthtext();
+  if (f != null) {
+    writer.writeMessage(
       7,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-  f = message.getNavdataList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getNavdata();
+  if (f != null) {
+    writer.writeMessage(
       8,
       f,
-      proto.android_full_next.compactVideoRenderer.navigationData.serializeBinaryToWriter
+      proto.android_full_next.navigationData.serializeBinaryToWriter
     );
   }
-  f = message.getLadataList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getLongauthordata();
+  if (f != null) {
+    writer.writeMessage(
       10,
       f,
-      proto.android_full_next.compactVideoRenderer.longAuthorData.serializeBinaryToWriter
+      proto.android_full_next.authorData.serializeBinaryToWriter
     );
   }
-  f = message.getAuthoravatarList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getAuthoravatar();
+  if (f != null) {
+    writer.writeMessage(
       14,
       f,
-      proto.android_full_next.compactVideoRenderer.authorAvatarType.serializeBinaryToWriter
+      proto.android_full_next.thumbnails.serializeBinaryToWriter
     );
   }
-  f = message.getShortviewcountsList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getShortviewcounts();
+  if (f != null) {
+    writer.writeMessage(
       23,
       f,
       proto.android_full_next.textRuns.serializeBinaryToWriter
     );
   }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.authorData.repeatedFields_ = [1];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.authorData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.authorData.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.authorData} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    acList: jspb.Message.toObjectList(msg.getAcList(),
-    proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData}
- */
-proto.android_full_next.compactVideoRenderer.authorData.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.authorData;
-  return proto.android_full_next.compactVideoRenderer.authorData.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData}
- */
-proto.android_full_next.compactVideoRenderer.authorData.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.android_full_next.compactVideoRenderer.authorData.authorDataContent;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.deserializeBinaryFromReader);
-      msg.addAc(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.authorData.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.authorData.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getAcList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      1,
-      f,
-      proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.repeatedFields_ = [5];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    authordisplayname: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    navigationList: jspb.Message.toObjectList(msg.getNavigationList(),
-    proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.authorData.authorDataContent;
-  return proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setAuthordisplayname(value);
-      break;
-    case 5:
-      var value = new proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.deserializeBinaryFromReader);
-      msg.addNavigation(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getAuthordisplayname();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-  f = message.getNavigationList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      5,
-      f,
-      proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.repeatedFields_ = [48687626];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    authorendpointList: jspb.Message.toObjectList(msg.getAuthorendpointList(),
-    proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData;
-  return proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 48687626:
-      var value = new proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.deserializeBinaryFromReader);
-      msg.addAuthorendpoint(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getAuthorendpointList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      48687626,
-      f,
-      proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    canonicalbaseurl: jspb.Message.getFieldWithDefault(msg, 4, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint;
-  return proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setBrowseid(value);
-      break;
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCanonicalbaseurl(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getBrowseid();
-  if (f.length > 0) {
-    writer.writeString(
-      2,
-      f
-    );
-  }
-  f = message.getCanonicalbaseurl();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string browseId = 2;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.prototype.getBrowseid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.prototype.setBrowseid = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string canonicalBaseUrl = 4;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.prototype.getCanonicalbaseurl = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint.prototype.setCanonicalbaseurl = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * repeated navigationEndpoint authorEndpoint = 48687626;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint>}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.prototype.getAuthorendpointList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint, 48687626));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint>} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData} returns this
-*/
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.prototype.setAuthorendpointList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 48687626, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.prototype.addAuthorendpoint = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 48687626, opt_value, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.navigationEndpoint, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData.prototype.clearAuthorendpointList = function() {
-  return this.setAuthorendpointList([]);
-};
-
-
-/**
- * optional string authorDisplayName = 1;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.getAuthordisplayname = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.setAuthordisplayname = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * repeated authorNavigationData navigation = 5;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData>}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.getNavigationList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData, 5));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData>} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent} returns this
-*/
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.setNavigationList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData}
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.addNavigation = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.authorNavigationData, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorData.authorDataContent.prototype.clearNavigationList = function() {
-  return this.setNavigationList([]);
-};
-
-
-/**
- * repeated authorDataContent ac = 1;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent>}
- */
-proto.android_full_next.compactVideoRenderer.authorData.prototype.getAcList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent, 1));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent>} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorData} returns this
-*/
-proto.android_full_next.compactVideoRenderer.authorData.prototype.setAcList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.authorData.authorDataContent}
- */
-proto.android_full_next.compactVideoRenderer.authorData.prototype.addAc = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.compactVideoRenderer.authorData.authorDataContent, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.authorData} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorData.prototype.clearAcList = function() {
-  return this.setAcList([]);
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.navigationData.repeatedFields_ = [1,48687757];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.navigationData.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    navList: jspb.Message.toObjectList(msg.getNavList(),
-    proto.android_full_next.compactVideoRenderer.navigationData.navType.toObject, includeInstance),
-    navpropertiesList: jspb.Message.toObjectList(msg.getNavpropertiesList(),
-    proto.android_full_next.compactVideoRenderer.navigationData.navData.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.navigationData;
-  return proto.android_full_next.compactVideoRenderer.navigationData.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.android_full_next.compactVideoRenderer.navigationData.navType;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.navigationData.navType.deserializeBinaryFromReader);
-      msg.addNav(value);
-      break;
-    case 48687757:
-      var value = new proto.android_full_next.compactVideoRenderer.navigationData.navData;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.navigationData.navData.deserializeBinaryFromReader);
-      msg.addNavproperties(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.navigationData.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getNavList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      1,
-      f,
-      proto.android_full_next.compactVideoRenderer.navigationData.navType.serializeBinaryToWriter
-    );
-  }
-  f = message.getNavpropertiesList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      48687757,
-      f,
-      proto.android_full_next.compactVideoRenderer.navigationData.navData.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.repeatedFields_ = [19];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.navigationData.navType.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    i1: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    i2: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    i3: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    source: jspb.Message.getFieldWithDefault(msg, 11, ""),
-    navextraList: jspb.Message.toObjectList(msg.getNavextraList(),
-    proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.navigationData.navType;
-  return proto.android_full_next.compactVideoRenderer.navigationData.navType.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setI1(value);
-      break;
-    case 2:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setI2(value);
-      break;
-    case 3:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setI3(value);
-      break;
-    case 11:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setSource(value);
-      break;
-    case 19:
-      var value = new proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.deserializeBinaryFromReader);
-      msg.addNavextra(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.navigationData.navType.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getI1();
-  if (f !== 0) {
-    writer.writeInt32(
-      1,
-      f
-    );
-  }
-  f = message.getI2();
-  if (f !== 0) {
-    writer.writeInt32(
-      2,
-      f
-    );
-  }
-  f = message.getI3();
-  if (f !== 0) {
-    writer.writeInt32(
-      3,
-      f
-    );
-  }
-  f = message.getSource();
-  if (f.length > 0) {
-    writer.writeString(
-      11,
-      f
-    );
-  }
-  f = message.getNavextraList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      19,
-      f,
-      proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    i2: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    i3: jspb.Message.getFieldWithDefault(msg, 3, 0)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType;
-  return proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 2:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setI2(value);
-      break;
-    case 3:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setI3(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getI2();
-  if (f !== 0) {
-    writer.writeInt32(
-      2,
-      f
-    );
-  }
-  f = message.getI3();
-  if (f !== 0) {
-    writer.writeInt32(
-      3,
-      f
-    );
-  }
-};
-
-
-/**
- * optional int32 i2 = 2;
- * @return {number}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.prototype.getI2 = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.prototype.setI2 = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional int32 i3 = 3;
- * @return {number}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.prototype.getI3 = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType.prototype.setI3 = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int32 i1 = 1;
- * @return {number}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.getI1 = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.setI1 = function(value) {
-  return jspb.Message.setProto3IntField(this, 1, value);
-};
-
-
-/**
- * optional int32 i2 = 2;
- * @return {number}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.getI2 = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.setI2 = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional int32 i3 = 3;
- * @return {number}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.getI3 = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.setI3 = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional string source = 11;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.getSource = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.setSource = function(value) {
-  return jspb.Message.setProto3StringField(this, 11, value);
-};
-
-
-/**
- * repeated navExtraType navExtra = 19;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType>}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.getNavextraList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType, 19));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType>} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType} returns this
-*/
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.setNavextraList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 19, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.addNavextra = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 19, opt_value, proto.android_full_next.compactVideoRenderer.navigationData.navType.navExtraType, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navType.prototype.clearNavextraList = function() {
-  return this.setNavextraList([]);
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.navigationData.navData.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navData} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    navid: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navData}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.navigationData.navData;
-  return proto.android_full_next.compactVideoRenderer.navigationData.navData.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navData} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navData}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setNavid(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.navigationData.navData.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navData} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getNavid();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string navId = 1;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.prototype.getNavid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navData} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.navData.prototype.setNavid = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * repeated navType nav = 1;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navType>}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.getNavList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navType>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.navigationData.navType, 1));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navType>} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData} returns this
-*/
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.setNavList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navType=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navType}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.addNav = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.compactVideoRenderer.navigationData.navType, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.clearNavList = function() {
-  return this.setNavList([]);
-};
-
-
-/**
- * repeated navData navProperties = 48687757;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navData>}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.getNavpropertiesList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.navigationData.navData, 48687757));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.navigationData.navData>} value
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData} returns this
-*/
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.setNavpropertiesList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 48687757, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData.navData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData.navData}
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.addNavproperties = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 48687757, opt_value, proto.android_full_next.compactVideoRenderer.navigationData.navData, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData} returns this
- */
-proto.android_full_next.compactVideoRenderer.navigationData.prototype.clearNavpropertiesList = function() {
-  return this.setNavpropertiesList([]);
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.repeatedFields_ = [1];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    ladatacontentList: jspb.Message.toObjectList(msg.getLadatacontentList(),
-    proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.longAuthorData;
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.deserializeBinaryFromReader);
-      msg.addLadatacontent(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.longAuthorData.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getLadatacontentList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      1,
-      f,
-      proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.repeatedFields_ = [5];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    displayname: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    lanaviList: jspb.Message.toObjectList(msg.getLanaviList(),
-    proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer;
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setDisplayname(value);
-      break;
-    case 5:
-      var value = new proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.deserializeBinaryFromReader);
-      msg.addLanavi(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getDisplayname();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-  f = message.getLanaviList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      5,
-      f,
-      proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.repeatedFields_ = [48687626];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    lanaviendpointList: jspb.Message.toObjectList(msg.getLanaviendpointList(),
-    proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation;
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 48687626:
-      var value = new proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.deserializeBinaryFromReader);
-      msg.addLanaviendpoint(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getLanaviendpointList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      48687626,
-      f,
-      proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    canonicalbaseurl: jspb.Message.getFieldWithDefault(msg, 4, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint;
-  return proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setBrowseid(value);
-      break;
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCanonicalbaseurl(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getBrowseid();
-  if (f.length > 0) {
-    writer.writeString(
-      2,
-      f
-    );
-  }
-  f = message.getCanonicalbaseurl();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string browseId = 2;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.prototype.getBrowseid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint} returns this
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.prototype.setBrowseid = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string canonicalBaseUrl = 4;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.prototype.getCanonicalbaseurl = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint} returns this
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint.prototype.setCanonicalbaseurl = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * repeated navigationEndpoint laNaviEndpoint = 48687626;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint>}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.prototype.getLanaviendpointList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint, 48687626));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint>} value
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation} returns this
-*/
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.prototype.setLanaviendpointList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 48687626, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.prototype.addLanaviendpoint = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 48687626, opt_value, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.navigationEndpoint, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation} returns this
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation.prototype.clearLanaviendpointList = function() {
-  return this.setLanaviendpointList([]);
-};
-
-
-/**
- * optional string displayName = 1;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.getDisplayname = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer} returns this
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.setDisplayname = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * repeated navigation laNavi = 5;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation>}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.getLanaviList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation, 5));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation>} value
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer} returns this
-*/
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.setLanaviList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.addLanavi = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.navigation, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer} returns this
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer.prototype.clearLanaviList = function() {
-  return this.setLanaviList([]);
-};
-
-
-/**
- * repeated laDataContainer laDataContent = 1;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer>}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.prototype.getLadatacontentList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer, 1));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer>} value
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData} returns this
-*/
-proto.android_full_next.compactVideoRenderer.longAuthorData.prototype.setLadatacontentList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer}
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.prototype.addLadatacontent = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.compactVideoRenderer.longAuthorData.laDataContainer, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData} returns this
- */
-proto.android_full_next.compactVideoRenderer.longAuthorData.prototype.clearLadatacontentList = function() {
-  return this.setLadatacontentList([]);
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.repeatedFields_ = [1];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.authorAvatarType.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    aadataList: jspb.Message.toObjectList(msg.getAadataList(),
-    proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.authorAvatarType;
-  return proto.android_full_next.compactVideoRenderer.authorAvatarType.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain;
-      reader.readMessage(value,proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.deserializeBinaryFromReader);
-      msg.addAadata(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.authorAvatarType.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getAadataList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      1,
-      f,
-      proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    url: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    width: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    height: jspb.Message.getFieldWithDefault(msg, 3, 0)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain;
-  return proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setUrl(value);
-      break;
-    case 2:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setWidth(value);
-      break;
-    case 3:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setHeight(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getUrl();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-  f = message.getWidth();
-  if (f !== 0) {
-    writer.writeInt32(
-      2,
-      f
-    );
-  }
-  f = message.getHeight();
-  if (f !== 0) {
-    writer.writeInt32(
-      3,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string url = 1;
- * @return {string}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.getUrl = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.setUrl = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional int32 width = 2;
- * @return {number}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.getWidth = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.setWidth = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional int32 height = 3;
- * @return {number}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.getHeight = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain.prototype.setHeight = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * repeated aaContain aaData = 1;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain>}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.prototype.getAadataList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain, 1));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain>} value
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType} returns this
-*/
-proto.android_full_next.compactVideoRenderer.authorAvatarType.prototype.setAadataList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain}
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.prototype.addAadata = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_full_next.compactVideoRenderer.authorAvatarType.aaContain, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType} returns this
- */
-proto.android_full_next.compactVideoRenderer.authorAvatarType.prototype.clearAadataList = function() {
-  return this.setAadataList([]);
 };
 
 
@@ -10864,382 +8136,372 @@ proto.android_full_next.compactVideoRenderer.prototype.setVideoid = function(val
 
 
 /**
- * repeated thumbnails thumblist = 2;
- * @return {!Array<!proto.android_full_next.thumbnails>}
+ * optional thumbnails thumblist = 2;
+ * @return {?proto.android_full_next.thumbnails}
  */
-proto.android_full_next.compactVideoRenderer.prototype.getThumblistList = function() {
-  return /** @type{!Array<!proto.android_full_next.thumbnails>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.thumbnails, 2));
+proto.android_full_next.compactVideoRenderer.prototype.getThumblist = function() {
+  return /** @type{?proto.android_full_next.thumbnails} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.thumbnails, 2));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.thumbnails>} value
+ * @param {?proto.android_full_next.thumbnails|undefined} value
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
 */
-proto.android_full_next.compactVideoRenderer.prototype.setThumblistList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 2, value);
+proto.android_full_next.compactVideoRenderer.prototype.setThumblist = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.thumbnails=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.thumbnails}
- */
-proto.android_full_next.compactVideoRenderer.prototype.addThumblist = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.android_full_next.thumbnails, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
  */
-proto.android_full_next.compactVideoRenderer.prototype.clearThumblistList = function() {
-  return this.setThumblistList([]);
+proto.android_full_next.compactVideoRenderer.prototype.clearThumblist = function() {
+  return this.setThumblist(undefined);
 };
 
 
 /**
- * repeated textRuns titleData = 3;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.compactVideoRenderer.prototype.getTitledataList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 3));
+proto.android_full_next.compactVideoRenderer.prototype.hasThumblist = function() {
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
-*/
-proto.android_full_next.compactVideoRenderer.prototype.setTitledataList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 3, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional textRuns titleData = 3;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.compactVideoRenderer.prototype.addTitledata = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.compactVideoRenderer.prototype.getTitledata = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 3));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
- */
-proto.android_full_next.compactVideoRenderer.prototype.clearTitledataList = function() {
-  return this.setTitledataList([]);
-};
-
-
-/**
- * repeated authorData author = 4;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.authorData>}
- */
-proto.android_full_next.compactVideoRenderer.prototype.getAuthorList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.authorData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.authorData, 4));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.authorData>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
 */
-proto.android_full_next.compactVideoRenderer.prototype.setAuthorList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 4, value);
+proto.android_full_next.compactVideoRenderer.prototype.setTitledata = function(value) {
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.compactVideoRenderer.authorData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.authorData}
- */
-proto.android_full_next.compactVideoRenderer.prototype.addAuthor = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.android_full_next.compactVideoRenderer.authorData, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
  */
-proto.android_full_next.compactVideoRenderer.prototype.clearAuthorList = function() {
-  return this.setAuthorList([]);
+proto.android_full_next.compactVideoRenderer.prototype.clearTitledata = function() {
+  return this.setTitledata(undefined);
 };
 
 
 /**
- * repeated textRuns publishedTimeText = 5;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.compactVideoRenderer.prototype.getPublishedtimetextList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 5));
+proto.android_full_next.compactVideoRenderer.prototype.hasTitledata = function() {
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
-*/
-proto.android_full_next.compactVideoRenderer.prototype.setPublishedtimetextList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional authorData shortAuthorData = 4;
+ * @return {?proto.android_full_next.authorData}
  */
-proto.android_full_next.compactVideoRenderer.prototype.addPublishedtimetext = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.compactVideoRenderer.prototype.getShortauthordata = function() {
+  return /** @type{?proto.android_full_next.authorData} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.authorData, 4));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
- */
-proto.android_full_next.compactVideoRenderer.prototype.clearPublishedtimetextList = function() {
-  return this.setPublishedtimetextList([]);
-};
-
-
-/**
- * repeated textRuns viewCountText = 6;
- * @return {!Array<!proto.android_full_next.textRuns>}
- */
-proto.android_full_next.compactVideoRenderer.prototype.getViewcounttextList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 6));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * @param {?proto.android_full_next.authorData|undefined} value
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
 */
-proto.android_full_next.compactVideoRenderer.prototype.setViewcounttextList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 6, value);
+proto.android_full_next.compactVideoRenderer.prototype.setShortauthordata = function(value) {
+  return jspb.Message.setWrapperField(this, 4, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.compactVideoRenderer.prototype.addViewcounttext = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
  */
-proto.android_full_next.compactVideoRenderer.prototype.clearViewcounttextList = function() {
-  return this.setViewcounttextList([]);
+proto.android_full_next.compactVideoRenderer.prototype.clearShortauthordata = function() {
+  return this.setShortauthordata(undefined);
 };
 
 
 /**
- * repeated textRuns lengthText = 7;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.compactVideoRenderer.prototype.getLengthtextList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 7));
+proto.android_full_next.compactVideoRenderer.prototype.hasShortauthordata = function() {
+  return jspb.Message.getField(this, 4) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
-*/
-proto.android_full_next.compactVideoRenderer.prototype.setLengthtextList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 7, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
+ * optional textRuns publishedTimeText = 5;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.compactVideoRenderer.prototype.addLengthtext = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.android_full_next.textRuns, opt_index);
+proto.android_full_next.compactVideoRenderer.prototype.getPublishedtimetext = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 5));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
- */
-proto.android_full_next.compactVideoRenderer.prototype.clearLengthtextList = function() {
-  return this.setLengthtextList([]);
-};
-
-
-/**
- * repeated navigationData navData = 8;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.navigationData>}
- */
-proto.android_full_next.compactVideoRenderer.prototype.getNavdataList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.navigationData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.navigationData, 8));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.navigationData>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
 */
-proto.android_full_next.compactVideoRenderer.prototype.setNavdataList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 8, value);
+proto.android_full_next.compactVideoRenderer.prototype.setPublishedtimetext = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.compactVideoRenderer.navigationData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.navigationData}
- */
-proto.android_full_next.compactVideoRenderer.prototype.addNavdata = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.android_full_next.compactVideoRenderer.navigationData, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
  */
-proto.android_full_next.compactVideoRenderer.prototype.clearNavdataList = function() {
-  return this.setNavdataList([]);
+proto.android_full_next.compactVideoRenderer.prototype.clearPublishedtimetext = function() {
+  return this.setPublishedtimetext(undefined);
 };
 
 
 /**
- * repeated longAuthorData laData = 10;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.compactVideoRenderer.prototype.getLadataList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.longAuthorData, 10));
+proto.android_full_next.compactVideoRenderer.prototype.hasPublishedtimetext = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.longAuthorData>} value
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
-*/
-proto.android_full_next.compactVideoRenderer.prototype.setLadataList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 10, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.compactVideoRenderer.longAuthorData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.longAuthorData}
+ * optional textRuns viewCountText = 6;
+ * @return {?proto.android_full_next.textRuns}
  */
-proto.android_full_next.compactVideoRenderer.prototype.addLadata = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 10, opt_value, proto.android_full_next.compactVideoRenderer.longAuthorData, opt_index);
+proto.android_full_next.compactVideoRenderer.prototype.getViewcounttext = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 6));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.compactVideoRenderer} returns this
- */
-proto.android_full_next.compactVideoRenderer.prototype.clearLadataList = function() {
-  return this.setLadataList([]);
-};
-
-
-/**
- * repeated authorAvatarType authorAvatar = 14;
- * @return {!Array<!proto.android_full_next.compactVideoRenderer.authorAvatarType>}
- */
-proto.android_full_next.compactVideoRenderer.prototype.getAuthoravatarList = function() {
-  return /** @type{!Array<!proto.android_full_next.compactVideoRenderer.authorAvatarType>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.compactVideoRenderer.authorAvatarType, 14));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.compactVideoRenderer.authorAvatarType>} value
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
 */
-proto.android_full_next.compactVideoRenderer.prototype.setAuthoravatarList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 14, value);
+proto.android_full_next.compactVideoRenderer.prototype.setViewcounttext = function(value) {
+  return jspb.Message.setWrapperField(this, 6, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.compactVideoRenderer.authorAvatarType=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.compactVideoRenderer.authorAvatarType}
- */
-proto.android_full_next.compactVideoRenderer.prototype.addAuthoravatar = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.android_full_next.compactVideoRenderer.authorAvatarType, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
  */
-proto.android_full_next.compactVideoRenderer.prototype.clearAuthoravatarList = function() {
-  return this.setAuthoravatarList([]);
+proto.android_full_next.compactVideoRenderer.prototype.clearViewcounttext = function() {
+  return this.setViewcounttext(undefined);
 };
 
 
 /**
- * repeated textRuns shortViewCounts = 23;
- * @return {!Array<!proto.android_full_next.textRuns>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.compactVideoRenderer.prototype.getShortviewcountsList = function() {
-  return /** @type{!Array<!proto.android_full_next.textRuns>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.textRuns, 23));
+proto.android_full_next.compactVideoRenderer.prototype.hasViewcounttext = function() {
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.textRuns>} value
+ * optional textRuns lengthText = 7;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.getLengthtext = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 7));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
 */
-proto.android_full_next.compactVideoRenderer.prototype.setShortviewcountsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 23, value);
+proto.android_full_next.compactVideoRenderer.prototype.setLengthtext = function(value) {
+  return jspb.Message.setWrapperField(this, 7, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.textRuns=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.textRuns}
- */
-proto.android_full_next.compactVideoRenderer.prototype.addShortviewcounts = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 23, opt_value, proto.android_full_next.textRuns, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.compactVideoRenderer} returns this
  */
-proto.android_full_next.compactVideoRenderer.prototype.clearShortviewcountsList = function() {
-  return this.setShortviewcountsList([]);
+proto.android_full_next.compactVideoRenderer.prototype.clearLengthtext = function() {
+  return this.setLengthtext(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.hasLengthtext = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional navigationData navData = 8;
+ * @return {?proto.android_full_next.navigationData}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.getNavdata = function() {
+  return /** @type{?proto.android_full_next.navigationData} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.navigationData, 8));
+};
+
+
+/**
+ * @param {?proto.android_full_next.navigationData|undefined} value
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+*/
+proto.android_full_next.compactVideoRenderer.prototype.setNavdata = function(value) {
+  return jspb.Message.setWrapperField(this, 8, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+ */
+proto.android_full_next.compactVideoRenderer.prototype.clearNavdata = function() {
+  return this.setNavdata(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.hasNavdata = function() {
+  return jspb.Message.getField(this, 8) != null;
+};
+
+
+/**
+ * optional authorData longAuthorData = 10;
+ * @return {?proto.android_full_next.authorData}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.getLongauthordata = function() {
+  return /** @type{?proto.android_full_next.authorData} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.authorData, 10));
+};
+
+
+/**
+ * @param {?proto.android_full_next.authorData|undefined} value
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+*/
+proto.android_full_next.compactVideoRenderer.prototype.setLongauthordata = function(value) {
+  return jspb.Message.setWrapperField(this, 10, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+ */
+proto.android_full_next.compactVideoRenderer.prototype.clearLongauthordata = function() {
+  return this.setLongauthordata(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.hasLongauthordata = function() {
+  return jspb.Message.getField(this, 10) != null;
+};
+
+
+/**
+ * optional thumbnails authorAvatar = 14;
+ * @return {?proto.android_full_next.thumbnails}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.getAuthoravatar = function() {
+  return /** @type{?proto.android_full_next.thumbnails} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.thumbnails, 14));
+};
+
+
+/**
+ * @param {?proto.android_full_next.thumbnails|undefined} value
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+*/
+proto.android_full_next.compactVideoRenderer.prototype.setAuthoravatar = function(value) {
+  return jspb.Message.setWrapperField(this, 14, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+ */
+proto.android_full_next.compactVideoRenderer.prototype.clearAuthoravatar = function() {
+  return this.setAuthoravatar(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.hasAuthoravatar = function() {
+  return jspb.Message.getField(this, 14) != null;
+};
+
+
+/**
+ * optional textRuns shortViewCounts = 23;
+ * @return {?proto.android_full_next.textRuns}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.getShortviewcounts = function() {
+  return /** @type{?proto.android_full_next.textRuns} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.textRuns, 23));
+};
+
+
+/**
+ * @param {?proto.android_full_next.textRuns|undefined} value
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+*/
+proto.android_full_next.compactVideoRenderer.prototype.setShortviewcounts = function(value) {
+  return jspb.Message.setWrapperField(this, 23, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.compactVideoRenderer} returns this
+ */
+proto.android_full_next.compactVideoRenderer.prototype.clearShortviewcounts = function() {
+  return this.setShortviewcounts(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.compactVideoRenderer.prototype.hasShortviewcounts = function() {
+  return jspb.Message.getField(this, 23) != null;
 };
 
 
@@ -11249,7 +8511,7 @@ proto.android_full_next.compactVideoRenderer.prototype.clearShortviewcountsList 
  * @private {!Array<number>}
  * @const
  */
-proto.android_full_next.root.repeatedFields_ = [7,9,14];
+proto.android_full_next.root.repeatedFields_ = [7];
 
 
 
@@ -11284,10 +8546,8 @@ proto.android_full_next.root.toObject = function(includeInstance, msg) {
   var f, obj = {
     contentList: jspb.Message.toObjectList(msg.getContentList(),
     proto.android_full_next.root.contents.toObject, includeInstance),
-    pbextraList: jspb.Message.toObjectList(msg.getPbextraList(),
-    proto.android_full_next.root.bData.toObject, includeInstance),
-    pbextra14List: jspb.Message.toObjectList(msg.getPbextra14List(),
-    proto.android_full_next.root.fData.toObject, includeInstance)
+    navigationendpoint: (f = msg.getNavigationendpoint()) && proto.android_full_next.navigationData.toObject(includeInstance, f),
+    poverlays: (f = msg.getPoverlays()) && proto.android_full_next.root.playerOverlays.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -11330,14 +8590,14 @@ proto.android_full_next.root.deserializeBinaryFromReader = function(msg, reader)
       msg.addContent(value);
       break;
     case 9:
-      var value = new proto.android_full_next.root.bData;
-      reader.readMessage(value,proto.android_full_next.root.bData.deserializeBinaryFromReader);
-      msg.addPbextra(value);
+      var value = new proto.android_full_next.navigationData;
+      reader.readMessage(value,proto.android_full_next.navigationData.deserializeBinaryFromReader);
+      msg.setNavigationendpoint(value);
       break;
     case 14:
-      var value = new proto.android_full_next.root.fData;
-      reader.readMessage(value,proto.android_full_next.root.fData.deserializeBinaryFromReader);
-      msg.addPbextra14(value);
+      var value = new proto.android_full_next.root.playerOverlays;
+      reader.readMessage(value,proto.android_full_next.root.playerOverlays.deserializeBinaryFromReader);
+      msg.setPoverlays(value);
       break;
     default:
       reader.skipField();
@@ -11376,20 +8636,20 @@ proto.android_full_next.root.serializeBinaryToWriter = function(message, writer)
       proto.android_full_next.root.contents.serializeBinaryToWriter
     );
   }
-  f = message.getPbextraList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getNavigationendpoint();
+  if (f != null) {
+    writer.writeMessage(
       9,
       f,
-      proto.android_full_next.root.bData.serializeBinaryToWriter
+      proto.android_full_next.navigationData.serializeBinaryToWriter
     );
   }
-  f = message.getPbextra14List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getPoverlays();
+  if (f != null) {
+    writer.writeMessage(
       14,
       f,
-      proto.android_full_next.root.fData.serializeBinaryToWriter
+      proto.android_full_next.root.playerOverlays.serializeBinaryToWriter
     );
   }
 };
@@ -12705,13 +9965,6 @@ proto.android_full_next.root.contents.prototype.clearNextresultsList = function(
 
 
 
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.root.bData.repeatedFields_ = [48687757];
-
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -12727,8 +9980,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.android_full_next.root.bData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.root.bData.toObject(opt_includeInstance, this);
+proto.android_full_next.root.playerOverlays.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.root.playerOverlays.toObject(opt_includeInstance, this);
 };
 
 
@@ -12737,14 +9990,13 @@ proto.android_full_next.root.bData.prototype.toObject = function(opt_includeInst
  * @param {boolean|undefined} includeInstance Deprecated. Whether to include
  *     the JSPB instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.root.bData} msg The msg instance to transform.
+ * @param {!proto.android_full_next.root.playerOverlays} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.android_full_next.root.bData.toObject = function(includeInstance, msg) {
+proto.android_full_next.root.playerOverlays.toObject = function(includeInstance, msg) {
   var f, obj = {
-    msg3List: jspb.Message.toObjectList(msg.getMsg3List(),
-    proto.android_full_next.root.bData.pbVarious.toObject, includeInstance)
+    overlay: (f = msg.getOverlay()) && proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -12758,313 +10010,23 @@ proto.android_full_next.root.bData.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.root.bData}
+ * @return {!proto.android_full_next.root.playerOverlays}
  */
-proto.android_full_next.root.bData.deserializeBinary = function(bytes) {
+proto.android_full_next.root.playerOverlays.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.root.bData;
-  return proto.android_full_next.root.bData.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.android_full_next.root.playerOverlays;
+  return proto.android_full_next.root.playerOverlays.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.android_full_next.root.bData} msg The message object to deserialize into.
+ * @param {!proto.android_full_next.root.playerOverlays} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.root.bData}
+ * @return {!proto.android_full_next.root.playerOverlays}
  */
-proto.android_full_next.root.bData.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 48687757:
-      var value = new proto.android_full_next.root.bData.pbVarious;
-      reader.readMessage(value,proto.android_full_next.root.bData.pbVarious.deserializeBinaryFromReader);
-      msg.addMsg3(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.root.bData.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.root.bData.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.root.bData} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.root.bData.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getMsg3List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      48687757,
-      f,
-      proto.android_full_next.root.bData.pbVarious.serializeBinaryToWriter
-    );
-  }
-};
-
-
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.root.bData.pbVarious.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.root.bData.pbVarious.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.root.bData.pbVarious} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.root.bData.pbVarious.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.root.bData.pbVarious}
- */
-proto.android_full_next.root.bData.pbVarious.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.root.bData.pbVarious;
-  return proto.android_full_next.root.bData.pbVarious.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.root.bData.pbVarious} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.root.bData.pbVarious}
- */
-proto.android_full_next.root.bData.pbVarious.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setId(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.android_full_next.root.bData.pbVarious.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.android_full_next.root.bData.pbVarious.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.root.bData.pbVarious} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.root.bData.pbVarious.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string id = 1;
- * @return {string}
- */
-proto.android_full_next.root.bData.pbVarious.prototype.getId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.android_full_next.root.bData.pbVarious} returns this
- */
-proto.android_full_next.root.bData.pbVarious.prototype.setId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * repeated pbVarious msg3 = 48687757;
- * @return {!Array<!proto.android_full_next.root.bData.pbVarious>}
- */
-proto.android_full_next.root.bData.prototype.getMsg3List = function() {
-  return /** @type{!Array<!proto.android_full_next.root.bData.pbVarious>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.root.bData.pbVarious, 48687757));
-};
-
-
-/**
- * @param {!Array<!proto.android_full_next.root.bData.pbVarious>} value
- * @return {!proto.android_full_next.root.bData} returns this
-*/
-proto.android_full_next.root.bData.prototype.setMsg3List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 48687757, value);
-};
-
-
-/**
- * @param {!proto.android_full_next.root.bData.pbVarious=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.root.bData.pbVarious}
- */
-proto.android_full_next.root.bData.prototype.addMsg3 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 48687757, opt_value, proto.android_full_next.root.bData.pbVarious, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.root.bData} returns this
- */
-proto.android_full_next.root.bData.prototype.clearMsg3List = function() {
-  return this.setMsg3List([]);
-};
-
-
-
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_full_next.root.fData.repeatedFields_ = [78882851];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * Optional fields that are not set will be set to undefined.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
- * @param {boolean=} opt_includeInstance Deprecated. whether to include the
- *     JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.android_full_next.root.fData.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.root.fData.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Deprecated. Whether to include
- *     the JSPB instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.root.fData} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.android_full_next.root.fData.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    pb1List: jspb.Message.toObjectList(msg.getPb1List(),
-    proto.android_full_next.root.fData.pbVarious.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.root.fData}
- */
-proto.android_full_next.root.fData.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.root.fData;
-  return proto.android_full_next.root.fData.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.android_full_next.root.fData} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.root.fData}
- */
-proto.android_full_next.root.fData.deserializeBinaryFromReader = function(msg, reader) {
+proto.android_full_next.root.playerOverlays.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -13072,9 +10034,9 @@ proto.android_full_next.root.fData.deserializeBinaryFromReader = function(msg, r
     var field = reader.getFieldNumber();
     switch (field) {
     case 78882851:
-      var value = new proto.android_full_next.root.fData.pbVarious;
-      reader.readMessage(value,proto.android_full_next.root.fData.pbVarious.deserializeBinaryFromReader);
-      msg.addPb1(value);
+      var value = new proto.android_full_next.root.playerOverlays.playerOverlaysRenderer;
+      reader.readMessage(value,proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.deserializeBinaryFromReader);
+      msg.setOverlay(value);
       break;
     default:
       reader.skipField();
@@ -13089,9 +10051,9 @@ proto.android_full_next.root.fData.deserializeBinaryFromReader = function(msg, r
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.android_full_next.root.fData.prototype.serializeBinary = function() {
+proto.android_full_next.root.playerOverlays.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.android_full_next.root.fData.serializeBinaryToWriter(this, writer);
+  proto.android_full_next.root.playerOverlays.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -13099,18 +10061,18 @@ proto.android_full_next.root.fData.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.root.fData} message
+ * @param {!proto.android_full_next.root.playerOverlays} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.android_full_next.root.fData.serializeBinaryToWriter = function(message, writer) {
+proto.android_full_next.root.playerOverlays.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPb1List();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getOverlay();
+  if (f != null) {
+    writer.writeMessage(
       78882851,
       f,
-      proto.android_full_next.root.fData.pbVarious.serializeBinaryToWriter
+      proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.serializeBinaryToWriter
     );
   }
 };
@@ -13132,8 +10094,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.android_full_next.root.fData.pbVarious.prototype.toObject = function(opt_includeInstance) {
-  return proto.android_full_next.root.fData.pbVarious.toObject(opt_includeInstance, this);
+proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.prototype.toObject = function(opt_includeInstance) {
+  return proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.toObject(opt_includeInstance, this);
 };
 
 
@@ -13142,11 +10104,11 @@ proto.android_full_next.root.fData.pbVarious.prototype.toObject = function(opt_i
  * @param {boolean|undefined} includeInstance Deprecated. Whether to include
  *     the JSPB instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.android_full_next.root.fData.pbVarious} msg The msg instance to transform.
+ * @param {!proto.android_full_next.root.playerOverlays.playerOverlaysRenderer} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.android_full_next.root.fData.pbVarious.toObject = function(includeInstance, msg) {
+proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.toObject = function(includeInstance, msg) {
   var f, obj = {
 
   };
@@ -13162,23 +10124,23 @@ proto.android_full_next.root.fData.pbVarious.toObject = function(includeInstance
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.android_full_next.root.fData.pbVarious}
+ * @return {!proto.android_full_next.root.playerOverlays.playerOverlaysRenderer}
  */
-proto.android_full_next.root.fData.pbVarious.deserializeBinary = function(bytes) {
+proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.android_full_next.root.fData.pbVarious;
-  return proto.android_full_next.root.fData.pbVarious.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.android_full_next.root.playerOverlays.playerOverlaysRenderer;
+  return proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.android_full_next.root.fData.pbVarious} msg The message object to deserialize into.
+ * @param {!proto.android_full_next.root.playerOverlays.playerOverlaysRenderer} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.android_full_next.root.fData.pbVarious}
+ * @return {!proto.android_full_next.root.playerOverlays.playerOverlaysRenderer}
  */
-proto.android_full_next.root.fData.pbVarious.deserializeBinaryFromReader = function(msg, reader) {
+proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -13198,9 +10160,9 @@ proto.android_full_next.root.fData.pbVarious.deserializeBinaryFromReader = funct
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.android_full_next.root.fData.pbVarious.prototype.serializeBinary = function() {
+proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.android_full_next.root.fData.pbVarious.serializeBinaryToWriter(this, writer);
+  proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -13208,50 +10170,49 @@ proto.android_full_next.root.fData.pbVarious.prototype.serializeBinary = functio
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.android_full_next.root.fData.pbVarious} message
+ * @param {!proto.android_full_next.root.playerOverlays.playerOverlaysRenderer} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.android_full_next.root.fData.pbVarious.serializeBinaryToWriter = function(message, writer) {
+proto.android_full_next.root.playerOverlays.playerOverlaysRenderer.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
 };
 
 
 /**
- * repeated pbVarious pb1 = 78882851;
- * @return {!Array<!proto.android_full_next.root.fData.pbVarious>}
+ * optional playerOverlaysRenderer overlay = 78882851;
+ * @return {?proto.android_full_next.root.playerOverlays.playerOverlaysRenderer}
  */
-proto.android_full_next.root.fData.prototype.getPb1List = function() {
-  return /** @type{!Array<!proto.android_full_next.root.fData.pbVarious>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.root.fData.pbVarious, 78882851));
+proto.android_full_next.root.playerOverlays.prototype.getOverlay = function() {
+  return /** @type{?proto.android_full_next.root.playerOverlays.playerOverlaysRenderer} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.root.playerOverlays.playerOverlaysRenderer, 78882851));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.root.fData.pbVarious>} value
- * @return {!proto.android_full_next.root.fData} returns this
+ * @param {?proto.android_full_next.root.playerOverlays.playerOverlaysRenderer|undefined} value
+ * @return {!proto.android_full_next.root.playerOverlays} returns this
 */
-proto.android_full_next.root.fData.prototype.setPb1List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 78882851, value);
+proto.android_full_next.root.playerOverlays.prototype.setOverlay = function(value) {
+  return jspb.Message.setWrapperField(this, 78882851, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.root.fData.pbVarious=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.root.fData.pbVarious}
+ * Clears the message field making it undefined.
+ * @return {!proto.android_full_next.root.playerOverlays} returns this
  */
-proto.android_full_next.root.fData.prototype.addPb1 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 78882851, opt_value, proto.android_full_next.root.fData.pbVarious, opt_index);
+proto.android_full_next.root.playerOverlays.prototype.clearOverlay = function() {
+  return this.setOverlay(undefined);
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_full_next.root.fData} returns this
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.root.fData.prototype.clearPb1List = function() {
-  return this.setPb1List([]);
+proto.android_full_next.root.playerOverlays.prototype.hasOverlay = function() {
+  return jspb.Message.getField(this, 78882851) != null;
 };
 
 
@@ -13294,78 +10255,76 @@ proto.android_full_next.root.prototype.clearContentList = function() {
 
 
 /**
- * repeated bData pbExtra = 9;
- * @return {!Array<!proto.android_full_next.root.bData>}
+ * optional navigationData navigationEndpoint = 9;
+ * @return {?proto.android_full_next.navigationData}
  */
-proto.android_full_next.root.prototype.getPbextraList = function() {
-  return /** @type{!Array<!proto.android_full_next.root.bData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.root.bData, 9));
+proto.android_full_next.root.prototype.getNavigationendpoint = function() {
+  return /** @type{?proto.android_full_next.navigationData} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.navigationData, 9));
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.root.bData>} value
+ * @param {?proto.android_full_next.navigationData|undefined} value
  * @return {!proto.android_full_next.root} returns this
 */
-proto.android_full_next.root.prototype.setPbextraList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 9, value);
+proto.android_full_next.root.prototype.setNavigationendpoint = function(value) {
+  return jspb.Message.setWrapperField(this, 9, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.root.bData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.root.bData}
- */
-proto.android_full_next.root.prototype.addPbextra = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.android_full_next.root.bData, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.root} returns this
  */
-proto.android_full_next.root.prototype.clearPbextraList = function() {
-  return this.setPbextraList([]);
+proto.android_full_next.root.prototype.clearNavigationendpoint = function() {
+  return this.setNavigationendpoint(undefined);
 };
 
 
 /**
- * repeated fData pbExtra14 = 14;
- * @return {!Array<!proto.android_full_next.root.fData>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_full_next.root.prototype.getPbextra14List = function() {
-  return /** @type{!Array<!proto.android_full_next.root.fData>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_full_next.root.fData, 14));
+proto.android_full_next.root.prototype.hasNavigationendpoint = function() {
+  return jspb.Message.getField(this, 9) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_full_next.root.fData>} value
+ * optional playerOverlays poverlays = 14;
+ * @return {?proto.android_full_next.root.playerOverlays}
+ */
+proto.android_full_next.root.prototype.getPoverlays = function() {
+  return /** @type{?proto.android_full_next.root.playerOverlays} */ (
+    jspb.Message.getWrapperField(this, proto.android_full_next.root.playerOverlays, 14));
+};
+
+
+/**
+ * @param {?proto.android_full_next.root.playerOverlays|undefined} value
  * @return {!proto.android_full_next.root} returns this
 */
-proto.android_full_next.root.prototype.setPbextra14List = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 14, value);
+proto.android_full_next.root.prototype.setPoverlays = function(value) {
+  return jspb.Message.setWrapperField(this, 14, value);
 };
 
 
 /**
- * @param {!proto.android_full_next.root.fData=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_full_next.root.fData}
- */
-proto.android_full_next.root.prototype.addPbextra14 = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 14, opt_value, proto.android_full_next.root.fData, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_full_next.root} returns this
  */
-proto.android_full_next.root.prototype.clearPbextra14List = function() {
-  return this.setPbextra14List([]);
+proto.android_full_next.root.prototype.clearPoverlays = function() {
+  return this.setPoverlays(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_full_next.root.prototype.hasPoverlays = function() {
+  return jspb.Message.getField(this, 14) != null;
 };
 
 

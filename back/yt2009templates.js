@@ -1095,11 +1095,7 @@ module.exports = {
         <openSearch:itemsPerPage>25</openSearch:itemsPerPage>
     </feed>`,
     "gdata_feedStart": `<?xml version='1.0' encoding='UTF-8'?>
-<feed xmlns='http://www.w3.org/2005/Atom'
-xmlns:media='http://search.yahoo.com/mrss/'
-xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/'
-xmlns:gd='http://schemas.google.com/g/2005'
-xmlns:yt='http://gdata.youtube.com/schemas/2007'>
+<feed xmlns='http://www.w3.org/2005/Atom' xmlns:media='http://search.yahoo.com/mrss/' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' xmlns:gd='http://schemas.google.com/g/2005' xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <id>http://gdata.youtube.com/feeds/api/standardfeeds/us/recently_featured</id>
     <updated>2010-12-21T18:59:58.000-08:00</updated>
     <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#video'/>
@@ -1115,6 +1111,8 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <openSearch:itemsPerPage>25</openSearch:itemsPerPage>`,
     "gdata_feedEnd": "\n</feed>",
     "gdata_feedVideo": function(id, title, author, views, length, description, uploadDate, keywords, category, flags, qualities, additional) {
+        if(!id) return ""
+        
         // flag handling
         if(typeof(flags) == "object") {
             try {
@@ -1243,6 +1241,7 @@ xmlns:yt='http://gdata.youtube.com/schemas/2007'>
                 <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/${id}/comments' countHint='530'/>
             </gd:comments>
             <media:group>
+                <media:title>${title.split("<").join("").split(">").join("").split("&").join("&amp;")}</media:title>
                 <media:category label='${category}' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>${category}</media:category>
                 <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
                 <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("&amp;")}</media:description>

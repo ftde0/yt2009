@@ -93,11 +93,17 @@ function initPlayer(parent, fullscreenEnabled) {
                     player_fullscreen = false;
                     fullscreen_btn.className = "fullscreen"
                     document.exitFullscreen();
+                    if(window.modifiersAdded) {
+                        adjustModifiers("FULLSCREEN_CLOSED")
+                    }
                 } else {
                     $(".embed-container").requestFullscreen();
                     fullscreen_btn.className = "fullscreen opened"
                     fullscreen_btn.style.backgroundPosition = ""
                     player_fullscreen = true;
+                    if(window.modifiersAdded) {
+                        adjustModifiers("FULLSCREEN_OPENED")
+                    }
                 }
                 
             }, false)
@@ -123,6 +129,9 @@ function initPlayer(parent, fullscreenEnabled) {
                         player_overlay.style.width = ""
                     }
                     adjustSeekbarWidth()
+                    if(window.modifiersAdded) {
+                        adjustModifiers("FULLSCREEN_CLOSED")
+                    }
                 } else {
                     player_fullscreen = true;
                     fullscreen_btn.className = "fullscreen opened"
@@ -145,6 +154,9 @@ function initPlayer(parent, fullscreenEnabled) {
                         = "flash-player fullscreen-unsupported"
                     }
                     adjustSeekbarWidth()
+                    if(window.modifiersAdded) {
+                        adjustModifiers("FULLSCREEN_OPENED")
+                    }
                 }
             }, false)
         }
@@ -642,10 +654,12 @@ function adjustSeekbarWidth() {
     // loading gif
     if(document.querySelector(".html5-loading")) {
         // -16 from half the gif size (32x32)
-        $(".html5-loading").style.left = video.getBoundingClientRect().width / 2
-                                            - 16 + "px"
-        $(".html5-loading").style.top = video.getBoundingClientRect().height / 2
-                                            - 16 + "px"; 
+        var vidBounds = video.getBoundingClientRect()
+        if(window.modifiersAdded && mainElement.getBoundingClientRect) {
+            vidBounds = mainElement.getBoundingClientRect()
+        }
+        $(".html5-loading").style.left = vidBounds.width / 2 - 16 + "px"
+        $(".html5-loading").style.top = vidBounds.height / 2 - 16 + "px"; 
     }
 
 
@@ -2226,14 +2240,14 @@ catch(error) {}
 function showLoadingSprite() {
     var className = $(".html5-loading").className
     $(".html5-loading").className = className.replace("hid", "")
-    if(!$(".html5-loading").style.left) {
+    //if(!$(".html5-loading").style.left) {
         var vidBounds = video.getBoundingClientRect()
         if(modifiersAdded && mainElement.getBoundingClientRect) {
             vidBounds = mainElement.getBoundingClientRect()
         }
         $(".html5-loading").style.left = vidBounds.width / 2 - 16 + "px";
         $(".html5-loading").style.top = vidBounds.height / 2 - 16 + "px";
-    }
+    //}
     setupLoadingRototo()
 }
 
@@ -2717,7 +2731,9 @@ function initAsSabr() {
         "waitingSabrFetch": false,
         "timedCooldown": false,
         "timedSabrFetchAborted": false,
-        "lastRequestFailCount": 0
+        "lastRequestFailCount": 0,
+        "readAhead": 14,
+        "defaultLongReadaheadSet": false
     }
 
     // start once ready
@@ -2767,6 +2783,12 @@ function initAsSabr() {
 
     // watch for new buffer fetches
     video.addEventListener("timeupdate", function() {
+        if(!sabrData.defaultLongReadaheadSet
+        && video.duration >= (60 * 3)) {
+            sabrData.defaultLongReadaheadSet = true;
+            sabrData.readAhead = 50
+        }
+
         if(video.currentTime > 120
         && !sabrData.videoBuffer.updating
         && !sabrData.audioBuffer.updating) {
@@ -2790,7 +2812,7 @@ function initAsSabr() {
         var currentRange = arrayedRanges.filter(function(s) {
             return (s.start <= c && s.end >= c)
         })[0]
-        if(currentRange && ((currentRange.end - c) < 14
+        if(currentRange && ((currentRange.end - c) < sabrData.readAhead
         && (currentRange.end - c) > 0.1
         && !(video.duration - currentRange.end <= 0.3))
         && !sabrData.appendQueue[0]) {
@@ -3285,7 +3307,7 @@ function initModifiers(modifiers) {
     modifierTags = modifiers;
     usingModifiers = true;
 }
-function loadModifierTags() {
+function loadModifierTags(source) {
     if(!video.videoWidth
     || !video.videoHeight) return;
     var modifiers = modifierTags.split(",")
@@ -3322,7 +3344,8 @@ function loadModifierTags() {
             }
             case "yt:cc=on": {
                 // autoenable captions
-                if(!captionsEnabled) {
+                if(!captionsEnabled
+                && (!source || source !== "autoadjust")) {
                     captionsMain()
                 }
                 break;
@@ -3333,7 +3356,8 @@ function loadModifierTags() {
                 && mainElement.querySelector(".hq")
                 && !playingAsLive
                 && !window.sabrData)
-                || (window.sabrData && !window.sabrHd)) {
+                || (window.sabrData && !window.sabrHd)
+                && (!source || source !== "autoadjust")) {
                     // normal playback
                     try {
                         $(".video_controls .hq").click()
@@ -3355,5 +3379,25 @@ function loadModifierTags() {
 
     if(transforms.length >= 1) {
         video.style.transform = transforms.join(" ")
+    }
+}
+
+function adjustModifiers(source) {
+    switch(source) {
+        case "FULLSCREEN_OPENED": {
+            // letterbox stretched video if on a non-matching aspect ratio
+            if(modifierTags && modifierTags.indexOf("yt:stretch=16:9") !== -1
+            && (window.innerWidth / window.innerHeight) < 1.5) {
+                var scale = (video.videoHeight / video.videoWidth)
+                scale = scale.toFixed(2)
+                video.style.transform = "scaleY(" + scale + ")"
+            }
+            break;
+        }
+        case "FULLSCREEN_CLOSED":
+        default: {
+            loadModifierTags("autoadjust")
+            break;
+        }
     }
 }

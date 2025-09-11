@@ -112,6 +112,12 @@ module.exports = {
             false
         )
 
+        let maxVideos = 25
+        if(req.query["max-results"]
+        && !isNaN(parseInt(req.query["max-results"]))) {
+            maxVideos = parseInt(req.query["max-results"])
+        }
+        
         function addVideosToResponse(data) {
             let videos = ``
             let videosCount = 0;
@@ -121,7 +127,7 @@ module.exports = {
                 if(video.type == "metadata") {
                     resultCount = video.resultCount
                 }
-                if(video.type !== "video") return;
+                if(video.type !== "video" || videosCount >= maxVideos) return;
                 videosCount++;
                 let author_name = video.author_name;
                 if(flags.includes("username_aciify")) {
@@ -165,11 +171,17 @@ module.exports = {
                 )
             })
 
-            response =
-            templates.cpsSearchBegin(resultCount, req.originalUrl)
-            .replace(`x>1<`, `x>${index + 1}<`)
-            + "\n" + videos
-            + templates.cpsSearchEnd;
+            if(!req.source || req.source !== "proxy") {
+                response = templates.cpsSearchBegin(
+                    resultCount, req.originalUrl
+                ).replace(`x>1<`, `x>${index + 1}<`)
+            } else {
+                response = templates.gdata_feedStart
+                                    .split(">1<")
+                                    .join(`>${index + 1}<`)
+            }
+            response += "\n" + videos
+                     + templates.cpsSearchEnd;
 
             res.set("content-type", "application/atom+xml")
             res.send(response)

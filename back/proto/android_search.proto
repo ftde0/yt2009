@@ -26,102 +26,54 @@ message browseNavigation {
     }
     repeated browseData data = 48687626;
 }
+message authorData {
+    message authorDataContent {
+        string authorDisplayName = 1;
+        optional browseNavigation navigation = 5;
+    }
+    optional authorDataContent ac = 1;
+}
+message navigationData {
+    message navData {
+        string navId = 1;
+    }
+    optional navData navProperties = 48687757;
+}
 message compactVideoRenderer {
     string videoId = 1;
-    repeated thumbnails thumblist = 2;
-    repeated textRuns titleData = 3;
-    message authorData {
-        message authorDataContent {
-            string authorDisplayName = 1;
-            message authorNavigationData {
-                message navigationEndpoint {
-                    string browseId = 2;
-                    string canonicalBaseUrl = 4;
-                }
-                repeated navigationEndpoint authorEndpoint = 48687626;
-            }
-            repeated authorNavigationData navigation = 5;
-        }
-        repeated authorDataContent ac = 1;
-    }
-    repeated authorData author = 4;
-    repeated textRuns publishedTimeText = 5;
-    repeated textRuns viewCountText = 6;
-    repeated textRuns lengthText = 7;
-    message navigationData {
-        message navType {
-            int32 i1 = 1;
-            int32 i2 = 2;
-            int32 i3 = 3;
-            string source = 11;
-            message navExtraType {
-                int32 i2 = 2;
-                int32 i3 = 3;
-            }
-            repeated navExtraType navExtra = 19;
-        }
-        repeated navType nav = 1;
-        message navData {
-            string navId = 1;
-        }
-        repeated navData navProperties = 48687757;
-    }
-    repeated navigationData navData = 8;
-    message longAuthorData {
-        message laDataContainer {
-            string displayName = 1;
-            message navigation {
-                message navigationEndpoint {
-                    string browseId = 2;
-                    string canonicalBaseUrl = 4;
-                }
-                repeated navigationEndpoint laNaviEndpoint = 48687626;
-            }
-            repeated navigation laNavi = 5;
-        }
-        repeated laDataContainer laDataContent = 1;
-    }
-    repeated longAuthorData laData = 10;
-    message authorAvatarType {
-        message aaContain {
-            string url = 1;
-            int32 width = 2;
-            int32 height = 3;
-        }
-        repeated aaContain aaData = 1;
-    }
-    repeated authorAvatarType authorAvatar = 14;
-    repeated textRuns shortViewCounts = 23;
-}
-message ownerData {
-    message ownerContainer {
-        string ownerName = 1;
-        repeated browseNavigation navigation = 5;
-    }
-    repeated ownerContainer content = 1;
+    optional thumbnails thumblist = 2;
+    optional textRuns titleData = 3;
+    optional authorData shortAuthorData = 4;
+    optional textRuns publishedTimeText = 5;
+    optional textRuns viewCountText = 6;
+    optional textRuns lengthText = 7;
+    optional navigationData navData = 8;
+    optional authorData longAuthorData = 10;
+    optional thumbnails authorAvatar = 14;
+    optional textRuns shortViewCounts = 23;
 }
 message playlistRenderer {
     string id = 1;
-    repeated thumbnails thumbnail = 2;
-    repeated textRuns playlistName = 3;
-    repeated ownerData owner = 4;
-    repeated textRuns videoCount = 5;
-    repeated browseNavigation playlistBrowse = 6;
-    repeated textRuns bareVideoCount = 9;
-    repeated thumbnails separatedThumbnail = 13;
-    repeated textRuns videoCount2 = 15;
+    optional thumbnails thumbnail = 2;
+    optional textRuns playlistName = 3;
+    optional authorData shortOwner = 4;
+    optional textRuns videoCount = 5;
+    optional browseNavigation playlistBrowse = 6;
+    optional textRuns bareVideoCount = 9;
+    optional thumbnails separatedThumbnail = 13;
+    optional textRuns videoCount2 = 15;
     string webUrl = 19;
-    repeated ownerData owner2 = 21;
+    optional authorData longOwner = 21;
 }
 message channelRenderer {
     string id = 1;
-    repeated thumbnails avatar = 2;
-    repeated textRuns name = 3;
-    repeated textRuns subCount = 4;
-    repeated textRuns handle = 5;
-    repeated browseNavigation navigation = 6;
-    repeated textRuns name2 = 9;
-    repeated thumbnails avatar2 = 16;
+    optional thumbnails avatar = 2;
+    optional textRuns name = 3;
+    optional textRuns subCount = 4;
+    optional textRuns handle = 5;
+    optional browseNavigation navigation = 6;
+    optional textRuns name2 = 9;
+    optional thumbnails avatar2 = 16;
 }
 message root {
     message contents {
