@@ -2778,6 +2778,26 @@ app.post("/youtube/accounts/registerDevice", (req, res) => {
     res.send(`DeviceId=${deviceId}
 DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=`)
 })
+app.get("/youtube/accounts/registerDevice", (req, res) => {
+    let deviceId = ""
+    while(deviceId.length !== 7) {
+        deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
+                    [Math.floor(Math.random() * 36)]
+    }
+    while(useMobileHelper && mobileHelper.hasLogin(deviceId)) {
+        deviceId = ""
+        while(deviceId.length !== 7) {
+            deviceId += "qwertyuiopasdfghjklzxcvbnm1234567890".split("")
+                        [Math.floor(Math.random() * 36)]
+        }
+    } 
+    /* This is required for RedirMode to work. Without the same function with GET instead of POST, all 
+	clients connecting for the first time will error out during initialization.
+    
+    #yt2009 - devicekey created with aes secret from 2.3.4 apk*/
+    res.send(`DeviceId=${deviceId}
+DeviceKey=ULxlVAAVMhZ2GeqZA/X1GgqEEIP1ibcd3S+42pkWfmk=`)
+})
 app.get("/feeds/api/standardfeeds/*", (req, res) => {
     yt2009_mobile.feeds(req, res)
 })
