@@ -96,6 +96,7 @@ function initPlayer(parent, fullscreenEnabled) {
                     if(window.modifiersAdded) {
                         adjustModifiers("FULLSCREEN_CLOSED")
                     }
+                    fullscreenAdjustVheight()
                 } else {
                     $(".embed-container").requestFullscreen();
                     fullscreen_btn.className = "fullscreen opened"
@@ -104,6 +105,7 @@ function initPlayer(parent, fullscreenEnabled) {
                     if(window.modifiersAdded) {
                         adjustModifiers("FULLSCREEN_OPENED")
                     }
+                    fullscreenAdjustVheight()
                 }
                 
             }, false)
@@ -132,6 +134,7 @@ function initPlayer(parent, fullscreenEnabled) {
                     if(window.modifiersAdded) {
                         adjustModifiers("FULLSCREEN_CLOSED")
                     }
+                    fullscreenAdjustVheight()
                 } else {
                     player_fullscreen = true;
                     fullscreen_btn.className = "fullscreen opened"
@@ -157,6 +160,7 @@ function initPlayer(parent, fullscreenEnabled) {
                     if(window.modifiersAdded) {
                         adjustModifiers("FULLSCREEN_OPENED")
                     }
+                    fullscreenAdjustVheight()
                 }
             }, false)
         }
@@ -214,6 +218,21 @@ function initPlayer(parent, fullscreenEnabled) {
                 mousein = true;
             }, 400)
         }, false)
+
+        // watch mouse pos for fullscreen fadeout
+        createMouseWatch()
+
+        // lock mouse whell scroll on embed
+        try {
+            window.addEventListener("scroll", function() {
+                if(window.scrollY > 0) {
+                    window.scrollTo(0,0)
+                }
+            }, false)
+        }
+        catch(error){
+            console.log(error)
+        }
     } else {
         // hide/show controls on mousein/mouseout
         var controlsFadeProgress = false;
@@ -255,8 +274,6 @@ function initPlayer(parent, fullscreenEnabled) {
             }
         }, false)
 
-
-
         $("#watch-player-div").addEventListener("mouseover", function() {
             lastMouseMovement = Math.floor(Date.now() / 1000)
             if(controlsFadeProgress
@@ -269,6 +286,9 @@ function initPlayer(parent, fullscreenEnabled) {
                 videoControlsShown = true;
             }, 250)
         }, false)
+
+        // watch mouse pos for fullscreen fadeout
+        createMouseWatch()
     }
 
     setTimeout(function() {
@@ -627,6 +647,7 @@ function setVidHeight() {
         var h = document.getElementById("watch-this-vid")
                         .getBoundingClientRect().height
         video.style.height = (h - 25) + "px"
+        initialFullscreenHeightProperty = video.style.height
     }
 }
 setTimeout(setVidHeight, 100)
@@ -1305,12 +1326,7 @@ function annotationRender(annotation) {
     var ac = document.querySelector(".annotations_container") || mainElement
     var element = document.createElement("div")
     var container = mainElement;
-    if(mainElement == document) {
-        $(".embed-container").appendChild(element)
-        container = $(".embed-container")
-    } else {
-        ac.appendChild(element)
-    }
+    ac.appendChild(element)
     
 
     // setting css for our annotation element
@@ -1943,7 +1959,7 @@ function captionsMain(source) {
                 }
             }
 
-            if(!captionsFound) {
+            if(!captionsFound && !audiotracksEnabled) {
                 var captionsPaHovered = false;
                 captionsSwitch.addEventListener("mousemove", function() {
                     captionsPaHovered = true;
@@ -2084,8 +2100,8 @@ function loadCaptions(id, language) {
             catch(error) {}
         }
         try {
-            if(mainElement.querySelector(".circle.selected")) {
-                mainElement.querySelector(".circle.selected")
+            if(mainElement.querySelector(".captions_selection .circle.selected")) {
+                mainElement.querySelector(".captions_selection .circle.selected")
                            .className = "circle"
                 mainElement.querySelector("[lang=\"" + language + "\"] .circle")
                            .className += " selected"
@@ -2211,13 +2227,88 @@ function resizeCaptions() {
 
 // hover-over caption selection ui
 function captionSelectShowUi() {
-    if(!ccListLoaded || !captionsEnabled) return;
+    if((!ccListLoaded || !captionsEnabled) && !audiotracksEnabled) return;
     $(".captions_popup").style.display = "block"
 }
 
 $(".cc .triangle-container").addEventListener("mouseover", captionSelectShowUi, false)
 $(".cc .triangle").addEventListener("mouseover", captionSelectShowUi, false)
 captionsSwitch.addEventListener("click", captionsMain, false)
+
+// audiotracks
+var audiotracksEnabled = false;
+function audiotracksMain() {
+    var tracks = window.sabrData.audiotrackData
+    $(".captions_popup").className += " will_audiotracks"
+    audiotracksEnabled = true;
+    if(!captionsEnabled) {
+        captionsMain()
+    }
+
+    var atContainer = document.createElement("div")
+    atContainer.className = "audio_track_container"
+    var atHeader = document.createElement("h2")
+    atHeader.innerHTML = "Audio Tracks"
+    atContainer.appendChild(atHeader)
+    var atList = document.createElement("ul")
+    atList.className = "audio_tracks"
+
+    tracks.forEach(function(track) {
+        var s = track.split(",")
+        var xtags = s[s.length - 1]
+        s.pop()
+        var name = s.join(",")
+        
+        var atElement = document.createElement("li")
+        var atCircle = document.createElement("span")
+        atCircle.className = "circle"
+        if(window.sabrData.currentXtag == xtags) {
+            atCircle.className += " selected"
+        }
+        atElement.appendChild(atCircle)
+        var atName = document.createElement("p")
+        atName.innerHTML = name;
+        atElement.appendChild(atName)
+        atElement.onclick = function() {
+            loadAudiotrack(xtags, atElement)
+        }
+        atList.appendChild(atElement)
+    })
+
+    atContainer.appendChild(atList)
+
+    if(tracks.length > 9) {
+        // 9 is the max that fits on the screen at once
+        // add a button to scroll if needed
+        var maxTrackScroll = (tracks.length - 8) * 18 //18px per element on list
+        var atMore = document.createElement("p")
+        atMore.className = "audio_track_more"
+        atMore.innerHTML = "[ ▼ more ]"
+        atMore.onclick = function() {
+            if((atList.scrollTop || atList.scrollY) >= maxTrackScroll - 10) {
+                atList.scrollTo(0,0)
+            } else {
+                atList.scrollBy(0,18)
+            }
+        }
+        atContainer.appendChild(atMore)
+    }
+
+    $(".captions_popup_container").appendChild(atContainer)
+}
+
+function loadAudiotrack(xtags, el) {
+    var z = $(".audio_track_container .audio_tracks li")
+    for(var sel in z) {
+        try {
+            z[sel].querySelector("span").className = "circle"
+        }
+        catch(error) {}
+    }
+    el.querySelector(".circle").className += " selected"
+    window.sabrData.customXtag = xtags;
+    sabrQualityChanged()
+}
 
 // switch back fullscreen sprite when exited externally
 try {
@@ -2230,6 +2321,7 @@ try {
             setTimeout(function() {
                 f.style.backgroundPosition = "0px 0px"
             }, 500)
+            fullscreenAdjustVheight()
         }
     }, false)
 }
@@ -2635,6 +2727,9 @@ function requestSabr(offset, source, force) {
     if(force) {
         url.push("&force_replayer=1")
     }
+    if(sabrData.customXtag) {
+        url.push("&xtags=" + sabrData.customXtag)
+    }
     function retryRequest(force) {
         sabrData.lastRequestFailCount++
         if(sabrData.lastRequestFailCount > 3) {
@@ -2663,6 +2758,23 @@ function requestSabr(offset, source, force) {
                 +" try reloading the page."
             )
             return;
+        }
+
+        // add audiotrack data if available
+        // (server only sends if exp_sabr_audiotracks enabled)
+        if(r.getResponseHeader("x-yt2009-used-xtag")) {
+            sabrData.currentXtag = r.getResponseHeader("x-yt2009-used-xtag")
+        }
+        if(r.getResponseHeader("x-yt2009-xtags")
+        && !sabrData.receivedAudiotrackData) {
+            sabrData.receivedAudiotrackData = true;
+            sabrData.audiotrackData = r.getResponseHeader("x-yt2009-xtags")
+                                       .split(";")
+            try {
+                sabrData.audiotrackData.sort()
+            }
+            catch(error){}
+            audiotracksMain()
         }
 
         // parse x-yt2009-saber
@@ -3400,4 +3512,80 @@ function adjustModifiers(source) {
             break;
         }
     }
+}
+
+// fadeout player on fullscreen
+var lastMousePosition = [0,0]
+var fullscreenControlsFaded = false;
+var fullscreenControlsFadeAnimationOngoing = false;
+var fullscreenControlsFadeInterval;
+var fullscreenControlsOpacity = 1;
+var initialFullscreenHeightProperty = ""
+function fullscreenAdjustVheight() {
+    if(player_fullscreen) {
+        video.style = "height:100% !important;"
+    } else {
+        video.style.height = initialFullscreenHeightProperty;
+    }
+}
+function createMouseWatch() {
+    try {
+        mainElement.addEventListener("mousemove", function(e) {
+            var x = e.pageX || e.clientX;
+            var y = e.pageY || e.clientY;
+            lastMousePosition = [x,y]
+            lastMouseMovement = Math.floor(Date.now() / 1000)
+
+            if(fullscreenControlsFaded) {
+                // unfade controls
+                if(fullscreenControlsFadeInterval) {
+                    clearInterval(fullscreenControlsFadeInterval)
+                    fullscreenControlsFadeInterval = false;
+                }
+                if(mainElement.querySelector(".annotations_container")) {
+                    $(".annotations_container").style.cursor = "pointer"
+                }
+                video.style.cursor = "pointer"
+                fullscreenControlsFadeInterval = setInterval(function() {
+                    fullscreenControlsOpacity += 0.35
+                    if(fullscreenControlsOpacity > 1) {
+                        fullscreenControlsOpacity = 1;
+                    }
+                    $(".video_controls").style.opacity = fullscreenControlsOpacity
+                    if(fullscreenControlsOpacity == 1) {
+                        clearInterval(fullscreenControlsFadeInterval)
+                        fullscreenControlsFadeInterval = false;
+                    }
+                }, 30)
+            }
+        }, false)
+
+        var x = setInterval(function() {
+            var now = Math.floor(Date.now() / 1000)
+            if(now - lastMouseMovement >= 3
+            && player_fullscreen 
+            && !fadeControlsEnable) {
+                // fade controls
+                fullscreenControlsFaded = true;
+                fullscreenControlsFadeAnimationOngoing = true;
+                fullscreenControlsFadeInterval = setInterval(function() {
+                    fullscreenControlsOpacity -= 0.35
+                    if(fullscreenControlsOpacity < 0) {
+                        fullscreenControlsOpacity = 0;
+                    }
+                    $(".video_controls").style.opacity = fullscreenControlsOpacity
+                    if(fullscreenControlsOpacity == 0) {
+                        clearInterval(fullscreenControlsFadeInterval)
+                        fullscreenControlsFadeInterval = false;
+
+                        if(mainElement.querySelector(".annotations_container")) {
+                            $(".annotations_container").style.cursor = "none"
+                        }
+                        video.style.cursor = "none"
+                    }
+                }, 30)
+            }
+        }, 1000)
+    }
+    catch(error){}
 }

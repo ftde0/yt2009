@@ -482,7 +482,11 @@ if(localStorage && localStorage.widescreenEnabled) {
 // popout
 $("#watch-longform-popup").addEventListener("click", function() {
     var id = window.location.href.split("v=")[1].split("&")[0]
-    window.open("/embed/" + id)
+    var url = "/embed/" + id;
+    if(window.playingAsLive) {
+        url += "?live=1"
+    }
+    window.open(url)
 }, false)
 
 /*

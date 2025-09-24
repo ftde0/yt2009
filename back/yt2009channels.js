@@ -8,6 +8,7 @@ const yt2009search = require("./yt2009search")
 const yt2009languages = require("./language_data/language_engine")
 const yt2009doodles = require("./yt2009doodles")
 const yt2009trusted = require("./yt2009trustedcontext")
+const yt2009playlists = require("./yt2009playlists")
 const n_impl_yt2009channelcache = require("./cache_dir/channel_cache")
 const yt2009defaultavatarcache = require("./cache_dir/default_avatar_adapt_manager")
 const yt2009mobilehelper = require("./yt2009mobilehelper")
@@ -129,11 +130,29 @@ module.exports = {
                         for(let property in data) {
                             fullData[property] = data[property]
                         }
-                        writeTimingData("main response parse")
-                        fetchesCompleted++
-                        if(fetchesCompleted >= fetchesRequired) {
-                            sendResponse(fullData)
+
+                        function onCanSend() {
+                            writeTimingData("main response parse")
+                            fetchesCompleted++
+                            if(fetchesCompleted >= fetchesRequired) {
+                                sendResponse(fullData)
+                            }
                         }
+
+                        // fast check if topic channel and apply fallback
+                        let rString = JSON.stringify(r)
+                        if(rString.includes("LOCKUP_CONTENT_TYPE_ALBUM")
+                        && !rString.includes(`/videos"`)
+                        && ((fullData.videos && fullData.videos.length == 0)
+                        || !fullData.videos)) {
+                            this.fetchVideosForTopic(id, (vids) => {
+                                fullData.videos = vids;
+                                onCanSend()
+                            })
+                        } else {
+                            onCanSend()
+                        }
+                        
                     })
                 })})
 
@@ -1514,9 +1533,9 @@ module.exports = {
                     video,
                     video_index,
                     views,
-                    yt2009utils.relativeTimeCreate(
+                    upload_date ? yt2009utils.relativeTimeCreate(
                         upload_date, yt2009languages.get_language(req)
-                    ),
+                    ) : "",
                     ratings_est,
                     req.protocol
                 )
@@ -1554,9 +1573,9 @@ module.exports = {
                     video,
                     video_index,
                     views,
-                    yt2009utils.relativeTimeCreate(
+                    upload_date ? yt2009utils.relativeTimeCreate(
                         upload_date, yt2009languages.get_language(req)
-                    ),
+                    ) : "",
                     ratings_est,
                     req.protocol
                 )
@@ -1606,7 +1625,7 @@ module.exports = {
                     uploadTime = yt2009utils.unixToRelative(new Date(
                         videoUploadDates[video.id]
                     ).getTime())
-                } else {
+                } else if(videoUploadDates[video.id]) {
                     uploadTime = yt2009utils.relativeTimeCreate(
                         videoUploadDates[video.id],
                         yt2009languages.get_language(req)
@@ -2905,22 +2924,38 @@ module.exports = {
                                   .simpleText,
                         "badges": badges
                     })
+                } else if(video.continuationItemRenderer
+                && (chipParam == templates.latestChip
+                || chipParam.startsWith("DIRECT:"))) {
+                    try {
+                        let c = video.continuationItemRenderer
+                                     .continuationEndpoint
+                                     .continuationCommand
+                                     .token;
+                        videos.push({"continuation": c})
+                    }
+                    catch(error) {}
                 }
             })
             
             callback(videos)
         }
 
-        const popularVids = require("./proto/popularVidsChip_pb")
-        let vidsContinuation = new popularVids.vidsChip()
-        let msg = new popularVids.vidsChip.nestedMsg1()
-        msg.setChannelid(channelId)
-        msg.setChipparam(chipParam)
-        vidsContinuation.addMsg(msg)
-        let chip = encodeURIComponent(Buffer.from(
-            vidsContinuation.serializeBinary()
-        ).toString("base64"))
-
+        let chip = ""
+        if(chipParam.startsWith("DIRECT:")) {
+            chip = chipParam.replace("DIRECT:", "")
+        } else {
+            const popularVids = require("./proto/popularVidsChip_pb")
+            let vidsContinuation = new popularVids.vidsChip()
+            let msg = new popularVids.vidsChip.nestedMsg1()
+            msg.setChannelid(channelId)
+            msg.setChipparam(chipParam)
+            vidsContinuation.addMsg(msg)
+            chip = encodeURIComponent(Buffer.from(
+                vidsContinuation.serializeBinary()
+            ).toString("base64"))
+        }
+        
         fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
             yt2009html.get_api_key()
         }`, {
@@ -2939,10 +2974,16 @@ module.exports = {
                 return;
             }
             r.onResponseReceivedActions.forEach(action => {
-                if(action.reloadContinuationItemsCommand.slot
+                if(action.reloadContinuationItemsCommand
+                && action.reloadContinuationItemsCommand.slot
                 == "RELOAD_CONTINUATION_SLOT_BODY") {
                     createVideosFromChip(
                         action.reloadContinuationItemsCommand
+                              .continuationItems
+                    )
+                } else if(action.appendContinuationItemsAction) {
+                    createVideosFromChip(
+                        action.appendContinuationItemsAction
                               .continuationItems
                     )
                 }
@@ -3202,5 +3243,46 @@ module.exports = {
 
     "setSupData": function(channelIds) {
         sups = channelIds
+    },
+
+    "fetchVideosForTopic": function(channelId, callback) {
+        // topic channels can't have their bare videos returned with WEB anymore
+        // workaround with WEB_REMIX (youtube music)
+        fetch("https://music.youtube.com/youtubei/v1/browse?prettyPrint=false", {
+            "headers": yt2009constants.headers,
+            "method": "POST",
+            "body": JSON.stringify({
+                "context": {
+                    "client": {
+                        "hl": "en",
+                        "gl": "US",
+                        "clientName": "WEB_REMIX",
+                        "clientVersion": "1.20250915.03.00"
+                    }
+                },
+                "browseId": channelId
+            })
+        }).then(r => {r.text().then(r => {
+            if(r.includes(`browseId":"VLOL`)) {
+                let firstPlaylist = "OL" + r.split(`browseId":"VLOL`)[1]
+                                            .split(`"`)[0]
+                yt2009playlists.parsePlaylist(firstPlaylist, (vids) => {
+                    let ogVl = vids.videos.slice(0,30).sort((a, b) => {
+                        return b.views - a.views
+                    })
+                    let rewrittenVl = []
+                    ogVl.forEach(z => {
+                        let n = JSON.parse(JSON.stringify(z))
+                        n.length = z.time;
+                        n.badges = []
+                        n.views = yt2009utils.countBreakup(z.views) + " views"
+                        rewrittenVl.push(n)
+                    })
+                    callback(rewrittenVl)
+                })
+            } else {
+                callback([])
+            }
+        })})
     }
 }

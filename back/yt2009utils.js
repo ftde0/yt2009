@@ -1669,6 +1669,7 @@ module.exports = {
             adjustPartsize()
             const newHeaders = JSON.parse(JSON.stringify(androidHeaders));
             newHeaders.headers.range = `bytes=${startB}-${startB + partSize}`;
+            newHeaders.timeout = 40000
             fetch(url, newHeaders).catch(e => {
                 lastPartFailCount++
                 let failFriendly = `(${lastPartFailCount}/${partFailMax})`
@@ -1689,6 +1690,9 @@ module.exports = {
             }).then(r => {
                 if(!r) return;
                 if(r.status == 403) {
+                    console.log(`googlevideo returned 403 while downloading!`)
+                    console.log(`${url}/${startB}/${partSize}`)
+                    console.log(`(if reporting, make sure to clear your IP!)`)
                     stream.end()
                     try {fs.unlinkSync(out)}catch(error){
                         try {fs.writeFileSync(out, "")}

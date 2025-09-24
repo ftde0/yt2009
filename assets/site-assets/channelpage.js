@@ -774,3 +774,20 @@ function playnav_sort(sortMode) {
         $(".uploads-filtered").innerHTML = r.responseText
     }, false)
 }
+
+// playnav more
+function playnav_more(continuation) {
+    var d = document.getElementById("playnav-more-continuation")
+    d.parentNode.removeChild(d)
+
+    $("#playnav-play-loading").style.display = "block"
+    var r = new XMLHttpRequest();
+    r.open("GET", "/channel_sort?rt=" + Date.now())
+    r.setRequestHeader("source", location.pathname)
+    r.setRequestHeader("continuation", continuation)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        $("#playnav-play-loading").style.display = "none"
+        $(".uploads-filtered").innerHTML += r.responseText
+    }, false)
+}

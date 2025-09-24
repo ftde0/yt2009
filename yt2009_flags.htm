@@ -110,6 +110,8 @@
 
 		<div class="group1">
 			<h2>/watch</h2>
+			<input type="checkbox" id="watch-allow-clientside-ryd" title="nie czeka jeśli api return youtube dislike zajmuje dłużej niż zazwyczaj żeby otrzymać ocenę w gwiazdkach.">
+			<label for="watch-allow-clientside-ryd">allow_clientside_ryd</label><br>
 			<input type="checkbox" id="watch-annotation-gradients" title="dodaje wcześniej widoczne gradienty na adnotacjach w html5.">
 			<label for="watch-annotation-gradients">annotation_gradients</label><br>
 			<i id="leg_annot_notice">annotation_gradients nie jest celnym odwzorowaniem adnotacji z flash.<br>zostało dodane ze względu na poprzednią implementację adnotacji w html5.</i><br>
@@ -138,10 +140,12 @@
 			<label for="watch-enable-stats-countback">enable_stats_countback</label><br>
 			<input type="checkbox" id="watch-exclude-cs" title="ukrywa twoje komentarze w /comment_search">
 			<label for="watch-exclude-cs">exclude_cs</label><br>
-			<input type="checkbox" id="watch-exp-related" title="pokazuje podobne filmy bazując na tagach oglądanego filmu">
+			<input type="checkbox" id="watch-exp-related" title="pokazuje tylko stare podobne filmy bazując na tagach oglądanego filmu">
 			<label for="watch-exp-related">exp_related</label><br>
 			<input type="checkbox" id="watch-exp-sabr" title="używa technologii SABR do odtwarzania filmów. szybszy start odtwarzania, wymaga jednak lepszego sprzętu.">
 			<label for="watch-exp-sabr">exp_sabr</label><br>
+			<input type="checkbox" id="watch-exp-sabr-audiotracks" title="umożliwia zmianę ścieżki audio w filmach używając SABR.">
+			<label for="watch-exp-sabr-audiotracks">exp_sabr_audiotracks</label><br>
 			<input type="checkbox" id="watch-fake-upload-date" title="fake rok wrzucenia filmu jako 2009">
 			<label for="watch-fake-upload-date">fake_upload_date</label>
 			<input type="text" id="watch-fake-upload-date-input" autocomplete="off" spellcheck="false" placeholder="tryb">
@@ -275,6 +279,10 @@
 			<label for="global-author-old-avatar">author_old_avatar</label><br>
 			<input type="checkbox" id="global-autogen-thumbnails" title="używanie automatycznie generowanych miniaturek">
 			<label for="global-autogen-thumbnails">autogen_thumbnails</label><br>
+			<input type="checkbox" id="global-disable-autocc" title="wyłącza automatyczne włączanie automatycznych napisów.">
+			<label for="global-disable-autocc">disable_autocc</label><br>
+			<input type="checkbox" id="global-disable-chapters" title="wyłącza podświetlanie rozdziałów filmu.">
+			<label for="global-disable-chapters">disable_chapters</label><br>
 			<input type="checkbox" id="global-fake-dates" title="podstawione daty komentarzy i opublikowania">
 			<label for="global-fake-dates">fake_dates</label><br>
 			<input type="checkbox" id="global-login-simulate" title="symuluje zalogowanego użytkownika">

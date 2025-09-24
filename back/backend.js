@@ -785,7 +785,7 @@ app.get("/ryd_request", (req, res) => {
     }
 
     let id = req.headers.source.split("v=")[1].split("&")[0]
-    ryd.fetch(id, (data) => {
+    ryd.readWait(id, (data) => {
         let toSend = data.toString();
         if(!toSend.includes(".5")) {
             toSend += ".0"
@@ -1001,6 +1001,13 @@ app.get("/get_video_info", (req, res) => {
                 "suberrorcode=8",
                 "reason=live streams are currently not supported in flash"
             ].join("&"))
+            return;
+        }
+        if(req.headers.referer
+        && req.headers.referer.includes("mp.swf")
+        && !req.headers.referer.includes("/mp4")) {
+            // minimal flash-only response for mobile flash flv option
+            res.send(yt2009_templates.get_video_info_onlyFlash(data, req, res))
             return;
         }
         let longVid = (data.length >= 60 * 30)
@@ -2454,7 +2461,8 @@ app.post("/pchelper_avatar_change", (req, res) => {
                            .split(`Content-Type: `)[1].split("\n")[0];
             index = req.body.toString().indexOf(index) + index.length
             let file = req.body.slice(index)
-            while(file[0] == 10 || file[0] == 13) {
+            while((file[0] == 10 || file[0] == 13)
+            && (file[0] !== undefined && file[0] !== null)) {
                 file = file.slice(1)
             }
             let fname = `flow-${Date.now()}`
@@ -4267,7 +4275,7 @@ app.get("/search_channel", (req, res) => {
 
 app.get("/channel_sort", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {res.sendStatus(401);return;}
-    if(!req.headers.source || !req.headers.sort) {
+    if(!req.headers.source) {
         res.sendStatus(400);return;
     }
 
@@ -4287,7 +4295,16 @@ app.get("/channel_sort", (req, res) => {
         )
     }
 
+    // skip figuring out chipparams if we a direct continuation
+    if(req.headers.continuation) {
+        getByChip(`DIRECT:${req.headers.continuation}`, false)
+        return;
+    }
+
     // init search params
+    if(!req.headers.sort) {
+        res.sendStatus(400);return;
+    }
     let vids = []
     let page = 1;
     let params = {"page": page}
@@ -4367,6 +4384,15 @@ app.get("/channel_sort", (req, res) => {
             && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
         )})
         results.forEach(result => {
+            if(result.continuation) {
+                createdHTML += yt2009_languages.apply_lang_to_code(
+                    yt2009_templates.playnavContMore(
+                        result.continuation
+                    ),
+                    req
+                )
+                return;
+            }
             let views = yt2009_utils.viewFlags(result.views, channelFlags)
             let upload = yt2009_utils.fakeDatesModern(req, result.upload)
             createdHTML += yt2009_templates.playnavVideo(
@@ -4830,6 +4856,17 @@ app.post("/homepage_subscriptions", (req, res) => {
     if(req.headers.format && req.headers.format == "subpage") {
         subpage = true;
     }
+
+    // skip local fetch entirely when using pchelper
+    if(mobileHelper.hasLogin(req)) {
+        mobileHelper.getSubscriptionVideos(req, (vids) => {
+            presentVids({
+                "source": "mobilehelper",
+                "videoSource": vids
+            })
+        })
+        return;
+    }
     
     // create a full list of channels
     function sc(c) {
@@ -4905,20 +4942,27 @@ app.post("/homepage_subscriptions", (req, res) => {
     })
 
     // sort and send
-    function presentVids() {
-        if(!subpage) {
-            combinedVideos = combinedVideos.sort(
-                (a, b) => b.uploadUnix - a.uploadUnix
-            ).slice(0, 8)
-        } else {
-            combinedVideos = combinedVideos.sort(
-                (a, b) => b.uploadUnix - a.uploadUnix
-            ).slice(0, 25)
+    function presentVids(altData) {
+        if(!altData || altData.source !== "mobilehelper") {
+            if(!subpage) {
+                combinedVideos = combinedVideos.sort(
+                    (a, b) => b.uploadUnix - a.uploadUnix
+                ).slice(0, 8)
+            } else {
+                combinedVideos = combinedVideos.sort(
+                    (a, b) => b.uploadUnix - a.uploadUnix
+                ).slice(0, 25)
+            }
         }
-
+        
         let finishHTML = ""
         let i = 0;
-        combinedVideos.forEach(v => {
+
+        let vids = (altData && altData.videoSource)
+                 ? altData.videoSource
+                 : combinedVideos
+
+        vids.forEach(v => {
             let tv = JSON.parse(JSON.stringify(v))
             if(req.headers.cookie
             && req.headers.cookie.includes("fake_dates")) {
@@ -6617,6 +6661,10 @@ app.get("/sabr_playback", (req, res) => {
         res.sendStatus(400)
         return;
     }
+    let usesCustomXtags = (
+        req.headers.cookie
+     && req.headers.cookie.includes("exp_sabr_audiotracks")
+    )
     let offset = 0;
     if(req.query.offset && !isNaN(parseInt(req.query.offset))) {
         offset = parseInt(req.query.offset)
@@ -6634,13 +6682,30 @@ app.get("/sabr_playback", (req, res) => {
         let partCount = 0;
         let resp = Buffer.from("SABER-START///")
         for(let part in result) {
-            let header = `//SPART-"${part}"-CL=${result[part].length}//`
-            resp = Buffer.concat([
-                resp,
-                Buffer.from(header),
-                result[part]
-            ])
-            partCount++
+            switch(part) {
+                case "xtags": {
+                    if(usesCustomXtags) {
+                        res.set("x-yt2009-xtags", result[part])
+                    }
+                    break;
+                }
+                case "usedXtag": {
+                    if(usesCustomXtags) {
+                        res.set("x-yt2009-used-xtag", result[part])
+                    }
+                    break;
+                }
+                default: {
+                    let header = `//SPART-"${part}"-CL=${result[part].length}//`
+                    resp = Buffer.concat([
+                        resp,
+                        Buffer.from(header),
+                        result[part]
+                    ])
+                    partCount++
+                    break;
+                }
+            }
         }
         res.set(
             "x-part-count",

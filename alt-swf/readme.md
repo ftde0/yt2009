@@ -15,6 +15,7 @@ modules found under `/modules/` have their original file names, just with the pl
 |e2006.swf|[player2.swf](http://web.archive.org/web/20060706195428oe_/http://youtube.com:80/player2.swf)|an early-mid 2006 player.
 |cpb.swf|[cpb-vflzG1o7y.swf](http://web.archive.org/web/20101222144444oe_/s.ytimg.com/yt/swfbin/cpb-vflzG1o7y.swf)|embedded playlist player linked by the playlist view page. (when patching, also change the gdata base url!!)
 |cps.swf|[cps-vfl_gIfdw.swf](http://web.archive.org/web/20120427131527oe_/http://s.ytimg.com/yt/swfbin/cps-vfl_gIfdw.swf)|player with built-in search. used as a fallback in some years. (also change gdata base url!)
+|mp.swf|[mp-vfl146722.swf](web.archive.org/web/20100327054256oe_/http://s.ytimg.com/yt/m/mobile/swf/mp-vfl146722.swf)|mobile player for flash enabled phones
 ---
 ## bonus: find your own!
 

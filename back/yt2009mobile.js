@@ -135,6 +135,39 @@ module.exports = {
             code = code.replace(`yt2009_upload`, data.upload)
             code = code.replace(`yt2009_thumbnail`, `http://i.ytimg.com/vi/${data.id}/hqdefault.jpg`)
 
+            // flash players
+            if(req.headers.cookie
+            && (req.headers.cookie.includes("http_flash_flv")
+            || req.headers.cookie.includes("http_flash_mp4"))) {
+                let flashId = id;
+                if(req.headers.cookie.includes("http_flash_mp4")) {
+                    flashId += "/mp4"
+                }
+                code = code.replace(
+                    `<!--yt2009_flash-->`,
+                    `<div style="text-align:center;">` +
+                    templates.flashObject(
+                        [`http://${config.ip}:${config.port}/alt-swf/mp.swf`,
+                        `?base_yt_url=${encodeURIComponent(
+                            `http://${config.ip}:${config.port}`
+                        )}`,
+                        `&onFlashError=ytm.onFlashError&allowseekahead=1`,
+                        `&controlssize=10`,
+                        `&videoId=${flashId}`
+                        ].join(""),
+                        330, 278
+                    ) + `</div>`
+                )
+                code = code.replace(
+                    ` id="yt2009-watch-video-link"`,
+                    ` id="yt2009-watch-video-link" style="visibility:hidden;"`
+                )
+                code = code.replace(
+                    ` id="yt2009-video-thumbnail"`,
+                    ` id="yt2009-video-thumbnail" style="display:none;"`
+                )
+            }
+
             // related
             let relatedHTML = ``
             let relatedIndex = 0;
@@ -173,7 +206,6 @@ module.exports = {
     
                 res.send(code)
             }
-            
         }, req.headers["user-agent"], utils.get_used_token(req), false)
     },
 
@@ -426,7 +458,9 @@ module.exports = {
             "http_mp4_144": "/mp4_144?v=" + id,
             "http_3gp": "/http_3gp?v=" + id,
             "http_wmv": "/http_wmv?v=" + id,
-            "http_xvid": "/http_xvid?v=" + id
+            "http_xvid": "/http_xvid?v=" + id,
+            "http_flash_flv": "/mobile/watch?v=" + id,
+            "http_flash_mp4": "/mobile/watch?v=" + id
         }
 
         if(linkLookup[playback]) {

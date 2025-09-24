@@ -565,8 +565,10 @@ module.exports = {
             </div>
         </div>`
     },
-    "flashObject": function(url) {
-        return `<object width="640" height="385" class="fl flash-video" id="watch-player-div"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" id="movie_player" allowscriptaccess="always" allowfullscreen="true" width="640" height="385" class="fl"></embed></object>`
+    "flashObject": function(url, width, height) {
+        let w = width || 640
+        let h = height || 385 
+        return `<object width="${w}" height="${h}" class="fl flash-video" id="watch-player-div"><param name="movie" value="${url}"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="${url}" type="application/x-shockwave-flash" id="movie_player" allowscriptaccess="always" allowfullscreen="true" width="${w}" height="${h}" class="fl"></embed></object>`
     },
     "html5Embed": function(id, elementId, disableAutoplay) {
         return `<iframe id="${elementId}" allowfullscreen src="/embed/${id}${disableAutoplay ? "?autoplay=0" : ""}"></iframe>`
@@ -925,7 +927,7 @@ module.exports = {
             </div>
             <div style="float: left; width: 120px;">
                 <a href="/watch?v=${video.id}" class="video-thumb"><img src="${video.thumbnail}"/></a>
-                <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
+                <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c; word-break: break-word;">${video.title}</a>
                 <div class="video-stats">
                     <div class="video-stat"><span class="stat-upload">${video.upload ? `Added: ${uploadDate}` : ""}</span></div>
                     ${viewCount ? `<div class="video-stat"><span class="stat-views">Views: ${viewCount}</span></div>` : ""}
@@ -1775,7 +1777,7 @@ module.exports = {
             "time_created_text": ""
         }
     },
-    "banner": function(url) {return `<div id="user_banner" class="profile-banner-box"><img src="${url}" class="" width="960" height="150"></div>`},
+    "banner": function(url) {return `<div id="user_banner" class="profile-banner-box"><img src="${url}" onerror="document.getElementById('user_banner').style.display = 'none'" class="" width="960" height="150"></div>`},
     "watchBanner": function(link, img) {
     return `<div id="watch-channel-brand-cap">
         <a href="${link}"><img src="${img}" onerror="document.getElementById('watch-channel-brand-cap').style.display = 'none';" width="300" height="50" border="0"></a>
@@ -3145,7 +3147,7 @@ term='channel'/>
             }
             if(a.selected) {
                 selectedName = a.name;
-                selectedHandle = a.handle.replace("@", "");
+                selectedHandle = (a.handle ? a.handle : "").replace("@", "");
             }
             let avatar = "/assets/site-assets/default.png"
             if(a.avatar && require("fs").existsSync(".." + a.avatar)) {
@@ -3676,5 +3678,57 @@ term='channel'/>
 
     "replyHoldReplyCode": function(continuation, commentId) {
         return `<a href="javascript:void(0)" onclick="loadReplies('${continuation}', this, '${commentId}');return false;" class="watch-replies-show-link">» lang_watch_replies_more</a>`
+    },
+
+    "playnavContMore": function(continuation) {
+        return `<div class="playnav-more" id="playnav-more-continuation"><a class="channel-cmd" href="#" onclick="playnav_more('${continuation}')">lang_playnav_more</a></div>`
+    },
+
+    "clientsideRydScript": `
+    var fullRating = 0;
+    var cdr;
+    if (window.XMLHttpRequest) {
+        cdr = new XMLHttpRequest()
+    } else {
+        cdr = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    var id = location.href.split("v=")[1].split("&")[0].split("#")[0]
+    cdr.open("GET", "/ryd_request?r=" + Math.random())
+    cdr.setRequestHeader("source", location.href)
+    cdr.send(null)
+    cdr.onreadystatechange = function(e) {
+        if(cdr.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            document.getElementById("ratingMessage").className = ""
+            var rating = cdr.responseText;
+            var btn = document.getElementById("ratingStars")
+                              .getElementsByTagName("button")[0];
+            btn.className = "yt2009-stars master-sprite ratingL ratingL-" + rating;
+            btn.setAttribute("title", rating)
+        }
+    }
+    `,
+
+    "get_video_info_onlyFlash": function(data, req, res) {
+        res.send(`status=ok
+length_seconds=${data.length}
+keywords=${data.tags.join(",").split("&").join("")}
+vq=None
+muted=0
+avg_rating=5.0
+thumbnail_url=${
+    encodeURIComponent(
+        `${req.protocol}://i.ytimg.com/vi/${req.query.video_id}/hqdefault.jpg`
+    )
+}
+allow_ratings=1
+hl=en
+ftoken=
+allow_embed=1
+token=amogus_flash_only
+plid=amogus_flash_only
+track_embed=0
+author=${data.author_name.split("&").join("")}
+title=${data.title.split("&").join("")}
+video_id=${req.query.video_id}`.split("\n").join("&"))
     }
 }

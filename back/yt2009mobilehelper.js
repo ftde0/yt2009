@@ -220,6 +220,8 @@ module.exports = {
                 if(!dataSent && req.headers.mode == "pchelper") {
                     const joinedMsg = [
                         "timed out waiting for your accounts.",
+                        "make sure you have at least 1 youtube channel",
+                        "added to this account. if so,",
                         "try refreshing this page. if it doesn't work,",
                         "try removing your pchelper_user cookie",
                         "and readding your account."
@@ -368,45 +370,99 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         catch(error){console.log(error)}
                     })
 
+                    let videoList = vl.slice(0, targetVids)
 
-                    vl.slice(0, targetVids).forEach(v => {
-                        if(!v.shortBylineText || !v.lengthText
-                        || !v.viewCountText) return;
-                        let a = v.shortBylineText.runs[0]
-                        let handle = false;
+                    function applyData() {
+                        videoList.forEach(v => {
+                            if(!v.shortBylineText || !v.lengthText
+                            || !v.viewCountText) return;
+                            let a = v.shortBylineText.runs[0]
+                            let handle = false;
 
-                        try {
-                            let c = a.navigationEndpoint.browseEndpoint
-                                     .canonicalBaseUrl;
-                            if(c.startsWith("/@")) {
-                                handle = c.split("/@")[1];
+                            try {
+                                let c = a.navigationEndpoint.browseEndpoint
+                                        .canonicalBaseUrl;
+                                if(c.startsWith("/@")) {
+                                    handle = c.split("/@")[1];
+                                }
+                            }
+                            catch(error){}
+
+                            if(handle) {
+                                a = handle;
+                            } else {
+                                a = utils.asciify(a.text)
+                            }
+
+                            try {
+                                let title = v.originalTitle
+                                         || v.title.runs[0].text
+                                rt += templates.gdata_feedVideo(
+                                    v.videoId, title, a,
+                                    utils.bareCount(v.viewCountText.runs[0].text),
+                                    utils.time_to_seconds(
+                                        v.lengthText.runs[0].text
+                                    ),
+                                    "-", utils.relativeToAbsoluteApprox(
+                                        v.publishedTimeText.runs[0].text
+                                    ), "-", "-", mobileflags.get_flags(req).watch
+                                )
+                                //console.log("successfully added video " + v.videoId)
+                            }
+                            catch(error){}
+                        })
+
+                        rt += templates.gdata_feedEnd;
+                        res.set("content-type", "application/xml")
+                        res.send(rt)
+                    }
+
+                    if(config.data_api_key) {
+                        function applyOriginalData(apid) {
+                            for(let id in apid) {
+                                let videoData = apid[id]
+                                let rel = videoList.filter(s => {
+                                    return s.videoId == id
+                                })[0]
+                                let i = videoList.indexOf(rel)
+                                if(i !== null && i !== undefined && i >= 0) {
+                                    videoList[i].originalTitle = videoData.title
+                                    videoList[i].dataApi = true;
+                                }
                             }
                         }
-                        catch(error){}
 
-                        if(handle) {
-                            a = handle;
-                        } else {
-                            a = utils.asciify(a.text)
+                        let videoIds = []
+                        let requestedParts = ["title"]
+
+                        let fetchesRequired = 1;
+                        let fetchesDone = 0;
+
+                        videoList.forEach(v => {videoIds.push(v.videoId)})
+                        
+                        if(videoIds.length > 50) {
+                            let vl2 = videoIds.slice(50)
+                            fetchesRequired = 2;
+                            videoIds = videoIds.slice(0,50);
+                            utils.dataApiBulk(vl2, requestedParts, (apid) => {
+                                applyOriginalData(apid)
+                                fetchesDone++
+                                if(fetchesDone >= fetchesRequired) {
+                                    applyData()
+                                }
+                            })
                         }
 
-                        try {
-                            rt += templates.gdata_feedVideo(
-                                v.videoId, v.title.runs[0].text, a,
-                                utils.bareCount(v.viewCountText.runs[0].text),
-                                utils.time_to_seconds(v.lengthText.runs[0].text),
-                                "-", utils.relativeToAbsoluteApprox(
-                                    v.publishedTimeText.runs[0].text
-                                ), "-", "-", mobileflags.get_flags(req).watch
-                            )
-                            //console.log("successfully added video " + v.videoId)
-                        }
-                        catch(error){}
-                    })
-
-                    rt += templates.gdata_feedEnd;
-                    res.set("content-type", "application/xml")
-                    res.send(rt)
+                        utils.dataApiBulk(videoIds, requestedParts, (apid) => {
+                            applyOriginalData(apid)
+                            fetchesDone++
+                            if(fetchesDone >= fetchesRequired) {
+                                applyData()
+                            }
+                        })
+                    } else {
+                        applyData()
+                    }
                 })})
             })
         } else {
@@ -707,7 +763,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         fetchesRequired++
 
                         let videoIds = []
-                        let requestedParts = ["viewCount", "publishedAt"]
+                        let requestedParts = ["viewCount", "publishedAt", "title"]
 
                         videos.forEach(v => {videoIds.push(v.id)})
 
@@ -721,6 +777,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                                 if(i !== null && i !== undefined && i >= 0) {
                                     videos[i].upload = videoData.publishedAt
                                     videos[i].views = videoData.viewCount
+                                    videos[i].title = videoData.title
                                     videos[i].dataApi = true;
                                 }
                             }
@@ -2668,7 +2725,65 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 }, 250)
             })
         })
-    }
+    },
+
+    "getSubscriptionVideos": function(req, callback) {
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            callback([])
+            return;
+        }
+
+        setupYouTube(device, (h) => {
+            fetch("https://www.youtube.com/youtubei/v1/browse", {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "browseId": "FEsubscriptions"
+                })
+            }).then(r => {r.json().then(r => {
+                let vids = []
+                try {
+                    let a = r.contents.singleColumnBrowseResultsRenderer
+                             .tabs[0].tabRenderer.content
+                             .sectionListRenderer.contents
+                    a.forEach(b => {
+                        try {
+                            b = b.shelfRenderer.content.verticalListRenderer
+                                 .items
+                            b.forEach(c => {
+                                c = c.compactVideoRenderer //<3
+                                let authorId = c.shortBylineText.runs[0]
+                                                .navigationEndpoint
+                                                .browseEndpoint.browseId
+                                let upload = c.publishedTimeText.runs[0].text
+                                upload = upload.replace("Streamed ", "")
+                                               .replace("Premiered ", "")
+                                vids.push({
+                                    "id": c.videoId,
+                                    "author_name": c.shortBylineText
+                                                    .runs[0].text,
+                                    "title": c.title.runs[0].text,
+                                    "length": c.lengthText.runs[0].text,
+                                    "upload": upload,
+                                    "views": c.viewCountText.runs[0].text,
+                                    "author_url": "/channel/" + authorId,
+                                    "o": true
+                                })
+                            })
+                        }
+                        catch(error) {}
+                    })
+                }
+                catch(error) {
+                    console.log("failed to pull vid list!", error)
+                }
+
+                callback(vids)
+            })})
+        }, req)
+    },
 }
 
 function pullFirstGoogleAuth(email, token, callback) {

@@ -243,31 +243,33 @@ if(location.href.indexOf("watch") !== -1) {
                 "video=" + currentId
             ].join("&")
             r.send(params)
-            r.addEventListener("load", function(e) {
-                if(r.status == 200) {
-                    var id = r.responseText;
+            r.onreadystatechange = function(e) {
+                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                    if(r.status == 200) {
+                        var id = r.responseText;
 
-                    // write cookie and index
-                    var cookies = document.cookie.split(";")
-                    var cookieIndex = false;
-                    for(var c in cookies) {
-                        if(cookies[c].indexOf("playlist_index=") !== -1) {
-                            cookieIndex = trimLeft(cookies[c]).replace(
-                                "playlist_index=", ""
-                            )
+                        // write cookie and index
+                        var cookies = document.cookie.split(";")
+                        var cookieIndex = false;
+                        for(var c in cookies) {
+                            if(cookies[c].indexOf("playlist_index=") !== -1) {
+                                cookieIndex = trimLeft(cookies[c]).replace(
+                                    "playlist_index=", ""
+                                )
+                            }
                         }
+
+                        cookieIndex = encodeURIComponent(name + ";" + id)
+                                    + ":" + cookieIndex
+                        document.cookie = "playlist_index=" + cookieIndex
+                                        + "; Path=/"
+                                        + "; expires=Fri, 31 Dec 2066 23:59:59 GMT";
+
+                        $("#addToPlaylistResult").style.display = "block"
+                        $("#addToPlaylistDiv").style.display = "none"
                     }
-
-                    cookieIndex = encodeURIComponent(name + ";" + id)
-                                + ":" + cookieIndex
-                    document.cookie = "playlist_index=" + cookieIndex
-                                    + "; Path=/"
-                                    + "; expires=Fri, 31 Dec 2066 23:59:59 GMT";
-
-                    $("#addToPlaylistResult").style.display = "block"
-                    $("#addToPlaylistDiv").style.display = "none"
                 }
-            })
+            }
             watchpage_initPlaylistsTab();
             return;
         }
@@ -948,25 +950,6 @@ function showStars(rating, source) {
         ratingText.innerHTML = ratingTexts[rating - 1]
     } else {
         ratingText.innerHTML = defaultRatingText
-    }
-}
-
-// fastload: refetch comments
-function commandComments() {
-    var r;
-    if (window.XMLHttpRequest) {
-        r = new XMLHttpRequest()
-    } else {
-        r = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    var r = new XMLHttpRequest();
-    var id = location.href.split("v=")[1].split("&")[0].split("#")[0]
-    r.open("GET", "/fastload_initial_comments?id=" + id)
-    r.send(null)
-    r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
-            $(".comments-container").innerHTML += r.responseText
-        }
     }
 }
 
@@ -2074,6 +2057,30 @@ function playnav_sort(sortMode) {
     }
 }
 
+// playnav more
+function playnav_more(continuation) {
+    var d = document.getElementById("playnav-more-continuation")
+    d.parentNode.removeChild(d)
+
+    $("#playnav-play-loading").style.display = "block"
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/channel_sort?rt=" + Date.now())
+    r.setRequestHeader("source", location.pathname)
+    r.setRequestHeader("continuation", continuation)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            $("#playnav-play-loading").style.display = "none"
+            $(".uploads-filtered").innerHTML += r.responseText
+        }
+    }
+}
+
 // playnav playlists for adding into
 var playnavPlaylistsFirstInit = false;
 
@@ -2103,31 +2110,33 @@ function createPlaynavPlaylists() {
                     "video=" + currentVideo
                 ].join("&")
                 r.send(params)
-                r.addEventListener("load", function(e) {
-                    if(r.status == 200) {
-                        var id = r.responseText;
+                r.onreadystatechange = function(e) {
+                    if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                        if(r.status == 200) {
+                            var id = r.responseText;
 
-                        // write cookie and index
-                        var cookies = document.cookie.split(";")
-                        var cookieIndex = false;
-                        for(var c in cookies) {
-                            if(cookies[c].indexOf("playlist_index=") !== -1) {
-                                cookieIndex = trimLeft(cookies[c]).replace(
-                                    "playlist_index=", ""
-                                )
+                            // write cookie and index
+                            var cookies = document.cookie.split(";")
+                            var cookieIndex = false;
+                            for(var c in cookies) {
+                                if(cookies[c].indexOf("playlist_index=") !== -1) {
+                                    cookieIndex = trimLeft(cookies[c]).replace(
+                                        "playlist_index=", ""
+                                    )
+                                }
                             }
+
+                            cookieIndex = encodeURIComponent(name + ";" + id)
+                                        + ":" + cookieIndex
+                            document.cookie = "playlist_index=" + cookieIndex
+                                            + "; Path=/"
+                                            + "; expires=Fri, 31 Dec 2066 23:59:59 GMT";
+
+                            $("#addToPlaylistResult").style.display = "block"
+                            $("#addToPlaylistDiv").style.display = "none"
                         }
-
-                        cookieIndex = encodeURIComponent(name + ";" + id)
-                                    + ":" + cookieIndex
-                        document.cookie = "playlist_index=" + cookieIndex
-                                        + "; Path=/"
-                                        + "; expires=Fri, 31 Dec 2066 23:59:59 GMT";
-
-                        $("#addToPlaylistResult").style.display = "block"
-                        $("#addToPlaylistDiv").style.display = "none"
                     }
-                })
+                }
                 return;
             }
             var newId = playlistCreate();
@@ -2204,15 +2213,21 @@ if((location.href.indexOf("/watch") !== -1
 
     // add css and setup player
     if(navigator.userAgent.indexOf("MSIE") == -1) {
-        var r = new XMLHttpRequest()
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
         r.open("GET", "/assets/site-assets/apr1.css")
         r.send(null)
-        r.addEventListener("load", function(e) {
-            var style = document.createElement("style")
-            style.innerHTML = r.responseText;
-            document.body.appendChild(style)
-        }, false)
-
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                var style = document.createElement("style")
+                style.innerHTML = r.responseText;
+                document.body.appendChild(style)
+            }
+        }
 
         var playerPath = document.getElementsByTagName("embed")[0].getAttribute("src")
         document.querySelector(".flash-video").innerHTML = '\

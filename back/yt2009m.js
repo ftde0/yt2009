@@ -1498,6 +1498,7 @@ function generateBrowseData(browseId, params, canonicalBaseUrl, p) {
     return n;
 }
 function generateVideo(id, title, authorName, authorId, authorAvatar, publishedTime, views, time, p) {
+    if(!id) return;
     let video = new p.compactVideoRenderer()
     video.setVideoid(id)
 

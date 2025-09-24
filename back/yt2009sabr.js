@@ -122,15 +122,38 @@ module.exports = {
                 return b.totalbitrate - a.totalbitrate
             })
 
+            if(!audioFmts[0]) {
+                console.log(`couldn't find suitable audio?`)
+                callback(false)
+                return;
+            }
+
+            // list all itags to user
+            let usedItag = audioFmts[0].formatid;
+            let at = audioFmts.filter(s => {
+                return s.formatid == usedItag
+            })
+            let xtagList = []
+            at.forEach(z => {
+                if(z.xtags && z.audioTrack && z.audioTrack.label) {
+                    xtagList.push([z.audioTrack.label, z.xtags].join())
+                }
+            })
+
+
             // cant filter isOriginal on the initial filter wtf??
             let hasAudiotracks = audioFmts.filter(s => {
                 return s.isOriginal !== null && s.isOriginal !== undefined
             }).length
-            let originalAudiotrack = audioFmts.filter(s => {
-                return s.isOriginal
+            let usedAudiotrack = audioFmts.filter(s => {
+                return (
+                    req.query && req.query.xtags
+                    ? s.xtags == req.query.xtags
+                    : s.isOriginal
+                )
             })
-            if(hasAudiotracks >= 1 && originalAudiotrack.length >= 1) {
-                audioFmts = [originalAudiotrack[0]]
+            if(hasAudiotracks >= 1 && usedAudiotrack.length >= 1) {
+                audioFmts = [usedAudiotrack[0]]
             }
 
             //console.log(audioFmts)
@@ -177,7 +200,6 @@ module.exports = {
                     },
                     "body": protoReq
                 }).then(r => {r.buffer().then(r => {
-                    //console.log("response: " + r.length)
                     if(r.length < 1000) {
                         console.log(`malformed resp? ${r.toString("base64")}`)
                     }
@@ -187,6 +209,12 @@ module.exports = {
                             console.log("redoing request because redirector?")
                             pull()
                         } else {
+                            if(xtagList.length >= 1) {
+                                data.xtags = xtagList.join(";")
+                            }
+                            if(preferedAudioFmt.xtags) {
+                                data.usedXtag = preferedAudioFmt.xtags
+                            }
                             callback(data)
                         }
                     }, (redir) => {
