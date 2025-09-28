@@ -1608,7 +1608,7 @@ module.exports = {
                 <td colspan="2">
         `
     }, `</td></tr></tbody>`],
-    "listview_video": function(v, index, flags) {
+    "expandview_video": function(v, index, flags) {
         let thumbUrl = utils.getThumbUrl(v.id, flags)
         return `
     <tr id="video-${v.id}" class="video ${index % 2 == 0 ? "even" : "odd"}">
@@ -1625,19 +1625,19 @@ module.exports = {
                         </div>
                     </div>
                     <p id="video-description-${v.id}" class="video-description-expanded"><span>${
-                        v.description.length > 140
+                        (v.description && v.description.length > 140)
                         ? v.description.split("\n")[0].substring(0, 140) + "..."
-                        : v.description
+                        : (v.description || "")
                     }</span></p>
                     <div class="video-stats">
                         <div class="video-stat">
-                            Added: <span class="stat-date-added">${utils.dateFormat(v.upload)}</span>
+                            Added: <span class="stat-date-added">${utils.dateFormat(v.upload || v.publishedAt)}</span>
                         </div>
                         <div class="video-stat">
-                            Time: <span class="stat-duration">${utils.seconds_to_time(v.length)}</span>
+                            Time: <span class="stat-duration">${utils.seconds_to_time(v.length || utils.dataApiDurationSeconds(v.duration))}</span>
                         </div>
                         <div class="video-stat">
-                            Owner: <a href="${v.author_url}" class="stat-username">${utils.asciify(v.author_name)}</a>
+                            Owner: <a href="${v.author_url || `/channel/${v.channelId}`}" class="stat-username">${utils.asciify(v.author_name || v.channelTitle)}</a>
                         </div>
                     </div>
                     <div class="video-stats">
@@ -3316,9 +3316,9 @@ term='channel'/>
         </div>
         <div class="spacer">&nbsp;</div>`
     },
-    "ssr_yt_playlist": function(videos, autogen, proxy) {
+    "ssr_yt_playlist": function(videos, autogen, proxy, customIndex) {
         let html = ""
-        let i = 0;
+        let i = customIndex || 0;
         videos.forEach(v => {
             let thumbUrl = `//i.ytimg.com/vi/${v.id}/${autogen ? "1.jpg" : "default.jpg"}`
             if(proxy) {
@@ -3730,5 +3730,9 @@ track_embed=0
 author=${data.author_name.split("&").join("")}
 title=${data.title.split("&").join("")}
 video_id=${req.query.video_id}`.split("\n").join("&"))
-    }
+    },
+    
+    "disabledCommentsNotice": `<div id="watch-comment-post">
+        <b>lang_watch_comments_disabled_notice</b>
+    </div>`
 }

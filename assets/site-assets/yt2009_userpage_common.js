@@ -69,6 +69,16 @@ function viewingHistoryClear() {
 
 // browse subscribed channels
 function switchChannel(element) {
+    // temporarily switch to grid for fetching
+    var usingOtherView = false;
+    if(getCurrentView() !== "grid") {
+        try {
+            usingOtherView = getCurrentView()
+            document.querySelector("#view-toggle .grid").click()
+        }
+        catch(error){}
+    }
+
     var url = element.getAttribute("data-url")
     var username = element.querySelector(".name").innerHTML
 
@@ -100,6 +110,20 @@ function switchChannel(element) {
         videos_element.innerHTML = r.responseText
 
         document.querySelector(".yt2009-sub-header").innerHTML = "<div class=\"pager\"></div><a href=\"" + url + "\"><h2>" + username + "</h2></a>"
+
+        // otherview adapt
+        setTimeout(function() {
+            switch(usingOtherView) {
+                case "expand": {
+                    document.querySelector("#view-toggle .expand").click()
+                    break;
+                }
+                case "list": {
+                    document.querySelector("#view-toggle .list").click()
+                    break;
+                }
+            }
+        }, 250)
     }, false)
 }
 
@@ -360,6 +384,9 @@ function playlists_handle() {
         document.querySelector(".subfolder").className = "subfolder selected"
         show_playlist_localstorage(document.querySelector(".subfolder"))
     }
+
+    // list/grid switchr
+    playlistsViewSwitchrs()
 }
 
 // switch playlist
@@ -367,6 +394,14 @@ function show_playlist_localstorage(playlist) {
     // show .selected
     document.querySelector(".subfolder.selected").className = "subfolder"
     playlist.className = "subfolder selected"
+
+    // temp switch to listview for fetch
+    var switchToGrid = false;
+    if(getCurrentView() == "grid") {
+        switchToGrid = true;
+        document.querySelector("#list-view tbody").innerHTML = ""
+        document.querySelector(".list").click()
+    }
 
     // render videos
     var playlistId = playlist.getAttribute("data-id")
@@ -466,6 +501,12 @@ function show_playlist_localstorage(playlist) {
         })
 
         document.querySelector(".yt2009-videos-insert").innerHTML = playlistVideosHTML
+
+        if(switchToGrid) {
+            setTimeout(function() {
+                document.querySelector(".grid").click()
+            }, 100)
+        }
     }
 }
 
@@ -604,7 +645,7 @@ function removeSelectedFromQuicklist() {
                 videoIds.push(s[e].querySelector(".checkbox").value)
             }
         }
-        catch(error) {console.log(error)}
+        catch(error) {}
     }
 
     // remove em
@@ -625,10 +666,25 @@ function removeSelectedFromQuicklist() {
 if(document.querySelector("#view-toggle .expand")) {
     document.querySelector("#view-toggle .expand")
             .addEventListener("click", function() {
-        var currentPage = document.querySelector(".videos-page:not(.hid)")
-        var pageIndex = currentPage.className
-                        .split("videos-page-")[1]
-                        .split(" ")[0]
+        var currentPage;
+        var pageIndex = 0;
+        try {
+            currentPage = document.querySelector(".videos-page:not(.hid)")
+            pageIndex = currentPage.className
+                            .split("videos-page-")[1]
+                            .split(" ")[0]
+        }
+        catch(error) {
+            try {
+                currentPage = document.querySelector("#videos")
+                if(document.querySelector("#expand-view tbody")) {
+                    document.querySelector("#expand-view table").removeChild(
+                        document.querySelector("#expand-view tbody")
+                    )
+                }
+            }
+            catch(e) {}
+        }
         // create expand view container if needed
         if(!document.querySelector("#expand-view")) {
             var e = document.createElement("div")
@@ -675,6 +731,10 @@ if(document.querySelector("#view-toggle .expand")) {
 
         // hide other view(s)
         document.querySelector("#grid-view").className += " hid"
+        if(document.querySelector("#list-view")
+        && document.querySelector("#list-view").className.indexOf(" hid") == -1) {
+            document.querySelector("#list-view").className += " hid"
+        }
         var expand = document.querySelector("#expand-view")
         expand.className = expand.className.split("hid").join("")
         document.querySelector("#view-toggle .expand")
@@ -688,18 +748,31 @@ if(document.querySelector("#view-toggle .expand")) {
         var videos = nlToArray(currentPage.querySelectorAll(".video"))
         var videoIds = ""
         videos.forEach(function(v) {
-            videoIds += v.querySelector(".title").href.split("?v=")[1] + ","
+            if(v.querySelector(".title")) {
+                videoIds += v.querySelector(".title").href.split("?v=")[1] + ","
+            } else if(v.querySelector(".video-title")) {
+                videoIds += v.querySelector(".video-title").href.split("?v=")[1] + ","
+            }
         })
 
         // request expand view html for selected page
         var r = new XMLHttpRequest();
-        r.open("GET", "/userpage_expand_view")
+        r.open("GET", "/userpage_view?r=" + Math.random())
         r.setRequestHeader("videos", videoIds)
+        r.setRequestHeader("view", "expand")
         r.send(null)
         r.addEventListener("load", function(e) {
-            document.querySelector(
+            var page = document.querySelector(
                 "#expand-view .videos-page-" + pageIndex
-            ).innerHTML = r.responseText
+            )
+            if(page) {
+                page.innerHTML = r.responseText
+            } else {
+                document.querySelector("#expand-view table").innerHTML = ""
+                var vdata = document.createElement("tbody")
+                vdata.innerHTML = r.responseText
+                document.querySelector("#expand-view table").appendChild(vdata)
+            }
         }, false)
     }, false)
 }
@@ -715,13 +788,108 @@ function expandViewFetchPage(page) {
     })
     if(!page.querySelector(".video")) {
         var r = new XMLHttpRequest();
-        r.open("GET", "/userpage_expand_view")
+        r.open("GET", "/userpage_view?r=" + Math.random())
         r.setRequestHeader("videos", videoIds)
+        r.setRequestHeader("view", "expand")
         r.send(null)
         r.addEventListener("load", function(e) {
             page.innerHTML = r.responseText
         }, false)
     }
+}
+
+// list view if available (unpaged only)
+if(document.querySelector("#view-toggle .list")) {
+    document.querySelector("#view-toggle .list")
+            .addEventListener("click", function() {
+        var currentPage = document.querySelector("#grid-view")
+        var pageIndex = 0;
+        // create expand view container if needed
+        if(!document.querySelector("#list-view")) {
+            var e = document.createElement("div")
+            e.id = "list-view"
+            document.querySelector(".view").appendChild(e)
+
+            // create table as container
+            var table = document.createElement("table")
+            table.id = "table"
+            e.appendChild(table)
+            
+            // create thead and tbody for all pages
+            var thead = document.querySelector("#grid-view thead")
+                                .cloneNode(true)
+            thead.innerHTML = '<tr id="headings"><td id="heading-check" class="first heading"><div><input id="all-items-checkbox" type="checkbox" onclick="if (this.checked == true) { selectAllItems(\'videos\'); } else { deselectAllItems(\'videos\'); };"></div></td><td id="heading-position" class="heading"><div><a href="#">Position</a></div></td><td id="heading-title" class="heading"><div><a href="#">Title</a></div></td><td id="heading-time" class="heading"><div><a href="#">Time</a></div></td><td id="heading-date" class="heading"><div><a href="#">Date Added</a></div></td><td id="heading-views" class="heading"><div><a href="#">Views</a></div></td><td id="heading-rating" class="heading"><div><a href="#">Rating</a></div></td></tr>'
+            table.appendChild(thead)
+
+            var tbody = document.createElement("tbody")
+            tbody.id = "videos"
+            tbody.className = "videos-page videos-page-0"
+            table.appendChild(tbody)
+
+            // tbody tr & td containing videos
+            var tr = document.createElement("tr")
+            tbody.appendChild(tr)
+
+            var td = document.createElement("td")
+            td.setAttribute("colspan", "2")
+            tr.appendChild(td)
+
+            // move footer
+            var footerP = document.querySelector(".view")
+            var footerC = document.querySelector(".view .footer").cloneNode(true)
+            footerP.appendChild(footerC)
+            footerP.removeChild(footerP.querySelector(".footer"))
+        }
+
+        // hide other view(s)
+        document.querySelector("#grid-view").className += " hid"
+        if(document.querySelector("#expand-view")
+        && document.querySelector("#expand-view").className.indexOf(" hid") == -1) {
+            document.querySelector("#expand-view").className += " hid"
+        }
+        var list = document.querySelector("#list-view")
+        list.className = list.className.split("hid").join("")
+        document.querySelector("#view-toggle .list")
+                .className = "list-selected"
+        if(document.querySelector(".grid-selected")) {
+            document.querySelector("#view-toggle .grid-selected")
+                    .className = "grid"
+        }
+        if(document.querySelector(".expand-selected")) {
+            document.querySelector("#view-toggle .expand-selected")
+                    .className = "expand"
+        }
+
+        // get videos to be fetched for a page
+        var videos = nlToArray(currentPage.querySelectorAll(".video"))
+        var videoIds = ""
+        videos.forEach(function(v) {
+            if(v.querySelector(".title")) {
+                videoIds += v.querySelector(".title").href.split("?v=")[1] + ","
+            } else if(v.querySelector(".video-title")) {
+                videoIds += v.querySelector(".video-title").href.split("?v=")[1] + ","
+            }
+        })
+
+        // request expand view html for selected page
+        var r = new XMLHttpRequest();
+        r.open("GET", "/userpage_view?r=" + Math.random())
+        r.setRequestHeader("videos", videoIds)
+        r.setRequestHeader("view", "list")
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            var page = document.querySelector(
+                "#list-view .videos-page-" + pageIndex
+            )
+            if(page) {
+                page.innerHTML = r.responseText
+            } else {
+                var vdata = document.createElement("tbody")
+                vdata.innerHTML = r.responseText
+                document.querySelector("#expand-view table").appendChild(vdata)
+            }
+        }, false)
+    }, false)
 }
 
 // switch back to grid view
@@ -732,23 +900,42 @@ if(document.querySelector("#view-toggle .grid-selected")) {
         var currentView = document.querySelector(
             "#expand-view:not(.hid)"
         )
-        var s = currentView.querySelector(".videos-page:not(.hid)")
-        var currentPage = s.className.split("videos-page-")[1].split(" ")[0]
-        // hide the previously open pages on grid-view
-        // show the needed one
-        nlToArray(
-            document.querySelectorAll("#grid-view .videos-page")
-        ).forEach(function(p) {
-            if(p.className.indexOf("hid") !== -1) return;
-            p.className += " hid"
-        })
+        var s;
+        var currentPage;
+        var targetPage;
+        try {
+            s = currentView.querySelector(".videos-page:not(.hid)")
+            currentPage = s.className.split("videos-page-")[1].split(" ")[0]
+            targetPage = document.querySelector(
+                "#grid-view .videos-page-" + currentPage
+            )
+            // hide the previously open pages on grid-view
+            // show the needed one
+            nlToArray(
+                document.querySelectorAll("#grid-view .videos-page")
+            ).forEach(function(p) {
+                if(p.className.indexOf("hid") !== -1) return;
+                p.className += " hid"
+            })
+        }
+        catch(error) {
+            // unpaged view
+            currentPage = currentView
+            targetPage = document.querySelector("#grid-view")
+        }
 
-        var targetPage = document.querySelector(
-            "#grid-view .videos-page-" + currentPage
-        )
-        targetPage.className = targetPage.className.split("hid").join("")
+        if(targetPage) {
+            targetPage.className = targetPage.className.split("hid").join("")
+        }
         // hide other view(s)
-        document.querySelector("#expand-view").className += " hid"
+        if(document.querySelector("#list-view")
+        && document.querySelector("#list-view").className.indexOf(" hid") == -1) {
+            document.querySelector("#list-view").className += " hid"
+        }
+        if(document.querySelector("#expand-view")
+        && document.querySelector("#expand-view").className.indexOf(" hid") == -1) {
+            document.querySelector("#expand-view").className += " hid"
+        }
         document.querySelector("#grid-view").className = ""
         document.querySelector("#view-toggle .grid")
                 .className = "grid-selected"
@@ -756,8 +943,29 @@ if(document.querySelector("#view-toggle .grid-selected")) {
             document.querySelector("#view-toggle .expand-selected")
                     .className = "expand"
         }
+        if(document.querySelector(".list-selected")) {
+            document.querySelector("#view-toggle .list-selected")
+                    .className = "list"
+        }
 
     }, false)
+}
+
+// using with unpaged: get current view
+function getCurrentView() {
+    try {
+        if(document.getElementById("expand-view").className.indexOf("hid") == -1) {
+            return "expand"
+        }
+    }
+    catch(error){}
+    try{
+        if(document.getElementById("list-view").className.indexOf("hid") == -1) {
+            return "list"
+        }
+    }
+    catch(error){}
+    return "grid"
 }
 
 // ql: no videos notice
@@ -772,4 +980,74 @@ function deletePrompt(videoId) {
     if(ans) {
         document.getElementById("video-delete-" + videoId).submit()
     }
+}
+
+function playlistsViewSwitchrs() {
+    var gridBtn = document.querySelector("#view-toggle .grid")
+    gridBtn.addEventListener("click", function() {
+        // switch to grid view
+        if(getCurrentView() == "list") {
+            var completeIds = []
+            var videoIds = document.querySelectorAll("#list-view .video-title")
+            for(var i in videoIds) {
+                try {
+                    completeIds.push(
+                        videoIds[i].getAttribute("href").split("?v=")[1]
+                    )
+                }
+                catch(error) {
+                    // failed == not a video link
+                }
+            }
+            if(!document.querySelector("#grid-view")) {
+                var g = document.createElement("div")
+                g.id = "grid-view"
+                var t = document.createElement("table")
+                t.id = "table"
+                var th = document.createElement("thead")
+                th.innerHTML = '<tr id="headings"><td id="heading-check" class="first heading"><div><input id="all-items-checkbox" type="checkbox" onclick="if (this.checked == true) { selectAllItems(\'videos\'); } else { deselectAllItems(\'videos\'); };"></div></td><td id="heading-filter" class="heading"><div></div></td></tr>'
+                t.appendChild(th)
+                var tb = document.createElement("tbody")
+                tb.id = "videos"
+                var tr = document.createElement("tr")
+                tb.appendChild(tr)
+                t.appendChild(tb)
+                g.appendChild(t)
+                document.querySelector(".view").appendChild(g)
+            }
+
+            document.querySelector(".list-selected").className = "list"
+            gridBtn.className = "grid-selected"
+            document.getElementById("list-view").className += " hid"
+
+            var c = document.getElementById("grid-view")
+            c.className = c.className.split(" hid").join("")
+            document.querySelector("#grid-view tbody").innerHTML = ""
+
+            var trz = document.createElement("tr")
+            var td = document.createElement("td")
+            td.setAttribute("colspan", "2")
+            trz.appendChild(td)
+            document.querySelector("#grid-view tbody").appendChild(trz)
+
+            var r = new XMLHttpRequest();
+            r.open("GET", "/userpage_view?r=" + Math.random())
+            r.setRequestHeader("videos", completeIds.join(","))
+            r.setRequestHeader("view", "grid")
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                td.innerHTML = r.responseText
+            }, false)
+        }
+    }, false)
+    var listBtn = document.querySelector("#view-toggle .list-selected")
+    listBtn.addEventListener("click", function() {
+        // switch to list view
+        if(getCurrentView() == "grid") {
+            gridBtn.className = "grid"
+            listBtn.className = "list-selected"
+            document.getElementById("list-view").className = ""
+            document.getElementById("grid-view").className += " hid"
+        }
+    }, false)
 }

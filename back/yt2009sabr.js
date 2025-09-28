@@ -199,7 +199,10 @@ module.exports = {
                         "user-agent": "com.google.android.youtube/20.06.36 (Linux; U; Android 14) gzip"
                     },
                     "body": protoReq
-                }).then(r => {r.buffer().then(r => {
+                }).catch(e => {
+                    // retry on network error
+                    pull()
+                }).then(r => {if(!r || !r.status) return;r.buffer().then(r => {
                     if(r.length < 1000) {
                         console.log(`malformed resp? ${r.toString("base64")}`)
                     }

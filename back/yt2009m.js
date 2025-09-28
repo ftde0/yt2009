@@ -90,6 +90,7 @@ function pullNewTrending() {
             v = v.videoRenderer;
             if(!v.shortBylineText || !v.shortBylineText.runs) return;
             let byUsername = v.shortBylineText.runs[0].text;
+            if(!v.shortBylineText.runs[0].navigationEndpoint.browseEndpoint) return;
             let byId = v.shortBylineText.runs[0].navigationEndpoint
                         .browseEndpoint.browseId;
             let video = {

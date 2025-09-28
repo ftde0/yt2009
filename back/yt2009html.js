@@ -811,6 +811,13 @@ module.exports = {
                         data.qualities.push(quality.qualityLabel)
                     }
                 })
+
+                // disabled comments
+                if(JSON.stringify(videoData).includes(
+                    "/answer/9706180"
+                )) {
+                    data.commentsDisabled = true;
+                }
                 
                 // save mp4/ogv
 
@@ -1133,6 +1140,14 @@ module.exports = {
             code = code.replace(
                 `//yt2009-unplay`,
                 `showUnrecoverableError("This video is unavailable.")`
+            )
+        }
+
+        // show notice on disabled comments
+        if(data.commentsDisabled) {
+            code = code.replace(
+                `<!--yt2009_relay_comment_form-->`,
+                yt2009templates.disabledCommentsNotice
             )
         }
 

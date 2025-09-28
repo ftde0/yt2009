@@ -57,25 +57,9 @@ module.exports = {
     },
 
     "isValid": function(req, res) {
-        const drops = [
-            "4pm.213236b95b34ff61c95f656337766372/72/seivom/p/lp.ndcsulp.38-1e",
-            "4pm.d50e4f359e592202a63dbc72fe673a98/98/seivom/p/lp.ndcsulp.28-1e",
-            "4pm.ed817d283158b795e0a01c431fb9790f/0f/seivom/p/lp.ndcsulp.77-1e",
-            "4pm.4a680a31b75126be3af6a1f16125f822/22/seivom/p/lp.ndcsulp.28-1e",
-            "4pm.43a7375dc9655834512f7fd1e96064c8/c8/seivom/p/lp.ndcsulp.67-1e",
-            "4pm.758f65644c39058f105e7df647936cca/ca/seivom/p/lp.ndcsulp.02-2e",
-            "4pm.aa4347768cbf811a90d435418da1230d/0d/seivom/p/lp.ndcsulp.38-1e",
-            "4pm.59c94d2a5a45ed9c2b844121bce362fc/fc/seivom/p/lp.ndcsulp.71-2e"
-        ]
         function handleInvalid() {
             if(req.query.gcon) return false;
-            if(Math.random() <= 0.5) { // 0.8?
-                res.sendStatus(403)
-                return;
-            }
-            let d = drops[Math.floor(Math.random() * drops.length)]
-            d = "http://" + (d+"-alpi").split("").reverse().join("")
-            res.redirect(d)
+            res.sendStatus(403)
             return;
         }
 
@@ -88,6 +72,16 @@ module.exports = {
 
         if(complimentary_access.includes(id)) return true;
 
+        // allow apiplayer (XL and mp.swf) as it doesn't function otherwise
+        // (rewrites urls and omits params)
+        if(req.headers.referer
+        && (req.headers.referer.includes("/xl/")
+        || req.headers.referer.includes("/mp.swf"))
+        && req.query.fmt == "5") {
+            return true;
+        }
+
+        // continue
         if(!req.query.sig || !req.query.context || !req.query.expire) {
             handleInvalid()
             return false;

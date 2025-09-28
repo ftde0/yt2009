@@ -226,6 +226,8 @@ module.exports = {
                 playlistArray.forEach(video => {
                     if(!video.playlistVideoRenderer) return;
                     video = video.playlistVideoRenderer
+                    if((video.videoInfo && !video.videoInfo.runs)
+                    || (!video.videoInfo)) return; //skip members-only?
                     videoList.videos.push({
                         "id": video.videoId,
                         "title": video.title.runs[0].text,

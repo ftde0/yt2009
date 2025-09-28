@@ -147,7 +147,7 @@ module.exports = {
                     `<!--yt2009_flash-->`,
                     `<div style="text-align:center;">` +
                     templates.flashObject(
-                        [`http://${config.ip}:${config.port}/alt-swf/mp.swf`,
+                        [`/alt-swf/mp.swf`,
                         `?base_yt_url=${encodeURIComponent(
                             `http://${config.ip}:${config.port}`
                         )}`,
@@ -257,6 +257,21 @@ module.exports = {
                 )
             }
         })
+
+        if(req.originalUrl.split("/")[1]) {
+            // url override playback method for http
+            // (compatibility with cookieless)
+            let method = req.originalUrl.split("/")[1]
+                            .split("?")[0].split("#")[0]
+            switch(method) {
+                case "http_3gp":
+                case "http_wmv":
+                case "mp4_144":
+                case "http_xvid": {
+                    playback = method;
+                }
+            }
+        }
         
         let taskLookup = {
             "rtsp_mp4": [ffmpeg_process_144, "rtsp", "id-144.mp4"],

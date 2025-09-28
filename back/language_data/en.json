@@ -124,6 +124,7 @@
     "footer_worldwide": "Worldwide",
     "footer_langname": "English",
     "footer_2009flags": "yt2009 settings",
+    "footer_gh_sponsor": "support yt2009 development ♥",
     "playnav_all": "All",
     "playnav_videos": "Uploads",
     "playnav_livevids": "Live",
@@ -326,5 +327,6 @@
     "watch_replies_single": "View 1 reply",
     "watch_replies_plural_prefix": "View ",
     "watch_replies_plural_suffix": " replies",
-    "watch_replies_more": "More replies"
+    "watch_replies_more": "More replies",
+    "watch_comments_disabled_notice": "Adding comments has been disabled for this video."
 }

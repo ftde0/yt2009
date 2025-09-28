@@ -2329,6 +2329,12 @@ module.exports = {
                     }
                     break;
                 }
+                case "duration": {
+                    if(!requestedParts.includes("contentDetails")) {
+                        requestedParts.push("contentDetails")
+                    }
+                    break;
+                }
             }
         })
 
@@ -2346,6 +2352,7 @@ module.exports = {
             "method": "GET"
         }).then(r => {try {r.json().then(r => {
             if(!r.error && r.items) {
+                let index = 0;
                 r.items.forEach(item => {
                     let neededData = {}
                     requestedData.forEach(property => {
@@ -2353,9 +2360,13 @@ module.exports = {
                             neededData[property] = item.snippet[property]
                         } else if(item.statistics && item.statistics[property]) {
                             neededData[property] = item.statistics[property]
+                        } else if(item.contentDetails && item.contentDetails[property]) {
+                            neededData[property] = item.contentDetails[property]
                         }
                     })
+                    neededData.index = index;
                     results[item.id] = neededData
+                    index++
                 })
 
                 callback(results)
@@ -2517,6 +2528,37 @@ module.exports = {
             major = 10;
         }
         return (major < 10)
+    },
+
+    "dataApiDurationSeconds": function(time) {
+        if(!time) return 0;
+        let at = 0;
+        if(time.includes("PT")) {
+            time = time.split("PT")[1]
+        }
+        if(time.includes("S")) {
+            let s = time.split("S")[0]
+            if(time.includes("M")) {
+                s = time.split("M")[1]
+            } else if(time.includes("H")) {
+                s = time.split("H")[1]
+            }
+            s = parseInt(s)
+            at += s;
+        }
+        if(time.includes("M")) {
+            let m = time.split("M")[0]
+            if(time.includes("H")) {
+                m = time.split("H")[1]
+            }
+            m = parseInt(m)
+            at += (m * 60)
+        }
+        if(time.includes("H")) {
+            let hours = parseInt(time.split("H")[0])
+            at += (hours * 3600)
+        }
+        return at;
     }
 }
 

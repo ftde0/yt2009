@@ -58,21 +58,22 @@
 				<form autocomplete="off" class="search-form" action="/results" method="get" name="searchForm">
 					<input id="masthead-search-term" class="search-term" name="search_query" type="text" tabindex="1" value="" maxlength="128">
 					<input id="search-type-masthead" name="search_type" type="hidden" value="">
-					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document['searchForm'].submit()"><span>Search</span></a>
+					<a class="yt-button yt-button-primary" id="" onclick="yt2009_search();"><span>lang_search</span></a>
 				</form>
 			</div>
 			<div id="masthead-utility">
 				<!--yt2009_login_insert-->
 			</div>
 			<div id="masthead-nav-user">
-				<a href="/my_subscriptions?feature=mhw4">Subscriptions</a>
-				<a href="/my_history?feature=mhw4">History</a>
-				<a class="yt-button yt-button-urgent yt-button-short" id="" style="" href="/my_videos_upload?feature=mhw4"><span>Upload</span></a>
+				<a href="/watch_queue" id="quicklist-nav" style="background-color: rgb(255, 255, 255);" class="hid">lang_quicklist (<span id="quicklist-nav-count">?</span>)</a>
+				<a href="/my_subscriptions?masthead=1">lang_subs_btn</a>
+				<a href="/my_history">lang_history_btn</a>
+				<a class="yt-button yt-button-urgent yt-button-short" id="" class href="/my_videos_upload"><span>lang_upload_btn</span></a>
 			</div>
 			<div id="masthead-nav-main">
-				<a href="/">Home</a>
-				<a href="/videos?feature=mhw4">Videos</a>
-				<a href="/channels">Channels</a>
+				<a href="/">lang_home</a>
+				<a href="/videos">lang_videos</a>
+				<a href="/channels">lang_channels</a>
 			</div>
 			<div id="masthead-end"></div>
 		</div>
@@ -87,13 +88,13 @@
 						<h1>
 							<span class="yt-menulink yt-menulink-primary" id="" style="" onmouseenter="this.className += ' yt-menulink-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menulink-primary-hover', '');"><a class="yt-menulink-btn yt-button yt-button-primary" href="/account" onclick="">My Account</a><a class="yt-menulink-arr" href="/account" onclick=""></a>
 								<ul class="yt-menulink-menu">
-									<li><a href="/inbox?folder=messages&amp;action_message=1" onclick="">Inbox</a></li>
-									<li><a href="/my_videos" onclick="">Videos, Favorites, and Playlists</a></li>
-									<li><a href="/my_subscriptions" onclick="">Subscriptions</a></li>
-									<li><a href="/address_book" onclick="">Address Book</a></li>
-									<li><a href="/account" onclick="">Account Settings</a></li>
-									<li><a href="/my_profile" onclick="">My Channel</a></li>
-									<li><a href="/my_videos_insight" onclick="">Insight: Statistics and Data</a></li>
+									<li><a href="/inbox?folder=messages&amp;action_message=1" onclick="">lang_userpage_inbox_entry</a></li>
+									<li><a href="/my_videos" onclick="">lang_userpage_videos_entry</a></li>
+									<li><a href="/my_subscriptions" onclick="">lang_userpage_subs_entry</a></li>
+									<li><a href="/address_book" onclick="">lang_userpage_addressbook_entry</a></li>
+									<li><a href="/account" onclick="">lang_userpage_accsettings_entry</a></li>
+									<li><a href="/my_profile" onclick="">lang_userpage_mychannel_entry</a></li>
+									<li><a href="/my_videos_insight" onclick="">lang_userpage_insight_entry</a></li>
 								</ul>
 							</span>
 							&nbsp;<span class="subSep">/</span>&nbsp;
@@ -284,81 +285,89 @@
 		<div id="footer">
 			<div class="search">
 				<form autocomplete="off" class="search-form" action="/results" method="get" name="footer-search-form">
-					<input id="footer-search-term" class="search-term" name="search_query" type="text">
+					<input id="footer-search-term" class="search-term" name="search_query" type="text" value="" maxlength="128">
 					<input id="search-type-footer" name="search_type" type="hidden" value="">
-					<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="document['footer-search-form'].submit();"><span>Search</span></a>
+					<a class="yt-button yt-button-primary" id="" class href="#"><span>lang_search</span></a>
 				</form>
 			</div>
 			<div class="links">
 				<table cellpadding="0" cellspacing="0">
 					<tr>
-						<th>YouTube</th>
-						<th>Programs</th>
-						<th>Help</th>
-						<th>Policy</th>
-						<th>Discover</th>
+						<th>lang_footer_yt</th>
+						<th>lang_footer_programs</th>
+						<th>lang_footer_help</th>
+						<th>lang_footer_policy</th>
+						<th>lang_footer_discover</th>
 					</tr>
 					<tr>
-						<td><a href="/t/contact_us">Contact Us</a></td>
-						<td><a href="/t/advertising">Advertising</a></td>
-						<td><strong><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US">Get Help</a></strong></td>
-						<td><a href="/t/privacy">Privacy Policy</a></td>
-						<td><a href="/mobile">YouTube on Your Phone</a></td>
+						<td><a href="/t/contact_us">lang_footer_contact</a></td>
+						<td><a href="/t/advertising">lang_footer_advertising</a></td>
+						<td><b><a href="http://www.google.com/support/youtube/bin/static.py?page=start.cs&amp;hl=en-US" target="_blank">lang_footer_ghelp</a></b></td>
+						<td><a href="/t/privacy">lang_footer_privacy</a></td>
+						<td><a href="/mobile">lang_footer_mobile</a></td>
 					</tr>
 					<tr>
-						<td><a href="http://www.googlestore.com/youtube">YouTube Store</a></td>
-						<td><a href="http://code.google.com/apis/youtube/overview.html">Developers</a></td>
-						<td><a href="/t/yt_handbook_home">YouTube Handbook</a></td>
-						<td><a href="/t/terms">Terms of Service</a></td>
-						<td><a href="/youtubeonyoursite">YouTube on Your Site</a></td>
+						<td><a href="http://www.googlestore.com/youtube">lang_footer_store</a></td>
+						<td><a href="http://code.google.com/apis/youtube/overview.html">lang_footer_dev</a>
+						</td>
+						<td><a href="/t/yt_handbook_home">lang_footer_handbook</a>
+						</td>
+						<td><a href="/t/terms">lang_footer_tos</a></td>
+						<td><a href="/youtubeonyoursite">lang_footer_site</a></td>
 					</tr>
 					<tr>
-						<td><a href="/press_room">Press Room</a></td>
-						<td><a href="/partners">Partnerships</a></td>
-						<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">Community Help Forums</a></td>
-						<td><a href="/t/dmca_policy">Copyright Notices</a></td>
-						<td><a href="/youtubeonyourtv">YouTube on Your TV</a></td>
+						<td><a href="/press_room">lang_footer_press</a></td>
+						<td><a href="/partners">lang_footer_partner</a></td>
+						<td><a href="http://www.google.com/support/forum/p/youtube?hl=en">lang_footer_community</a></td>
+						<td><a href="/t/dmca_policy">lang_footer_dmca</a></td>
+						<td><a href="/youtubeonyourtv">lang_footer_tv</a></td>
 					</tr>
 					<tr>
-						<td><a href="http://ytbizblog.blogspot.com/">Business Blog</a></td>
-						<td><a href="/t/content_management">Content Management</a></td>
-						<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">Safety Center</a></td>
-						<td><a href="/t/community_guidelines">Community Guidelines</a></td>
-						<td><a href="/t/rss_feeds">YouTube RSS Feeds</a></td>
+						<td><a href="http://ytbizblog.blogspot.com/">lang_footer_business</a></td>
+						<td><a href="/t/content_management">lang_footer_cm</a></td>
+						<td><a href="http://www.google.com/support/youtube/bin/request.py?contact_type=abuse&amp;hl=en-US">lang_footer_safety</a></td>
+						<td><a href="/t/community_guidelines">lang_footer_guidelines</a></td>
+						<td><a href="/t/rss_feeds">lang_footer_rss</a></td>
 					</tr>
 					<tr>
-						<td><a href="/blog">YouTube Blog</a></td>
+						<td><a href="/blog">lang_footer_blog</a></td>
+						<td><a href="https://github.com/sponsors/ftde0" target="_blank">lang_footer_gh_sponsor</a></td>
+						<td><a href="/t/creators_corner">lang_footer_corner</a></td>
 						<td></td>
-						<td><a href="/t/creators_corner">Creator's Corner</a></td>
+						<td><a href="/testtube">lang_footer_test</a></td>
+					</tr>
+					<tr>
+						<td><a href="/yt2009_flags.htm">lang_footer_2009flags</a></td>
 						<td></td>
-						<td><a href="/testtube">TestTube</a></td>
+						<td></td>
+						<td></td>
+						<td></td>
 					</tr>
 				</table>
 			</div>
 			<div class="region-and-language-pickers">
 				<div class="google-home">
-					<a href="http://www.google.com/webmasters/igoogle/youtube.html">Add YouTube to your Google homepage</a>
+					<a href="http://www.google.com/webmasters/igoogle/youtube.html">lang_footer_igoogle</a>
 				</div>
 				<div class="region-picker-box">
-					<span class="region-label">Current Location:</span>
-					<strong class="region-title">Worldwide</strong>
-					<a href="#" onclick="yt.www.masthead.loadPicker('region-picker'); return false;">Show locations</a>
+					<span class="region-label">lang_footer_location</span>
+					<strong class="region-title">lang_footer_worldwide</strong>
+					<a href="#" onclick="loadPicker('region-picker'); return false;">lang_footer_showloc</a>
 					<div id="region-picker-container">
 						<div id="region-picker-loading" style="display: none">Loading...</div>
 					</div>
 				</div>
 				<div class="language-picker-box">
-					<span class="language-label">Current Language:</span>
-					<strong class="language-title">English</strong>
-					<a href="#" onclick="yt.www.masthead.loadPicker('language-picker'); return false;">Show languages</a>
+					<span class="language-label">lang_footer_language</span>
+					<strong class="language-title">lang_footer_langname</strong>
+					<a href="#" onclick="loadPicker('language-picker'); return false;">lang_footer_showlang</a>
 					<div id="language-picker-container">
 						<div id="language-picker-loading" style="display: none">Loading...</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div id="copyright">
-			&copy; 2009 YouTube, LLC
+		<div id="copyright">lang_footer_copyright</div>
 		</div>
 		<!-- end bottom section -->
 	</div>

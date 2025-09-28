@@ -92,7 +92,7 @@ generate innertube data
 =======
 */
 console.log("== generating innertube data")
-let ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"
+let ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
 if(!config.userAgent) {
     console.log("useragent not found in config, using \"" + ua + "\"")
     console.log("if you wish to use your own user agent,"

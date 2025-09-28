@@ -65,8 +65,52 @@
 		}
 	</style>
 	<style>
-		#videos .video {
+		#grid-view #videos .video {
 			height: 190px !important;
+		}
+	</style>
+	<style>
+		#heading-position {
+			min-width: 50px;
+			width: 50px;
+		}
+		#heading-time {
+			min-width: 40px;
+			width: 40px;
+		}
+		#heading-date {
+			min-width: 75px;
+			width: 75px;
+		}
+		#heading-views {
+			min-width: 60px;
+			width: 60px;
+		}
+		#heading-rating {
+			min-width: 70px;
+			width: 70px;
+		}
+
+		tbody #heading-title * {
+			float: left;
+		}
+		#heading-title img {
+			width: 60px;
+			height: 48px;
+			margin-top: -4px;
+		}
+		#heading-title button {
+			background-position: 0px -344px;
+			width: 16px;
+			height: 12px;
+			margin-top: 15px;
+		}
+		#heading-title .video-title {
+			margin-left: 10px;
+			width: 245px;
+			height: 15px;
+			overflow: hidden;
+			margin-top: 12px;
 		}
 	</style>
 </head>
@@ -278,10 +322,17 @@
 					</tr>
 					<tr>
 						<td><a href="/blog">lang_footer_blog</a></td>
-						<td></td>
+						<td><a href="https://github.com/sponsors/ftde0" target="_blank">lang_footer_gh_sponsor</a></td>
 						<td><a href="/t/creators_corner">lang_footer_corner</a></td>
 						<td></td>
 						<td><a href="/testtube">lang_footer_test</a></td>
+					</tr>
+					<tr>
+						<td><a href="/yt2009_flags.htm">lang_footer_2009flags</a></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
 					</tr>
 				</table>
 			</div>

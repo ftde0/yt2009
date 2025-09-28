@@ -1533,6 +1533,8 @@ function annotationRender(annotation) {
                                                     .toString()
                                             + " L " + relativePoints[2]
                                                     .toString() + " Z")
+                path.setAttributeNS(null, "stroke", "rgba(0,0,0,0.25)")
+                path.setAttributeNS(null, "stroke-width", "2px")
                 tip.appendChild(path)
 
                 // correct tip overflowing into the annotation itself

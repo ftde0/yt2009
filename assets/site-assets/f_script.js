@@ -2069,7 +2069,7 @@ function playnav_more(continuation) {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/channel_sort?rt=" + Date.now())
+    r.open("GET", "/channel_sort?rt=" + Math.random())
     r.setRequestHeader("source", location.pathname)
     r.setRequestHeader("continuation", continuation)
     r.send(null)

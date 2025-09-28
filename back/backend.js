@@ -1037,7 +1037,7 @@ app.get("/get_video_info", (req, res) => {
                         fmt_list += "37/1920x1080/9/0/115,"
                         fmt_map += "37/3000000/9/0/115,"
                         fmt_stream_map += `37|${fmtUrl}&,`
-                        if(addUrlEncoded && !waitForDash) {
+                        if(addUrlEncoded) {
                             let fmtData = [
                                 "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
                                 "itag=37",
@@ -1059,7 +1059,7 @@ app.get("/get_video_info", (req, res) => {
                         fmt_list += "22/1280x720/9/0/115,"
                         fmt_map += "22/2000000/9/0/115,"
                         fmt_stream_map += `22|${fmtUrl}&,`
-                        if(addUrlEncoded && !waitForDash) {
+                        if(addUrlEncoded) {
                             let fmtData = [
                                 "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
                                 "itag=22",
@@ -1081,7 +1081,7 @@ app.get("/get_video_info", (req, res) => {
                         fmt_list += "35/854x480/9/0/115,"
                         fmt_map += "35/0/9/0/115,"
                         fmt_stream_map +=  `35|${fmtUrl}&,`
-                        if(addUrlEncoded && !waitForDash) {
+                        if(addUrlEncoded) {
                             let fmtData = [
                                 "type=video%2Fmp4%3B+codecs%3D%22avc1.64001F%2C+mp4a.40.2%22",
                                 "itag=35",
@@ -3610,10 +3610,11 @@ app.get("/yt2009_recommended", (req, res) => {
 
 /*
 ======
-userpage list view
+userpage views (expand/list/grid)
 ======
 */
-app.get("/userpage_expand_view", (req, res) => {
+app.get("/userpage_view", (req, res) => {
+    let view = "expand"
     if(!yt2009_utils.isAuthorized(req)) {
         res.sendStatus(401)
         return;
@@ -3621,6 +3622,14 @@ app.get("/userpage_expand_view", (req, res) => {
     if(!req.headers.videos) {
         res.sendStatus(400)
         return;
+    }
+    switch(req.headers.view) {
+        case "expand":
+        case "list":
+        case "grid": {
+            view = req.headers.view
+            break;
+        }
     }
     let flags = ""
     if(req.headers.cookie
@@ -3633,19 +3642,90 @@ app.get("/userpage_expand_view", (req, res) => {
     if(videos[videos.length - 1] == "") {
         videos = videos.slice(0, videos.length - 1)
     }
+
     let response = ``
-    yt2009.bulk_get_videos(videos, () => {
-        setTimeout(function() {
-            let videoIndex = 0;
-            videos.forEach(v => {
-                v = yt2009.get_cache_video(v)
-                response += yt2009_templates.listview_video(v, videoIndex, flags)
-                videoIndex++
-            })
+    function renderVideo(v, videoIndex) {
+        switch(view) {
+            case "expand": {
+                response += yt2009_templates.expandview_video(
+                    v, videoIndex, flags
+                )
+                break;
+            }
+            case "list": {
+                v.rating = "5.0"
+                let autogen = (
+                    req.headers.cookie
+                 && req.headers.cookie.includes("autogen_thumbnails")
+                )
+                let proxy = (
+                    req.headers.cookie
+                 && req.headers.cookie.includes("thumbnail_proxy")
+                )
+                v.time = yt2009_utils.seconds_to_time(
+                    yt2009_utils.dataApiDurationSeconds(v.duration)
+                )
+                v.date = ""
+                v.viewCount = yt2009_utils.countBreakup(v.viewCount)
+                response += yt2009_templates.ssr_yt_playlist(
+                    [v], autogen, proxy, videoIndex
+                )
+                break;
+            }
+            case "grid": {
+                v.views = yt2009_utils.countBreakup(
+                    yt2009_utils.bareCount(v.viewCount)
+                )
+                response += yt2009_languages.apply_lang_to_code(
+                    yt2009_templates.historyVideo(v, req), req
+                )
+                break;
+            }
+        }
+    }
+
+    // bulk fetch_video_data approach
+    // only use if data api is unavailable
+    function bulkVideos() {
+        yt2009.bulk_get_videos(videos, () => {
+            setTimeout(function() {
+                let videoIndex = 0;
+                videos.forEach(v => {
+                    v = yt2009.get_cache_video(v)
+                    renderVideo(v, videoIndex)
+                    videoIndex++
+                })
+
+                res.send(response)
+            }, 100)
+        })
+    }
+
+    // use data api if available (faster and less resources used)
+    function dataApiVideos() {
+        let requiredProperties = [
+            "title", "description", "publishedAt",
+            "channelId", "channelTitle", "viewCount",
+            "duration"
+        ]
+        yt2009_utils.dataApiBulk(videos, requiredProperties, (data) => {
+            for(let id in data) {
+                let v = data[id]
+                v.id = id;
+                renderVideo(v, v.index)
+            }
 
             res.send(response)
-        }, 100)
-    })
+        })
+    }
+
+
+
+    if(config.data_api_key) {
+        dataApiVideos()
+    } else {
+        bulkVideos()
+    }
 })
 
 /*
