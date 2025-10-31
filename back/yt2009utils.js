@@ -24,6 +24,11 @@ let ratelimitData = {}
 let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
 
+let downloadRetryMax = 5;
+if(config.dl_max_retry && !isNaN(parseInt(config.dl_max_retry))) {
+    downloadRetryMax = parseInt(config.dl_max_retry)
+}
+
 function devlog(text) {
     if(config.env == "dev") {
         console.log(text)
@@ -1193,9 +1198,25 @@ module.exports = {
     "testF18": function(url, callback) {
         const newHeaders = JSON.parse(JSON.stringify(androidHeaders));
         newHeaders.headers.range = `bytes=0-1`;
-        fetch(url, newHeaders).then(r => {
-            callback(r.status !== 403)
-        })
+        let failCount = 0;
+        function testFetch() {
+            fetch(url, newHeaders).catch(err => {
+                failCount++
+                if(failCount > downloadRetryMax) {
+                    devlog(`f18 failed too many times! will retry adaptive`)
+                    callback(false)
+                    return;
+                } else {
+                    devlog(`testf18 network fail! ${failCount}/${downloadRetryMax}`)
+                    testFetch()
+                }
+            }).then(r => {
+                if(!r || !r.status) return;
+                failCount = 0;
+                callback(r.status !== 403)
+            })
+        }
+        testFetch()
     },
 
     "saveMp4_android": function(id, callback, existingPlayer, quality) {
@@ -1664,7 +1685,6 @@ module.exports = {
         }
         const stream = fs.createWriteStream(out, {flags: "w"});
         let lastPartFailCount = 0;
-        let partFailMax = 5;
         function fetchNextPart() {
             adjustPartsize()
             const newHeaders = JSON.parse(JSON.stringify(androidHeaders));
@@ -1672,8 +1692,8 @@ module.exports = {
             newHeaders.timeout = 40000
             fetch(url, newHeaders).catch(e => {
                 lastPartFailCount++
-                let failFriendly = `(${lastPartFailCount}/${partFailMax})`
-                if(lastPartFailCount > partFailMax) {
+                let failFriendly = `(${lastPartFailCount}/${downloadRetryMax})`
+                if(lastPartFailCount > downloadRetryMax) {
                     devlog(`part ${startB}b failed too many times! rejecting`)
                     stream.end()
                     try {fs.unlinkSync(out)}catch(error){
@@ -1689,6 +1709,7 @@ module.exports = {
                 }, 500)
             }).then(r => {
                 if(!r) return;
+                lastPartFailCount = 0;
                 if(r.status == 403) {
                     console.log(`googlevideo returned 403 while downloading!`)
                     console.log(`${url}/${startB}/${partSize}`)
@@ -1729,7 +1750,7 @@ module.exports = {
                     if(metadata) {
                         let f = metadata
                         let cdata = yt2009exports.read().verboseDownloadProgress[f]
-                        if(cdata.type && cdata.type == "NONDASH") {
+                        if(cdata && cdata.type && cdata.type == "NONDASH") {
                             cdata.state = "DONE"
                             yt2009exports.extendWrite(
                                 "verboseDownloadProgress", f, cdata

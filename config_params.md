@@ -34,3 +34,4 @@ other params you can set:
 - `file_limit` - a number in MB of max upload size. (default: 10)
 - `default_f` - should flash mode be enabled by default for new sessions. `true/false`
 - `default_fh264` - should H264 be enabled with flash by default for new sessions. `true/false`
+- `dl_max_retry` - maximum number of network retries for a download url. (default: 5)

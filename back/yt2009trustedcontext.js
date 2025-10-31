@@ -72,12 +72,12 @@ module.exports = {
 
         if(complimentary_access.includes(id)) return true;
 
-        // allow apiplayer (XL and mp.swf) as it doesn't function otherwise
+        // allow apiplayer (XL, mp.swf) and cps2 as it doesn't function otherwise
         // (rewrites urls and omits params)
         if(req.headers.referer
         && (req.headers.referer.includes("/xl/")
-        || req.headers.referer.includes("/mp.swf"))
-        && req.query.fmt == "5") {
+        || req.headers.referer.includes("/mp.swf")
+        || req.headers.referer.includes("/cps2.swf"))) {
             return true;
         }
 

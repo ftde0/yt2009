@@ -890,7 +890,7 @@ volume_panel.addEventListener("mousemove", function(e) {
     if(mouseY <= 10 || mouseY >= 54) return;
 
     volume_head.style.top = mouseY - 5 + "px";
-    video.volume = Math.max(1 - ((mouseY - 10) / 40), 0)
+    video.volume = Math.max(1 - ((mouseY - 10) / 43), 0)
 
     if(mouseY >= 55) {
         video.volume = 0;
@@ -2385,12 +2385,22 @@ try {
         switch(e.keyCode) {
             // arrow right
             case 39: {
-                video.currentTime += skipAmount
+                if((e.target
+                && e.target.nodeName.toLowerCase() !== "textarea"
+                && e.target.nodeName.toLowerCase() !== "input")
+                || !e.target) {
+                    video.currentTime += skipAmount
+                }
                 break;
             }
             // arrow left
             case 37: {
-                video.currentTime -= skipAmount
+                if((e.target
+                && e.target.nodeName.toLowerCase() !== "textarea"
+                && e.target.nodeName.toLowerCase() !== "input")
+                || !e.target) {
+                    video.currentTime -= skipAmount
+                }
             }
         }
     }, false)

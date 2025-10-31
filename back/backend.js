@@ -1010,6 +1010,12 @@ app.get("/get_video_info", (req, res) => {
             res.send(yt2009_templates.get_video_info_onlyFlash(data, req, res))
             return;
         }
+        let playback = "amogus"
+        if(req.headers.referer
+        && req.headers.referer.includes("cps2.swf")) {
+            // custom playbacktoken for cps2 to allow get_video with fmt
+            playback = "CPS_ALL_" + Math.floor(Math.random() * 1003050)
+        }
         let longVid = (data.length >= 60 * 30)
         yt2009.get_qualities(req.query.video_id, (qualities => {
             if((!qualities || qualities.length == 0) && data.qualities) {
@@ -1136,8 +1142,8 @@ ftoken=
 allow_embed=1
 fmt_map=${encodeURIComponent(fmt_map)}
 fmt_url_map=${encodeURIComponent(fmt_stream_map)}
-token=amogus
-plid=amogus
+token=${playback}
+plid=${playback}
 track_embed=0
 author=${data.author_name.split("&").join("")}
 title=${data.title.split("&").join("")}
@@ -5624,6 +5630,12 @@ app.post("/annotations_auth/update2", (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
     ${annotations}
     </annotations></document>`)
+})
+app.get("/annotations_auth/read2", (req, res) => {
+    res.status(200).end(
+        `<?xml version="1.0" encoding="UTF-8" ?><document><annotations>
+</annotations></document>`
+    )
 })
 app.get("/auth/read2", (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8" ?><document><annotations>

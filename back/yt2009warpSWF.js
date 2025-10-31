@@ -156,19 +156,28 @@ module.exports = {
             res.send("")
             return;
         }
-        if(req.query.eurl
-        && req.query.eurl.includes("embedr.com")) {
+        if((req.query.eurl
+        && req.query.eurl.includes("embedr.com"))
+        || (req.query.t && req.query.t.includes("CPS_ALL"))) {
             // xl
-            if(req.query.fmt == "22") {
-                // hd
-                res.redirect("/exp_hd?video_id=" + req.query.video_id)
-                return;
+            switch(req.query.fmt) {
+                case "22": {
+                    // hd 720
+                    res.redirect("/exp_hd?video_id=" + req.query.video_id)
+                    return;
+                }
+                case "35": {
+                    // hq 480
+                    res.redirect("/get_480?video_id=" + req.query.video_id)
+                    return;
+                }
+                case "37": {
+                    // hd 1080
+                    res.redirect("/exp_hd?video_id=" + req.query.video_id + "&fhd=1")
+                    return;
+                }
             }
-            if(req.query.fmt == "35") {
-                // hq
-                res.redirect("/get_480?video_id=" + req.query.video_id)
-                return;
-            }
+            return;
         }
         let ip = utils.getIP(req)
         if(!tcRatelimits[ip]) {

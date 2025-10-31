@@ -2914,7 +2914,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             code = code.replace(
                 `//yt2009-exp-hq-btn`,
                 yt2009templates.playerHDBtnJS(
-                    data.id, use720p, autoHQ, trustedContextData
+                    data.id, use720p, autoHQ,
+                    trustedContextData, (data.length / 60)
                 )
                 + enableConnCheck
             )
@@ -2967,7 +2968,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             code = code.replace(
                 `//yt2009-exp-hq-btn`,
                 yt2009templates.playerHDSabr(
-                    use720p, autoHQ
+                    use720p, autoHQ, (data.length / 60)
                 )
             )
 
@@ -3590,6 +3591,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             })
             featured_videos.unshift(v)
         })
+        fs.writeFile(
+            "./cache_dir/watched_now.json",
+            JSON.stringify(featured_videos),
+            (e) => {}
+        )
         if(config.env == "dev") {
             console.log("received " + videos.length + " videos from master")
         }

@@ -70,6 +70,15 @@ function pullNewTrending() {
         }),
         "headers": constants.headers
     }).then(r => {r.json().then(r => {
+        if(!r || !r.contents || !r.contents.twoColumnBrowseResultsRenderer) {
+            console.log(
+                `\n\n[warn] invalid trending response.`
+            )
+            console.log(
+                `^ this will not affect usability, but is being looked into.`
+            )
+            return;
+        }
         //fs.writeFileSync("./test.json", JSON.stringify(r))
         let c = r.contents.twoColumnBrowseResultsRenderer.tabs
                  .filter(s => s.tabRenderer && s.tabRenderer.selected)[0]
@@ -1882,12 +1891,12 @@ or wait a little :)`
     let vs = new isc()
     let vc = new isc.contents()
     let vmRenderer = new p.videoMetadataRenderer()
-    vmRenderer.addTitle(generateRun("auth required - open description", p))
-    vmRenderer.addViewcount(generateRun("", p))
-    vmRenderer.addDescription(generateRun(description, p))
-    vmRenderer.addPublishdate(generateRun("", p))
+    vmRenderer.setTitle(generateRun("auth required - open description", p))
+    vmRenderer.setViewcount(generateRun("", p))
+    vmRenderer.setDescription(generateRun(description, p))
+    vmRenderer.setPublishdate(generateRun("", p))
     vmRenderer.setVideoid("12345678910")
-    vmRenderer.addShortviewcount(generateRun("", p))
+    vmRenderer.setShortviewcount(generateRun("", p))
     vmRenderer.setInt8(1)
     vmRenderer.setInt24(0)
 

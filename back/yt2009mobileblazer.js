@@ -67,6 +67,7 @@ module.exports = {
         // or some undefault_avatar?
         let disableOnlyOld = false;
         let undefaultAvatar = false;
+        let innertubeRelated = false;
         if(req.headers.cookie
         && req.headers.cookie.includes("blzr_watch_flags=")) {
             let flags = req.headers.cookie
@@ -77,6 +78,9 @@ module.exports = {
             }
             if(flags.includes("undefault-avatar")) {
                 undefaultAvatar = true;
+            }
+            if(flags.includes("innertube-related")) {
+                innertubeRelated = true
             }
         }
 
@@ -164,33 +168,21 @@ module.exports = {
             }
 
             // related videos
-            // send video data after related done as those must be
-            // within the response unlike some other yt clients
-            let enableHQ = false;
-            expRelated(data, (videos) => {
-                response.content.related_videos = videos;
-                if(enableHQ) {
-                    // get qualities for an hq button
-                    try {
-                        yt2009html.get_qualities(id, (qualities) => {
-                            if(qualities.includes("480p")) {
-                                let url = "/get_480?video_id=" + id
-                                url += trusted.urlContext(
-                                    id, "PLAYBACK_HQ", false
-                                )
-                                response.content.video.hq_stream_url = url;
-                            }
-                            res.send(response)
-                        })
-                    }
-                    catch(error) {
-                        res.send(response)
-                    }
-                } else {
+            if(innertubeRelated) {
+                let vids = []
+                data.related.forEach(v => {
+                    vids.push(templates.blazer_bareVideo(
+                        v.id, v.title, v.length, v.views, v.creatorName
+                    ))
+                })
+                response.content.related_videos = vids;
+                res.send(response)
+            } else {
+                expRelated(data, (videos) => {
+                    response.content.related_videos = videos;
                     res.send(response)
-                }
-                
-            })
+                })
+            }
         }, constants.headers["user-agent"], "",false, false, true)
 
         // blazer related (exp_related)

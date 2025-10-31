@@ -700,7 +700,7 @@ module.exports = {
                     e = String.fromCharCode(e)
                     redirUrl.push(e)
                 }
-                while(redirUrl[0] !== "h") {
+                while(redirUrl[0] && redirUrl[0] !== "h") {
                     redirUrl.shift()
                 }
                 redirUrl = redirUrl.join("")

@@ -235,12 +235,20 @@ module.exports = {
                                     + video.videoId
                                     + "/hqdefault.jpg",
                         "uploaderName": video.shortBylineText.runs[0].text,
-                        "uploaderUrl": video.shortBylineText.runs[0]
-                                            .navigationEndpoint.browseEndpoint
-                                            .canonicalBaseUrl,
-                        "uploaderId": video.shortBylineText.runs[0]
-                                           .navigationEndpoint.browseEndpoint
-                                           .browseId,
+                        "uploaderUrl": ((video.shortBylineText.runs[0]
+                                         .navigationEndpoint
+                                      && video.shortBylineText.runs[0]
+                                         .navigationEndpoint.browseEndpoint
+                                      && video.shortBylineText.runs[0]
+                                         .navigationEndpoint.browseEndpoint
+                                         .canonicalBaseUrl)||""),
+                        "uploaderId": ((video.shortBylineText.runs[0]
+                                         .navigationEndpoint
+                                      && video.shortBylineText.runs[0]
+                                         .navigationEndpoint.browseEndpoint
+                                      && video.shortBylineText.runs[0]
+                                         .navigationEndpoint.browseEndpoint
+                                         .browseId)||""),
                         "time": video.lengthText ?
                                 video.lengthText.simpleText : "",
                         "views": utils.approxSubcount(

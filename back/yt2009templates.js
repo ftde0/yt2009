@@ -992,16 +992,22 @@ module.exports = {
     }
     </style>
     `,
-    "playerHDBtnJS": function(id, use720p, autoHQ, trustedContextData) {
+    "playerHDBtnJS": function(id, use720p, autoHQ, trustedContextData, videoLengthMinutes) {
         let stdUrl = `/get_video?video_id=${id}/mp4`
         let hqUrl = `/${use720p ? "exp_hd" : "get_480"}?video_id=${id}`
         if(trustedContextData) {
             stdUrl += "&" + trustedContextData.sd;
             hqUrl += "&" + trustedContextData.hq;
         }
+        let seekbarRemoveWidth = 245
+        if(videoLengthMinutes && videoLengthMinutes >= 100) {
+            seekbarRemoveWidth = 265
+        } else if(videoLengthMinutes && videoLengthMinutes >= 10) {
+            seekbarRemoveWidth = 255
+        }
         return `
         //exp_hq
-        seekbarRemoveWidth = 245;
+        seekbarRemoveWidth = ${seekbarRemoveWidth};
         adjustSeekbarWidth();
         var hqPlaying = false;
 
@@ -3482,10 +3488,16 @@ term='channel'/>
         <div class="clear"></div>
     </div>`,
 
-    "playerHDSabr": function(use720p, autoHQ) {
+    "playerHDSabr": function(use720p, autoHQ, videoLengthMinutes) {
+        let seekbarRemoveWidth = 245
+        if(videoLengthMinutes && videoLengthMinutes >= 100) {
+            seekbarRemoveWidth = 265
+        } else if(videoLengthMinutes && videoLengthMinutes >= 10) {
+            seekbarRemoveWidth = 255
+        }
         return `
         //exp_hq
-        seekbarRemoveWidth = 245;
+        seekbarRemoveWidth = ${seekbarRemoveWidth};
         adjustSeekbarWidth();
         var sabrHd = false;
 
