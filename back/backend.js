@@ -2980,6 +2980,19 @@ app.get("/feeds/api/users/*", (req, res) => {
     }
     yt2009_mobile.userInfo(req, res)
 })
+app.get("/feeds/api/channels*", (req, res) => {
+    if(req.query.q) {
+        res.sendStatus(404) //unsupported (for now)
+        return;
+    }
+    req.originalUrl = req.originalUrl.replace("/channels", "/users")
+    if(req.originalUrl.includes("users/default")
+    && useMobileHelper && mobileHelper.hasLogin(req)) {
+        mobileHelper.userData(req, res)
+        return;
+    }
+    yt2009_mobile.userInfo(req, res)
+})
 app.get("/feeds/api/events", (req, res) => {
     yt2009_mobile.apkUserEvents(req, res)
 })

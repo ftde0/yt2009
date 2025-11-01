@@ -669,7 +669,8 @@ module.exports = {
                         (data.tags || []).join(),
                         data.category,
                         mobileflags.get_flags(req).watch,
-                        data.qualities
+                        data.qualities,
+                        {"authorId": data.author_id, "omitY9": true}
                     )
                     videosAdded++;
                     if(videosAdded >= vids.length) {
@@ -716,7 +717,8 @@ module.exports = {
                             (data.tags || []).join(),
                             data.category,
                             mobileflags.get_flags(req).watch,
-                            data.qualities
+                            data.qualities,
+                            {"authorId": data.author_id, "omitY9": true}
                         )
                         videosAdded++
                     }
@@ -773,7 +775,8 @@ module.exports = {
                 (data.tags || []).join(),
                 data.category,
                 "",
-                data.qualities
+                data.qualities,
+                {"authorId": data.author_id, "omitY9": true}
             )
             res.set("content-type", "application/atom+xml")
             res.send(response)
@@ -937,7 +940,8 @@ module.exports = {
                 rawData.forEach(video => {
                     if(video.type !== "video"
                     || utils.time_to_seconds(video.time) >= 600
-                    || response.includes(video.id) || video.id == id) return;
+                    || response.includes(video.id) || video.id == id
+                    || !video.uploaded) return;
                     let cacheData = yt2009html.get_cache_video(video.id)
 
                     let uploadDate = cacheData.upload
@@ -945,6 +949,15 @@ module.exports = {
                         uploadDate = video.upload
                     } else if(!uploadDate && !video.dataApi) {
                         uploadDate = utils.relativeToAbsoluteApprox(video.uploaded)
+                    }
+
+                    let authorId = false;
+                    if(video.creatorUrl
+                    && video.creatorUrl.startsWith("/channel/")) {
+                        authorId = video.creatorUrl.split("/channel/")[1]
+                    } else if(video.author_url
+                    && video.author_url.startsWith("/channel/")) {
+                        authorId = video.author_url.split("/channel/")[1]
                     }
 
                     response += templates.gdata_feedVideo(
@@ -957,7 +970,9 @@ module.exports = {
                         uploadDate,
                         (cacheData.tags || []).join() || "-",
                         cacheData.category || "-",
-                        mobileflags.get_flags(req).watch
+                        mobileflags.get_flags(req).watch,
+                        null,
+                        {"authorId": authorId, "omitY9": true}
                     )
                 })
 
@@ -976,6 +991,12 @@ module.exports = {
                             uploadDate = video.upload
                         }
 
+                        let authorId = false;
+                        if(video.creatorUrl
+                        && video.creatorUrl.startsWith("/channel/")) {
+                            authorId = video.creatorUrl.split("/channel/")[1]
+                        }
+
                         //let data = yt2009html.get_cache_video(video.id)
                         // only 12 years or older & no repeats
                         response += templates.gdata_feedVideo(
@@ -985,7 +1006,9 @@ module.exports = {
                             utils.bareCount(video.views),
                             utils.time_to_seconds(video.length),
                             yt2009html.get_video_description(video.id),
-                            uploadDate
+                            uploadDate,
+                            undefined, undefined, undefined, undefined,
+                            {"authorId": authorId, "omitY9": true}
                         )
                     }
                 })
@@ -1196,7 +1219,9 @@ module.exports = {
                         upload,
                         (cacheVideo.tags || []).join() || "-",
                         cacheVideo.category || "-",
-                        mobileflags.get_flags(req).watch
+                        mobileflags.get_flags(req).watch,
+                        undefined,
+                        {"authorId": data.id, "omitY9": true}
                     )
                 })
 
@@ -1302,6 +1327,44 @@ module.exports = {
             "headers": {"cookie": ""},
             "query": {"f": 0}}, 
             {"send": function(data) {
+                function pullFavoritesPlaylist(playlist) {
+                    yt2009playlists.parsePlaylist(playlist.id, (data => {
+                        // add videos (kinda limited data but workable)
+                        let response = templates.gdata_feedStart
+
+                        if(req.query.alt == "json") {
+                            yt2009jsongdata.playlistVideos(
+                                data.videos, res, req.query.callback
+                            )
+                            return;
+                        }
+
+                        data.videos.forEach(video => {
+                            let videoCache = yt2009html.get_cache_video(video.id)
+                            response += templates.gdata_feedVideo(
+                                video.id,
+                                video.title,
+                                utils.asciify(video.uploaderName),
+                                utils.bareCount(
+                                    videoCache.viewCount || Math.floor(
+                                        Math.random() * 20000000
+                                    ).toString()
+                                ),
+                                videoCache.length
+                                || Math.floor(Math.random() * 300),
+                                "", "",
+                                undefined, undefined, undefined, undefined,
+                                {"authorId": data.id, "omitY9": true}
+                            )
+                        })
+        
+                        // send response
+                        response += templates.gdata_feedEnd;
+                        res.set("content-type", "application/atom+xml")
+                        res.send(response)
+                    })) 
+                } 
+
                 channels.get_additional_sections(data, "", () => {
                     let response = templates.gdata_feedStart
                     let playlists = channels.get_cache.read("playlist")
@@ -1310,41 +1373,7 @@ module.exports = {
                         playlists[data.id].forEach(playlist => {
                             if(playlist.name == "Favorites") {
                                 hasFavoritesPlaylist = true;
-                                yt2009playlists.parsePlaylist(playlist.id, (data => {
-                                    // add videos (kinda limited data but workable)
-
-                                    if(req.query.alt == "json") {
-                                        yt2009jsongdata.playlistVideos(
-                                            data.videos, res, req.query.callback
-                                        )
-                                        return;
-                                    }
-
-                                    data.videos.forEach(video => {
-                                        let videoCache = yt2009html
-                                                        .get_cache_video(video.id)
-                                        response += templates.gdata_feedVideo(
-                                            video.id,
-                                            video.title,
-                                            utils.asciify(video.uploaderName),
-                                            utils.bareCount(
-                                                videoCache.viewCount
-                                                || Math.floor(
-                                                    Math.random() * 20000000
-                                                ).toString()
-                                            ),
-                                            videoCache.length
-                                            || Math.floor(Math.random() * 300),
-                                            "",
-                                            ""
-                                        )
-                                    })
-        
-                                    // send response
-                                    response += templates.gdata_feedEnd;
-                                    res.set("content-type", "application/atom+xml")
-                                    res.send(response)
-                                })) 
+                                pullFavoritesPlaylist(playlist)
                             }
                         })
                     }
@@ -1487,6 +1516,13 @@ module.exports = {
                 // have full video data?
                 let videoCacheData = yt2009html.get_cache_video(video.id)
 
+                let authorId = false;
+                if(videoCacheData && videoCacheData.author_id) {
+                    authorId = videoCacheData.author_id
+                } else if(video.uploaderId) {
+                    authorId = video.uploaderId
+                }
+
                 // fill
                 response += templates.gdata_feedVideo(
                     video.id,
@@ -1501,7 +1537,9 @@ module.exports = {
                     videoCacheData.upload || "",
                     (videoCacheData.tags || []).join() || "-",
                     videoCacheData.category || "-",
-                    mobileflags.get_flags(req).watch
+                    mobileflags.get_flags(req).watch,
+                    undefined,
+                    {"authorId": authorId, "omitY9": true}
                 )
             })
 
@@ -1552,7 +1590,8 @@ module.exports = {
                 (cacheVideo.tags || []).join() || "-",
                 cacheVideo.category || "",
                 mobileflags.get_flags(req).watch,
-                cacheVideo.qualities
+                cacheVideo.qualities,
+                {"authorId": cacheVideo.author_id, "omitY9": true}
             )
             videosAdded++
         })

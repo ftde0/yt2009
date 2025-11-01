@@ -1897,8 +1897,8 @@ or wait a little :)`
     vmRenderer.setPublishdate(generateRun("", p))
     vmRenderer.setVideoid("12345678910")
     vmRenderer.setShortviewcount(generateRun("", p))
-    vmRenderer.setInt8(1)
-    vmRenderer.setInt24(0)
+    vmRenderer.setAllowratings(1)
+    vmRenderer.setIslimitedstate(0)
 
     vc.addVideometadata(vmRenderer)
     vs.addContent(vc)

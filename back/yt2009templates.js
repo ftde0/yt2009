@@ -1224,10 +1224,10 @@ module.exports = {
 
         // additional data
         let add = ""
-        if(additional && additional.authorFull) {
+        if(additional && additional.authorFull && !additional.omitY9) {
             add += "\n          <yt9full>" + utils.xss(additional.authorFull).split("&").join("&amp;") + "</yt9full>"
         }
-        if(additional && additional.authorId) {
+        if(additional && additional.authorId && !additional.omitY9) {
             add += "\n          <yt9aid>" + additional.authorId + "</yt9aid>"
         }
 
@@ -1239,11 +1239,12 @@ module.exports = {
             <updated>${uploadDate ? new Date(uploadDate).toISOString() : ""}</updated>
             <category scheme="http://gdata.youtube.com/schemas/2007/categories.cat" label="${category}" term="${category}">${category}</category>
             <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("&amp;")}</title>
-            <content type='text'>${description.split("<").join("").split(">").join("").split("&").join("&amp;")}</content>
+            <content type='text'>${(description||"").split("<").join("").split(">").join("").split("&").join("&amp;")}</content>
             <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>${favCode}
             <author>
                 <name>${author}</name>
                 <uri>http://${config.ip}:${config.port}/feeds/api/users/${author}</uri>
+                <yt:userId>${((additional&&additional.authorId)||"")}</yt:userId>
             </author>
             <gd:comments>
                 <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/${id}/comments' countHint='530'/>
@@ -1252,16 +1253,18 @@ module.exports = {
                 <media:title>${title.split("<").join("").split(">").join("").split("&").join("&amp;")}</media:title>
                 <media:category label='${category}' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>${category}</media:category>
                 <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
-                <media:description type='plain'>${description.split("<").join("").split(">").join("").split("&").join("&amp;")}</media:description>
+                <media:description type='plain'>${(description||"").split("<").join("").split(">").join("").split("&").join("&amp;")}</media:description>
                 <media:keywords>${unduplicateKeywordList.join(", ")}</media:keywords>
                 <media:player url='http://www.youtube.com/watch?v=${id}'/>
                 <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/${id}/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
                 <media:thumbnail yt:name='poster' url='http://i.ytimg.com/vi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
                 <media:thumbnail yt:name='default' url='http://i.ytimg.com/vi/${id}/0.jpg' height='240' width='320' time='00:00:00'/>
                 <yt:duration seconds='${length}'/>
+                <yt:uploaded>${uploadDate ? new Date(uploadDate).toISOString() : ""}</yt:uploaded>
+                <yt:uploaderId>${(additional&&additional.authorId)||""}</yt:uploaderId>
                 <yt:videoid id='${id}'>${id}</yt:videoid>
                 <youTubeId id='${id}'>${id}</youTubeId>
-                <media:credit role='uploader' name='${author}'>${author}</media:credit>
+                <media:credit role='uploader' yt:display='${author}' name='${author}'>${author}</media:credit>
             </media:group>
             <gd:rating average='5' max='5' min='1' numRaters='${Math.floor(views / 600)}' rel='http://schemas.google.com/g/2005#overall'/>
             <yt:statistics favoriteCount="${Math.floor(views / 150)}" viewCount="${views}"/>
@@ -1336,6 +1339,7 @@ module.exports = {
     <yt:statistics lastWebAccess='2011-02-01T12:45:18.000-08:00' subscriberCount='${subs}' videoWatchCount='1' viewCount='${channelViews}' totalUploadViews='${uploadViews}'/>
     <media:thumbnail url='${avatar}'/>
     <yt:username>${name}</yt:username>
+    <yt:channelId>${id}</yt:channelId>
 </entry>` 
     },
     "gdata_playlistEntry": function(author, playlistId, playlistName, vidCount, summary) {
@@ -2997,6 +3001,7 @@ module.exports = {
         <author>
             <name>auth_required</name>
             <uri>http://gdata.youtube.com/feeds/api/users/auth_required</uri>
+            <yt:userId>UCBR8-60-B28hp2BmDPdntcQ</yt:userId>
         </author>
         <gd:comments>
             <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/12345678901/comments' countHint='530'/>
@@ -3013,6 +3018,8 @@ module.exports = {
             <yt:duration seconds='25'/>
             <yt:videoid id='12345678901'>12345678901</yt:videoid>
             <youTubeId id='12345678901'>12345678901</youTubeId>
+            <yt:uploaded>${new Date().toISOString()}</yt:uploaded>
+            <yt:uploaderId>UCBR8-60-B28hp2BmDPdntcQ</yt:uploaderId>
             <media:credit role='uploader' name='auth_required'>auth_required</media:credit>
         </media:group>
         <gd:rating average='5' max='5' min='1' numRaters='1' rel='http://schemas.google.com/g/2005#overall'/>
