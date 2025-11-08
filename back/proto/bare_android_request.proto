@@ -1,0 +1,14 @@
+syntax = "proto3";
+package bare_android_request;
+
+message root {
+    message contextType {
+        message clientType {
+            int32 clientNumber = 16;
+            string clientVersion = 17;
+        }
+        repeated clientType client = 1;
+    }
+    repeated contextType context = 1;
+    string browseId = 2;
+}

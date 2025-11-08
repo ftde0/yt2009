@@ -1352,6 +1352,11 @@ let channel_endpoints = [
 ] 
 channel_endpoints.forEach(channel_endpoint => {
     app.get(channel_endpoint, (req, res) => {
+        if(req.originalUrl.includes("/__Packages.com.google")) {
+            // malformed cps2 request, 404 and ignore
+            res.sendStatus(404)
+            return;
+        }
         if(!yt2009_utils.isAuthorized(req)) {
             if(yt2009_utils.isTemplocked(req)) {
                 res.redirect("/t.htm")

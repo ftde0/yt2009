@@ -807,7 +807,9 @@ module.exports = {
                     }
                     if(quality.qualityLabel
                     && !data.qualities.includes(quality.qualityLabel)
-                    && quality.url) {
+                    && quality.url
+                    && quality.mimeType
+                    && quality.mimeType.includes("avc")) {
                         data.qualities.push(quality.qualityLabel)
                     }
                 })
@@ -2021,7 +2023,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
             data.comments.forEach(comment => {
                 if(comment.continuation) {
-                    continuationFound = true;
                     code = code.replace(
                         "yt2009_comments_continuation_token",
                         comment.continuation
@@ -3051,6 +3052,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }
             
             // get
+            let customOld = false;
+            if(req.headers.cookie && req.headers.cookie.includes("only_old")
+            && flags.includes("old_match_exp_rel")) {
+                let oldDate = req.headers.cookie.split("only_old")[1]
+                                 .split(":")[0].split(";")[0]
+                if(typeof(oldDate) == "string" && oldDate.length >= 4) {
+                    customOld = oldDate;
+                }
+            }
             yt2009search.related_from_keywords(
                 lookup_keyword, data.id, flags, (html, rawData) => {
                     rawData.forEach(video => {
@@ -3139,7 +3149,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         callback(code)
                     }
                 },
-                req.protocol
+                req.protocol, false, customOld
             )
         }
 

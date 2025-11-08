@@ -1467,6 +1467,8 @@ module.exports = {
                         }
                         catch(error) {
                             console.log(error)
+                            console.log("\n\n^^^ this will not affect usability")
+                            console.log("^^^ no need to report")
                         }
                     }, 10000)
                     yt2009exports.updateFileDownload(fname, 2)

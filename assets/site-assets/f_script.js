@@ -1497,6 +1497,12 @@ function toggleLights() {
     }
 }
 
+// search hotfix
+function yt2009_search() {
+    var query = document.getElementById("masthead-search-term").value
+    window.location = "/results?search_query=" + query.split(" ").join("+")
+}
+
 /*
 =======
 channels

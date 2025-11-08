@@ -14,6 +14,7 @@ var languageData_EN = {
         "watch-hd-1080": "HD button in player will load 1080p instead of 720p",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",
         "watch-old-banners": "uses old channel banners without wayback_features if possible",
+        "watch-only-old-match-exp-rel": "uses the date set for only_old as cutoff for exp_related.",
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",
         "watch-remove-username-space": "removes spaces from usernames",
         "watch-share-behavior": "sets how the Share section should work",

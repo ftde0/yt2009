@@ -20,14 +20,14 @@ const chip = require("./yt2009templates").latestChip
 const channelCache = require("./cache_dir/channel_cache")
 const fs = require("fs")
 const fetch = require("node-fetch")
-const dbg = true;
+const dbg = false;
 
 function getBrowseData(message, outputVersion, outputRaw, protoType) {
     let deserialized;
     if(protoType) {
         deserialized = protoType.root.deserializeBinary(message).toObject()
     } else {
-        deserialized = require("./proto/android_player_request_pb")
+        deserialized = require("./proto/bare_android_request_pb")
                        .root.deserializeBinary(message).toObject()
     }
 
@@ -52,6 +52,85 @@ function getBrowseData(message, outputVersion, outputRaw, protoType) {
 
 let w2w_tab_music = []
 let w2w_tab_trending = []
+function pullNewHype() {
+    // HYPE tab (mobile exclusive)
+    // basically modern trending
+    let rHeaders = JSON.parse(JSON.stringify(constants.headers))
+    rHeaders["user-agent"] = "com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip"
+    fetch("https://www.youtube.com/youtubei/v1/browse?prettyPrint=false", {
+        "method": "POST",
+        "body": JSON.stringify({
+            "context": {
+                "client": {
+                    "hl": "en",
+                    "gl": "US",
+                    "clientName": "ANDROID",
+                    "clientVersion": "20.10.38"
+                }
+            },
+            "browseId": "FEhype_leaderboard",
+        }),
+        "headers": rHeaders
+    }).then(r => {r.json().then(r => {
+        let vids = []
+        if(r && r.contents && r.contents.singleColumnBrowseResultsRenderer
+        && r.contents.singleColumnBrowseResultsRenderer.tabs) {
+            try {
+                vids = r.contents.singleColumnBrowseResultsRenderer.tabs[0]
+                        .tabRenderer.content.sectionListRenderer.contents
+            }
+            catch(error) {}
+        }
+        w2w_tab_trending = []
+        let bareIds = []
+        vids = vids.slice(0,25)
+        vids.forEach(v => {
+            let fv = false;
+            try {
+                fv = v.itemSectionRenderer.contents[0].elementRenderer
+                      .newElement.type.componentType.model
+                      .compactVideoModel.compactVideoData.videoData
+            }
+            catch(error){
+                //console.log(error)
+            }
+            if(fv) {
+                let id = fv.dragAndDropUrl.split("v=")[1].split("&")[0]
+                           .substring(0,11)
+                let title = fv.metadata.title
+                let uploaderName = fv.metadata.byline
+                let time = fv.thumbnail.timestampText
+                let video = {
+                    "id": id,
+                    "title": title,
+                    "uploaderName": uploaderName,
+                    "time": time
+                }
+                w2w_tab_trending.push(video)
+                bareIds.push(id)
+            }
+        })
+
+        if(config.data_api_key) {
+            utils.dataApiBulk(
+                bareIds, ["publishedAt", "viewCount", "channelId"], (data) => {
+                    for(let id in data) {
+                        let v = data[id]
+                        let i = bareIds.indexOf(id)
+                        w2w_tab_trending[i].uploaderId = v.channelId
+                        w2w_tab_trending[i].uploaded = utils.unixToRelative(
+                            new Date(v.publishedAt).getTime()
+                        )
+                        w2w_tab_trending[i].views = utils.countBreakup(
+                            v.viewCount
+                        ) + " views"
+                    }
+                }
+            )
+        }
+    })})
+}
+
 function pullNewTrending() {
     // trending MUSIC (V5?-V10)
     
@@ -71,12 +150,8 @@ function pullNewTrending() {
         "headers": constants.headers
     }).then(r => {r.json().then(r => {
         if(!r || !r.contents || !r.contents.twoColumnBrowseResultsRenderer) {
-            console.log(
-                `\n\n[warn] invalid trending response.`
-            )
-            console.log(
-                `^ this will not affect usability, but is being looked into.`
-            )
+            // failed FETRENDING response, use mobile HYPE
+            pullNewHype()
             return;
         }
         //fs.writeFileSync("./test.json", JSON.stringify(r))
@@ -336,6 +411,9 @@ module.exports = {
         let bd = new p.root.responseBody.singleColumnBrowseResultsRenderer()
         let tS = p.root.responseBody.singleColumnBrowseResultsRenderer
                   .tabs.tabRenderer
+        if(!id) {
+            id = "FEwhat_to_watch"
+        }
         if(id.startsWith("UC")) {
             // channel
             yt2009channels.main({
@@ -1911,16 +1989,16 @@ or wait a little :)`
     c.addNextresults(sc)
     root.addContent(c)
 
-    let bdata = new p.root.bData()
-    let pb2 = new p.root.bData.pbVarious()
-    pb2.setId("12345678910")
-    bdata.addMsg3(pb2)
-    root.addPbextra(bdata)
+    let nav = new p.navigationData()
+    let navd = new p.navigationData.navData()
+    navd.setNavid("12345678910")
+    nav.setNavproperties(navd)
+    root.setNavigationendpoint(nav)
 
-    let fdata = new p.root.fData()
-    let fdatapb = new p.root.fData.pbVarious()
-    fdata.addPb1(fdatapb)
-    root.addPbextra14(fdata)
+    let overlays = new p.root.playerOverlays()
+    let overlaysrender = new p.root.playerOverlays.playerOverlaysRenderer()
+    overlays.setOverlay(overlaysrender)
+    root.setPoverlays(overlays)
 
     res.send(Buffer.from(root.serializeBinary()))
     if(dbg) {fs.writeFileSync("../media/test_full_next", root.serializeBinary())}
