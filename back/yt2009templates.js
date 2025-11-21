@@ -3495,19 +3495,27 @@ term='channel'/>
         <div class="clear"></div>
     </div>`,
 
-    "playerHDSabr": function(use720p, autoHQ, videoLengthMinutes) {
+    "playerHDSabr": function(use720p, autoHQ, videoLengthMinutes, srData) {
         let seekbarRemoveWidth = 245
         if(videoLengthMinutes && videoLengthMinutes >= 100) {
             seekbarRemoveWidth = 265
         } else if(videoLengthMinutes && videoLengthMinutes >= 10) {
             seekbarRemoveWidth = 255
         }
+		if(srData) {
+			srData = srData.map(s => {
+				let z = JSON.parse(JSON.stringify(s))
+				z[2] = z[2].split("\"").join("\\\"")
+				return z;
+			})
+		}
         return `
         //exp_hq
         seekbarRemoveWidth = ${seekbarRemoveWidth};
         adjustSeekbarWidth();
         var sabrHd = false;
-
+		${srData ? `
+		var sabrSrData = '${JSON.stringify(srData)}'` : ""}
         ${autoHQ ? `
         sabrHd = true;` : ""}
 

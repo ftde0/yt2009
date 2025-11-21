@@ -18,6 +18,7 @@ const yt2009sabr = require("./yt2009sabr")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
 const userid = require("./cache_dir/userid_cache")
+const playerProto = require("./proto/android_player_pb")
 const crypto = require("crypto")
 const signedInNext = false;
 const devTimings = false;
@@ -478,9 +479,13 @@ module.exports = {
                     }
                 } else {
                     try {
-                        data.upload = videoData.contents.twoColumnWatchNextResults
-                                      .results.results.contents[0]
-                                      .videoPrimaryInfoRenderer.dateText.simpleText
+                        let contents = videoData.contents.twoColumnWatchNextResults
+                                       .results.results.contents
+                                       .filter(s => {
+                                           return s.videoPrimaryInfoRenderer
+                                       })[0]
+                        data.upload = contents.videoPrimaryInfoRenderer
+                                      .dateText.simpleText
                         if(data.upload.includes(" on ")) {
                             data.upload = data.upload.split(" on ")[1]
                         }
@@ -811,8 +816,37 @@ module.exports = {
                     && quality.mimeType
                     && quality.mimeType.includes("avc")) {
                         data.qualities.push(quality.qualityLabel)
-                    }
+                    } else if(quality.qualityLabel
+					&& !data.qualities.includes(quality.qualityLabel)
+					&& quality.xtags) {
+						let xtags = false;
+						try {
+							xtags = playerProto.xtags.deserializeBinary(
+								quality.xtags
+							).toObject()
+						}
+						catch(error){}
+						let isSr = false;
+						if(xtags && xtags.partList) {
+							xtags.partList.forEach(p => {
+								if(p.key == "sr" && p.value == "1") {
+									isSr = true;
+								}
+							})
+						}
+						if(isSr) {
+							if(!data.superResolutions) {
+								data.superResolutions = []
+							}
+							data.superResolutions.push([
+								quality.qualityLabel,
+								quality.itag,
+								quality.mimeType
+							])
+						}
+					}
                 })
+
 
                 // disabled comments
                 if(JSON.stringify(videoData).includes(
@@ -956,13 +990,6 @@ module.exports = {
             return;
         }
 
-        // modern qualitylist
-        if(data.qualities) {
-            qualityList = data.qualities;
-        } else {
-            qualityList = []
-        }
-
         // playlist
         let playlistId = req.query.list
 
@@ -988,7 +1015,8 @@ module.exports = {
         // sabr
         let useSabr = false;
         let sabrBaseUrl = ""
-        if(flags.includes("exp_sabr")) {
+        if(flags.includes("exp_sabr")
+		&& !(req.query&&req.query.unsabr=="1")) {
             useSabr = true;
             sabrBaseUrl = yt2009sabr.initPlaybackSession(data.id, data.qualities)
         }
@@ -1027,6 +1055,25 @@ module.exports = {
 
         // quality list
         let showHQ = false;
+		
+		if(data.superResolutions
+		&& data.superResolutions.length >= 1
+		&& useSabr
+		&& flags.includes("exp_sabr_enable_superresolution")) {
+			data = JSON.parse(JSON.stringify(data)) //detach data
+			data.superResolutions.forEach(sr => {
+				if(!data.qualities.includes(sr[0])) {
+					data.qualities.push(sr[0])
+				}
+			})
+		}
+		
+		// modern qualitylist
+        if(data.qualities) {
+            qualityList = data.qualities;
+        } else {
+            qualityList = []
+        }
 
         if(isFeather && !useFlash) {
             code = watchpage_feather;
@@ -2800,6 +2847,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     )
                 }
 
+                if(flash_url.includes("cps2.swf")) {
+                    flash_url += "&iurl=" + encodeURIComponent(
+                        "http://i.ytimg.com/vi/"
+                      + data.id.substring(0,11)
+                      + "/hqdefault.jpg"
+                    )
+                }
+
                 // 2012 subtitles/annotations
                 let cc3_module = ""
                 let iv3_module = ""
@@ -2954,10 +3009,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 // 480p
                 code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
             }
-        } else if(!useFlash
+        } else if((!useFlash
         && (qualityList.includes("720p")
         || qualityList.includes("480p"))
-        && useSabr) {
+        && useSabr)) {
             // hd buttons for sabr
             let use720p = qualityList.includes("720p")
             code = code.replace(
@@ -2969,7 +3024,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             code = code.replace(
                 `//yt2009-exp-hq-btn`,
                 yt2009templates.playerHDSabr(
-                    use720p, autoHQ, (data.length / 60)
+                    use720p, autoHQ, (data.length / 60), (
+						(data.superResolutions
+						&& data.superResolutions.length >= 1
+						&& flags.includes("exp_sabr_enable_superresolution"))
+						? data.superResolutions
+						: false
+					)
                 )
             )
 

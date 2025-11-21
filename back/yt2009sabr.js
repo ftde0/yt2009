@@ -47,6 +47,14 @@ module.exports = {
         let p = playbackSessions[playbackSession]
         let createProto = this.createProto
         let parseResponse = this.parseResponse
+		
+		let customItag = false;
+		if(req.query.user_video_itag
+		&& !isNaN(parseInt(req.query.user_video_itag))) {
+			playbackSessions[playbackSession].dirty = true;
+			p.dirty = true;
+			customItag = parseInt(req.query.user_video_itag)
+		}
 
         function processPlayer(r) {
             if(!r.sabrUrl) {
@@ -61,7 +69,8 @@ module.exports = {
                         (s.itag == 299 || s.itag == 298 || s.itag == 137
                         || s.itag == 216 || s.itag == 136 || s.itag == 135
                         || s.itag == 134 || s.itag == 133 || s.itag == 160
-                        || s.itag == 140 || s.itag == 139)
+                        || s.itag == 140 || s.itag == 139
+						|| (customItag && s.itag == customItag))
                         && !s.isdrc
                         && (!s.audioTrack
                         || (s.audioTrack
@@ -102,10 +111,11 @@ module.exports = {
                 vItags = [135, 134, 133]
             }
 
-            //console.log(vItags)
-
             let videoFmts = fmts.filter((s) => {
-                return vItags.includes(s.itag)
+                return (
+					(customItag && customItag == s.itag)
+				  || vItags.includes(s.itag)
+				)
             })
             videoFmts = videoFmts.sort((a,b) => {
                 return b.itag - a.itag
@@ -128,7 +138,7 @@ module.exports = {
                 return;
             }
 
-            // list all itags to user
+            // list all xtags to user
             let usedItag = audioFmts[0].formatid;
             let at = audioFmts.filter(s => {
                 return s.formatid == usedItag
@@ -173,13 +183,14 @@ module.exports = {
             // create request proto payload
             let videoFmt = preferedVideoFmt.itag;
             let videoLmt = preferedVideoFmt.lastchanged;
+			let videoXtags = preferedVideoFmt.xtags
             let audioFmt = preferedAudioFmt.itag
             let audioLmt = preferedAudioFmt.lastchanged
             let audioXtags = preferedAudioFmt.xtags || ""
             let protoReq = createProto(
                 videoFmt, videoLmt, audioFmt,
                 audioLmt, audioXtags, r.ustreamer,
-                offset
+                offset, videoXtags
             )
 
             // send request
@@ -218,6 +229,9 @@ module.exports = {
                             if(preferedAudioFmt.xtags) {
                                 data.usedXtag = preferedAudioFmt.xtags
                             }
+							if(p.dirty) {
+								data.videoMime = preferedVideoFmt.mimeType
+							}
                             callback(data)
                         }
                     }, (redir) => {
@@ -329,12 +343,15 @@ module.exports = {
     },
 
     "createProto": function(
-        videoItagN, videoLmt, audioItagN, audioLmt, audioXtags, ustreamer, offset
+        videoItagN, videoLmt, audioItagN, audioLmt, audioXtags, ustreamer, offset, videoXtags
     ) {
         const requestProto = require("./proto/sabr_pb")
         let videoItag = new requestProto.itagData()
         videoItag.setItag(videoItagN)
         videoItag.setLastmodifiedtime(videoLmt)
+		if(videoXtags) {
+			videoItag.setDrcstring(videoXtags)
+		}
         let audioItag = new requestProto.itagData()
         audioItag.setItag(audioItagN)
         audioItag.setLastmodifiedtime(audioLmt)

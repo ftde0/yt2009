@@ -58,59 +58,6 @@ module.exports = {
         */
 
         let response = ``
-        
-        search.get_search(
-            encodeURIComponent(req.query.q) || "",
-            flags,
-            {"custom_index": index},
-            (data => {
-                let first3Videos = []
-                let allVideos = []
-                let fetchesCompleted = 0;
-                let fetchesRequired = 1;
-                if(config.data_api_key) {
-                    fetchesRequired++
-                }
-                data.forEach(video => {
-                    if(video.type !== "video") return;
-                    if(first3Videos.length < 3) {
-                        first3Videos.push(video.id)
-                    }
-                    allVideos.push(video.id)
-                })
-
-                // add videos when preloading done
-                html.bulk_get_videos(first3Videos, () => {
-                    fetchesCompleted++
-                    if(fetchesCompleted >= fetchesRequired) {
-                        addVideosToResponse(data)
-                    }
-                })
-
-                // also if using data api wait for that
-                if(config.data_api_key) {
-                    utils.dataApiBulk(allVideos, ["publishedAt"], (apidata) => {
-                        for(let id in apidata) {
-                            let videoData = apidata[id]
-                            let rel = data.filter(s => {
-                                return s.id == id
-                            })[0]
-                            let i = data.indexOf(rel)
-                            if(i !== null && i !== undefined && i >= 0) {
-                                data[i].upload = videoData.publishedAt
-                                data[i].dataApi = true;
-                            }
-                        }
-                        fetchesCompleted++
-                        if(fetchesCompleted >= fetchesRequired) {
-                            addVideosToResponse(data)
-                        }
-                    })
-                }
-            }),
-            utils.get_used_token(req) + "-cps",
-            false
-        )
 
         let maxVideos = 25
         if(req.query["max-results"]
@@ -186,5 +133,58 @@ module.exports = {
             res.set("content-type", "application/atom+xml")
             res.send(response)
         }
+
+        search.get_search(
+            encodeURIComponent(req.query.q) || "",
+            flags,
+            {"custom_index": index},
+            (data => {
+                let first3Videos = []
+                let allVideos = []
+                let fetchesCompleted = 0;
+                let fetchesRequired = 1;
+                if(config.data_api_key) {
+                    fetchesRequired++
+                }
+                data.forEach(video => {
+                    if(video.type !== "video") return;
+                    if(first3Videos.length < 3) {
+                        first3Videos.push(video.id)
+                    }
+                    allVideos.push(video.id)
+                })
+
+                // add videos when preloading done
+                html.bulk_get_videos(first3Videos, () => {
+                    fetchesCompleted++
+                    if(fetchesCompleted >= fetchesRequired) {
+                        addVideosToResponse(data)
+                    }
+                })
+
+                // also if using data api wait for that
+                if(config.data_api_key) {
+                    utils.dataApiBulk(allVideos, ["publishedAt"], (apidata) => {
+                        for(let id in apidata) {
+                            let videoData = apidata[id]
+                            let rel = data.filter(s => {
+                                return s.id == id
+                            })[0]
+                            let i = data.indexOf(rel)
+                            if(i !== null && i !== undefined && i >= 0) {
+                                data[i].upload = videoData.publishedAt
+                                data[i].dataApi = true;
+                            }
+                        }
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            addVideosToResponse(data)
+                        }
+                    })
+                }
+            }),
+            utils.get_used_token(req) + "-cps",
+            false
+        )
     }
 }

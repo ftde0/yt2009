@@ -1,11 +1,13 @@
 var languageData_EN = {
     "tooltips": {
+		"watch-allow-clientside-ryd": "doesn't wait for return youtube dislike API if it takes longer than usual to send a rating.",
         "watch-annotation-gradients": "shows previously seen gradients on annotations in html5.",
         "watch-comments-remove-future": "show old comments on a video",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
         "watch-distill-tags": "&quot;distills&quot; the video's tags for more accuracy",
         "watch-enable-stats-countback": "dials back counters on the Statistics & Data tab for old videos.",
+		"watch-exp-sabr-enable-superresolution": "enables watching superresolutions on videos that have them.",
         "watch-exclude-cs": "hides comments you post from /comment_search",
         "watch-exp-related": "shows only old related videos based on the tags of the currently watched video",
         "watch-exp-sabr": "uses SABR technology for playback. faster starts but requires better hardware.",
@@ -14,7 +16,7 @@ var languageData_EN = {
         "watch-hd-1080": "HD button in player will load 1080p instead of 720p",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",
         "watch-old-banners": "uses old channel banners without wayback_features if possible",
-        "watch-only-old-match-exp-rel": "uses the date set for only_old as cutoff for exp_related.",
+        "watch-old-match-exp-rel": "uses the date set for only_old as cutoff for exp_related.",
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",
         "watch-remove-username-space": "removes spaces from usernames",
         "watch-share-behavior": "sets how the Share section should work",

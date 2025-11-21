@@ -34,6 +34,7 @@ const yt2009_stats = require("./yt2009statsdata")
 const yt2009_myvideos = require("./yt2009myvideos")
 const yt2009_autoshare = require("./yt2009autoshare")
 const yt2009sabr = require("./yt2009sabr")
+const yt2009_masf = require("./yt2009masf")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -3118,6 +3119,11 @@ app.post("/deviceregistration/v1/devices", (req, res) => {
 })
 app.post("/youtubei/*", (req, res) => {
     yt2009m.rootHandle(req, res)
+})
+
+
+app.post("/m/appreq/mobilevideo", (req, res) => {
+    yt2009_masf.handleRequest(req, res)
 })
 
 /*
@@ -6805,6 +6811,10 @@ app.get("/sabr_playback", (req, res) => {
                     }
                     break;
                 }
+				case "videoMime": {
+					res.set("x-yt2009-video-mime", result[part])
+					break;
+				}
                 default: {
                     let header = `//SPART-"${part}"-CL=${result[part].length}//`
                     resp = Buffer.concat([

@@ -296,6 +296,40 @@ function initPlayer(parent, fullscreenEnabled) {
     }, 50)
 }
 
+function time_to_seconds(input) {
+    // time to seconds (01:00:00 -> 3600)
+    var tr = 0;
+    
+    if(typeof(input) == "number") return input;
+    var split = input.split(":")
+    switch(split.length) {
+        // ss
+        case 1: {
+            tr += parseInt(split[0])
+            if(isNaN(parseInt(split[0]))) {
+                tr = 0;
+            }
+            break;
+        }
+        // mm:ss
+        case 2: {
+            tr += parseInt(split[0]) * 60
+            tr += parseInt(split[1])
+            break;
+        }
+        // hh:mm:ss
+        case 3: {
+            tr += parseInt(split[0]) * 3600
+            tr += parseInt(split[1]) * 60
+            tr += parseInt(split[2])
+            break;
+        }
+    }
+
+    return tr;
+
+}
+
 // reversed fullscreen anim
 function retractFullscreen(skipLastFrame) {
     if(fullscreen_anim_playing || player_fullscreen) return;
@@ -1293,10 +1327,24 @@ for(var s in seekbarElements) {
             $(".seek_time").style.left = offsetX + "px"
             
             // time to innerHTML
+            var duration = video.duration;
+            if(!duration || isNaN(duration)) {
+                try {
+                    var t = $(".video_controls .timer").innerHTML
+                    if(t && t.indexOf(" / ") !== -1) {
+                        var time = t.split(" / ")[1]
+                        time = time_to_seconds(time)
+                        if(typeof(time) == "number" && !isNaN(time)) {
+                            duration = time;
+                        }
+                    }
+                }
+                catch(error) {}
+            }
             var time_hovered = (
                 (e.pageX - seekbar.getBoundingClientRect().left)
                 / seekbar.getBoundingClientRect().width
-            ) * video.duration
+            ) * duration
             time_hovered = seconds_to_time(Math.floor(time_hovered))
             if(time_hovered.indexOf("-") == 0) {
                 time_hovered = "0:00"
@@ -2742,9 +2790,25 @@ function requestSabr(offset, source, force) {
     if(sabrData.customXtag) {
         url.push("&xtags=" + sabrData.customXtag)
     }
+	if(window.sabrHd && sabrData.customVideoItag) {
+		url.push("&user_video_itag=" + sabrData.customVideoItag);
+	} else if(window.sabrHd && sabrData.usableSr) {
+		url.push("&user_video_itag=" + sabrData.usableSr[1]);
+	}
+	
     function retryRequest(force) {
         sabrData.lastRequestFailCount++
         if(sabrData.lastRequestFailCount > 3) {
+			if(!videoStartedPlaying) {
+				var sabrlessUrl = "/watch" + location.href.split("/watch")[1]
+								+ "&unsabr=1";
+				var eMsg = [
+					"sabr playback seems to have failed this time.",
+					"<br>try refreshing the page, or ",
+					'<a href="'+sabrlessUrl+'">load without sabr</a>'
+				].join("")
+				showUnrecoverableError(eMsg)
+			}
             console.warn("last sabr request failed too many times! no recovery")
             return;
         }
@@ -2788,6 +2852,52 @@ function requestSabr(offset, source, force) {
             catch(error){}
             audiotracksMain()
         }
+		var waitForCodecSwitch = false;
+		if(r.getResponseHeader("x-yt2009-video-mime")
+		&& sabrData.videoMime !== r.getResponseHeader("x-yt2009-video-mime")) {
+			waitForCodecSwitch = true;
+			var videoTime = video.currentTime;
+			// wrong mime type
+			// must redo mediasource! (switching sourcebuffers doesnt work
+			// after video starts)
+			
+			sabrData.addedSegments = []
+			if(sabrData.videoBuffer.updating) {
+				try {sabrData.videoBuffer.abort()}catch(error){}
+			}
+			if(sabrData.audioBuffer.updating) {
+				try {sabrData.audioBuffer.abort()}catch(error){}
+			}
+			try {
+				sabrData.videoBuffer.remove(0,video.duration)
+				sabrData.audioBuffer.remove(0,video.duration)
+			}
+			catch(error) {}
+			sabrData.waitingSabrFetch = false;
+			sabrData.timedSabrFetchAborted = true;
+			
+			video.src = ""
+			
+			var ms = new MediaSource();
+			video.src = URL.createObjectURL(ms);
+			
+			sabrData.rawMediaSource = ms;
+			
+			function readyStart() {
+				sabrData.videoMime = r.getResponseHeader("x-yt2009-video-mime")
+				vStream = ms.addSourceBuffer(sabrData.videoMime)
+				aStream = ms.addSourceBuffer(sabrData.audioMime)
+				sabrData.videoBuffer = vStream
+				sabrData.audioBuffer = aStream
+				sabrProcessParts()
+				video.currentTime = videoTime;
+			}
+
+			// init
+			ms.addEventListener("sourceopen", function() {
+				readyStart()
+			}, false)
+		}
 
         // parse x-yt2009-saber
         var partsExtracted = 0;
@@ -2803,34 +2913,43 @@ function requestSabr(offset, source, force) {
 
         sabrData.lastRequestFailCount = 0;
 
-        while(partsExtracted !== partsInResponse) {
-            var partHeader = uint8tostring(
-                new Uint8Array(s.slice(cursor, cursor + 70))
-            )
-            partHeader = partHeader.split("//")[1]
-            var headerLength = ("//" + partHeader + "//").length
+		function sabrProcessParts() {
+			while(partsExtracted !== partsInResponse) {
+				var partHeader = uint8tostring(
+					new Uint8Array(s.slice(cursor, cursor + 70))
+				)
+				partHeader = partHeader.split("//")[1]
+				var headerLength = ("//" + partHeader + "//").length
 
-            var partId = partHeader.split("SPART-\"")[1].split("\"")[0]
-            var plen = parseInt(partHeader.split("-CL=")[1])
-            var pdata = s.slice(cursor + headerLength, cursor + headerLength + plen)
-            var ptype = "video"
-            if(sabrData.audioItags.indexOf(parseInt(partId.split("-")[0])) !== -1) {
-                ptype = "audio"
-            }
+				var partId = partHeader.split("SPART-\"")[1].split("\"")[0]
+				var plen = parseInt(partHeader.split("-CL=")[1])
+				var pdata = s.slice(
+					cursor + headerLength,
+					cursor + headerLength + plen
+				)
+				var ptype = "video"
+				var partItag = parseInt(partId.split("-")[0])
+				if(sabrData.audioItags.indexOf(partItag) !== -1) {
+					ptype = "audio"
+				}
 
-            var part = {
-                "id": partId,
-                "itag": parseInt(partId.split("-")[0]),
-                "pn": parseInt(partId.split("-")[1]),
-                "data": pdata,
-                "type": ptype
-            }
+				var part = {
+					"id": partId,
+					"itag": parseInt(partId.split("-")[0]),
+					"pn": parseInt(partId.split("-")[1]),
+					"data": pdata,
+					"type": ptype
+				}
 
-            addToSabrQueue(part)
-            cursor = cursor + headerLength + plen
+				addToSabrQueue(part)
+				cursor = cursor + headerLength + plen
 
-            partsExtracted++
-        }
+				partsExtracted++
+			}
+		}
+		if(!waitForCodecSwitch) {
+			sabrProcessParts()
+		}
     }, false)
 }
 
@@ -2852,6 +2971,7 @@ function initAsSabr() {
         "addedSegments": [],
         "audioItags": [139, 140],
         "appendQueue": [],
+		"rawMediaSource": ms,
         "waitingSabrFetch": false,
         "timedCooldown": false,
         "timedSabrFetchAborted": false,
@@ -2859,11 +2979,49 @@ function initAsSabr() {
         "readAhead": 14,
         "defaultLongReadaheadSet": false
     }
+	
+	
+	// super resolution support
+	if(window.sabrSrData) {
+		window.sabrSrData = JSON.parse(window.sabrSrData)
+		// filter unplayable fmts
+		sabrSrData = window.sabrSrData.filter(function(res) {
+			return video.canPlayType(res[2]) == "probably"
+		})
+		// use vp9 if matching formats (more compatible)
+		var webmFmts = sabrSrData.filter(function(res) {
+			return res[2].indexOf("vp9") !== -1
+		})
+		var av1Fmts = sabrSrData.filter(function(res) {
+			return res[2].indexOf("av01") !== -1
+		})
+		if(webmFmts.length == av1Fmts.length) {
+			sabrSrData = webmFmts;
+		}
+		
+		var useTeneighty = (
+			document.cookie
+			&& (document.cookie.indexOf("hd_1080:") !== -1
+			|| document.cookie.indexOf("hd_1080") !== -1)
+		)
+		
+		if(!useTeneighty) {
+			sabrSrData = sabrSrData.filter(function(res) {
+				return res[0].indexOf("1080p") == -1
+			})
+		}
+		
+		if(sabrSrData[0]) {
+			sabrData.usableSr = sabrSrData[0]
+		}
+	}
 
     // start once ready
     function readyStart() {
-        vStream = ms.addSourceBuffer("video/mp4; codecs=\"avc1.4D4028\"")
-        aStream = ms.addSourceBuffer("audio/mp4; codecs=\"mp4a.40.2\"")
+		sabrData.videoMime = "video/mp4; codecs=\"avc1.4D4028\""
+		sabrData.audioMime = "audio/mp4; codecs=\"mp4a.40.2\""
+        vStream = ms.addSourceBuffer(sabrData.videoMime)
+        aStream = ms.addSourceBuffer(sabrData.audioMime)
         sabrData.videoBuffer = vStream
         sabrData.audioBuffer = aStream
         requestSabr(0, "TIMED")
