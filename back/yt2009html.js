@@ -190,7 +190,11 @@ module.exports = {
                     "hl": "en",
                     "clientName": "ANDROID",
                     "clientVersion": "19.02.39",
-                    "androidSdkVersion": 34,
+                    "deviceMake": "Google",
+                    "deviceModel": "Android SDK built for x86",
+                    "deviceCodename": "ranchu;",
+                    "osName": "Android",
+                    "osVersion": "10",
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + id
                     }
@@ -804,7 +808,26 @@ module.exports = {
                         {"qualityLabel": "360p", "url": "dummy"}
                     ]
                 }
+                data.extendedItagData = []
                 videoData.streamingData.adaptiveFormats.forEach(quality => {
+                    if(quality.qualityLabel) {
+                        let xtags = false;
+						if(quality.xtags) {
+                            try {
+                                xtags = playerProto.xtags.deserializeBinary(
+                                    quality.xtags
+                                ).toObject()
+                            }
+                            catch(error){}
+                        }
+                        if(!config.max_1080
+                        || (config.max_1080 && quality.height <= 1080)) {
+                            data.extendedItagData.push([
+                                quality.itag,quality.qualityLabel,quality.height,
+                                quality.xtags,quality.mimeType,xtags
+                            ])
+                        }
+                    }
                     if(quality.qualityLabel) {
                         quality.qualityLabel = quality.qualityLabel
                                                .replace("p50", "p")
@@ -1805,6 +1828,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         function setChannelIcon() {
+            if(channelIcon.startsWith("/assets/")
+            && !fs.existsSync(".." + channelIcon)) {
+                code = code.replace(
+                    "channel_icon",
+                    "/avatar_wait?av=" + channelIcon
+                )
+            }
             code = code.replace("channel_icon", channelIcon)
         }
 
@@ -2125,11 +2155,20 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     commentTime, yt2009languages.get_language(req)
                 )
                 // like count clarif
-                let presentedLikeCount = Math.floor((comment.likes / topLike) * 10)
-                if(topLike < 10) {
-                    presentedLikeCount = comment.likes
+                let presentedLikeCount = comment.likes
+                if(!flags.includes("watch_modern_features")) {
+                    presentedLikeCount = Math.floor((comment.likes / topLike) * 10)
+                    if(topLike < 10) {
+                        presentedLikeCount = comment.likes
+                    }
                 }
-
+                if(presentedLikeCount >= 1000) {
+                    code = code.replace(
+                        `//yt2009-cmt-lik`,
+                        `document.body.className += " extended-comment-likecount"`
+                    )
+                }
+                
                 if(isNaN(presentedLikeCount)) {presentedLikeCount = 0;}
 
                 // comment id
@@ -2150,6 +2189,24 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
                 if(!commentContent) return;
 
+                let additionalContentHeader = []
+                if(comment.pinned) {
+                    additionalContentHeader.push(
+                        "lang_watch_comment_pinned"
+                    )
+                }
+                if(comment.hearted) {
+                    additionalContentHeader.push(
+                        "lang_watch_comment_hearted_prefix" + data.author_name
+                    )
+                }
+                if(additionalContentHeader.length == 0) {
+                    additionalContentHeader = false;
+                } else {
+                    additionalContentHeader = additionalContentHeader.join(" - ")
+                    additionalContentHeader = " - " + additionalContentHeader
+                }
+
                 let commentHTML = yt2009templates.videoComment(
                     comment.authorUrl,
                     commentPoster,
@@ -2159,7 +2216,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     true,
                     presentedLikeCount,
                     id,
-                    comment.r
+                    comment.r,
+                    (flags.includes("watch_modern_features")
+                    && additionalContentHeader)
                 )
 
                 if(customRating == 1) {
@@ -3030,7 +3089,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 						&& flags.includes("exp_sabr_enable_superresolution"))
 						? data.superResolutions
 						: false
-					)
+					), (data.extendedItagData
+                    && flags.includes("watch_modern_features")
+                    ? data.extendedItagData : false)
                 )
             )
 

@@ -1757,6 +1757,7 @@ module.exports = {
                     }
                     if(watch_url.includes("cps2.swf")) {
                         flashUrl += `&BASE_YT_URL=http://${config.ip}:${config.port}/`;
+                        flashUrl += `&iurl=http://i.ytimg.com/vi/${video.id}/hqdefault.jpg`
                     }
                     code = code.replace(
                         "<!--yt2009_player-->",

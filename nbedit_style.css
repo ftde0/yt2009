@@ -256,3 +256,8 @@ a[href="/my_videos_upload"] span {
     font-weight: bold;
     margin-top: 10px;
 }
+
+.extended-comment-likecount .watch-comment-voting,
+.extended-comment-likecount .watch-comment-voting-off {
+    width: 97px;
+}

@@ -24,6 +24,7 @@
     if you've signed into mobile apps with yt2009, this process will be familiar.</p>
     <p style="margin-top: 30px;">having trouble using an older browser? sign in through a new one and copy the <code>pchelper_user</code> cookie.</p>
     <a href="#" class="highlighted-a" onclick="switchPanel(2);genConnData()">start connection</a>
+    <a href="#" onclick="switchPanel(9)">already have a pchelper_user cookie?</a>
 </div>
 <div class="panel" id="panel2" style="display: none;">
     <p id="load-text">loading..</p>
@@ -75,6 +76,15 @@
 <div class="panel" id="panel8" style="display: none;">
     <p class="i">adding account, please wait..</p>
     <p id="panel8-error" style="display: none;"></p>
+</div>
+<div class="panel" id="panel9" style="display: none;">
+    <p>set your <code>pchelper_user</code> cookie here.<br>
+    this can be used - for example - to carry your account when moving across PCs,<br>
+    or using an older browser, provided you already have a sign in cookie on a newer one.</p>
+    <input type="text" spellcheck="false" autocomplete="off" id="pchelper_existing"><br>
+    <a class="yt-button yt-button-primary" href="#" onclick="pchelperUserSet()">
+        <span>done</span>
+    </a>
 </div>
 <script>
     var usesUnsupportedNode = false;

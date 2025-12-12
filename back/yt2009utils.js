@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const https = require("https")
 const constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const fs = require("fs")
@@ -141,8 +142,21 @@ module.exports = {
         }
         catch(error) {}
         let comments = []
+        let heartedComments = []
         try {
             let i = 0;
+            response.frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
+                if(m.payload
+                && m.payload.engagementToolbarStateEntityPayload
+                && m.payload.engagementToolbarStateEntityPayload.key) {
+                    let z = m.payload.engagementToolbarStateEntityPayload
+                    if(z.heartState == "TOOLBAR_HEART_STATE_HEARTED") {
+                        heartedComments.push(
+                            m.payload.engagementToolbarStateEntityPayload.key
+                        )
+                    }
+                }
+            })
             response.frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
                 if(m.payload
                 && m.payload.commentEntityPayload) {
@@ -164,12 +178,13 @@ module.exports = {
                         "time": comment_flags.includes("fake_comment_dates")
                                 ? gen_fake_date()
                                 : m.properties.publishedTime,
-                        "likes": parseInt(m.toolbar.likeCountA11y.replace(
-                            /[^0-9]/g, ""
-                        )),
+                        "likes": this.approxSubcount(m.toolbar.likeCountA11y),
                         "pinned": (i == 0 && firstPinned),
                         "commentId": m.properties.commentId,
-                        "r": repliesData
+                        "r": repliesData,
+                        "hearted": heartedComments.includes(
+                            m.properties.toolbarStateKey
+                        )
                     })
                     i++
                 }
@@ -399,9 +414,17 @@ module.exports = {
                 }
                 catch(error) {}
                 try {
-                    let author_url = result.ownerText.runs[0]
-                                    .navigationEndpoint.browseEndpoint
-                                    .canonicalBaseUrl;
+                    let author_url = "";
+                    try {
+                        author_url = result.ownerText.runs[0]
+                                     .navigationEndpoint.browseEndpoint
+                                     .canonicalBaseUrl;
+                    }
+                    catch(error) {
+                        author_url = "/channel/" + JSON.stringify(
+                            result.ownerText.runs[0].navigationEndpoint
+                        ).split(`browseId":"`)[1].split(`"`)[0]
+                    }
 
                     // check for author urls
                     let userHandle = false
@@ -1223,7 +1246,7 @@ module.exports = {
         let testF18 = this.testF18;
         let downloadInParts_file = this.downloadInParts_file;
         let funcRef = this.saveMp4_android;
-
+        
         function parseResponse(r) {
             // parse formats
             if(!r.streamingData) {
@@ -1604,7 +1627,6 @@ module.exports = {
                     "hl": "en",
                     "clientName": "ANDROID",
                     "clientVersion": "19.02.39",
-                    "androidSdkVersion": 34,
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + id
                     }
@@ -1642,7 +1664,6 @@ module.exports = {
                     "hl": "en",
                     "clientName": "ANDROID",
                     "clientVersion": "19.02.39",
-                    "androidSdkVersion": 34,
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + id
                     }

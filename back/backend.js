@@ -235,7 +235,9 @@ if(!config.disableWs) {
                         let commentsAdded = 0
                         m.data.forEach(comment => {
                             if(!comment.id
-                            || JSON.stringify(comments).includes(comment.id)) return;
+                            || JSON.stringify(comments).includes(comment.id)) {
+                                return;
+                            }
                             if(!comments[comment.video]) {
                                 comments[comment.video] = []
                             }
@@ -243,7 +245,14 @@ if(!config.disableWs) {
                             commentsAdded++
                         })
                         yt2009.receive_update_custom_comments(comments)
-                        console.log("added " + commentsAdded + " comments from master")
+                        if(config.env == "dev") {
+                            let consoleMsg = [
+                                "added",
+                                commentsAdded,
+                                "comments from master"
+                            ].join(" ")
+                            console.log(consoleMsg)
+                        }
                         break;
                     }
                     case "pull_name-result": {
@@ -2765,6 +2774,25 @@ let videoProcessEndpoints = [
 videoProcessEndpoints.forEach(endpoint => {
     app.get(endpoint, (req, res) => {
         yt2009_mobile.video_process(req, res)
+    })
+    app.head(endpoint + "*", (req, res) => {
+        let ct = "video/mp4"
+        switch(endpoint) {
+            case "/http_3gp": {
+                ct = "video/3gpp"
+                break;
+            }
+            case "/http_wmv": {
+                ct = "video/wmv"
+                break;
+            }
+            case "/http_xvid": {
+                ct = "video/avi"
+                break;
+            }
+        }
+        res.set("content-type", ct)
+        res.status(200).send()
     })
 })
 
@@ -6815,6 +6843,10 @@ app.get("/sabr_playback", (req, res) => {
 					res.set("x-yt2009-video-mime", result[part])
 					break;
 				}
+                case "itag": {
+                    res.set("x-yt2009-used-itag", result[part])
+                    break;
+                }
                 default: {
                     let header = `//SPART-"${part}"-CL=${result[part].length}//`
                     resp = Buffer.concat([

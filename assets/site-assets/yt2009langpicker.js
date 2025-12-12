@@ -64,3 +64,7 @@ function setLoc(loc) {
 function closeLangPicker() {
     document.getElementById("language-picker-container").innerHTML = ""
 }
+
+function closeLocPicker() {
+    document.getElementById("region-picker-container").innerHTML = ""
+}

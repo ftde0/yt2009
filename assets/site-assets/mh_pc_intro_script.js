@@ -22,7 +22,7 @@ try {
 catch(error) {}
 var panels = [
     "panel1", "panel2", "panel3", "panel4", "panel5", "panel6",
-    "panel7", "panel8"
+    "panel7", "panel8", "panel9"
 ]
 function switchPanel(panelNumber) {
     for(var p in panels) {
@@ -107,4 +107,11 @@ function putAuth() {
         }
     }
     catch(error) {}
+}
+function pchelperUserSet() {
+    var userCookie = document.getElementById("pchelper_existing").value;
+    document.cookie = "pchelper_user=" + userCookie + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT";
+    setTimeout(function() {
+        window.location = "/mh_pc_manage"
+    }, 150)
 }

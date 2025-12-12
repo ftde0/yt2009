@@ -1458,7 +1458,11 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         delete userdata[req.query.device];
         res.status(200);
         fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
-        res.send("unlink successful! you can now close this window.")
+        let msg = `unlink successful! you can now close this window.
+        <script>
+            document.cookie = "pchelper_user=a; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT";
+        </script>`
+        res.send(msg)
     },
 
     "pullOwnVideos": function(req, callback) {

@@ -1545,6 +1545,7 @@ function switchVideo(video) {
     if(customPlayerUrl.indexOf("2012.swf") !== -1
     || customPlayerUrl.indexOf("cps2.swf") !== -1) {
         videoUrl += "&BASE_YT_URL=" + baseUrlSetting
+        videoUrl += "&iurl=" + "http://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
     }
 
     var infoTitle = $("#playnav-curvideo-title")

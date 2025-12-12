@@ -1,5 +1,6 @@
 const test_alwayssign = false;
 
+const https = require("https")
 const fetch = require("node-fetch")
 const fs = require("fs")
 const config = require("./config.json")
@@ -121,7 +122,7 @@ if(!loginData.yExpire) {
         "yQwPhCI_qO0", "ts2a9cW4nLY"
     ]
 
-    // test /player fetch to check if we need tv sign in on host
+    // test /player fetch to check if we need android sign in on host
     let rv = vids[Math.floor(Math.random() * vids.length)]
     let ac = JSON.parse(JSON.stringify(androidContext))
     ac.client.mainAppWebInfo = {

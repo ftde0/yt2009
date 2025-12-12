@@ -328,5 +328,7 @@
     "watch_replies_plural_prefix": "View ",
     "watch_replies_plural_suffix": " replies",
     "watch_replies_more": "More replies",
-    "watch_comments_disabled_notice": "Adding comments has been disabled for this video."
+    "watch_comments_disabled_notice": "Adding comments has been disabled for this video.",
+    "watch_comment_pinned": "■ Pinned",
+    "watch_comment_hearted_prefix": "♥ from "
 }

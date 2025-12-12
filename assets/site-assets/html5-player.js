@@ -272,6 +272,14 @@ function initPlayer(parent, fullscreenEnabled) {
                     controlsFadeProgress = false;
                 }, 250)
             }
+
+            // hide qsel
+            if(mainElement.querySelector(".quality_selector")) {
+                var qsel = mainElement.querySelector(".quality_selector")
+                if(qsel.className.indexOf(" hid") == -1) {
+                    qsel.className += " hid"
+                }
+            }
         }, false)
 
         $("#watch-player-div").addEventListener("mouseover", function() {
@@ -382,9 +390,18 @@ function non_css_anim_add(element, cssProperty, from, to) {
     }, 200)*/
     element.style[cssProperty] = from + "px"
     var current = from;
-    var ff = false;
+    var ffInconsistent = false;
     if(navigator.userAgent.indexOf("Firefox") !== -1) {
-        ff = true
+        var ffVersion = 3;
+        if(navigator.userAgent.indexOf("Firefox/") !== -1) {
+            ffVersion = navigator.userAgent.split("Firefox/")[1].split(".")[0]
+            ffVersion = parseInt(ffVersion)
+            if(!isNaN(ffVersion) && ffVersion < 140) {
+                ffInconsistent = true;
+            }
+        } else {
+            ffInconsistent = true;
+        }
     }
     var x = setInterval(function() {
         current += 11;
@@ -398,7 +415,7 @@ function non_css_anim_add(element, cssProperty, from, to) {
             clearInterval(x);
             animationDebounces[element.className] = false;
         }
-    }, ff ? 20 : 33)
+    }, ffInconsistent ? 20 : 33)
 }
 function non_css_anim_remove(element, cssProperty, from, to) {
     if(element.style[cssProperty] == to + "px"
@@ -406,9 +423,18 @@ function non_css_anim_remove(element, cssProperty, from, to) {
     element.style[cssProperty] = from + "px"
     animationDebounces[element.className] = true;
     var current = from;
-    var ff = false;
+    var ffInconsistent = false;
     if(navigator.userAgent.indexOf("Firefox") !== -1) {
-        ff = true
+        var ffVersion = 3;
+        if(navigator.userAgent.indexOf("Firefox/") !== -1) {
+            ffVersion = navigator.userAgent.split("Firefox/")[1].split(".")[0]
+            ffVersion = parseInt(ffVersion)
+            if(!isNaN(ffVersion) && ffVersion < 140) {
+                ffInconsistent = true;
+            }
+        } else {
+            ffInconsistent = true;
+        }
     }
     var x = setInterval(function() {
         current -= 12;
@@ -417,7 +443,7 @@ function non_css_anim_remove(element, cssProperty, from, to) {
             clearInterval(x);
             animationDebounces[element.className] = false;
         }
-    }, ff ? 20 : 33)
+    }, ffInconsistent ? 20 : 33)
 }
 function $(element) {
     if(document.querySelectorAll(element).length !== 1) {
@@ -840,6 +866,13 @@ volume_btn.addEventListener("mouseover", function() {
     setTimeout(function() {
         volume_popping = false;
     }, 500)
+
+    if(mainElement.querySelector(".quality_selector")) {
+        var qsel = mainElement.querySelector(".quality_selector")
+        if(qsel.className.indexOf(" hid") == -1) {
+            qsel.className += " hid"
+        }
+    }
     try {
         $(".video_controls .fullscreen").style.backgroundPosition = "0px 0px"
     }
@@ -883,6 +916,13 @@ $(".timer").addEventListener("mouseover", function() {
         volume_panel_mousedown = false;
     }
 
+    if(mainElement.querySelector(".quality_selector")) {
+        var qsel = mainElement.querySelector(".quality_selector")
+        if(qsel.className.indexOf(" hid") == -1) {
+            qsel.className += " hid"
+        }
+    }
+
     mousedown = false;
     $(".seek_btn").className = "seek_btn"
 }, false)
@@ -900,6 +940,13 @@ if(document.querySelector(".fullscreen")) {
             volume_popping = false;
         }, 500)
         volume_panel_mousedown = false;
+
+        if(mainElement.querySelector(".quality_selector")) {
+            var qsel = mainElement.querySelector(".quality_selector")
+            if(qsel.className.indexOf(" hid") == -1) {
+                qsel.className += " hid"
+            }
+        }
 
         non_css_anim_remove(player_add_popout, "bottom", 25, -59)
     }, false)
@@ -1232,6 +1279,12 @@ player_add_btn.addEventListener("mouseover", function() {
     setTimeout(function() {
         player_add_popout_debounce = false;
     }, 400)
+    if(mainElement.querySelector(".quality_selector")) {
+        var qsel = mainElement.querySelector(".quality_selector")
+        if(qsel.className.indexOf(" hid") == -1) {
+            qsel.className += " hid"
+        }
+    }
 }, false)
 
 // mouse out of the additions
@@ -2790,7 +2843,10 @@ function requestSabr(offset, source, force) {
     if(sabrData.customXtag) {
         url.push("&xtags=" + sabrData.customXtag)
     }
-	if(window.sabrHd && sabrData.customVideoItag) {
+    if(sabrData.respondItag) {
+        url.push("&ri=1")
+    }
+	if(sabrData.customVideoItag) {
 		url.push("&user_video_itag=" + sabrData.customVideoItag);
 	} else if(window.sabrHd && sabrData.usableSr) {
 		url.push("&user_video_itag=" + sabrData.usableSr[1]);
@@ -2852,6 +2908,25 @@ function requestSabr(offset, source, force) {
             catch(error){}
             audiotracksMain()
         }
+
+        // itag data for quality selector
+        if(r.getResponseHeader("x-yt2009-used-itag")
+        && mainElement.querySelector(".qualities")) {
+            var qs = mainElement.querySelectorAll(".qualities .circle.selected")
+            for(var s in qs) {
+                s = qs[s]
+                if(s.className) {
+                    s.className = "circle"
+                }
+            }
+
+            var itag = r.getResponseHeader("x-yt2009-used-itag")
+            var selector = ".qualities [data-itag=\"" + itag + "\"] .circle"
+
+            mainElement.querySelector(selector).className = "circle selected"
+        }
+
+        // video mime for custom res
 		var waitForCodecSwitch = false;
 		if(r.getResponseHeader("x-yt2009-video-mime")
 		&& sabrData.videoMime !== r.getResponseHeader("x-yt2009-video-mime")) {
@@ -2953,6 +3028,7 @@ function requestSabr(offset, source, force) {
     }, false)
 }
 
+var sabrInitCount = 0;
 function initAsSabr() {
     if(!window.MediaSource) {
         showUnrecoverableError(
@@ -2960,6 +3036,9 @@ function initAsSabr() {
         )
         return;
     }
+
+    sabrInitCount++
+    var m = mainElement
 
     var ms = new MediaSource();
     var vStream;
@@ -2983,6 +3062,11 @@ function initAsSabr() {
 	
 	// super resolution support
 	if(window.sabrSrData) {
+        if(sabrInitCount >= 2) {
+            window.sabrSrData = window.sabrOriginalSrData
+        } else {
+            window.sabrOriginalSrData = window.sabrSrData
+        }
 		window.sabrSrData = JSON.parse(window.sabrSrData)
 		// filter unplayable fmts
 		sabrSrData = window.sabrSrData.filter(function(res) {
@@ -3016,6 +3100,210 @@ function initAsSabr() {
 		}
 	}
 
+    // exact res support
+    if(window.sabrExactRes) {
+        if(sabrInitCount >= 2) {
+            window.sabrExactRes = window.sabrOriginalExactRes
+        } else {
+            window.sabrOriginalExactRes = window.sabrExactRes
+        }
+        // sort playable and most compatible configs (avc > vp9 > av1)
+        window.sabrExactRes = JSON.parse(window.sabrExactRes).filter(
+            function(res) {
+                return video.canPlayType(res[4])
+            }
+        )
+        var addedResolutions = []
+        var sabrResTemp = []
+        var h264Res = window.sabrExactRes.filter(function(res) {
+            return res[4].indexOf("avc1") !== -1
+        })
+        var vp9Res = window.sabrExactRes.filter(function(res) {
+            return res[4].indexOf("vp9") !== -1
+        })
+        var av1Res = window.sabrExactRes.filter(function(res) {
+            return res[4].indexOf("av01") !== -1
+        })
+        h264Res.forEach(function(res) {
+            sabrResTemp.push(res)
+            addedResolutions.push(res[1])
+        })
+        vp9Res.forEach(function(res) {
+            if(addedResolutions.indexOf(res[1]) == -1) {
+                sabrResTemp.push(res)
+                addedResolutions.push(res[1])
+            }
+        })
+        av1Res.forEach(function(res) {
+            if(addedResolutions.indexOf(res[1]) == -1) {
+                sabrResTemp.push(res)
+                addedResolutions.push(res[1])
+            }
+        })
+
+        if(typeof(window.useTeneighty) == "undefined") {
+            var useTeneighty = (
+                document.cookie
+                && (document.cookie.indexOf("hd_1080:") !== -1
+                || document.cookie.indexOf("hd_1080") !== -1)
+            )
+        }
+        
+        if(!useTeneighty) {
+            sabrResTemp = sabrResTemp.filter(function(res) {
+                return res[2] <= 720
+            })
+        }
+
+        window.sabrExactRes = sabrResTemp.sort(function(a,b) {
+            return b[2] - a[2]
+        }).sort(function(a,b) {
+            return b[1].length - a[1].length
+        });
+
+
+        sabrData.respondItag = 1;
+
+        // add quality selector to hd button
+        if(mainElement.querySelector(".hq")) {
+            var qContainer = document.createElement("div")
+            qContainer.className = "quality_selector hid"
+            var qHeader = document.createElement("h2")
+            qHeader.innerHTML = "Quality"
+            qContainer.appendChild(qHeader)
+            var qList = document.createElement("ul")
+            qList.className = "qualities"
+
+            var moreSpacedPicker = false;
+
+            window.sabrExactRes.forEach(function(q) {
+                var isSr = false;
+                var srIndicator = false;
+                if(q[5] && q[5].partList) {
+                    isSr = !!(q[5].partList.filter(function(s) {
+                        return (s.key == "sr" && s.value == "1")
+                    })[0])
+                }
+                if(isSr && !moreSpacedPicker) {
+                    moreSpacedPicker = true;
+                }
+                if(isSr) {
+                    var enablesSr = (
+                        document.cookie
+                     && document.cookie.indexOf("enable_superresolution") !== -1
+                    )
+
+                    srIndicator = document.createElement("div")
+                    srIndicator.setAttribute("title", "Super Resolution")
+                    srIndicator.className = "sr_indicator"
+                    var srIp1 = document.createElement("span")
+                    srIp1.innerHTML = "["
+                    srIp1.className = "ip1"
+                    srIndicator.appendChild(srIp1)
+                    var srIp2 = document.createElement("span")
+                    srIp2.innerHTML = "SR"
+                    srIp2.className = "ip2"
+                    srIndicator.appendChild(srIp2)
+                    var srIp3 = document.createElement("span")
+                    srIp3.innerHTML = "]"
+                    srIp3.className = "ip3"
+                    srIndicator.appendChild(srIp3)
+                }
+                if(isSr && !enablesSr) return;
+
+                var qElement = document.createElement("li")
+                qElement.setAttribute("data-itag", q[0])
+                var qCircle = document.createElement("span")
+                qCircle.className = "circle"
+                qElement.appendChild(qCircle)
+                var qName = document.createElement("p")
+                qName.innerHTML = q[1];
+                if(srIndicator) {
+                    qName.appendChild(srIndicator)
+                }
+                qElement.appendChild(qName)
+                qElement.onclick = function() {
+                    if(sabrData.lastCustomItag) {
+                        sabrData.lastCustomItag = false;
+                    }
+                    sabrData.customVideoItag = q[0]
+                    requestSabr(Math.floor(video.currentTime * 1000), "FORCE")
+
+
+                    if(q[2] >= 720 && !sabrHd
+                    && mainElement.querySelector(".hq.hd")
+                    && mainElement.querySelector(".hd.hd")
+                      .className.indexOf(" enabled") == -1) {
+                        sabrHd = true;
+                        mainElement.querySelector(".hq.hd").className = "hq hd enabled"
+                    } else if(q[2] == 480 && !sabrHd
+                    && !mainElement.querySelector(".hq.hd")
+                    && mainElement.querySelector(".hq")
+                    && mainElement.querySelector(".hq")
+                      .className.indexOf(" enabled") == -1) {
+                        sabrHd = true;
+                        mainElement.querySelector(".hq").className = "hq enabled"
+                    } else if(q[2] < 720
+                    && mainElement.querySelector(".hq.hd")
+                    && mainElement.querySelector(".hq.hd.enabled")) {
+                        sabrHd = false;
+                        mainElement.querySelector(".hq.hd").className = "hq hd"
+                    } else if(q[2] < 480
+                    && mainElement.querySelector(".hq")
+                    && mainElement.querySelector(".hq.enabled")) {
+                        sabrHd = false;
+                        mainElement.querySelector(".hq").className = "hq"
+                    }
+                }
+                qElement.oncontextmenu = function(e) {
+                    var playerX = 0;
+                    var playerY = 0;
+                    if(mainElement.getBoundingClientRect) {
+                        playerX = Math.floor(mainElement.getBoundingClientRect().left)
+                        playerY = Math.floor(mainElement.getBoundingClientRect().top)
+                    }
+                    var x = (e.clientX || e.pageX || 0) - playerX
+                    var y = (e.clientY || e.pageY || 0) - playerY
+                    return false;
+                }
+                qList.appendChild(qElement)
+            })
+
+            if(moreSpacedPicker) {
+                qContainer.className += " more_space"
+            }
+
+            qContainer.appendChild(qList)
+            mainElement.appendChild(qContainer)
+
+            var mouseOnHq = false;
+            var hqBtn = mainElement.querySelector(".hq")
+
+            hqBtn.addEventListener("mousemove", function() {
+                if(mouseOnHq) return;
+                mouseOnHq = true;
+                setTimeout(function() {
+                    if(mouseOnHq) {
+                        qContainer.className = qContainer.className
+                                               .split(" hid").join("")
+                    }
+                }, 300)
+            }, false)
+            hqBtn.addEventListener("mouseout", function() {
+                mouseOnHq = false;
+            }, false)
+
+            qContainer.addEventListener("mouseout", function(e) {
+                var mouse_left = e.pageX || e.clientX;
+                var mouse_top = e.pageY || e.clientY;
+                if(checkBounds(hqBtn, mouse_left, mouse_top)
+                || (checkBounds(qContainer, mouse_left, mouse_top)
+                && qContainer.className.indexOf(" hid") == -1)) return;
+                qContainer.className += " hid"
+            }, false)
+        }
+    }
+
     // start once ready
     function readyStart() {
 		sabrData.videoMime = "video/mp4; codecs=\"avc1.4D4028\""
@@ -3044,7 +3332,10 @@ function initAsSabr() {
                 }
                 catch(error) {
                     console.log("VID", error)
+                    // try reinit player
                     clearInterval(vbq)
+                    initAsSabr()
+                    return;
                 }
                 sabrData.appendQueue.shift()
             } else if(sabrData.appendQueue[0].type == "video"
@@ -3069,6 +3360,9 @@ function initAsSabr() {
         && video.duration >= (60 * 3)) {
             sabrData.defaultLongReadaheadSet = true;
             sabrData.readAhead = 50
+        }
+        if(video.duration >= (60 * 30)) {
+            sabrData.readAhead = 120
         }
 
         if(video.currentTime > 120
@@ -3184,6 +3478,14 @@ function sabrQualityChanged() {
     sabrData.waitingSabrFetch = false;
     sabrData.timedSabrFetchAborted = true;
     var c = video.currentTime
+    if(!sabrHd && sabrData.customVideoItag) {
+        // take off custom quality if switching hd -> nonhd
+        sabrData.lastCustomItag = sabrData.customVideoItag;
+        sabrData.customVideoItag = false;
+    } else if(sabrHd && !sabrData.customVideoItag && sabrData.lastCustomItag) {
+        sabrData.customVideoItag = sabrData.lastCustomItag
+        sabrData.lastCustomItag = false;
+    }
     requestSabr(Math.floor(c * 1000), "FORCE")
 }
 

@@ -22,6 +22,7 @@ var languageData_EN = {
         "watch-share-behavior": "sets how the Share section should work",
         "watch-turn-down-lights": "shows a button to turn down the lights. was available for some videos in 2009.",
         "watch-username-asciify": "remove special characters from usernames",
+        "watch-watch-modern-features": "backport new youtube features to yt2009",
         "watch-wayback-features": "use Wayback Machine data for yt2009",
         "watch-yt-redir": "redirect youtube.com links in descriptions to yt2009",
 

@@ -5,6 +5,7 @@ const sabrResponsePb = require("./proto/sabr_response_pb")
 const yt2009utils = require("./yt2009utils")
 const yt2009signin = require("./yt2009androidsignin")
 const yt2009constants = require("./yt2009constants.json")
+const config = require("./config.json")
 const child_process = require("child_process")
 const audioItags = [139, 140]
 
@@ -53,8 +54,15 @@ module.exports = {
 		&& !isNaN(parseInt(req.query.user_video_itag))) {
 			playbackSessions[playbackSession].dirty = true;
 			p.dirty = true;
+            playbackSessions[playbackSession].pongItag = true;
+            p.pongItag = true;
 			customItag = parseInt(req.query.user_video_itag)
 		}
+
+        if(req.query.ri == "1") {
+            playbackSessions[playbackSession].pongItag = true;
+            p.pongItag = true;
+        }
 
         function processPlayer(r) {
             if(!r.sabrUrl) {
@@ -124,6 +132,17 @@ module.exports = {
                 videoFmts = fmts.filter((s) => {
                     return s.itag == 160
                 })
+            }
+            if(p.pongItag
+            && p.dirty
+            && customItag
+            && videoFmts[0].itag !== customItag) {
+                let target = videoFmts.filter(s => {
+                    return s.itag == customItag
+                })
+                if(target[0]) {
+                    videoFmts = [target[0]]
+                }
             }
             let audioFmts = fmts.filter((s) => {
                 return (s.itag == 140 || s.itag == 139)
@@ -232,6 +251,9 @@ module.exports = {
 							if(p.dirty) {
 								data.videoMime = preferedVideoFmt.mimeType
 							}
+                            if(p.pongItag) {
+                                data.itag = preferedVideoFmt.itag
+                            }
                             callback(data)
                         }
                     }, (redir) => {

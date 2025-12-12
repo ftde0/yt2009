@@ -69,6 +69,16 @@
     <a class="yt-button yt-button-primary" href="#" onclick="save_settings()">
         <span>save</span>
     </a>
+    <hr>
+    <div>
+        <h1>Danger Zone</h1>
+        <a class="yt-button yt-button-primary" href="#" onclick="unlinkhelper()">
+            <span>remove my account</span>
+        </a> from this yt2009 instance<br><br>
+        <a class="yt-button yt-button-primary" href="#" onclick="exposehelper()">
+            <span>export pchelper cookie</span>
+        </a> for moving devices
+    </div>
 </div>
 <script>
     var device = ""
@@ -315,15 +325,33 @@ should we do so?");
                 }
             }
 
-
-        
-            //fillSync("pchelper_subs", "sublist", "subscriptions")
-            //fillSync("pchelper_playlists", "playlist_index", "playlistsIndex")
-            //fillSync("pchelper_favorites", "favorites", "favorites")
-
         }
         document.cookie = "pchelper_flags=" + s
                         + "; Path=/;" + expiry;
         alert("ok")
+    }
+
+    function unlinkhelper() {
+        var message = [
+            "unlinking pchelper will remove your data from this yt2009 instance,",
+            "resulting in your need to log in again if needed.",
+            "confirm?"
+        ]
+        var r = confirm(message.join(" "))
+        if(r) {
+            window.location = "/unlinkhelper?device=" + device
+        }
+    }
+
+    function exposehelper() {
+        var message = [
+            "showing the pchelper cookie will let you move your account",
+            "but it can also be added by anyone to use your youtube channel.",
+            "make sure to keep this token secret."
+        ]
+        var r = confirm(message.join(" "))
+        if(r) {
+            alert("pchelper_user cookie: " + device)
+        }
     }
 </script>

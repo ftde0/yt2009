@@ -8,7 +8,15 @@ const config = require("./config.json")
 const langs = require("./language_data/language_engine")
 
 module.exports = {
-    "videoComment": function(authorUrl, authorName, commentTime, content, flags, useLanguage, likes, id, replyData) {
+    "videoComment": function(
+        authorUrl, authorName, commentTime,
+        content, flags, useLanguage, likes,
+        id, replyData, additionalRenderHeader
+    ) {
+        if(!additionalRenderHeader) {
+            additionalRenderHeader = ""
+        }
+
         if(commentTime.includes("in playlist")) {
             commentTime = commentTime.split("in playlist")[0]
         }
@@ -69,7 +77,7 @@ module.exports = {
             <div class="watch-comment-head">
                 <div class="watch-comment-info">
                     <a class="watch-comment-auth" href="${authorUrl}" rel="nofollow">${authorName}</a>
-                    <span class="watch-comment-time"> (${commentTime}) </span>
+                    <span class="watch-comment-time"> (${commentTime}) ${utils.xss(additionalRenderHeader)}</span>
                 </div>
                 <div class="watch-comment-voting">
                     <span class="watch-comment-score watch-comment-${likeColor}" data-initial="${likes || 0}">${likePrefix}${likes || 0}</span>
@@ -2805,7 +2813,7 @@ module.exports = {
             <h2>Choose your content location</h2><br>
             <p style="clear: left;">Choose which country or region's content (videos and channels) you would like to view. This will not change the language of the site.</p>
             <div class="box-close-link">
-                <img onclick="closeLangPicker()" src="/assets/site-assets/pixel-vfl73.gif" alt="Close">
+                <img onclick="closeLocPicker()" src="/assets/site-assets/pixel-vfl73.gif" alt="Close">
             </div>
             <div class="clearR"></div>
         </div>
@@ -3495,7 +3503,7 @@ term='channel'/>
         <div class="clear"></div>
     </div>`,
 
-    "playerHDSabr": function(use720p, autoHQ, videoLengthMinutes, srData) {
+    "playerHDSabr": function(use720p, autoHQ, videoLengthMinutes, srData, exactData) {
         let seekbarRemoveWidth = 245
         if(videoLengthMinutes && videoLengthMinutes >= 100) {
             seekbarRemoveWidth = 265
@@ -3509,15 +3517,24 @@ term='channel'/>
 				return z;
 			})
 		}
+        if(exactData) {
+            exactData = exactData.map(s => {
+                let z = JSON.parse(JSON.stringify(s))
+                z[4] = z[4].split("\"").join("\\\"")
+                return z;
+            })
+        }
         return `
         //exp_hq
         seekbarRemoveWidth = ${seekbarRemoveWidth};
         adjustSeekbarWidth();
         var sabrHd = false;
 		${srData ? `
-		var sabrSrData = '${JSON.stringify(srData)}'` : ""}
+		var sabrSrData = '${JSON.stringify(srData)}';` : ""}
         ${autoHQ ? `
         sabrHd = true;` : ""}
+        ${exactData ? `
+        var sabrExactRes = '${JSON.stringify(exactData)}';` : ""}
 
         // hd/hq playback
         $(".video_controls .hq").addEventListener("click", function() {

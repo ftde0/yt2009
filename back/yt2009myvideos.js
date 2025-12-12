@@ -353,13 +353,21 @@ module.exports = {
             res.send(code)
         } else if(state == 3) {
             // handle actual video upload
+            let sep = "---"
+            if(req.headers["content-type"]
+            && req.headers["content-type"].includes("boundary=")) {
+                sep = req.headers["content-type"].split("boundary=")[1]
+                         .split(";")[0].substring(0,30)
+            }
             let ct = req.body.toString().split(`name="video"`)[1]
                         .split(`Content-Type: `)[1].split("\n")[0];
             let flowToken = req.body.toString()
                                .split(`name="flow-token"`)[1]
-                               .split("\n---------------")[0]
+                               .substring(0,100).split("\r\n").join("\n")
+                               .split(sep)[0]
+                               .split("--").join("")
                                .split("\n")
-            flowToken = flowToken[flowToken.length - 1].trim()
+            flowToken = flowToken.filter(s => {return s && s.length > 10})[0]
 
             if(!uploadFlowTokens[flowToken]) {
                 res.send("missed flow data!\
