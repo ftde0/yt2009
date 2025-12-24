@@ -998,6 +998,7 @@
 	/*padding-left: 15px;*/
     width: 67px;
     user-select: none;
+    z-index: 6;
 }
 
 .quality_selector h2 {

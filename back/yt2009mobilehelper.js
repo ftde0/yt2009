@@ -18,7 +18,7 @@ const androidHeaders = {
     "Content-Type": "application/json",
     "x-goog-authuser": "0",
     "x-origin": "https://www.youtube.com/",
-    "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+    "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
 }
 const upUA = [
     "com.google.android.youtube/1552803264",
@@ -36,8 +36,12 @@ const androidContext = {
     "client": {
         "hl": "en",
         "clientName": "ANDROID",
-        "clientVersion": "19.02.39",
-        "androidSdkVersion": 34
+        "clientVersion": "20.51",
+        "deviceMake": "Google",
+        "deviceModel": "Android SDK built for x86",
+        "deviceCodename": "ranchu;",
+        "osName": "Android",
+        "osVersion": "10"
     }
 }
 const genericDefault = fs.readFileSync(
@@ -739,7 +743,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                 let context = new protobufNextReq.root.contextType()
                 let client = new protobufNextReq.root.contextType.clientType()
                 client.setClientnumber(3)
-                client.setClientversion("19.02.39")
+                client.setClientversion("20.51.39")
                 client.setOsname("Android")
                 client.setOsversion("14")
                 client.setAndroidsdkversion(34)
@@ -1220,8 +1224,13 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
             }).then(r => {r.json().then(r => {
                 try {
                     r = r.contents.singleColumnBrowseResultsRenderer.tabs[0]
-                         .tabRenderer.content.sectionListRenderer.contents[0]
-                         .playlistVideoListRenderer;
+                         .tabRenderer.content.sectionListRenderer.contents
+                         .filter(s => {
+                             return s.playlistVideoListRenderer
+                         })[0]
+                    if(r.playlistVideoListRenderer) {
+                        r = r.playlistVideoListRenderer
+                    }
                 }
                 catch(error) {
                     createGdata()
@@ -1533,7 +1542,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             let context = new protobufNextReq.root.contextType()
             let client = new protobufNextReq.root.contextType.clientType()
             client.setClientnumber(3)
-            client.setClientversion("19.02.39")
+            client.setClientversion("20.51.39")
             client.setOsname("Android")
             client.setOsversion("14")
             client.setAndroidsdkversion(34)
@@ -1604,7 +1613,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 "body": JSON.stringify({
                     "context": androidContext,
                     "videoId": req.query.video_id
-                })
+                }),
+                "agent": yt2009utils.createFetchAgent()
             }).then(r => {r.json().then(r => {
                 callback(r)
             })})
@@ -1923,7 +1933,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             let context = new metadataUpdate.root.contextType()
             let client = new metadataUpdate.root.contextType.clientType()
             client.setClientnumber(3)
-            client.setClientversion("19.02.39")
+            client.setClientversion("20.51.39")
             client.setOsname("Android")
             client.setOsversion("14")
             client.setAndroidsdkversion(34)
@@ -2117,7 +2127,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             let context = new userMetadata.root.contextType()
             let client = new userMetadata.root.contextType.clientType()
             client.setClientnumber(3)
-            client.setClientversion("19.02.39")
+            client.setClientversion("20.51.39")
             client.setOsname("Android")
             client.setOsversion("14")
             client.setAndroidsdkversion(34)
@@ -2405,7 +2415,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         let context = new userMetadata.root.contextType()
         let client = new userMetadata.root.contextType.clientType()
         client.setClientnumber(3)
-        client.setClientversion("19.02.39")
+        client.setClientversion("20.51.39")
         client.setOsname("Android")
         client.setOsversion("14")
         client.setAndroidsdkversion(34)
@@ -2475,49 +2485,6 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                         res.redirect(ownUrl)
                     }, 1000)
                 })
-                /*let root = new userMetadata.root()
-                let context = new userMetadata.root.contextType()
-                let client = new userMetadata.root.contextType.clientType()
-                client.setClientnumber(3)
-                client.setClientversion("19.02.39")
-                client.setOsname("Android")
-                client.setOsversion("14")
-                client.setAndroidsdkversion(34)
-                context.addClient(client)
-                root.addContext(context)
-
-                root.setBrowseid(id)
-
-                let upd = new userMetadata.root.channelAboutTab()
-                upd.setDescription(description)
-                root.addAbout(upd)
-                
-                let pbmsg = root.serializeBinary()
-
-                // send request
-                setupYouTube(pullDeviceId(req), (h) => {
-                    h["Content-Type"] = "application/x-protobuf"
-                    h["x-goog-api-format-version"] = "2"
-                    let url = [
-                        "https://youtubei.googleapis.com",
-                        "/youtubei/v1/channel_edit",
-                        "/update_channel_page_settings"
-                    ].join("")
-                    fetch(url, {
-                        "method": "POST",
-                        "headers": h,
-                        "body": pbmsg
-                    }).then(r => {
-                        setTimeout(() => {
-                            let ownUrl = [
-                                "/channel/" + id,
-                                "?resetcache=1",
-                                "&nc=" + Date.now()
-                            ].join("")
-                            res.redirect(ownUrl)
-                        }, 1000)
-                    })
-                })*/
             })
         })
     },
@@ -3114,6 +3081,7 @@ function pullUserIdFromDevice(device, callback) {
 }
 
 const crypto = require("crypto")
+const yt2009utils = require("./yt2009utils")
 const tranferIkRef = "../www-core-feather.css"
 const i = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
 let ik = false;

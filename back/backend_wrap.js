@@ -3,6 +3,7 @@ const fetch = require("node-fetch")
 const fs = require("fs")
 const config = require("./config.json")
 const https = require("https")
+const yt2009utils = require("./yt2009utils")
 let yt2009_process;
 
 if(!fs.existsSync("./logs/")) {
@@ -25,16 +26,17 @@ if(!fs.existsSync("./androiddata.json")) {
             "Content-Type": "application/json",
             "x-goog-authuser": "0",
             "x-origin": "https://www.youtube.com/",
-            "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip",
+            "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip",
             "cookie": require("./yt2009constants.json").headers.cookie
         },
+        "agent": yt2009utils.createFetchAgent(),
         "referrer": "https://www.youtube.com/watch?v=" + rv,
         "body": JSON.stringify({
             "context": {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "19.02.39",
+                    "clientVersion": "20.51",
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + rv
                     }

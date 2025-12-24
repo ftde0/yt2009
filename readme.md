@@ -6,6 +6,15 @@ a fairly accurate 2009 youtube frontend with account features.
 
 ---
 
+## thank you to yt2009's top tier monthly sponsors!
+
+- [RF7391](https://github.com/RF7391)
+- [Szprinktrap](https://github.com/Szprinktrap)
+
+for $5/month, you can also join this list! --> https://github.com/sponsors/ftde0
+
+---
+
 ## setup
 ### if you prefer using docker rather than installing directly, go [here](docker.md) for setup instructions instead
 ### if hosting on windows xp, follow [xp specific instructions](windowsxp.md) instead.

@@ -24,6 +24,48 @@ const signedInNext = false;
 const devTimings = false;
 const oneWeek = 1000 * 60 * 60 * 24 * 7
 
+const EXTRA_RISK_BLOCK = true; //EXPERIMENT: reduce number of /player requests
+// to hopefully reduce IP blocks that started happening recently
+// when hosting on datacenter IPs
+const ANDROID_REQ_UA = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+let visitorId = ""
+if(EXTRA_RISK_BLOCK) {
+    fetch("https://youtubei.googleapis.com/youtubei/v1/visitor_id", {
+        "body": JSON.stringify({
+            "context": {
+                "client": {
+                    "hl": "en",
+                    "clientName": "ANDROID",
+                    "clientVersion": "20.51",
+                    "deviceMake": "Google",
+                    "deviceModel": "Android SDK built for x86",
+                    "deviceCodename": "ranchu;",
+                    "osName": "Android",
+                    "osVersion": "14"
+                }
+            }
+        }),
+        "method": "POST",
+        "headers": {
+            "user-agent": ANDROID_REQ_UA
+        }
+    }).then(r => {r.json().then(r => {
+        try {
+            visitorId = r.responseContext.visitorData
+            yt2009exports.writeData("visitor", visitorId)
+            if(config.env == "dev") {
+                let msg = [
+                    `[EXTRA_RISK EXP/DEV] got ANDROID visitor:`,
+                    visitorId,
+                    "\n"
+                ].join(" ")
+                console.log(msg)
+            }
+        }
+        catch(error){}
+    })})
+}
+
 const watchpage_code = fs.readFileSync("../watch.html").toString();
 const watchpage_feather = fs.readFileSync("../watch_feather.html").toString()
 let cache = require("./cache_dir/video_cache_manager")
@@ -189,7 +231,7 @@ module.exports = {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "19.02.39",
+                    "clientVersion": "20.51.39",
                     "deviceMake": "Google",
                     "deviceModel": "Android SDK built for x86",
                     "deviceCodename": "ranchu;",
@@ -201,21 +243,8 @@ module.exports = {
                 }
             }
         }
-        rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
-        fetch(`https://www.youtube.com/youtubei/v1/player?prettyPrint=false`, {
-            "headers": rHeaders,
-            "referrer": `https://www.youtube.com/`,
-            "referrerPolicy": "strict-origin-when-cross-origin",
-            "body": JSON.stringify({
-                "context": playerContext,
-                "playbackContext": {"vis": 0, "lactMilliseconds": "1"},
-                "videoId": id,
-                "racyCheckOk": true,
-                "contentCheckOk": true
-            }),
-            "method": "POST",
-            "mode": "cors"
-        }).then(r => {r.json().then(r => {
+        rHeaders["user-agent"] = ANDROID_REQ_UA
+        function onPlayerReceived(r) {
             if(devTimings) {
                 console.log("/player received", timer)
             }
@@ -224,11 +253,10 @@ module.exports = {
                     yt2009exports.extendWrite("players", id, r)
                 }
                 setTimeout(() => {
-                    // delete cached player after 15 minutes if still there
                     if(yt2009exports.read().players[id]) {
                         yt2009exports.delete("players", id)
                     }
-                }, 1000 * 60 * 15)
+                }, 1000 * 60 * 60)
                 combinedResponse.freezeSync = true;
                 // ^ overriden when category pull done successfully
             }
@@ -255,6 +283,54 @@ module.exports = {
                 callback(combinedResponse)
                 stopTimer()
             }
+        }
+        if(EXTRA_RISK_BLOCK) {
+            rHeaders = {
+                "user-agent": ANDROID_REQ_UA,
+                "x-goog-visitor-id": visitorId,
+                "accept-encoding": "",
+                "priority": "u=0, i",
+                "x-goog-api-format-version": "2",
+                "content-type": "application/x-protobuf"
+            }
+            if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
+                let d = yt2009signin.getData().yAuth
+                rHeaders.Authorization = `Bearer ${d}`
+            }
+            const url = [
+                `https://youtubei.googleapis.com/youtubei/v1/player`,
+                `?inline=1&id=${id}`
+            ].join("")
+            yt2009utils.craftPlayerProto(id, (pbmsg) => {
+                fetch(url, {
+                    "headers": rHeaders,
+                    "method": "POST",
+                    "body": pbmsg,
+                    "agent": yt2009utils.createFetchAgent()
+                }).then(r => {r.buffer().then(r => {
+                    //fs.writeFileSync("./test", r)
+                    let player = yt2009utils.protoportPlayer(r)
+                    onPlayerReceived(player)
+                })})
+            })
+            return;
+        }
+        fetch(`https://www.youtube.com/youtubei/v1/player?prettyPrint=false`, {
+            "headers": rHeaders,
+            "referrer": `https://www.youtube.com/`,
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": playerContext,
+                "playbackContext": {"vis": 0, "lactMilliseconds": "1"},
+                "videoId": id,
+                "racyCheckOk": true,
+                "contentCheckOk": true
+            }),
+            "method": "POST",
+            "mode": "cors",
+            "agent": yt2009utils.createFetchAgent()
+        }).then(r => {r.json().then(r => {
+            onPlayerReceived(r)
         })})
     },
 
@@ -2393,9 +2469,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             let playlistsHTML = yt2009templates.watchpagePlaylistPanelEntry
             
             try {
-                yt2009playlists.parsePlaylist(
+                let vids = yt2009playlists.parsePlaylist(
                     playlistId, () => {}
-                ).videos.forEach(video => {
+                ).videos
+                let hasCurrent = !!(vids.filter(s => {
+                    return s.id == data.id
+                })[0])
+                if(!hasCurrent) {
+                    throw "amogus";
+                }
+                vids.forEach(video => {
                     let playlistVideoHTML = yt2009templates.relatedVideo(
                         video.id,
                         video.title,
@@ -2405,20 +2488,23 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         video.uploaderUrl,
                         video.uploaderName,
                         flags,
-                        playlistId
+                        playlistId,
+                        (data.id == video.id)
                     )
-                    if(data.id == video.id) {
-                        playlistVideoHTML = playlistVideoHTML.replace(
-                            `"video-entry"`,
-                            `"video-entry watch-ppv-vid"`
-                        )
-                    }
                     playlistsHTML += playlistVideoHTML
                     index++;
                 })
             }
             catch(error) {
-                playlistsHTML += `<div class="hid yt2009_marking_fetch_playlist_client"></div>`
+                let classNames = [
+                    "hid",
+                    "yt2009_marking_fetch_playlist_client"
+                ]
+                if(error == "amogus") {
+                    classNames.push("force_next")
+                }
+                classNames = classNames.join(" ")
+                playlistsHTML += `<div class="${classNames}"></div>`
             }
 
             playlistsHTML += `
@@ -3838,6 +3924,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
     "setSupData": function(s) {
         sups = s;
+    },
+
+    "EXTRA_RISK_BLOCK": EXTRA_RISK_BLOCK,
+
+    "getVisitorId": function() {
+        return visitorId
     }
 }
 

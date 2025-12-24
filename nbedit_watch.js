@@ -491,12 +491,12 @@ $("#watch-longform-popup").addEventListener("click", function() {
 
 /*
 ======
-playlisty
+playlist
 ======
 */
 
 if(document.querySelector("#watch-playlist-videos-panel")) {
-    // następny film
+    // next video
     function nextVideo() {
         var videoElements = []
         var currentVideoIndex = 0;
@@ -536,23 +536,49 @@ if(document.querySelector("#watch-playlist-videos-panel")) {
         }
     }, 100)
 
-    // refetch jak nie ma filmów zapisanych
+    // refetch if no cached video data
     if(document.querySelector(".yt2009_marking_fetch_playlist_client")) {
         // request
+        var marking = document.querySelector(
+            ".yt2009_marking_fetch_playlist_client"
+        )
         var vr = new XMLHttpRequest();
         vr.open("GET", "/refetch_playlist_watch?ac=" + Math.random())
         vr.setRequestHeader("source", location.href)
+        if(marking.className.indexOf("force_next") !== -1) {
+            vr.setRequestHeader("force_next", "1")
+        }
         vr.send(null)
         vr.addEventListener("load", function(e) {
-            // dopełnianie htmla wysłanego z serwera
+            // add html from server
             $("#watch-playlist-discoverbox").innerHTML += vr.responseText
+            function scrollToVideo() {
+                var dbox = document.getElementById("watch-playlist-discoverbox")
+                var plBox = dbox.getBoundingClientRect().top
+                var videoTop = document.querySelector(
+                    ".watch-ppv-vid"
+                )
+                if(videoTop && videoTop.getBoundingClientRect) {
+                    videoTop = videoTop.getBoundingClientRect().top
+                } else {
+                    videoTop = 0;
+                }
+                var scroll = videoTop - plBox - 180
+                try {
+                    dbox.scrollTo(0,scroll)
+                }
+                catch(error){
+                    dbox.scrollTop = scroll;
+                }
+            }
+            setTimeout(function() {scrollToVideo()}, 100)
         }, false)
     }
 }
 
 /*
 ======
-takie fajne
+cool stuff
 ======
 */
 
@@ -590,7 +616,7 @@ if(location.href.indexOf("&flip=1") !== -1
         catch(error) {}
     }
 
-    // classname ltr_override jako workaround dla niektórych
+    // classname ltr_override as a workaround for some
     s = document.querySelectorAll("#watch-vid-title, #watch-views-div")
     for(var sel in s) {
         try {

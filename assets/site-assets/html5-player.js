@@ -1317,28 +1317,52 @@ function initPopoutFadeout() {
         && !checkBounds($(".captions_popup"), mouse_left, mouse_top)
         && parseInt(player_add_popout.style.bottom) >= 25
         && !player_add_popout_debounce) {
-            $(".captions_popup").style.display = "none"
-            player_add_popout_debounce = true;
             setTimeout(function() {
-                non_css_anim_remove(player_add_popout, "bottom", 25, -59)
-            }, 200)
-            setTimeout(function() {
-                player_add_popout_debounce = false;
-            }, 300)
+                if((lastMousePosition[1]
+                && !checkBounds(
+                    player_add_popout,
+                    lastMousePosition[0],
+                    lastMousePosition[1]
+                ) && !checkBounds(
+                    $(".captions_popup"),
+                    lastMousePosition[0],
+                    lastMousePosition[1]
+                )) || !lastMousePosition[1]) {
+                    $(".captions_popup").style.display = "none"
+                    player_add_popout_debounce = true;
+                    setTimeout(function() {
+                        non_css_anim_remove(
+                            player_add_popout, "bottom", 25, -59
+                        )
+                    }, 200)
+                    setTimeout(function() {
+                        player_add_popout_debounce = false;
+                    }, 300)
+                }
+            }, 100)
         }
 
         // VOLUME PANEL
         if(!checkBounds(volume_panel, mouse_left, mouse_top)
         && parseInt(volume_panel.style.bottom) >= 25
         && !volume_popping) {
-            volume_up = false;
-            volume_popping = true;
             setTimeout(function() {
-                non_css_anim_remove(volume_panel, "bottom", 25, -64)
-            }, 200)
-            setTimeout(function() {
-                volume_popping = false;
-            }, 500)
+                if((lastMousePosition[1]
+                && !checkBounds(
+                    volume_panel,
+                    lastMousePosition[0],
+                    lastMousePosition[1]
+                )) || !lastMousePosition[1]) {
+                    volume_up = false;
+                    volume_popping = true;
+                    setTimeout(function() {
+                        non_css_anim_remove(volume_panel, "bottom", 25, -64)
+                    }, 200)
+                    setTimeout(function() {
+                        volume_popping = false;
+                    }, 500)
+                }
+            }, 100)
         }
         
         // SEEK BAR (unhover)
@@ -2923,7 +2947,10 @@ function requestSabr(offset, source, force) {
             var itag = r.getResponseHeader("x-yt2009-used-itag")
             var selector = ".qualities [data-itag=\"" + itag + "\"] .circle"
 
-            mainElement.querySelector(selector).className = "circle selected"
+            try {
+                mainElement.querySelector(selector).className = "circle selected"
+            }
+            catch(error){}
         }
 
         // video mime for custom res
@@ -3779,7 +3806,7 @@ those can be changed at any time:<br>\
         container.appendChild(titleLabel)
 
         var subtitle = document.createElement("p")
-        subtitle.innerHTML = "with the new yt2009 update, your browser can now\
+        subtitle.innerHTML = "as of yt2009 1.22, your browser can now\
         fully stream<br>videos on watchpages, without the need to store them."
         container.appendChild(subtitle)
 

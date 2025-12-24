@@ -13,13 +13,7 @@
 
 var jspb = require('google-protobuf');
 var goog = jspb;
-var global =
-    (typeof globalThis !== 'undefined' && globalThis) ||
-    (typeof window !== 'undefined' && window) ||
-    (typeof global !== 'undefined' && global) ||
-    (typeof self !== 'undefined' && self) ||
-    (function () { return this; }).call(null) ||
-    Function('return this')();
+var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
 
 goog.exportSymbol('proto.android_player.audioTrackData', null, global);
 goog.exportSymbol('proto.android_player.numberRange', null, global);
@@ -2552,6 +2546,7 @@ proto.android_player.root.playabilityStatus.prototype.toObject = function(opt_in
 proto.android_player.root.playabilityStatus.toObject = function(includeInstance, msg) {
   var f, obj = {
     status: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    error: jspb.Message.getFieldWithDefault(msg, 2, ""),
     playableinembed: jspb.Message.getFieldWithDefault(msg, 9, 0),
     contentparams: jspb.Message.getFieldWithDefault(msg, 31, "")
   };
@@ -2594,6 +2589,10 @@ proto.android_player.root.playabilityStatus.deserializeBinaryFromReader = functi
       var value = /** @type {number} */ (reader.readInt32());
       msg.setStatus(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setError(value);
+      break;
     case 9:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setPlayableinembed(value);
@@ -2635,6 +2634,13 @@ proto.android_player.root.playabilityStatus.serializeBinaryToWriter = function(m
   if (f != null) {
     writer.writeInt32(
       1,
+      f
+    );
+  }
+  f = message.getError();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
       f
     );
   }
@@ -2688,6 +2694,24 @@ proto.android_player.root.playabilityStatus.prototype.clearStatus = function() {
  */
 proto.android_player.root.playabilityStatus.prototype.hasStatus = function() {
   return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional string error = 2;
+ * @return {string}
+ */
+proto.android_player.root.playabilityStatus.prototype.getError = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_player.root.playabilityStatus} returns this
+ */
+proto.android_player.root.playabilityStatus.prototype.setError = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
@@ -5633,7 +5657,7 @@ proto.android_player.root.captionTracks.prototype.clearContentv6fieldList = func
  * @private {!Array<number>}
  * @const
  */
-proto.android_player.root.metadata.repeatedFields_ = [25];
+proto.android_player.root.metadata.repeatedFields_ = [18,25];
 
 
 
@@ -5669,6 +5693,7 @@ proto.android_player.root.metadata.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
     title: jspb.Message.getFieldWithDefault(msg, 15, ""),
     videolength: jspb.Message.getFieldWithDefault(msg, 16, 0),
+    keywordList: (f = jspb.Message.getRepeatedField(msg, 18)) == null ? undefined : f,
     channelid: jspb.Message.getFieldWithDefault(msg, 19, ""),
     description: jspb.Message.getFieldWithDefault(msg, 21, ""),
     thumbnailsList: jspb.Message.toObjectList(msg.getThumbnailsList(),
@@ -5728,6 +5753,10 @@ proto.android_player.root.metadata.deserializeBinaryFromReader = function(msg, r
     case 16:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setVideolength(value);
+      break;
+    case 18:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addKeyword(value);
       break;
     case 19:
       var value = /** @type {string} */ (reader.readString());
@@ -5821,6 +5850,13 @@ proto.android_player.root.metadata.serializeBinaryToWriter = function(message, w
   if (f !== 0) {
     writer.writeInt32(
       16,
+      f
+    );
+  }
+  f = message.getKeywordList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      18,
       f
     );
   }
@@ -6306,6 +6342,43 @@ proto.android_player.root.metadata.prototype.getVideolength = function() {
  */
 proto.android_player.root.metadata.prototype.setVideolength = function(value) {
   return jspb.Message.setProto3IntField(this, 16, value);
+};
+
+
+/**
+ * repeated string keyword = 18;
+ * @return {!Array<string>}
+ */
+proto.android_player.root.metadata.prototype.getKeywordList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 18));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.android_player.root.metadata} returns this
+ */
+proto.android_player.root.metadata.prototype.setKeywordList = function(value) {
+  return jspb.Message.setField(this, 18, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.android_player.root.metadata} returns this
+ */
+proto.android_player.root.metadata.prototype.addKeyword = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 18, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.android_player.root.metadata} returns this
+ */
+proto.android_player.root.metadata.prototype.clearKeywordList = function() {
+  return this.setKeywordList([]);
 };
 
 

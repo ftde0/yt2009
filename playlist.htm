@@ -25,6 +25,10 @@
 		.html5 #masthead-search span {
 			display: block;
 		}
+		#continuation-load-container {
+			width: 960px;
+			text-align: center;
+		}
 	</style>
 </head>
 <body class="en_US is-english html5">
@@ -226,6 +230,32 @@
 				document.getElementById("playlist-embed-url").value = url.replace(
 					hostname + ":" + port, "www.youtube.com"
 				).replace("/swf/", "/alt-swf/")
+			}
+			function loadmore_pl(continuation) {
+				var btn = document.getElementById("continuation-load-container")
+				var p = btn.parentNode
+				p.removeChild(btn)
+				var r;
+				if (window.XMLHttpRequest) {
+					r = new XMLHttpRequest()
+				} else {
+					r = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				var url = [
+					"/playlist_continuation",
+					"?type=vlpage",
+					"&token=" + continuation,
+					"&r=" + Math.random()
+				].join("")
+				r.open("GET", url)
+				r.send(null)
+				r.onreadystatechange = function(e) {
+					if((r.readyState && r.readyState == 4)
+					|| (this.readyState && this.readyState == 4) 
+					|| (e.readyState && e.readyState == 4)) {
+						p.innerHTML += r.responseText;
+					}
+				}
 			}
 		</script>
 		<script src="/assets/site-assets/yt2009langpicker.js"></script>

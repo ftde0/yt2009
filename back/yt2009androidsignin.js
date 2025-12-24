@@ -4,7 +4,7 @@ const https = require("https")
 const fetch = require("node-fetch")
 const fs = require("fs")
 const config = require("./config.json")
-const readline = require("readline-sync")
+const readline = require("readline-sync");
 const uida = "1234567890abcde".split("")
 const androidHeaders = {
     "Accept": "*/*",
@@ -12,14 +12,18 @@ const androidHeaders = {
     "Content-Type": "application/json",
     "x-goog-authuser": "0",
     "x-origin": "https://www.youtube.com/",
-    "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+    "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
 }
 const androidContext = {
     "client": {
         "hl": "en",
         "clientName": "ANDROID",
-        "clientVersion": "19.02.39",
-        "androidSdkVersion": 34
+        "clientVersion": "20.51.39",
+        "deviceMake": "Google",
+        "deviceModel": "Android SDK built for x86",
+        "deviceCodename": "ranchu;",
+        "osName": "Android",
+        "osVersion": "10"
     }
 }
 let redirect_url = [
@@ -136,6 +140,7 @@ if(!loginData.yExpire) {
             "context": ac,
             "videoId": rv
         }),
+        "agent": createFetchAgentMirror(),
         "method": "POST",
         "mode": "cors"
     }).then(r => {
@@ -418,4 +423,31 @@ function signIn(email, token) {
             getYTAuth()
         })
     })    
+}
+
+function createFetchAgentMirror(pickedAddress) {
+    if(pickedAddress) {
+        return new https.Agent({
+            "localAddress": pickedAddress
+        })
+    }
+    if(config.ipv6) {
+        const ipChars = "0123456789abcdef".split("")
+        let unshortened = config.ipv6.split(":").map(s => {
+            return (s&&s.toString()&&s.toString().padStart(4, "0"))
+        }).filter(s => {return s})
+        unshortened = unshortened.slice(0,8)
+        while(unshortened.length !== 8) {
+            let part = ""
+            while(part.length !== 4) {
+                part += ipChars[Math.floor(Math.random() * ipChars.length)]
+            }
+            unshortened.push(part)
+        }
+
+        return new https.Agent({
+            "localAddress": unshortened.join(":")
+        })
+    }
+    return null;
 }

@@ -16,14 +16,14 @@ const androidHeaders = {"headers": {
     "content-type": "application/json",
     "cookie": "",
     "x-goog-authuser": "0",
-    "x-origin": "https://www.youtube.com/",
-    "user-agent": "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+    "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
 }}
 const wlist = /discord.gg|tiktok|tik tok|pre-vevo|2023|lnk.to|official hd video|smarturl/gui
 let ip_uses_flash = []
 let ratelimitData = {}
 let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
+let fmodeCommunityPictureIds = {}
 
 let downloadRetryMax = 5;
 if(config.dl_max_retry && !isNaN(parseInt(config.dl_max_retry))) {
@@ -1082,6 +1082,17 @@ module.exports = {
                                      + "/hqdefault.jpg",
                     })
                 }
+                if(item.continuationItemRenderer) {
+                    try {
+                        parsedPlaylists.push({
+                            "isContinuation": true,
+                            "token": item.continuationItemRenderer
+                                     .continuationEndpoint
+                                     .continuationCommand.token
+                        })
+                    }
+                    catch(error){}
+                }
                 if(item.gridPlaylistRenderer) {
                     item = item.gridPlaylistRenderer
                     let videoId = item.navigationEndpoint.watchEndpoint.videoId
@@ -1525,93 +1536,41 @@ module.exports = {
             "verboseDownloadProgress", fname, {"state": "STARTED"}
         )
 
-        /* can't use cached players for now
         if(yt2009exports.read().players[id]) {
+            devlog(`using cached streamingdata for ${id} download`)
             parseResponse(yt2009exports.read().players[id])
-            setTimeout(() => {
+            /*setTimeout(() => {
                 yt2009exports.delete("players", id)
-            }, 200)
+            }, 200)*/
             return;
-        }*/
+        }
 
-        let rHeaders = JSON.parse(JSON.stringify(constants.headers))
-        rHeaders["user-agent"] = "com.google.android.youtube/20.06.36 (Linux; U; Android 14) gzip"
+        let rHeaders = {
+            "priority": "u=0, i",
+            "accept-encoding": "",
+            "user-agent": androidHeaders.headers["user-agent"]
+        }
         if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
             let d = yt2009signin.getData().yAuth
             rHeaders.Authorization = `Bearer ${d}`
+        }
+        if(yt2009exports.read().visitor) {
+            rHeaders["x-goog-visitor-id"] = yt2009exports.read().visitor
         }
 
         const formatRequestMode = (!this.isUnsupportedNode() ? "protobuf" : "json")
 
         if(formatRequestMode == "protobuf") {
-            rHeaders["Content-Type"] = "application/x-protobuf"
+            rHeaders["content-type"] = "application/x-protobuf"
             rHeaders["x-goog-api-format-version"] = "2"
             this.craftPlayerProto(id, (pbmsg) => {
                 fetch("https://youtubei.googleapis.com/youtubei/v1/player", {
                     "headers": rHeaders,
                     "method": "POST",
-                    "body": pbmsg
+                    "body": pbmsg,
+                    "agent": this.createFetchAgent()
                 }).then(r => {r.buffer().then(b => {
-                    let resp = playerResponsePb.root.deserializeBinary(b)
-                    let formats = resp.toObject().formatsList[0]
-                    let bp = {} //bp -- backport
-                    function backportFormat(f) {
-                        let a = JSON.parse(JSON.stringify(f))
-                        a.qualityLabel = f.qualitylabel;
-                        a.bitrate = f.totalbitrate;
-                        a.mimeType = f.mimetype;
-                        if(f.audiotrackList && f.audiotrackList[0]) {
-                            a.isOriginal = false
-                            let at = f.audiotrackList[0]
-                            if(f.xtags) {
-                                try {
-                                    let xtagsProto = playerResponsePb.xtags
-                                                 .deserializeBinary(f.xtags);
-                                    xtagsProto = xtagsProto.toObject()
-                                    let isOg = xtagsProto.partList.filter(s => {
-                                        return s.value == "original"
-                                    })[0]
-                                    if(isOg) {
-                                        a.isOriginal = true;
-                                    }
-                                }
-                                catch(error) {}
-                            }
-                            a.audioTrack = {
-                                "label": at.displayname,
-                                "vss_id": at.vssid,
-                                "audioIsDefault": Boolean(at.isdefault)
-                            }
-                        }
-                        return a;
-                    }
-                    if(!formats) {
-                        parseResponse(bp)
-                        return;
-                    }
-                    if(formats.nondashformatList) {
-                        if(!bp.streamingData) {
-                            bp.streamingData = {}
-                        }
-                        bp.streamingData.formats = []
-                        formats.nondashformatList.forEach(f => {
-                            bp.streamingData.formats.push(backportFormat(f))
-                        })
-                    }
-                    if(formats.dashformatList) {
-                        if(!bp.streamingData) {
-                            bp.streamingData = {}
-                        }
-                        bp.streamingData.adaptiveFormats = []
-                        formats.dashformatList.forEach(f => {
-                            bp.streamingData.adaptiveFormats.push(
-                                backportFormat(f)
-                            )
-                        })
-                    }
-    
-                    //console.log("using protoported response", bp)
-                    parseResponse(bp)
+                    parseResponse(this.protoportPlayer(b))
                 })})
             })
             return;
@@ -1626,7 +1585,7 @@ module.exports = {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "19.02.39",
+                    "clientVersion": "20.51",
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + id
                     }
@@ -1637,19 +1596,16 @@ module.exports = {
                 "contentCheckOk": true
             }),
             "method": "POST",
-            "mode": "cors"
+            "mode": "cors",
+            "agent": this.createFetchAgent()
         }).then(r => {r.json().then(r => {
-            if(r.streamingData && r.streamingData.adaptiveFormats) {
-                // adaptiveformats dont work with this request method
-                r.streamingData.adaptiveFormats = []
-            }
             parseResponse(r);
         })})
     },
 
     "pullBarePlayer": function(id, callback) {
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
-        rHeaders["user-agent"] = "com.google.android.youtube/19.02.39 (Linux; U; Android 14) gzip"
+        rHeaders["user-agent"] = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
         if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
             let d = yt2009signin.getData().yAuth
             rHeaders.Authorization = `Bearer ${d}`
@@ -1663,7 +1619,7 @@ module.exports = {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "19.02.39",
+                    "clientVersion": "20.51",
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + id
                     }
@@ -1674,7 +1630,8 @@ module.exports = {
                 "contentCheckOk": true
             }),
             "method": "POST",
-            "mode": "cors"
+            "mode": "cors",
+            "agent": this.createFetchAgent()
         }).then(r => {r.json().then(r => {
             callback(r);
         })})
@@ -2252,9 +2209,9 @@ module.exports = {
         client.setDevicemake("Google")
         client.setDevicemodel("Android SDK built for x86")
         client.setClientnumber(3) // ANDROID
-        client.setClientversion("20.06.36")
+        client.setClientversion("20.51")
         client.setOsname("Android")
-        client.setOsversion("10")
+        client.setOsversion("14")
         let hw = new p.hwData()
         hw.setId(1398091118)
         client.addHw(hw)
@@ -2295,7 +2252,7 @@ module.exports = {
         } else {
             let headers = JSON.parse(JSON.stringify(androidHeaders))
             headers["user-agent"] = [
-                "com.google.android.youtube/20.06.36",
+                "com.google.android.youtube/20.51.39",
                 "(Linux; U; Android 14; en_US; Android SDK built for x86 Build",
                 "/QSR1.190920.001) gzip"
             ].join("")
@@ -2309,9 +2266,14 @@ module.exports = {
                 "body": JSON.stringify({
                     "context": {
                         "client": {
-                            "androidSdkVersion": 34,
+                            "hl": "en",
                             "clientName": "ANDROID",
-                            "clientVersion": "20.06.36"
+                            "clientVersion": "20.51",
+                            "deviceMake": "Google",
+                            "deviceModel": "Android SDK built for x86",
+                            "deviceCodename": "ranchu;",
+                            "osName": "Android",
+                            "osVersion": "14"
                         }
                     }
                 })
@@ -2603,6 +2565,258 @@ module.exports = {
             at += (hours * 3600)
         }
         return at;
+    },
+
+    "protoportPlayer": function(b) {
+        const usedPlayStatuses = {
+            "0": "OK",
+            "1": "ERROR",
+            "2": "UNPLAYABLE",
+            "3": "LOGIN_REQUIRED"
+        }
+
+        let resp = playerResponsePb.root.deserializeBinary(b).toObject()
+        let formats = resp.formatsList[0]
+        let bp = {} //bp -- backport
+        function backportFormat(f) {
+            let a = JSON.parse(JSON.stringify(f))
+            a.qualityLabel = f.qualitylabel;
+            a.bitrate = f.totalbitrate;
+            a.mimeType = f.mimetype;
+            a.itag = f.formatid
+            a.height = f.videoheight
+            a.width = f.videowidth
+            if(f.audiotrackList && f.audiotrackList[0]) {
+                a.isOriginal = false
+                let at = f.audiotrackList[0]
+                if(f.xtags) {
+                    try {
+                        let xtagsProto = playerResponsePb.xtags
+                                     .deserializeBinary(f.xtags);
+                        xtagsProto = xtagsProto.toObject()
+                        let isOg = xtagsProto.partList.filter(s => {
+                            return s.value == "original"
+                        })[0]
+                        if(isOg) {
+                            a.isOriginal = true;
+                        }
+                    }
+                    catch(error) {}
+                }
+                a.audioTrack = {
+                    "label": at.displayname,
+                    "vss_id": at.vssid,
+                    "audioIsDefault": Boolean(at.isdefault)
+                }
+            }
+            return a;
+        }
+        if(!formats) {
+            return bp;
+        }
+        if(formats.nondashformatList) {
+            if(!bp.streamingData) {
+                bp.streamingData = {}
+            }
+            bp.streamingData.formats = []
+            formats.nondashformatList.forEach(f => {
+                bp.streamingData.formats.push(backportFormat(f))
+            })
+        }
+        if(formats.dashformatList) {
+            if(!bp.streamingData) {
+                bp.streamingData = {}
+            }
+            bp.streamingData.adaptiveFormats = []
+            formats.dashformatList.forEach(f => {
+                bp.streamingData.adaptiveFormats.push(
+                    backportFormat(f)
+                )
+            })
+        }
+        if(formats.serverabrstreamingurl) {
+            if(!bp.streamingData) {
+                bp.streamingData = {}
+            }
+            bp.streamingData.serverAbrStreamingUrl = formats.serverabrstreamingurl
+            bp.streamingData.expiresInSeconds = formats.expiresinseconds;
+        }
+        if(resp.playerconfigmsgList&&resp.playerconfigmsgList[0]) {
+            let ustreamerConfig = resp.playerconfigmsgList[0]
+                                  .mediacommonconfigmsgList[0]
+                                  .mediaustreamerconfigList[0]
+                                  .mediaustreamerrequestconfig
+            bp.playerConfig = {
+                "mediaCommonConfig": {
+                    "mediaUstreamerRequestConfig": {
+                        "videoPlaybackUstreamerConfig": ustreamerConfig
+                    }
+                }
+            }
+        }
+
+        if(resp.videometadataList && resp.videometadataList[0]) {
+            let m = resp.videometadataList[0]
+            bp.videoDetails = {
+                "videoId": m.id,
+                "allowRatings": m.allowratings,
+                "author": m.authorname,
+                "channelId": m.channelid,
+                "title": m.title,
+                "shortDescription": m.description,
+                "viewCount": m.viewcount,
+                "lengthSeconds": ((m.videolength&&m.videolength.toString())||"0"),
+                "isLiveContent": m.islivecontent,
+                "keywords": (m.keywordList||[])
+            }
+        }
+
+        if(resp.captionsList&&resp.captionsList[0]) {
+            try {
+                let c = resp.captionsList[0].contentList[0].trackList
+                let tracks = []
+                c.forEach(track => {
+                    let name = track.nameList[0].runList[0].text;
+                    let url = track.url;
+                    let vss = track.vssid;
+                    let languagecode = track.languagecode
+                    let trackname = track.trackname
+                    tracks.push({
+                        "name": {"simpleText": name},
+                        "baseUrl": url,
+                        "vssId": vss,
+                        "languageCode": languagecode,
+                        "trackName": trackname
+                    })
+                })
+                bp.captions = {
+                    "playerCaptionsTracklistRenderer": {
+                        "captionTracks": tracks
+                    }
+                }
+            }
+            catch(error){}
+        }
+
+        if(resp.playabilityList&&resp.playabilityList[0]) {
+            let p = resp.playabilityList[0]
+            bp.playabilityStatus = {
+                "status": usedPlayStatuses[(p.status||0).toString()]
+            }
+            if(p.error) {
+                bp.playabilityStatus.reason = p.error;
+            }
+        }
+
+        return bp;
+    },
+
+    "createFetchAgent": function(pickedAddress) {
+        if(pickedAddress) {
+            return new https.Agent({
+                "localAddress": pickedAddress
+            })
+        }
+        if(config.ipv6) {
+            const ipChars = "0123456789abcdef".split("")
+            let unshortened = config.ipv6.split(":").map(s => {
+                return (s&&s.toString()&&s.toString().padStart(4, "0"))
+            }).filter(s => {return s})
+            unshortened = unshortened.slice(0,8)
+            while(unshortened.length !== 8) {
+                let part = ""
+                while(part.length !== 4) {
+                    part += ipChars[Math.floor(Math.random() * ipChars.length)]
+                }
+                unshortened.push(part)
+            }
+
+            return new https.Agent({
+                "localAddress": unshortened.join(":")
+            })
+        }
+        return null;
+    },
+
+    "fmodeComunitab": {
+        "s": function(i) {
+            let s = i || "";
+            let d = ["&", ";", "`", "'",
+                    "|", "*", "?", "~",
+                    "\\", "<", ">", "^",
+                    "(", ")", "[", "]",
+                    "{", "}", "$", "\n",
+                    "\r", "~", "#"]
+            d.forEach(b => {
+                s = s.split(b).join("")
+            })
+            return s;
+        },
+        "assign": function(path) {
+            let rc = ""
+            let c = "qwertyuiopasdfghjklzxcvbnm".split("")
+            while(rc.length !== 16) {
+                rc += c[Math.floor(Math.random() * 26)]
+            }
+            fmodeCommunityPictureIds[rc] = path;
+            return rc;
+        },
+        "request": function(req, res) {
+            if(!req.query.i) {
+                res.sendStatus(400)
+                return;
+            }
+            let file = fmodeCommunityPictureIds[req.query.i];
+            if(!file) {
+                res.sendStatus(400)
+                return;
+            }
+            let s = this.s
+
+            // convert webp to png with magick
+            
+            function startProcess() {
+                let file1 = s(
+                    `${fPath}${file}`.split("\\").join("/")
+                )
+                let file2 = s(
+                    `${fPath}${file}-COMPAT.png`.split("\\").join("/")
+                )
+                let commandline = [
+                    "magick",
+                    `"${file1}"[0]`,
+                    `"${file2}"`
+                ].join(" ")
+                if(fs.existsSync(`${fPath}${file}-COMPAT.png`)) {
+                    res.redirect(`${file}-COMPAT.png`)
+                    return;
+                }
+                require("child_process").exec(commandline, (e,so,se) => {
+                    res.redirect(`${file}-COMPAT.png`)
+                })
+            }
+
+            // avatar_wait-based entry
+            let fPath = __dirname.split("back")
+            fPath.pop()
+            fPath = fPath.join("back")
+            let tries = 0;
+            function avTry() {
+                if(fs.existsSync(fPath + file)) {
+                    startProcess()
+                    return;
+                }
+                tries++
+                if(tries >= 10) {
+                    res.sendStatus(404)
+                    return;
+                }
+                setTimeout(() => {
+                    avTry()
+                }, 500)
+            }
+            avTry()
+        }
     }
 }
 

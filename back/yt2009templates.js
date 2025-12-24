@@ -105,12 +105,12 @@ module.exports = {
             </div>${replyCode}
         </div>${replyHolderCode}`
     },
-    "relatedVideo": function(id, title, protocol, length, viewCount, creatorUrl, creatorName, flags, playlistId) {
+    "relatedVideo": function(id, title, protocol, length, viewCount, creatorUrl, creatorName, flags, playlistId, isSelf) {
         if(creatorName.startsWith("by ")) {
             creatorName = creatorName.replace("by ", "")
         }
         let thumbUrl = utils.getThumbUrl(id, flags)
-        return `<div class="video-entry" data-id="${id}">
+        return `<div class="video-entry${isSelf ? " watch-ppv-vid" : ""}" data-id="${id}">
                     <div class="v90WideEntry">
                         <div class="v90WrapperOuter">
                             <div class="v90WrapperInner">
@@ -353,12 +353,12 @@ module.exports = {
     <video>
         <author>${creatorName}</author>
         <id>${id}</id>
-        <title>${title}</title>
+        <title>${title.split("&").join("")}</title>
         <length_seconds>${utils.time_to_seconds(length)}</length_seconds>
         <run_time>${length}</run_time>
         <rating_avg>${rating}</rating_avg>
         <rating_count>${Math.floor(views / 150)}</rating_count>
-        <description>${description || "."}</description>
+        <description>${description.split("&").join("") || "."}</description>
         <view_count>${views}</view_count>
         <upload_time>${utils.relativeToAbsoluteApprox(uploaded || "1 day ago")}</upload_time>
         <comment_count>${Math.floor(views / 170)}</comment_count>
@@ -724,6 +724,7 @@ module.exports = {
     </div>
     </div>`,
     "playnavPlaylist": function(playlist, protocol, useLanguage) {
+        if(!playlist.id) return ""
         return `
         <div class="playnav-item playnav-playlist" onclick="openPlaylist(this);return false;" data-id="${playlist.id}">
             <div class="content">
@@ -1351,6 +1352,7 @@ module.exports = {
 </entry>` 
     },
     "gdata_playlistEntry": function(author, playlistId, playlistName, vidCount, summary) {
+        if(!playlistId) return "";
         return `
     <entry>
 	    <id>http://${config.ip}:${config.port}/feeds/api/users/${author}/playlists/${playlistId}</id>
@@ -3449,11 +3451,19 @@ term='channel'/>
     
     "recentActivityPost": function(p, index, req) {
         //console.log(p)
+        let useFmode = (
+            req.query.f=="1"
+            || (req.headers.cookie
+            && (req.headers.cookie.indexOf("f_mode=on")!==-1))
+        )
         let imagesHTML = ""
         if(p.attachments) {
             p.attachments.forEach(img => {
                 if(img.imageAttachmentSmall) {
-                    imagesHTML += `<div style="float:left; margin-right: 8px;"><img class="feed-image" src="/avatar_wait?av=${encodeURIComponent(img.imageAttachmentSmall)}"/></div>`
+                    let url = !useFmode
+                            ? `/avatar_wait?av=${encodeURIComponent(img.imageAttachmentSmall)}`
+                            : `/fmodecomunitab?i=${utils.fmodeComunitab.assign(img.imageAttachmentSmall)}`
+                    imagesHTML += `<div style="float:left; margin-right: 8px;"><img class="feed-image" src="${url}"/></div>`
                 }
             })
         }
@@ -3724,8 +3734,8 @@ term='channel'/>
         return `<a href="javascript:void(0)" onclick="loadReplies('${continuation}', this, '${commentId}');return false;" class="watch-replies-show-link">» lang_watch_replies_more</a>`
     },
 
-    "playnavContMore": function(continuation) {
-        return `<div class="playnav-more" id="playnav-more-continuation"><a class="channel-cmd" href="#" onclick="playnav_more('${continuation}')">lang_playnav_more</a></div>`
+    "playnavContMore": function(continuation, otherContainer) {
+        return `<div class="playnav-more" id="playnav-more-continuation"><a class="channel-cmd" href="#" onclick="playnav_more('${continuation}'${otherContainer ? `, '${otherContainer}')` : ")"}">lang_playnav_more</a></div>`
     },
 
     "clientsideRydScript": `
@@ -3778,5 +3788,9 @@ video_id=${req.query.video_id}`.split("\n").join("&"))
     
     "disabledCommentsNotice": `<div id="watch-comment-post">
         <b>lang_watch_comments_disabled_notice</b>
-    </div>`
+    </div>`,
+
+    "web_playlists_loadmore_btn": function(token) {
+        return `<div id="continuation-load-container"><a class="yt-button yt-button-primary" href="javascript:void(0)" onclick="loadmore_pl('${token}');"><span>lang_vl_loadmore</span></a></div>`
+    }
 }

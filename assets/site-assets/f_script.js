@@ -1544,8 +1544,8 @@ function switchVideo(video) {
     }
     if(customPlayerUrl.indexOf("2012.swf") !== -1
     || customPlayerUrl.indexOf("cps2.swf") !== -1) {
-        videoUrl += "&BASE_YT_URL=" + baseUrlSetting
         videoUrl += "&iurl=" + "http://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
+        videoUrl += "&BASE_YT_URL=" + baseUrlSetting
     }
 
     var infoTitle = $("#playnav-curvideo-title")
@@ -1636,21 +1636,18 @@ function openPlaylist(element, switchMode) {
                                 + element.getAttribute("data-id")
                                 + " hid"
                 tab.style.overflowX = "hidden"
-                tab.innerHTML += '\
-    <div id="playnav-play-all-items" class="inner-scrollbox">\
-        <div class="playnav-playlist-header">\
+                var header = document.createElement("div")
+                header.innerHTML = '<div class="playnav-playlist-header">\
             <a style="text-decoration:none" class="title title-text-color">\
                 <span id="playnav-playlist-playlists-all-title" class="title">\
                 </span>\
             </a>\
         </div>'
-                tab.innerHTML += r.responseText
-                tab.innerHTML += '\
-        <div class=\"spacer\">&nbsp;</div>\
-        <div class=\"scrollbox-separator\">\
-        <div class=\"outer-box-bg-as-border\">\
-        </div></div></div>\
-    </div>';
+                tab.appendChild(header)
+                var inner = document.createElement("div")
+                inner.className = "inner-scrollbox"
+                inner.innerHTML += r.responseText
+                tab.appendChild(inner)
                 $(".scrollbox-body").appendChild(tab)
         
                 switchTab(
@@ -2065,8 +2062,24 @@ function playnav_sort(sortMode) {
 }
 
 // playnav more
-function playnav_more(continuation) {
+function playnav_more(continuation, otherContainer) {
     var d = document.getElementById("playnav-more-continuation")
+    if(otherContainer) {
+        d = $("." + otherContainer).getElementsByTagName("*")
+        for(var el in d) {
+            try {
+                el = d[el]
+                if(el.id == "playnav-more-continuation") {
+                    d = el;
+                }
+            }
+            catch(error){}
+        }
+        if(!d.className || d.className.indexOf(otherContainer) !== -1) {
+            // smth went wrong
+            d = {"parentNode": {"removeChild": function(z) {}}}
+        }
+    }
     d.parentNode.removeChild(d)
 
     $("#playnav-play-loading").style.display = "block"
@@ -2076,14 +2089,37 @@ function playnav_more(continuation) {
     } else {
         r = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    r.open("GET", "/channel_sort?rt=" + Math.random())
+    var containerSource = (
+        otherContainer ?
+        ("&container_source=" + otherContainer)
+        : ""
+    )
+    r.open("GET", "/channel_sort?rt=" + Math.random() + containerSource)
     r.setRequestHeader("source", location.pathname)
     r.setRequestHeader("continuation", continuation)
     r.send(null)
     r.onreadystatechange = function(e) {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
             $("#playnav-play-loading").style.display = "none"
-            $(".uploads-filtered").innerHTML += r.responseText
+            if(!otherContainer) {
+                $(".uploads-filtered").innerHTML += r.responseText
+            } else {
+                var t = $("." + otherContainer).getElementsByTagName("*")
+                var container = false;
+                for(var el in t) {
+                    try {
+                        el = t[el]
+                        if(el.className
+                        && el.className.indexOf("inner-scrollbox") !== -1) {
+                            container = el;
+                        }
+                    }
+                    catch(error){}
+                }
+                if(container) {
+                    container.innerHTML += r.responseText
+                }
+            }
         }
     }
 }
@@ -2566,4 +2602,53 @@ if(location.href.indexOf("/watch") !== -1
     r.open("POST", "/rec-submit")
     r.setRequestHeader("source", location.href)
     r.send(null)
+}
+
+/*
+======
+refetch_playlist_watch
+======
+*/
+if(document.querySelector(".yt2009_marking_fetch_playlist_client")) {
+    var marking = document.querySelector(
+        ".yt2009_marking_fetch_playlist_client"
+    )
+    var vr;
+    if (window.XMLHttpRequest) {
+        vr = new XMLHttpRequest()
+    } else {
+        vr = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    vr.open("GET", "/refetch_playlist_watch?ac=" + Math.random())
+    vr.setRequestHeader("source", location.href)
+    if(marking.className.indexOf("force_next") !== -1) {
+        vr.setRequestHeader("force_next", "1")
+    }
+    vr.send(null)
+    vr.addEventListener("load", function(e) {
+        // add html from server
+        document.getElementById(
+            "watch-playlist-discoverbox"
+        ).innerHTML += vr.responseText
+        function scrollToVideo() {
+            var dbox = document.getElementById("watch-playlist-discoverbox")
+            var plBox = dbox.getBoundingClientRect().top
+            var videoTop = document.querySelector(
+                ".watch-ppv-vid"
+            )
+            if(videoTop && videoTop.getBoundingClientRect) {
+                videoTop = videoTop.getBoundingClientRect().top
+            } else {
+                videoTop = 0;
+            }
+            var scroll = videoTop - plBox - 180
+            try {
+                dbox.scrollTo(0,scroll)
+            }
+            catch(error){
+                dbox.scrollTop = scroll;
+            }
+        }
+        setTimeout(function() {scrollToVideo()}, 100)
+    }, false)
 }

@@ -142,10 +142,14 @@ function openPlaylist(element, switchMode) {
             var tab = document.createElement("div")
             tab.className = "outer-scrollbox yt2009-scrollbox scrollbox-" + element.getAttribute("data-id") + " hid"
             tab.style.overflowX = "hidden"
-            tab.innerHTML += "<div id=\"playnav-play-all-items\" class=\"inner-scrollbox\"><div class=\"playnav-playlist-header\"><a style=\"text-decoration:none\" class=\"title title-text-color\"><span id=\"playnav-playlist-playlists-all-title\" class=\"title\">" + document.querySelector("[data-id=\"" + element.getAttribute("data-id") + "\"] .playnav-item-title span").innerHTML + "</span></a></div>"
-            tab.innerHTML += r.responseText
-            tab.innerHTML += "<div class=\"spacer\">&nbsp;</div><div class=\"scrollbox-separator\"><div class=\"outer-box-bg-as-border\"></div></div></div></div>";
-
+            var header = document.createElement("div")
+            header.innerHTML = "<div class=\"playnav-playlist-header\"><a style=\"text-decoration:none\" class=\"title title-text-color\"><span id=\"playnav-playlist-playlists-all-title\" class=\"title\">" + document.querySelector("[data-id=\"" + element.getAttribute("data-id") + "\"] .playnav-item-title span").innerHTML + "</span></a></div>"
+            var inner = document.createElement("div")
+            inner.className = "inner-scrollbox"
+            inner.innerHTML += r.responseText
+            inner.innerHTML += "<div class=\"spacer\">&nbsp;</div><div class=\"scrollbox-separator\"><div class=\"outer-box-bg-as-border\"></div></div></div>";
+            tab.appendChild(header)
+            tab.appendChild(inner)
             $(".scrollbox-body").appendChild(tab)
 
             switchTab(element.getAttribute("data-id"), $("#playnav-navbar-tab-" + switchMode))
@@ -776,18 +780,35 @@ function playnav_sort(sortMode) {
 }
 
 // playnav more
-function playnav_more(continuation) {
+function playnav_more(continuation, otherContainer) {
     var d = document.getElementById("playnav-more-continuation")
+    if(otherContainer) {
+        d = document.querySelector(
+            "." + otherContainer + " #playnav-more-continuation"
+        )
+    }
     d.parentNode.removeChild(d)
 
     $("#playnav-play-loading").style.display = "block"
+    var containerSource = (
+        otherContainer ?
+        ("&container_source=" + otherContainer)
+        : ""
+    )
     var r = new XMLHttpRequest();
-    r.open("GET", "/channel_sort?rt=" + Date.now())
+    r.open("GET", "/channel_sort?rt=" + Date.now() + containerSource)
     r.setRequestHeader("source", location.pathname)
     r.setRequestHeader("continuation", continuation)
     r.send(null)
     r.addEventListener("load", function(e) {
         $("#playnav-play-loading").style.display = "none"
-        $(".uploads-filtered").innerHTML += r.responseText
+        if(!otherContainer) {
+            $(".uploads-filtered").innerHTML += r.responseText
+        } else {
+            document.querySelector(
+                "." + otherContainer + " .inner-scrollbox"
+            ).innerHTML += r.responseText
+        }
+        
     }, false)
 }

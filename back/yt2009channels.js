@@ -18,6 +18,7 @@ const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
 const overrideBgs = require("./channel_backgrounds.json")
 const customChannel = require("./proto/yt2009_channel_pb")
+const yt2009homepage = require("./yt2009homepage")
 const devTimings = false;
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
@@ -79,7 +80,10 @@ module.exports = {
 
         userid_cache.read(url, (id) => {
             if(!id) {
-                res.send(`[yt2009] channel not found`)
+                let s = yt2009homepage({
+                    "error": "This channel is not available."
+                })
+                res.redirect("/?ytsession=" + s)
                 return;
             }
             if(req.query && req.query.earlyPull) {
@@ -121,7 +125,10 @@ module.exports = {
                     writeTimingData("clean innertube fetch")
                     this.parse_main_response(r, flags, (data) => {
                         if(!data) {
-                            res.send(`[yt2009] channel not found`)
+                            let s = yt2009homepage({
+                                "error": "This channel is not available."
+                            })
+                            res.redirect("/?ytsession=" + s)
                             earlyProgressPulls = earlyProgressPulls.filter(
                                 s => {return s !== id}
                             )
@@ -1756,8 +1763,8 @@ module.exports = {
                         flashUrl += argsMerged;
                     }
                     if(watch_url.includes("cps2.swf")) {
-                        flashUrl += `&BASE_YT_URL=http://${config.ip}:${config.port}/`;
                         flashUrl += `&iurl=http://i.ytimg.com/vi/${video.id}/hqdefault.jpg`
+                        flashUrl += `&BASE_YT_URL=http://${config.ip}:${config.port}/`;
                     }
                     code = code.replace(
                         "<!--yt2009_player-->",
@@ -2039,6 +2046,11 @@ module.exports = {
                 playlists_scrollbox_html += templates.playnavPlaylist(
                     playlist, req.protocol, true
                 )
+                if(playlist.isContinuation) {
+                    playlists_scrollbox_html += templates.playnavContMore(
+                        playlist.token, "scrollbox-playlists"
+                    )
+                }
             })
             playlists_scrollbox_html += templates.playlistScrollboxEnd
 
@@ -3283,6 +3295,50 @@ module.exports = {
                 })
             } else {
                 callback([])
+            }
+        })})
+    },
+
+    "continuationPlaylists": function(req, res) {
+        if(!req.headers.continuation) {
+            res.sendStatus(400)
+            return;
+        }
+        fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+            "headers": yt2009constants.headers,
+            "referrer": "https://www.youtube.com/",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": yt2009constants.cached_innertube_context,
+                "continuation": req.headers.continuation
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            try {
+                let wrap = r.onResponseReceivedActions[0]
+                            .appendContinuationItemsAction
+                            .continuationItems;
+                let items = yt2009utils.parseChannelPlaylists({
+                    "gridRenderer": {"items": wrap}
+                })
+                let html = ""
+                items.forEach(playlist => {
+                    html += templates.playnavPlaylist(
+                        playlist, req.protocol, true
+                    )
+                    if(playlist.isContinuation) {
+                        html += templates.playnavContMore(
+                            playlist.token, "scrollbox-playlists"
+                        )
+                    }
+                })
+                res.send(yt2009languages.apply_lang_to_code(html, req))
+            }
+            catch(error) {
+                console.log(error)
+                res.status(500).send("server error; try again later")
+                return;
             }
         })})
     }

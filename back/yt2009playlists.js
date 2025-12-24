@@ -89,6 +89,12 @@ module.exports = {
             code = code.split("yt2009_watch_all_link").join(`/`)
         }
 
+        if(data.firstContinuation) {
+            videos_html += yt2009templates.web_playlists_loadmore_btn(
+                data.firstContinuation
+            )
+        }
+
         code = code.replace(`<!--yt2009_video_entries-->`, videos_html)
         code = doodles.applyDoodle(code, req)
         code = language.apply_lang_to_code(code, req)
@@ -96,8 +102,15 @@ module.exports = {
         return code;
     },
 
-    "parsePlaylist": function(playlistId, callback, sourceVideo) {
-        if(cache.read()[playlistId]) {
+    "parsePlaylist": function(playlistId, callback, sourceVideo, resetCache) {
+        if((playlistId.startsWith("RD") && sourceVideo)
+        || (sourceVideo && playlistId.includes("-YT2009_FORCENEXT"))) {
+            playlistId = playlistId.replace("-YT2009_FORCENEXT", "")
+            this.nextAsPlaylist(playlistId, callback, sourceVideo)
+            return;
+        }
+
+        if(cache.read()[playlistId] && !resetCache) {
             callback(JSON.parse(JSON.stringify(cache.read()[playlistId])))
             return JSON.parse(JSON.stringify(cache.read()[playlistId]));
         } else {
@@ -111,65 +124,6 @@ module.exports = {
                 "lastUpdate": "",
                 "videoCount": "",
                 "playlistId": playlistId
-            }
-
-            if(playlistId.startsWith("RD") && sourceVideo) {
-                // special handling for radio playlists
-                //let ogId = playlistId.replace("RD", "")
-                fetch(`https://www.youtube.com/youtubei/v1/next`, {
-                    "headers": constants.headers,
-                    "referrer": `https://www.youtube.com/`,
-                    "referrerPolicy": "strict-origin-when-cross-origin",
-                    "body": JSON.stringify({
-                        "videoId": sourceVideo,
-                        "playlistId": playlistId,
-                        "context": constants.cached_innertube_context,
-                        "autonavState": "STATE_ON",
-                        "contentCheckOk": true,
-                        "racyCheckOk": true
-                    }),
-                    "method": "POST",
-                    "mode": "cors"
-                }).then(r => {r.json().then(r => {
-                    if(r.contents && r.contents.twoColumnWatchNextResults
-                    && r.contents.twoColumnWatchNextResults.playlist
-                    && r.contents.twoColumnWatchNextResults.playlist.playlist) {
-                        let p = r.contents.twoColumnWatchNextResults
-                                 .playlist.playlist;
-                        let vids = []
-                        p.contents.forEach(v => {
-                            if(v.playlistPanelVideoRenderer) {
-                                v = v.playlistPanelVideoRenderer
-                                try {
-                                    let thumb = [
-                                        "http://i.ytimg.com/vi/",
-                                        v.videoId,
-                                        "/hqdefault.jpg"
-                                    ].join("")
-                                    let by = v.shortBylineText.runs[0]
-                                    let byId = by.navigationEndpoint
-                                                 .browseEndpoint.browseId
-                                    vids.push({
-                                        "id": v.videoId,
-                                        "title": v.title.simpleText,
-                                        "thumbnail": thumb,
-                                        "uploaderName": by.text,
-                                        "uploaderId": byId,
-                                        "uploaderUrl": "/channel/" + byId,
-                                        "time": v.lengthText ?
-                                                v.lengthText.simpleText : "",
-                                        "views": "0"
-                                    })
-                                }
-                                catch(error) {console.log(error)}
-                            }
-                        })
-                        callback({"videos": vids})
-                    } else {
-                        callback(false)
-                    }
-                })})
-                return;
             }
 
             this.innertube_get_data(playlistId, (r) => {
@@ -224,6 +178,30 @@ module.exports = {
 
                 // vids
                 playlistArray.forEach(video => {
+                    if(video.continuationItemRenderer) {
+                        try {
+                            let e = video.continuationItemRenderer
+                                         .continuationEndpoint;
+                            let t = null;
+                            if(e.continuationCommand) {
+                                t = e.continuationCommand.token;
+                            } else if(e.commandExecutorCommand) {
+                                t = e.commandExecutorCommand.commands.filter(s => {
+                                    return (
+                                        s.continuationCommand
+                                    )
+                                })
+                                if(t[0]) {
+                                    t = t[0].continuationCommand.token;
+                                } else {
+                                    t = null;
+                                }
+                            }
+                            videoList.firstContinuation = t
+                        }
+                        catch(error){console.log(error)}
+                        return;
+                    }
                     if(!video.playlistVideoRenderer) return;
                     video = video.playlistVideoRenderer
                     if((video.videoInfo && !video.videoInfo.runs)
@@ -344,5 +322,173 @@ module.exports = {
 </ut_response>`
             res.send(videos_xml)
         })
+    },
+
+    "moreVideosContinuation": function(req, res) {
+        const validDisplayTypes = ["vlpage", "channelpage"]
+        if(!req.query.token) {
+            res.sendStatus(400)
+            return;
+        }
+        let continuation = req.query.token;
+        let playlistId = ""
+        let type = validDisplayTypes.includes(req.query.type)
+                   ? req.query.type : validDisplayTypes[0];
+        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
+            "headers": constants.headers,
+            "referrer": `https://www.youtube.com/`,
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": constants.cached_innertube_context,
+                "continuation": continuation
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            let itemHTML = ``
+            let items = []
+            try {
+                items = r.onResponseReceivedActions[0]
+                         .appendContinuationItemsAction
+                         .continuationItems
+            }
+            catch(error){}
+            try {
+                let append = r.onResponseReceivedActions[0]
+                              .appendContinuationItemsAction
+                              .targetId
+                if(append) {
+                    playlistId = append;
+                }
+            }
+            catch(error){}
+            let videoIndex = 1;
+            function renderVideo(vid) {
+                switch(type) {
+                    case "vlpage": {
+                        itemHTML += yt2009templates.playlistVideo(
+                            vid, playlistId, req.protocol
+                        )
+                        break;
+                    }
+                    case "channelpage": {
+                        itemHTML += yt2009templates.playnavVideo(
+                            vid, videoIndex, "", "", 0, req.protocol
+                        )
+                        break;
+                    }
+                }
+                videoIndex++
+            }
+            function renderContinuation(token) {
+                switch(type) {
+                    case "vlpage": {
+                        itemHTML += yt2009templates.web_playlists_loadmore_btn(
+                            token
+                        )
+                        break;
+                    }
+                    case "channelpage": {
+                        itemHTML += yt2009templates.playnavContMore(
+                            token, "scrollbox-" + playlistId
+                        )
+                        break;
+                    }
+                }
+            }
+            items.forEach(i => {
+                if(i.playlistVideoRenderer) {
+                    try {
+                        i = i.playlistVideoRenderer
+                        let thumbnail = [
+                            "http://i.ytimg.com/vi/",
+                            i.videoId,
+                            "/hqdefault.jpg"
+                        ].join("")
+                        let th = thumbnail
+                        let author = i.shortBylineText.runs[0]
+                        let authorId = author.navigationEndpoint
+                                             .browseEndpoint.browseId;
+                        let parsedItem = {
+                            "id": i.videoId,
+                            "thumbnail": th,
+                            "time": i.lengthText.simpleText,
+                            "uploaderName": author.text,
+                            "uploaderUrl": "/channel/" + authorId,
+                            "title": i.title.runs[0].text
+                        }
+                        renderVideo(parsedItem)
+                    }
+                    catch(error){}
+                } else if(i.continuationItemRenderer) {
+                    try {
+                        let token = i.continuationItemRenderer
+                                     .continuationEndpoint
+                                     .continuationCommand
+                                     .token;
+                        renderContinuation(token)
+                    }
+                    catch(error){}
+                }
+            })
+
+            res.send(language.apply_lang_to_code(itemHTML, req))
+        })})
+    },
+
+    "nextAsPlaylist": function(playlistId, callback, sourceVideo) {
+        fetch(`https://www.youtube.com/youtubei/v1/next`, {
+            "headers": constants.headers,
+            "referrer": `https://www.youtube.com/`,
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "videoId": sourceVideo,
+                "playlistId": playlistId,
+                "context": constants.cached_innertube_context,
+                "autonavState": "STATE_ON",
+                "contentCheckOk": true,
+                "racyCheckOk": true
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            if(r.contents && r.contents.twoColumnWatchNextResults
+            && r.contents.twoColumnWatchNextResults.playlist
+            && r.contents.twoColumnWatchNextResults.playlist.playlist) {
+                let p = r.contents.twoColumnWatchNextResults
+                        .playlist.playlist;
+                let vids = []
+                p.contents.forEach(v => {
+                    if(v.playlistPanelVideoRenderer) {
+                        v = v.playlistPanelVideoRenderer
+                        try {
+                            let thumb = [
+                                "http://i.ytimg.com/vi/",
+                                v.videoId,
+                                "/hqdefault.jpg"
+                            ].join("")
+                            let by = v.shortBylineText.runs[0]
+                            let byId = by.navigationEndpoint
+                                        .browseEndpoint.browseId
+                            vids.push({
+                                "id": v.videoId,
+                                "title": v.title.simpleText,
+                                "thumbnail": thumb,
+                                "uploaderName": by.text,
+                                "uploaderId": byId,
+                                "uploaderUrl": "/channel/" + byId,
+                                "time": v.lengthText ?
+                                        v.lengthText.simpleText : "",
+                                "views": "0"
+                            })
+                        }
+                        catch(error) {console.log(error)}
+                    }
+                })
+                callback({"videos": vids})
+            } else {
+                callback(false)
+            }
+        })})
     }
 }

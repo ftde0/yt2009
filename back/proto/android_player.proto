@@ -40,6 +40,7 @@ message root {
     repeated contextType context = 1;
     message playabilityStatus {
         optional int32 status = 1;
+        string error = 2;
         optional int32 playableInEmbed = 9;
         string contentParams = 31;
     }
@@ -116,6 +117,7 @@ message root {
         string id = 1;
         string title = 15;
         int32 videoLength = 16;
+        repeated string keyword = 18;
         string channelId = 19;
         string description = 21;
         message thumbList {
