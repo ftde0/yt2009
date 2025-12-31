@@ -287,7 +287,7 @@ module.exports = {
         res.set("content-type", "application/x-protobuf")
         let p = player_proto;
         let id = getBrowseData(
-            req.body, false, false, require("./proto/android_player_request_pb")
+            req.body, false, false
         )
         let root = new p.root()
         let playability = new p.root.playabilityStatus()
@@ -1373,7 +1373,7 @@ module.exports = {
                         break;
                     }
                     case "channel": {
-                        let a = `${baseUrl}${result.avatar}`
+                        let a = `${baseUrl}/avatar_wait?av=${result.avatar}`
                         let r = new content()
                         r.addChannel(generateChannel(
                             result.name, a, result.subscribers,

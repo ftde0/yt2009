@@ -284,6 +284,12 @@ module.exports = {
                 stopTimer()
             }
         }
+        if(config.wyjeba_typu_onesie) {
+            yt2009utils.wyjebaTypuOnesie(id, (player) => {
+                onPlayerReceived(player)
+            })
+            return;
+        }
         if(EXTRA_RISK_BLOCK) {
             rHeaders = {
                 "user-agent": ANDROID_REQ_UA,
@@ -3720,10 +3726,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(overrideDate) {pbDate = overrideDate;}
 
         pbDate = Math.floor(new Date(pbDate).getTime() / 1000)
-        if(oldCommentsCache[data.id + "/" + pbDate]) {
+        // override cache for now to refresh for everyone
+        // to be brought back a few updates later (2025-12-29)
+        /*if(oldCommentsCache[data.id + "/" + pbDate]) {
             callback(oldCommentsCache[data.id + "/" + pbDate])
             return;
-        }
+        }*/
 
         // generate get_newest_first token
         const pb = require("./proto/newestFirstComments_pb")
@@ -3767,6 +3775,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         let crpChild = new cmts_pb.comments.commentsReq.commentsData()
         crpChild.setVideoid(id)
+        crpChild.setH(1)
         commentsReqParamsMain.addCommentsdatareq(crpChild)
         commentRequest.addCommentsreqmsg(commentsReqParamsMain)
 

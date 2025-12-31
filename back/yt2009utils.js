@@ -24,6 +24,7 @@ let ratelimitData = {}
 let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
 let fmodeCommunityPictureIds = {}
+let wyjebaData = {}
 
 let downloadRetryMax = 5;
 if(config.dl_max_retry && !isNaN(parseInt(config.dl_max_retry))) {
@@ -1253,7 +1254,7 @@ module.exports = {
         testFetch()
     },
 
-    "saveMp4_android": function(id, callback, existingPlayer, quality) {
+    "saveMp4_android": function(id, callback, existingPlayer, quality, replayerCount) {
         let testF18 = this.testF18;
         let downloadInParts_file = this.downloadInParts_file;
         let funcRef = this.saveMp4_android;
@@ -1335,7 +1336,18 @@ module.exports = {
                     audioFile,
                     ((feedback) => {
                         if(feedback == "RETRY") {
+                            if(replayerCount && replayerCount >= 3) {
+                                console.log(`download failed too many times!!`)
+                                console.log(`^^(403?)`)
+                                callback(false)
+                                return;
+                            }
                             devlog("RETRY download audio")
+                            let rp = replayerCount || 1
+                            funcRef(id, (res => {
+                                callback(result)
+                            }), false, quality, rp)
+                            return;
                             downloadInParts_file(
                                 h264DashAudioUrl,
                                 audioFile,
@@ -1558,6 +1570,13 @@ module.exports = {
             rHeaders["x-goog-visitor-id"] = yt2009exports.read().visitor
         }
 
+        if(config.wyjeba_typu_onesie) {
+            this.wyjebaTypuOnesie(id, (data) => {
+                parseResponse(data)
+            })
+            return;
+        }
+
         const formatRequestMode = (!this.isUnsupportedNode() ? "protobuf" : "json")
 
         if(formatRequestMode == "protobuf") {
@@ -1604,6 +1623,12 @@ module.exports = {
     },
 
     "pullBarePlayer": function(id, callback) {
+        if(config.wyjeba_typu_onesie) {
+            this.wyjebaTypuOnesie(id, (data) => {
+                callback(data)
+            })
+            return;
+        }
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
         rHeaders["user-agent"] = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
         if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
@@ -2287,6 +2312,12 @@ module.exports = {
                     if(cfg.coldHashData) {
                         ytConfigData.coldHashData = cfg.coldHashData
                     }
+                    if(cfg.bytesSerializedColdConfigGroup) {
+                        ytConfigData.serializedCold = cfg.bytesSerializedColdConfigGroup
+                    }
+                    if(cfg.bytesSerializedHotConfigGroup) {
+                        ytConfigData.serializedHot = cfg.bytesSerializedHotConfigGroup
+                    }
                     ytConfigData.fi = 1
                     callback(ytConfigData)
                 } else {
@@ -2667,6 +2698,7 @@ module.exports = {
                 "viewCount": m.viewcount,
                 "lengthSeconds": ((m.videolength&&m.videolength.toString())||"0"),
                 "isLiveContent": m.islivecontent,
+                "isLive": m.islivecontent,
                 "keywords": (m.keywordList||[])
             }
         }
@@ -2817,6 +2849,227 @@ module.exports = {
             }
             avTry()
         }
+    },
+
+    "wyjebaTypuOnesie": function(id, callback) {
+        if(!wyjebaData.initialonesieurl
+        || !wyjebaData.clientKey
+        || !wyjebaData.expire
+        || !wyjebaData.encryptedClientKey
+        || !wyjebaData.appendUrl
+        || Date.now() - 60000 > wyjebaData.expire) {
+            // (re)generate and recall
+            this.initWyjeba(() => {this.wyjebaTypuOnesie(id,callback)})
+            return;
+        }
+        let fullUrl = ""
+        let serverBase = false;
+        let encodedId = Buffer.from(
+            id.split("-").join("+").split("_").join("/"), "base64"
+        ).toString("hex")
+
+        function readyToPull() {
+            // called when we have a ready body and have a ready url
+            fetch(fullUrl, {
+                "headers": {
+                    "accept": "*/*",
+                    "content-type": "application/x-protobuf",
+                    "connection": "keep-alive",
+                    "user-agent": androidHeaders.headers["user-agent"]
+                },
+                "method": "POST",
+                "body": requestBody
+            }).then(r => {r.buffer().then(r => {
+                yt2009exports.read().umpParseFun(r, (data) => {
+                    data.forEach(p => {
+                        try {
+                            p = proto.part11Resp.deserializeBinary(p)
+                                     .toObject();
+                            let r = Buffer.from(p.body, "base64").toString()
+                            if(r.includes("responseContext")) {
+                                callback(JSON.parse(r))
+                            }
+                        }
+                        catch(error){}
+                    })
+                }, false, true)
+            })})
+        }
+
+        serverBase = wyjebaData.initialonesieurl.split("/initplayback")[0]
+        fullUrl = serverBase + wyjebaData.appendUrl
+        fullUrl += [
+            `&id=${encodedId}`,
+            `&opr=1`,
+            `&por=1`,
+            `&onem=1`,
+            `&pvi=137,136,135,134,133,160`,
+            `&pai=140`,
+            `&rn=1`
+        ].join("")
+
+        // create request body
+        function createHeader(key,value) {
+            let h = new proto.requestHeader()
+            h.setKey(key)
+            h.setValue(value)
+            return h;
+        }
+        let requestBody = false;
+        const encryptKey = Buffer.from(wyjebaData.encryptedClientKey, "base64")
+        const proto = require("./proto/onesie_pb")
+        let req = new proto.root()
+        let timing = new proto.timingData()
+        timing.setAbsinittime(0)
+        timing.setVideoheight(500)
+        timing.setPlayerwidth(640)
+        timing.setPlayerheight(480)
+        timing.setStarttime(0)
+        req.setTiming(timing)
+        let wrappedRequest = new proto.request();
+        wrappedRequest.setEncryptedclientkey(encryptKey)
+        wrappedRequest.setTen(true)
+        wrappedRequest.setThirteenint(1)
+        wrappedRequest.setFourteenint(1)
+        let player = new proto.playerReq()
+        player.setUrl("https://youtubei.googleapis.com/youtubei/v1/player")
+        player.addHeader(createHeader("Content-Type", "application/json"))
+        if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
+            let d = yt2009signin.getData().yAuth
+            player.addHeader(createHeader("Authorization", `Bearer ${d}`))
+        }
+        if(yt2009exports.read().visitor) {
+            player.addHeader(createHeader(
+                "X-Goog-Visitor-Id", yt2009exports.read().visitor
+            ))
+        }
+        player.setRequestbody(JSON.stringify({
+            "context": {
+                "client": {
+                    "hl": "en",
+                    "clientName": "ANDROID",
+                    "clientVersion": "20.51",
+                    "deviceMake": "Google",
+                    "deviceModel": "Android SDK built for x86",
+                    "deviceCodename": "ranchu;",
+                    "osName": "Android",
+                    "osVersion": "14"
+                }
+            },
+            "videoId": id,
+            "contentCheckOk": true,
+            "racyCheckOk": true,
+            "params": "YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D"
+        }))
+        player.setUseproxydeprecated(true)
+        player.setFive(true)
+        player.setSkipencrypt(true)
+        player.setSeven(true)
+        player.setEight(true)
+        player.setNine(true)
+        player.setTen(true)
+        player.setEleven(true)
+        player.setTwelve(true)
+        player.setThirteen(true)
+        player.setFourteen(true)
+        player.setFifteen(true)
+        player.setSixteen(true)
+        wrappedRequest.setReq(player)
+        wrappedRequest.setSeventeenint(1)
+        req.setRequest(wrappedRequest)
+        req.setUstreamerconfig(wyjebaData.ustreamer)        
+        requestBody = Buffer.from(req.serializeBinary())
+
+        readyToPull()
+    },
+
+    "repullServer": function(callback) {
+        let initialUrl = [
+            "https://redirector.googlevideo.com/initplayback",
+            "?source=youtube&oeis=1&c=TVHTML5&oad=3200&ovd=3200",
+            "&oaad=3200&oavd=3200&ocs=700&oewis=1&oputc=1&ofpcc=1",
+            "&msp=1&odepv=1&alr=yes&id=43620&cmo=sensitive_content=yes",
+            "&cmo=td=c.youtube.com&sc=yes"
+        ].join("")
+        fetch(initialUrl, {
+            "headers": androidHeaders.headers
+        }).then(r => {r.text().then(r => {
+            wyjebaData.initialonesieurl = r;
+            if(callback) {
+                callback()
+            }
+        })})
+    },
+
+    "initWyjeba": function(callback) {
+        let inits = 0;
+        let initsNeeded = 2;
+        function onInitComplete() {
+            if(callback) {
+                callback()
+            }
+        }
+        this.repullServer(() => {
+            inits++
+            if(inits == initsNeeded) {
+                onInitComplete()
+            }
+        })
+        let times = 0;
+        let x = setInterval(() => {
+            times++
+            if(!yt2009exports.read().visitor
+            && times < 20) return;
+            clearInterval(x)
+            let ps4ua = [
+                "Mozilla/5.0 (PlayStation; PlayStation 5/10.20; PlayStation 4)",
+                "AppleWebKit/605.1.15 (KHTML, like Gecko)",
+                "Version/14.0 Safari/605.1.15"
+            ].join(" ")
+            let tvConfigUrl = [
+                "https://www.youtube.com/tv_config",
+                "?action_get_config=true&client=lb4&theme=cl"
+            ].join("")
+            fetch(tvConfigUrl, {
+                "headers": {
+                    "User-Agent": ps4ua,
+                    "Accept": "*/*",
+                    "Accept-Language": "pl,en-US;q=0.7,en;q=0.3",
+                    "X-Goog-Visitor-Id": yt2009exports.read().visitor,
+                    "Sec-GPC": "1",
+                    "Sec-Fetch-Dest": "empty",
+                    "Sec-Fetch-Mode": "cors",
+                    "Sec-Fetch-Site": "same-origin"
+                },
+                "referrer": "https://www.youtube.com/tv",
+                "method": "GET",
+                "mode": "cors"
+            }).then(r => {r.text().then(r => {
+                r = r.split("\r\n").join("\n")
+                if(r.startsWith(")]}'\n")) {
+                    r = r.split("\n")
+                    r.shift()
+                    r = r.join("\n")
+                    r = JSON.parse(r)
+                    for(let i in r.webPlayerContextConfig) {
+                        let a = r.webPlayerContextConfig[i]
+                        if(a.onesieHotConfig) {
+                            let z = a.onesieHotConfig
+                            wyjebaData.clientKey = z.clientKey;
+                            wyjebaData.encryptedClientKey = z.encryptedClientKey
+                            wyjebaData.ustreamer = z.onesieUstreamerConfig
+                            wyjebaData.appendUrl = z.baseUrl
+                            wyjebaData.exp = z.keyExpiresInSeconds*1000
+                            wyjebaData.expire = Date.now() + wyjebaData.exp
+                        }
+                    }
+                    inits++
+                    if(inits == initsNeeded) {
+                        onInitComplete()
+                    }
+                }
+            })})
+        }, 250)
     }
 }
 

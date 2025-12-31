@@ -194,6 +194,12 @@ if(config.redirmode
 
 require("./yt2009androidsignin").set(app)
 
+if(config.wyjeba_typu_onesie) {
+    yt2009_utils.initWyjeba(() => {
+        console.log(`onesie wyjeba started`)
+    })
+}
+
 // ws sync with master
 let syncCommentCallbacks = {}
 let syncCheckCallbacks = {}
@@ -5814,7 +5820,8 @@ app.get("/pchelper_related", (req, res) => {
     let fRes = {
         "set": function(name,key){},
         "send": function(data) {data.split("<entry>").forEach(v => {
-            if(v.includes("<feed xmlns")) return;
+            if(v.includes("<feed xmlns")
+            || !v.includes("/feeds/api/videos")) return;
             let id = v.split(`/feeds/api/videos/`)[1].split(`</id>`)[0]
             let title = v.split(`<title type='text'>`)[1].split("</title>")[0]
             let creatorName = v.split(`<name>`)[1].split("</name>")[0]
@@ -6451,22 +6458,38 @@ app.get("/stream_get_fragment", (req, res) => {
             let usable = []
             if(req.query.type !== "aud") {
                 usable = r.streamingData.adaptiveFormats.filter(s => {
-                    return s.url 
+                    return (s.url 
                         && s.videoheight
                         && qualities.includes(s.videoheight)
-                        && s.mimetype.includes("avc1")
+                        && s.mimetype.includes("avc1"))
+                        || (s.url
+                        && s.height
+                        && qualities.includes(s.height)
+                        && s.mimeType.includes("avc1"))
                 })
                 usable = usable.sort((a, b) => {
-                    return b.videoheight - a.videoheight
+                    if(b.videoheight) {
+                        return b.videoheight - a.videoheight;
+                    } else {
+                        return b.height - a.height
+                    }
                 })
                 res.set("content-type", "video/mp4")
             } else {
                 usable = r.streamingData.adaptiveFormats.filter(s => {
-                    return s.url
-                        && s.mimetype.includes("audio/mp4")
+                    return (s.url
+                        && s.mimetype
+                        && s.mimetype.includes("audio/mp4"))
+                        || (s.url
+                        && s.mimeType
+                        && s.mimeType.includes("audio/mp4"))
                 })
                 usable = usable.sort((a, b) => {
-                    return b.totalbitrate - a.totalbitrate
+                    if(b.totalbitrate) {
+                        return b.totalbitrate - a.totalbitrate;
+                    } else {
+                        return b.bitrate - a.bitrate
+                    }
                 })
                 res.set("content-type", "audio/mp4")
             }
@@ -6518,6 +6541,21 @@ app.get("/stream_get_fragment", (req, res) => {
         // no need to request new /player
         processPlayer()
     } else {
+        if(config.wyjeba_typu_onesie) {
+            yt2009_utils.wyjebaTypuOnesie(v, (data) => {
+                data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
+                if(data.sabrUrl && data.sabrUrl.includes("expire=")) {
+                    data.expiry = parseInt(
+                        data.sabrUrl.split("expire=")[1].split("&")[0]
+                    ) * 1000
+                } else {
+                    data.expiry = Date.now() + (7200 * 1000) // 2 hrs
+                }
+                videoStream_players[v] = data;
+                processPlayer()
+            })
+            return;
+        }
         let rHeaders = JSON.parse(JSON.stringify(yt2009_constant.headers))
         rHeaders["user-agent"] = "com.google.android.youtube/20.06.36 (Linux; U; Android 14) gzip"
         if(yt2009signin.needed() && yt2009signin.getData().yAuth) {

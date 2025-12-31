@@ -1,0 +1,83 @@
+syntax = "proto3";
+package onesie_request;
+
+message requestHeader {
+    string key = 1;
+    string value = 2;
+}
+
+message playerReq {
+    string url = 1;
+    repeated requestHeader header = 2;
+    string requestBody = 3;
+    bool useProxyDeprecated = 4;
+    bool five = 5;
+    bool skipEncrypt = 6;
+    bool seven = 7;
+    bool eight = 8;
+    bool nine = 9;
+    bool ten = 10;
+    bool eleven = 11;
+    bool twelve = 12;
+    bool thirteen = 13;
+    bool fourteen = 14;
+    bool fifteen = 15;
+    bool sixteen = 16;
+}
+
+message timingData {
+    /*all timestamp fields are in ms*/
+    int32 absInitTime = 13; /*since page load begin -- not present on ANDROID*/
+    int32 videoHeight = 16;
+    int32 playerWidth = 18;
+    int32 playerHeight = 19;
+    int32 fiveInt = 27;
+    optional int32 startTime = 28; /*where fetched data should start*/
+    optional int32 reqInitTime = 29; /*since first sabr request?*/
+    int32 fiveInt2 = 34;
+    int32 relInitTime = 36; /*since player init*/
+    /*more to be reversed*/
+}
+
+message clientMsg {
+    string deviceMake = 12;
+    string deviceModel = 13;
+    int32 clientNumber = 16;
+    string clientVersion = 17;
+    string osName = 18;
+    string osVersion = 19;
+    string locale = 21;
+    string gl = 22;
+    string plreq = 25;
+    int32 screenWidth = 37;
+    int32 screenHeight = 38;
+    int32 screenWidth2 = 55;
+    int32 screenHeight2 = 56;
+    optional int32 utcOffsetMinutes = 67;
+    string timeZone = 80;
+    string deviceCodename = 92;
+}
+
+message request {
+    bytes encryptedClientKey = 5;
+    bool ten = 10;
+    optional int32 thirteenint = 13;
+    optional int32 fourteenint = 14;
+    playerReq req = 16;
+    optional int32 seventeenint = 17;
+}
+
+message root {
+    timingData timing = 2;
+    request request = 3;
+    bytes ustreamerConfig = 4;
+    optional int32 fiveint = 5;
+    int32 screenHeight = 6;
+    clientMsg client = 10;
+    int32 thirteen = 13;
+}
+
+message part11Resp {
+    repeated requestHeader header = 3;
+    bytes body = 4; /*may be a json string or proto*/
+}

@@ -83,7 +83,11 @@ module.exports = {
                 let s = yt2009homepage({
                     "error": "This channel is not available."
                 })
-                res.redirect("/?ytsession=" + s)
+                if(res.redirect) {
+                    res.redirect("/?ytsession=" + s)
+                } else {
+                    res.send(`[yt2009] channel not found`)
+                }
                 return;
             }
             if(req.query && req.query.earlyPull) {
@@ -128,7 +132,11 @@ module.exports = {
                             let s = yt2009homepage({
                                 "error": "This channel is not available."
                             })
-                            res.redirect("/?ytsession=" + s)
+                            if(res.redirect) {
+                                res.redirect("/?ytsession=" + s)
+                            } else {
+                                res.send(`[yt2009] channel not found`)
+                            }
                             earlyProgressPulls = earlyProgressPulls.filter(
                                 s => {return s !== id}
                             )

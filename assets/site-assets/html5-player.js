@@ -2544,6 +2544,12 @@ setTimeout(function() {
         video.src = src;
     }
 }, 5000)
+// or after 2s if sabr (more just feels unacceptable)
+setTimeout(function() {
+    if(!video.playing && !videoStartedPlaying && window.sabrBase) {
+        requestSabr(0)
+    }
+}, 2000)
 
 // video loading sprite on unloaded area
 video.addEventListener("seeking", function(e) {

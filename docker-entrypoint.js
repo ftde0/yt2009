@@ -167,6 +167,22 @@ switch (process.env.YT2009_DEFAULTFH264) {
         break;
 }
 
+// set maxretry
+if(process.env.YT2009_DLMAXRETRY
+&& !isNaN(parseInt(process.env.YT2009_DLMAXRETRY))) {
+    cfg.dl_max_retry = parseInt(process.env.YT2009_DLMAXRETRY);
+}
+
+// set max1080
+if(process.env.YT2009_MAX1080) {
+    cfg.max_1080 = true;
+}
+
+// set ipv6
+if(process.env.YT2009_IPV6) {
+    cfg.ipv6 = process.env.YT2009_IPV6
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

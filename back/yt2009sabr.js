@@ -149,7 +149,11 @@ module.exports = {
                 return (s.itag == 140 || s.itag == 139)
             })
             audioFmts = audioFmts.sort((a,b) => {
-                return b.totalbitrate - a.totalbitrate
+                if(b.totalbitrate) {
+                    return b.totalbitrate - a.totalbitrate;
+                } else {
+                    return b.bitrate - a.bitrate;
+                }
             })
 
             if(!audioFmts[0]) {
@@ -311,6 +315,23 @@ module.exports = {
             if(config.env == "dev") {
                 console.log(`using clean player for ${playbackSession}`)
             }
+            if(config.wyjeba_typu_onesie) {
+                yt2009utils.wyjebaTypuOnesie(p.id, (data) => {
+                    data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
+                    data.ustreamer = data.playerConfig.mediaCommonConfig
+                                         .mediaUstreamerRequestConfig
+                                         .videoPlaybackUstreamerConfig;
+                    if(data.sabrUrl && data.sabrUrl.includes("expire=")) {
+                        data.expiry = parseInt(
+                            data.sabrUrl.split("expire=")[1].split("&")[0]
+                        ) * 1000
+                    } else {
+                        data.expiry = Date.now() + (7200 * 1000) // 2 hrs
+                    }
+                    players[p.id] = data;
+                })
+                return;
+            }
             let rHeaders = JSON.parse(JSON.stringify(yt2009constants.headers))
             rHeaders["user-agent"] = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
             if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
@@ -447,7 +468,7 @@ module.exports = {
         return abrReq.serializeBinary()
     },
 
-    "parseResponse": function(r, fCallback, redirCallback) {
+    "parseResponse": function(r, fCallback, redirCallback, parseAsOnesieWyjebka) {
         // root ump parse logic
         // https://github.com/LuanRT/googlevideo/blob/main/src/core/UMP.ts
         // https://github.com/LuanRT/googlevideo/blob/main/src/core/ChunkedDataBuffer.ts
@@ -709,6 +730,23 @@ module.exports = {
             }
         }
 
+        if(parseAsOnesieWyjebka) {
+            let parts = []
+            let umpParse = new ump(new chunkedDataBuffer([r]))
+            umpParse.parse(function(part) {
+                var data = part.data.chunks[0]
+                var type = part.type
+                if(type == 11 && data.length > 100) {
+                    try {
+                        parts.push(require("zlib").gunzipSync(data))
+                    }
+                    catch(error){}
+                }
+            })
+            fCallback(parts)
+            return;
+        }
+
         let allParts = []
         let mediaHeaders = []
         let finalFragments = {}
@@ -872,3 +910,5 @@ module.exports = {
         parserStart()
     }
 }
+
+yt2009exports.writeData("umpParseFun", module.exports.parseResponse)
