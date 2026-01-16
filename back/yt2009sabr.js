@@ -441,7 +441,7 @@ module.exports = {
         context.setClientversion("20.06.36")
         context.setOsname("Android")
         context.setOsversion("10")
-        context.setHl("en")
+        //context.setHl("en")
         context.setGl("US")
         context.setUtcoffsetminutes(60)
         context.setTimezone("Europe/Warsaw")

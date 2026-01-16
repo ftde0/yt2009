@@ -2241,7 +2241,7 @@ module.exports = {
         client.setClientversion("20.51")
         client.setOsname("Android")
         client.setOsversion("14")
-        client.setHl("pl")
+        //client.setHl("pl")
         client.setGl("US")
         client.setPlreq("4001214430065260964")
         client.setScreenwidth(411)
