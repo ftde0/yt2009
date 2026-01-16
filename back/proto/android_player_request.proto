@@ -3,10 +3,6 @@ package android_player_request;
 
 /*android /player REQUEST to send to yt*/
 
-message hwData {
-    fixed32 id = 12;
-}
-
 message appConfig {
     string coldConfigData = 1;
     string coldHashData = 3;
@@ -36,7 +32,7 @@ message root {
             string clientVersion = 17;
             string osName = 18;
             string osVersion = 19;
-            repeated hwData hw = 21;
+            string hl = 21;
             string gl = 22;
             string plreq = 25;
             int32 screenWidth = 37;
@@ -50,13 +46,6 @@ message root {
             string deviceCodename = 92;
         }
         repeated clientType client = 1;
-        /*message clickTrackingParamsMsg {
-            message contents {
-
-            }
-            repeated contents content = 2;
-        }
-        repeated clickTrackingParamsMsg clickTrackingParams = 6;*/
     }
     repeated contextType context = 1;
     string videoId = 2;

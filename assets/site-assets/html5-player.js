@@ -514,6 +514,9 @@ video.addEventListener("pause", function() {
 
 video.addEventListener("play", function() {
     video_show_play_btn()
+    if(window.sabrData && window.sabrData.fEnd) {
+        video.currentTime = 0;
+    }
 }, false)
 
 // play/pause animation
@@ -557,7 +560,8 @@ function timeUpdate() {
     if(window.usingModifiers && !window.modifiersAdded) {
         loadModifierTags()
     }
-    if(playingAsLive) return;
+    if(playingAsLive
+    || (window.sabrData && window.sabrData.seekToLength)) return;
     elapsedbar.style.width = (video.currentTime / video.duration) * 100 + "%"
     if(video.duration <= video.currentTime) {
         // ??
@@ -802,6 +806,10 @@ function mousedownf() {
 }
 
 function mouseup() {
+    if(window.sabrData && window.sabrData.seekToLength) {
+        video.currentTime = window.sabrData.seekToLength
+        window.sabrData.seekToLength = null;
+    }
     mousedown = false;
 }
 
@@ -815,8 +823,19 @@ function videoSeek(e) {
         }, 40)
         $(".seek_btn").className = "seek_btn hovered"
         var offsetX = e.pageX - seekbar.getBoundingClientRect().left;
-        video.currentTime = (offsetX / seekbar.getBoundingClientRect().width)
-                            * video.duration
+        if(window.sabrData) {
+            var tc = (offsetX / seekbar.getBoundingClientRect().width)
+                     * video.duration
+            elapsedbar.style.width = (tc / video.duration) * 100 + "%"
+            if(tc == 0) {
+                tc = 0.01
+            }
+            sabrData.seekToLength = tc;
+        } else {
+            video.currentTime = (offsetX / seekbar.getBoundingClientRect().width)
+                                * video.duration
+        }
+        
     } else {
         $(".seek_btn").className = "seek_btn"
     }
@@ -839,9 +858,9 @@ $(".video_controls .seek_btn").addEventListener("mouseup", mouseup, false)
 
 // normal click
 function click_seek(e) {
-    mousedown = true;
+    mousedownf()
     videoSeek(e)
-    mousedown = false;
+    mouseup()
 }
 
 seekbar.addEventListener("click", click_seek, false)
@@ -1338,6 +1357,8 @@ function initPopoutFadeout() {
                     setTimeout(function() {
                         player_add_popout_debounce = false;
                     }, 300)
+                    mousedown = false;
+                    $(".seek_btn").className = "seek_btn"
                 }
             }, 100)
         }
@@ -1362,12 +1383,10 @@ function initPopoutFadeout() {
                         volume_popping = false;
                     }, 500)
                 }
+                mousedown = false;
+                $(".seek_btn").className = "seek_btn"
             }, 100)
         }
-        
-        // SEEK BAR (unhover)
-        mousedown = false;
-        $(".seek_btn").className = "seek_btn"
     }, false)
 }
 setTimeout(function() {

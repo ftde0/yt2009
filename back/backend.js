@@ -6537,6 +6537,23 @@ app.get("/stream_get_fragment", (req, res) => {
         })
     }
     let v = req.query.video_id.substring(0,11)
+    if(yt2009_exports.read().players[v] && !videoStream_players[v]) {
+        let data = yt2009_exports.read().players[v]
+        data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
+        if(data.sabrUrl && data.sabrUrl.includes("expire=")) {
+            data.expiry = parseInt(
+                data.sabrUrl.split("expire=")[1].split("&")[0]
+            ) * 1000
+        } else {
+            data.expiry = Date.now() + (7200 * 1000) // 2 hrs
+        }
+        if(data.expiry) {
+            videoStream_players[v] = data;
+            if(config.env == "dev") {
+                console.log(`initing ${v} live playback with exports cache`)
+            }
+        }
+    }
     if(videoStream_players[v] && videoStream_players[v].expiry >= Date.now()) {
         // no need to request new /player
         processPlayer()

@@ -129,6 +129,10 @@ module.exports = {
                                  .commentRepliesRenderer
                         let viewString = r.viewReplies.buttonRenderer
                                           .text.runs[0].text;
+                        if((!r.contents || !r.contents[0])
+                        && (r.subThreads && r.subThreads[0])) {
+                            r.contents = r.subThreads
+                        }
                         r = r.contents[0].continuationItemRenderer
                              .continuationEndpoint.continuationCommand
                              .token
@@ -2237,9 +2241,7 @@ module.exports = {
         client.setClientversion("20.51")
         client.setOsname("Android")
         client.setOsversion("14")
-        let hw = new p.hwData()
-        hw.setId(1398091118)
-        client.addHw(hw)
+        client.setHl("pl")
         client.setGl("US")
         client.setPlreq("4001214430065260964")
         client.setScreenwidth(411)
