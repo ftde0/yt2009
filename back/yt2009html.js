@@ -61,16 +61,15 @@ if(EXTRA_RISK_BLOCK) {
                     "\n"
                 ].join(" ")
                 console.log(msg)
-
-                // if not signed in, bind to visitor id
-                if(!yt2009androidsignin.needed()) {
-                    createPot(visitorId)
-                } else {
-                    // bind to datasyncid
-                    yt2009androidsignin.getDatasyncId((id) => {
-                        createPot(id)
-                    })
-                }
+            }
+            // if not signed in, bind to visitor id
+            if(!yt2009androidsignin.needed()) {
+                createPot(visitorId)
+            } else {
+                // bind to datasyncid
+                yt2009androidsignin.getDatasyncId((id) => {
+                    createPot(id)
+                })
             }
         }
         catch(error){}
