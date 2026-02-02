@@ -15,6 +15,7 @@ const yt2009signin = require("./yt2009androidsignin")
 const yt2009trusted = require("./yt2009trustedcontext")
 const yt2009mobilehelper = require("./yt2009mobilehelper")
 const yt2009sabr = require("./yt2009sabr")
+const yt2009pot = require("./yt2009pot")
 const constants = require("./yt2009constants.json")
 const config = require("./config.json")
 const userid = require("./cache_dir/userid_cache")
@@ -60,16 +61,47 @@ if(EXTRA_RISK_BLOCK) {
                     "\n"
                 ].join(" ")
                 console.log(msg)
+
+                // if not signed in, bind to visitor id
+                if(!yt2009androidsignin.needed()) {
+                    createPot(visitorId)
+                } else {
+                    // bind to datasyncid
+                    yt2009androidsignin.getDatasyncId((id) => {
+                        createPot(id)
+                    })
+                }
             }
         }
         catch(error){}
     })})
 }
 
+function createPot(visitorId) {
+    yt2009pot.generatePo(visitorId, (data) => {
+        yt2009exports.writeData("potBytes", data.encryptData)
+        yt2009exports.writeData("potKey", data.backup)
+        if(config.env == "dev") {
+            let msg = [
+                "generated pot:",
+                "encryptdata - " + data.encryptData.toString("hex"),
+                "backup - " + data.backup.toString("hex"),
+                "valid for (s) - " + data.valid
+            ].join("\n")
+            console.log(msg + "\n")
+        }
+        // regenerate pot close to end of validity
+        setTimeout(() => {
+            createPot(visitorId)
+        }, (data.valid - 1800) * 1000)
+    })
+}
+
 const watchpage_code = fs.readFileSync("../watch.html").toString();
 const watchpage_feather = fs.readFileSync("../watch_feather.html").toString()
 let cache = require("./cache_dir/video_cache_manager")
-let yt2009userratings = require("./cache_dir/rating_cache_manager")
+let yt2009userratings = require("./cache_dir/rating_cache_manager");
+const yt2009androidsignin = require("./yt2009androidsignin");
 let innertube_context = {}
 let api_key = ""
 let featured_videos = []
@@ -606,6 +638,9 @@ module.exports = {
                 if(videoData.playabilityStatus
                 && videoData.playabilityStatus.status == "LOGIN_REQUIRED") {
                     data.restricted = true
+                    if(config.env == "dev") {
+                        console.log(`fetching ${id} returned LOGIN_REQUIRED`)
+                    }
                 }
 
                 if(videoData.freezeSync && !videoData.category) {
@@ -3194,6 +3229,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 // 480p
                 code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
             }
+        } else if(data.length >= 3600) {
+            // no hd but check hour counter
+            code = code.replace(
+                `//yt2009-exp-hq-btn`,
+                `seekbarRemoveWidth = 265;adjustSeekbarWidth();`
+            )
         }
 
         // annotation_redirect
@@ -3525,10 +3566,50 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     let comments = yt2009utils.comments_parser(
                         response, comment_flags, useContinuation
                     )
-                    callback(comments)
-                    continuations_cache[token] = JSON.parse(
-                        JSON.stringify(comments)
-                    )
+                    function sendComments() {
+                        callback(comments)
+                        continuations_cache[token] = JSON.parse(
+                            JSON.stringify(comments)
+                        )
+                    }
+                    if(config.data_api_key
+                    && comments.length >= 1) {
+                        // pull full comment like count if data api key
+                        let ids = comments.map((c) => {
+                            return c.commentId;
+                        }).filter(s => {return s}).join(",")
+                        let commentLikeCounts = {}
+                        let url = [
+                            "https://www.googleapis.com/youtube/v3/comments",
+                            "?part=snippet",
+                            "&id=" + ids,
+                            "&key=" + config.data_api_key
+                        ].join("")
+                        fetch(url, {
+                            "headers": constants.headers,
+                            "method": "GET"
+                        }).then(r => {try {r.json().then(r => {
+                            if(!r.error && r.items) {
+                                r.items.forEach(i => {
+                                    let id = i.id;
+                                    let likeCount = i.snippet.likeCount
+                                    commentLikeCounts[id] = likeCount
+                                })
+                            }
+
+                            comments = comments.map((c) => {
+                                if(commentLikeCounts[c.commentId]) {
+                                    c.likes = commentLikeCounts[c.commentId]
+                                }
+                                return c;
+                            })
+                            sendComments()
+                        })}catch(error){
+                            sendComments()
+                        }})
+                        return;
+                    }
+                    sendComments()
                 })
             })
         }

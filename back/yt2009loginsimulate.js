@@ -59,10 +59,18 @@ module.exports = function(req, code, returnNoLang) {
         }
     }
 
+    let unasciifyLogin = flags.includes("unasciify_login")
+
     if(loggedInUsername) {
-        loggedInUsername = require("./yt2009utils").asciify(
-            decodeURIComponent(loggedInUsername), true, true
-        ).substring(0, 20)
+        if(unasciifyLogin) {
+            loggedInUsername = require("./yt2009utils").xss(
+                decodeURIComponent(loggedInUsername)
+            ).substring(0,40)
+        } else {
+            loggedInUsername = require("./yt2009utils").asciify(
+                decodeURIComponent(loggedInUsername), true, true
+            ).substring(0, 20)
+        }
         if(loggedInUsername.length == 0) {
             loggedInUsername = "guest"
         }

@@ -499,7 +499,6 @@ video.addEventListener("click", function() {
 }, false)
 
 $(".play_btn").addEventListener("click", video_play, false)
-
 $(".pause_btn").addEventListener("click", video_pause, false)
 
 video.addEventListener("ended", function() {
@@ -515,6 +514,8 @@ video.addEventListener("pause", function() {
 video.addEventListener("play", function() {
     video_show_play_btn()
     if(window.sabrData && window.sabrData.fEnd) {
+        if(window.sabrData.seekedTempArchive
+        && Math.floor(window.sabrData.seekedTempArchive) - Math.floor(video.duration) <= 2) return;
         video.currentTime = 0;
     }
 }, false)
@@ -731,9 +732,12 @@ function adjustSeekbarWidth() {
         var videoWidth = video.getBoundingClientRect().width
                         - seekbarRemoveWidth
         //progressContainer.style.width = videoWidth + "px"
-        $(".player_auto_css").innerHTML = ".progress_container {width: "
-                                        + videoWidth
-                                        + "px;}"
+        try {
+            $(".player_auto_css").innerHTML = ".progress_container {width: " + videoWidth + "px;}"
+        }
+        catch(error) {
+            progressContainer.style.width = (videoWidth - 40) + "px"
+        }
     }
     
     // loading gif
@@ -759,9 +763,12 @@ function adjustSeekbarWidth() {
     // update css measurements to center the embed play btn
     var embedPlayX = video.getBoundingClientRect().width / 2 - 50;
     var embedPlayY = video.getBoundingClientRect().height / 2 - 37.5;
-    $(".player_auto_css").innerHTML += ".embed-play-btn {left: "
+    try {
+        $(".player_auto_css").innerHTML += ".embed-play-btn {left: "
                                         + embedPlayX + "px;top: " 
                                         + embedPlayY + "px;}"
+    }
+    catch(error){}
 
     sizeAnnotationsContainer()
     setVidHeight()
@@ -773,6 +780,7 @@ function adjustSeekbarWidth() {
             mainElement.querySelector(".unrecoverable-error-msg")
         )
     }
+    endscreenResize()
 }
 
 window.addEventListener("resize", adjustSeekbarWidth, false);
@@ -788,11 +796,20 @@ function seconds_to_time(input) {
     minutes = Math.floor(input / 60)
     seconds = remainingSeconds;
 
+    var hourString = ""
+    if(minutes >= 60) {
+		hourString = Math.floor(minutes / 60) + ":"
+		minutes = minutes % 60
+        if(minutes < 10) {
+            minutes = "0" + minutes
+        }
+	}
+
     if(seconds.toString().length == 1) {
         seconds = "0" + seconds.toString();
     }
 
-    return minutes + ":" + seconds;
+    return hourString + minutes + ":" + seconds;
 }
 
 
@@ -808,8 +825,13 @@ function mousedownf() {
 function mouseup() {
     if(window.sabrData && window.sabrData.seekToLength) {
         video.currentTime = window.sabrData.seekToLength
+        window.sabrData.seekedTempArchive = window.sabrData.seekToLength
+        setTimeout(function() {
+            window.sabrData.seekedTempArchive = null;
+        }, 3000)
         window.sabrData.seekToLength = null;
     }
+    $(".seek_btn").className = "seek_btn"
     mousedown = false;
 }
 
@@ -826,11 +848,13 @@ function videoSeek(e) {
         if(window.sabrData) {
             var tc = (offsetX / seekbar.getBoundingClientRect().width)
                      * video.duration
-            elapsedbar.style.width = (tc / video.duration) * 100 + "%"
+            var elapsedbarWidth = (tc / video.duration) * 100
+            elapsedbarWidth = Math.min(elapsedbarWidth, 100)
+            elapsedbar.style.width = elapsedbarWidth + "%"
             if(tc == 0) {
                 tc = 0.01
             }
-            sabrData.seekToLength = tc;
+            sabrData.seekToLength = Math.abs(tc);
         } else {
             video.currentTime = (offsetX / seekbar.getBoundingClientRect().width)
                                 * video.duration
@@ -1441,6 +1465,7 @@ for(var s in seekbarElements) {
                 (e.pageX - seekbar.getBoundingClientRect().left)
                 / seekbar.getBoundingClientRect().width
             ) * duration
+            time_hovered = Math.min(time_hovered, duration)
             time_hovered = seconds_to_time(Math.floor(time_hovered))
             if(time_hovered.indexOf("-") == 0) {
                 time_hovered = "0:00"
@@ -3263,6 +3288,27 @@ function initAsSabr() {
                 }
                 if(isSr && !enablesSr) return;
 
+                var hbrIndicator = false;
+                if(q[0] == 214 || q[0] == 216) {
+                    moreSpacedPicker = true;
+
+                    hbrIndicator = document.createElement("div")
+                    hbrIndicator.setAttribute("title", "High bit rate quality")
+                    hbrIndicator.className = "hbr_indicator"
+                    var hbrIp1 = document.createElement("span")
+                    hbrIp1.innerHTML = "["
+                    hbrIp1.className = "ip1"
+                    hbrIndicator.appendChild(hbrIp1)
+                    var hbrIp2 = document.createElement("span")
+                    hbrIp2.innerHTML = "HR"
+                    hbrIp2.className = "ip2"
+                    hbrIndicator.appendChild(hbrIp2)
+                    var hbrIp3 = document.createElement("span")
+                    hbrIp3.innerHTML = "]"
+                    hbrIp3.className = "ip3"
+                    hbrIndicator.appendChild(hbrIp3)
+                }
+
                 var qElement = document.createElement("li")
                 qElement.setAttribute("data-itag", q[0])
                 var qCircle = document.createElement("span")
@@ -3272,6 +3318,9 @@ function initAsSabr() {
                 qName.innerHTML = q[1];
                 if(srIndicator) {
                     qName.appendChild(srIndicator)
+                }
+                if(hbrIndicator) {
+                    qName.appendChild(hbrIndicator)
                 }
                 qElement.appendChild(qName)
                 qElement.onclick = function() {
@@ -3461,6 +3510,10 @@ function initAsSabr() {
                 showEndscreen()
                 if(sabrData.fEndCallback) {
                     sabrData.fEndCallback()
+                }
+                if(elapsedbar.style.width
+                && parseInt(elapsedbar.style.width) <= 97) {
+                    elapsedbar.style.width = "100%"
                 }
                 t++
             }
@@ -3664,6 +3717,27 @@ function createPlaybackModePickr(parent) {
             o2.className += " enabled"
         }
 
+        var o3 = createCheckbox("use modern watch features", function() {
+            if(pickrLastState.modern == undefined
+            || pickrLastState.modern == null) {
+                pickrLastState.modern = false;
+            }
+            pickrLastState.modern = !pickrLastState.modern
+            if(pickrLastState.modern) {
+                o3.className += " enabled"
+            } else {
+                o3.className = o3.className.split(" enabled").join("")
+            }
+        })
+        container.appendChild(o3)
+        
+        if(document.cookie
+        && document.cookie.indexOf("watch_modern_features") !== -1) {
+            pickrLastState.modern = true;
+            pickrLastState.initialModern = true;
+            o3.className += " enabled"
+        }
+
         var notice = document.createElement("span")
         notice.className = "pckr-int-notice"
         notice.innerHTML = "recommended internet speeds: 25Mbps+ for 720p, 55Mbps+ for 1080p<br>\
@@ -3692,11 +3766,18 @@ those can be changed at any time:<br>\
                 pickrLastState.def1080
                 && !pickrLastState.initialDef1080
             )
+            var addModern = (
+                pickrLastState.modern
+                && !pickrLastState.initialModern
+            )
             var removeAutohd = (
                 !pickrLastState.autohd
             )
             var remove1080 = (
                 !pickrLastState.def1080
+            )
+            var removeModern = (
+                !pickrLastState.modern
             )
 
             var wf = ""
@@ -3707,10 +3788,12 @@ those can be changed at any time:<br>\
                      .split(";")[0]
             }
             wf += "exp_sabr:"
+            if(addModern) {
+                wf += "watch_modern_features:"
+            }
             document.cookie = " watch_flags=" + wf + "; " 
                               + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
                               + "SameSite=Lax"
-
             if(removeAutohd) {
                 document.cookie = "playback_quality=1; " 
                                 + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
@@ -3723,6 +3806,17 @@ those can be changed at any time:<br>\
                 watchFlags = watchFlags.replace(":hd_1080:", "")
                 watchFlags = watchFlags.replace("hd_1080:", "")
                 watchFlags = watchFlags.replace(":hd_1080", "")
+                document.cookie = "watch_flags=" + watchFlags + "; " 
+                                + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                                + "SameSite=Lax"
+            }
+            if(removeModern) {
+                var watchFlags = " " + document.cookie
+                                 .split(" watch_flags=")[1]
+                                 .split(";")[0]
+                watchFlags = watchFlags.replace(":watch_modern_features:", "")
+                watchFlags = watchFlags.replace("watch_modern_features:", "")
+                watchFlags = watchFlags.replace(":watch_modern_features", "")
                 document.cookie = "watch_flags=" + watchFlags + "; " 
                                 + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "
                                 + "SameSite=Lax"
@@ -3753,7 +3847,7 @@ those can be changed at any time:<br>\
         }, false)
 
         setTimeout(function() {
-            positionPrompt2ndElements(o1, o2, parent)
+            positionPrompt2ndElements(o1, o2, o3, parent)
             pickrLastState.w = parent.getBoundingClientRect().width
             var watcher = setInterval(function() {
                 if(!pickrLastState.ongoing
@@ -3762,7 +3856,7 @@ those can be changed at any time:<br>\
                     return;
                 }
                 if(parent.getBoundingClientRect().width !== pickrLastState.w) {
-                    positionPrompt2ndElements(o1, o2, parent)
+                    positionPrompt2ndElements(o1, o2, o3, parent)
                 }
                 pickrLastState.w = parent.getBoundingClientRect().width
             }, 250)
@@ -3786,7 +3880,7 @@ those can be changed at any time:<br>\
         o2.style.left = o2l + "px"
     }
 
-    function positionPrompt2ndElements(o1, o2, parent) {
+    function positionPrompt2ndElements(o1, o2, o3, parent) {
         var fw = parent.getBoundingClientRect().width
 
         var o1w = o1.getElementsByTagName("h1")[0]
@@ -3801,6 +3895,12 @@ those can be changed at any time:<br>\
         o2w = Math.round(o2w) + 35
         var o2l = Math.floor((fw - o2w) / 2)
         o2.style.left = o2l + "px"
+
+        var o3w = o3.getElementsByTagName("h1")[0]
+                    .getBoundingClientRect().width
+        o3w = Math.round(o3w) + 35
+        var o3l = Math.floor((fw - o3w) / 2)
+        o3.style.left = o3l + "px"
     }
     
     if(!playingAsLive && window.MediaSource
@@ -4112,4 +4212,195 @@ function createMouseWatch() {
         }, 1000)
     }
     catch(error){}
+}
+
+
+// hotfix mouse seek sabr
+function dropSeek() {
+    if(!window.sabrData) return;
+    if(sabrData.seekToLength) {
+        mouseup()
+    }
+}
+
+$(".play_btn").addEventListener("mousemove", function() {
+    dropSeek()
+}, false)
+$(".pause_btn").addEventListener("mousemove", function() {
+    dropSeek()
+}, false)
+$(".timer").addEventListener("mousemove", dropSeek, false)
+video.addEventListener("mousemove", dropSeek, false)
+
+// rebuild endscreen sections on resizes if needed
+var endscreenCurrentVideoCount = 2;
+var enableEndscreenResizes = false;
+var onDisabledResizeCheck = false;
+setTimeout(function() {
+	enableEndscreenResizes = true;
+}, 2000)
+function endscreenResize() {
+    var vidBounds = video.getBoundingClientRect()
+    if(window.modifiersAdded && mainElement.getBoundingClientRect) {
+        vidBounds = mainElement.getBoundingClientRect()
+    }
+    var width = vidBounds.width;
+    var leftOffset = (width / 2) - (387 / 2)
+    try {
+        var css = ".endscreen-section {\
+            width: 387px;\
+            left: " + Math.floor(leftOffset) + "px\
+        }\
+        .endscreen-video-info {\
+            max-width: 269px;\
+        }\
+        .endscreen-video-title {\
+            width: 260px;\
+        }\
+        .flash-player.widescreen .endscreen .yt-center.buttons {\
+            left: 32%;\
+        }\
+        .flash-player.widescreen .endscreen .yt-center.buttons div {\
+            width: 18%;\
+        }"
+        $(".player_auto_css").innerHTML += css
+    }
+    catch(error){}
+    endscreenResizeCheckRebuild()
+}
+function endscreenResizeCheckRebuild() {
+	if(!enableEndscreenResizes) {
+        if(onDisabledResizeCheck) return;
+        onDisabledResizeCheck = true;
+        setTimeout(function() {
+            onDisabledResizeCheck = false;
+            enableEndscreenResizes = true;
+            endscreenResizeCheckRebuild()
+        }, 3000)
+        return;
+    }
+	var sections = [];
+	var foundVisibleSection = false;
+	if(mainElement.querySelectorAll) {
+		sections = mainElement.querySelectorAll(".endscreen-section")
+	} else {
+		sections = document.querySelectorAll(".endscreen-section")
+	}
+	var VIDEOS_PER_SECTION = 2;
+	var playerHeight = 0;
+	if(mainElement.getBoundingClientRect) {
+		playerHeight = mainElement.getBoundingClientRect().height;
+	} else if(mainElement == document) {
+		playerHeight = document.body.getBoundingClientRect().height;
+	}
+	if(playerHeight > 530) {
+		VIDEOS_PER_SECTION = 4;
+	}
+	
+	if(endscreenCurrentVideoCount == VIDEOS_PER_SECTION) return;
+	// ^ no need to rebuild if sections match
+	
+	endscreenCurrentVideoCount = VIDEOS_PER_SECTION
+	
+	var videos = []
+	if(mainElement.querySelectorAll) {
+		videos = mainElement.querySelectorAll(".endscreen-video")
+	} else {
+		videos = document.querySelectorAll(".endscreen-video")
+	}
+	
+	for(var section in sections) {
+		// remove existing sections to put rebuilt ones in
+		if(sections[section]
+		&& sections[section].parentNode) {
+			sections[section].parentNode.removeChild(sections[section])
+		}
+	}
+	
+	var endscreenElement = false;
+	if(mainElement.querySelector) {
+		endscreenElement = mainElement.querySelector(".endscreen")
+	} else {
+		endscreenElement = document.querySelector(".endscreen")
+	}
+	
+	var tempSection = []
+	var newSectionIndex = 0;
+	for(var video in videos) {
+		video = videos[video]
+		var isFromVisibleSection = false;
+		if(video.parentNode
+		&& video.parentNode.className
+		&& video.parentNode.className.indexOf("hid") == -1
+		&& !foundVisibleSection) {
+			isFromVisibleSection = true;
+			newSectionIndex = Math.max(tempSection.length - 1, 0)
+			foundVisibleSection = true;
+		}
+		if(video.className) {
+			tempSection.push(video)
+			if(tempSection.length >= VIDEOS_PER_SECTION) {
+				// put into div section
+				var section = document.createElement("div")
+				section.className = "endscreen-section"
+				section.style.opacity = "1"
+				if(!isFromVisibleSection) {
+					section.className += " hid"
+					section.style.opacity = "0"
+				}
+				tempSection.forEach(function(vid) {
+					section.appendChild(vid)
+				})
+				if(endscreenElement) {
+					endscreenElement.appendChild(section)
+				}
+				tempSection = []
+			}
+		}
+	}
+	endscreen_section_index = newSectionIndex;
+	endscreen_section_change(0)
+}
+
+// time param
+if(location.href
+&& (location.href.indexOf("&t=") !== -1
+|| location.href.indexOf("?t=") !== -1)) {
+    var time = location.href.indexOf("?t=") !== -1
+             ? location.href.split("?t=")[1].split("&")[0]
+             : location.href.split("&t=")[1].split("&")[0]
+    if(time.indexOf("m") !== -1) {
+        var s = time.split("m")[1]
+        if(!s || isNaN(parseInt(s))) {
+            s = 0;
+        }
+        var m = time.split("m")[0]
+        if(time.indexOf("h") !== -1) {
+            var h = m.split("h")[0]
+            m = m.split("h")[1]
+            m = parseInt(m) + (parseInt(h) * 60)
+            s = parseInt(s)
+            time = s + (m * 60)
+        } else {
+            m = parseInt(m)
+            s = parseInt(s)
+            time = s + (m * 60)
+        }
+    } else {
+        time = parseInt(time)
+    }
+    
+    video.currentTime = time;
+    var t = $(".video_controls .timer")
+    var duration = time_to_seconds(t.innerHTML.split("/ ")[1])
+    t.innerHTML = t.innerHTML.replace("0:00", seconds_to_time(time))
+    var elapsedbarWidth = Math.floor((time / duration) * 100)
+    elapsedbar.style.width = elapsedbarWidth + "%"
+}
+
+// add pchelper related to endscreen
+function handleWatchpagePchelperRelated(r) {
+    // TODO
+    // playback broke entirely while this was being added soo
+    var videos = []
 }

@@ -142,3 +142,6 @@ but an attempt was made.
 #message_composing.not_allowed, #message_composing.not_allowed * {
     cursor: not-allowed;
 }
+.message.unread .from.collapsed, .message.unread .subject.collapsed, .message.unread .date.collapsed {
+    font-weight: bold;
+}

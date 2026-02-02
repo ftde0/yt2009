@@ -51,7 +51,7 @@ install an older one to host yt2009 on windows 7:
 npm install express@4.17.1
 ```
 
-if still facing issues take a look at #243.
+if still facing issues take a look at [#243](github.com/ftde0/yt2009/issues/243).
 
 ## updating
 

@@ -1,0 +1,31 @@
+syntax = "proto3";
+package android_pot;
+
+/*https://github.com/microg/GmsCore/blob/ed0208a7146318d36e669fa719b37b834559388a/play-services-core-proto/src/main/proto/potoken.proto#L48*/
+
+message potResponse {
+    bytes desc = 1;
+    int32 time = 2;
+    bytes backup = 3;
+}
+
+message potDescriptor {
+    int32 time = 1;
+    /*optional bytes input = 2;*/
+    /*yt-specific -- uses visitorData (base64 encoded string) as input data*/
+    /*(or pageid in case of logged in pot)*/
+    string input = 2;
+    string pkgName = 3;
+    optional bytes pkgSignature = 4;
+    optional bytes token = 5;
+    int32 key = 6;
+}
+
+message potResult {
+    bytes data = 1;
+    bytes token = 2;
+}
+
+message wrapper {
+    optional potResult data = 1;
+}

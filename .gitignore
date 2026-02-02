@@ -29,6 +29,7 @@ back/tvdata.json
 back/androiddata.json
 back/mobilehelper_userdata.json
 back/autoshare_userdata
+back/yt2009experimentals.js
 
 # yt assets
 master-vfl121679.png
@@ -89,3 +90,8 @@ assets/site-assets/ugcpromo_tagline_bg-vfl91176.gif
 assets/site-assets/video_bar_arrows-vfl84478.png
 assets/site-assets/video_cluster_180_border-vfl88394.png
 assets/site-assets/yt-narrative-tail-vfl55396.gif
+assets/site-assets/youtube_logo_small_grey-vfl41206.png
+
+# other
+node_modules/
+node_modules/*

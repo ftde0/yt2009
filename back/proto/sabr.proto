@@ -1,10 +1,6 @@
 syntax = "proto3";
 package sabr_request;
 
-message hwData {
-    fixed32 id = 12;
-}
-
 message serviceIntegrityDimensionsMsg {
     message contents {
         optional bytes encryptData = 1;
@@ -21,7 +17,7 @@ message clientMsg {
     string clientVersion = 17;
     string osName = 18;
     string osVersion = 19;
-    repeated hwData hw = 21;
+    string hl = 21;
     string gl = 22;
     string plreq = 25;
     int32 screenWidth = 37;

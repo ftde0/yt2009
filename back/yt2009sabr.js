@@ -340,6 +340,7 @@ module.exports = {
             }
             rHeaders["Content-Type"] = "application/x-protobuf"
             rHeaders["x-goog-api-format-version"] = "2"
+            rHeaders["x-goog-visitor-id"] = yt2009exports.read().visitor
             yt2009utils.craftPlayerProto(p.id, (pbmsg) => {
                 fetch("https://youtubei.googleapis.com/youtubei/v1/player", {
                     "headers": rHeaders,
@@ -388,6 +389,12 @@ module.exports = {
                         return a;
                     }
                     if(!formats) {
+                        console.log(`no streamingData for sabr!`)
+                        if(config.env == "dev") {
+                            let a = "sabr-error-" + Date.now()
+                            console.log(`saving pb response to ./${a}`)
+                            require("fs").writeFileSync(a, b)
+                        }
                         callback(false)
                         return;
                     }
@@ -441,12 +448,20 @@ module.exports = {
         context.setClientversion("20.06.36")
         context.setOsname("Android")
         context.setOsversion("10")
-        //context.setHl("en")
+        context.setHl("en")
         context.setGl("US")
         context.setUtcoffsetminutes(60)
         context.setTimezone("Europe/Warsaw")
         context.setDevicecodename("ranchu;")
         abrNineteen.addClient(context)
+        if(yt2009exports.read().potBytes && yt2009exports.read().potKey) {
+            let pot = new requestProto.serviceIntegrityDimensionsMsg()
+            let content = new requestProto.serviceIntegrityDimensionsMsg.contents()
+            content.setEncryptdata(yt2009exports.read().potBytes)
+            content.setTokendata(yt2009exports.read().potKey)
+            pot.addContent(content)
+            abrNineteen.addServiceintegritydimensions(pot)
+        }
         let abrItagsData = new requestProto.root.sourcePlayer.abrRequestMsg()
         abrItagsData.addVideoitag(videoItag)
         abrItagsData.addAudioitag(audioItag)

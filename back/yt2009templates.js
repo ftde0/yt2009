@@ -1009,8 +1009,8 @@ module.exports = {
             hqUrl += "&" + trustedContextData.hq;
         }
         let seekbarRemoveWidth = 245
-        if(videoLengthMinutes && videoLengthMinutes >= 100) {
-            seekbarRemoveWidth = 265
+        if(videoLengthMinutes && videoLengthMinutes >= 60) {
+            seekbarRemoveWidth = 277
         } else if(videoLengthMinutes && videoLengthMinutes >= 10) {
             seekbarRemoveWidth = 255
         }
@@ -2591,7 +2591,7 @@ module.exports = {
                 <div class="statModule-item-line">
                     <div class="statModule-item-text">
                         <button class="master-sprite img-general-messages yt2009-side-icon"></button>
-                        <a href="/inbox">lang_hp_messages_prefix0 lang_hp_messages</a>
+                        <a href="/inbox?folder=personal">lang_hp_messages_prefix0 lang_hp_messages</a>
                     </div>
                 </div>
                 <div class="statModule-item-line">
@@ -3515,8 +3515,8 @@ term='channel'/>
 
     "playerHDSabr": function(use720p, autoHQ, videoLengthMinutes, srData, exactData) {
         let seekbarRemoveWidth = 245
-        if(videoLengthMinutes && videoLengthMinutes >= 100) {
-            seekbarRemoveWidth = 265
+        if(videoLengthMinutes && videoLengthMinutes >= 60) {
+            seekbarRemoveWidth = 277
         } else if(videoLengthMinutes && videoLengthMinutes >= 10) {
             seekbarRemoveWidth = 255
         }

@@ -80,11 +80,20 @@ module.exports = {
         let minutes = Math.floor(input / 60);
         let seconds = input % 60;
 
+        let hourString = ""
+		if(minutes >= 60) {
+			hourString = Math.floor(minutes / 60) + ":"
+			minutes = minutes % 60
+            if(minutes < 10) {
+                minutes = "0" + minutes
+            }
+		}
+
         if(seconds < 10) {
             seconds = "0" + seconds
         }
 
-        return minutes + ":" + seconds;
+        return hourString + minutes + ":" + seconds;
     },
 
 
@@ -719,7 +728,7 @@ module.exports = {
             fname = banner + "_banner"
         }
         fname = fname.replace(".png", "")
-        if(!fs.existsSync(`../assets/${fname}.png`) || forceUpdate) {
+         if(!fs.existsSync(`../assets/${fname}.png`) || forceUpdate) {
             fetch(link.replace("ggpht.com", "googleusercontent.com"), {
                 "headers": constants.headers
             }).then(r => {
@@ -727,16 +736,13 @@ module.exports = {
                     fs.writeFileSync(`../assets/${fname}.png`, buffer)
                 })
             }).catch(e => {
-                devlog("googleusercontent load fail! trying ggpht")
                 fetch(link, {
                     "headers": constants.headers
                 }).then(r => {
                     r.buffer().then(buffer => {
                         fs.writeFileSync(`../assets/${fname}.png`, buffer)
                     })
-                }).catch(e => {
-                    devlog("attempt 2 of loading user avatar fail!", link)
-                })
+                }).catch(e => {})
             })
         }
 
@@ -1839,6 +1845,7 @@ module.exports = {
         let year = current.getFullYear()
         let month = current.getMonth()
         let day = current.getDate()
+        let exact = false;
 
         if(relativeTime.includes("year")) {
             year -= parseInt(relativeTime.split(" ")[0])
@@ -1847,6 +1854,16 @@ module.exports = {
             if(month < 1) {
                 year--;
                 month = current.getMonth()
+            }
+        } else if(relativeTime.includes("week")) {
+            day -= (parseInt(relativeTime.split(" ")[0]) * 7)
+            if(day < 1) {
+                month--;
+                day = current.getDate()
+                if(month < 1) {
+                    year--;
+                    month = current.getMonth()
+                }
             }
         } else if(relativeTime.includes("day")) {
             day -= parseInt(relativeTime.split(" ")[0])
@@ -1858,9 +1875,17 @@ module.exports = {
                     month = current.getMonth()
                 }
             }
+        } else if(relativeTime.includes("hour")) {
+            let h = parseInt(relativeTime.split(" ")[0])
+            current = new Date(current.getTime() - (1000 * 60 * 60 * h))
+            exact = true;
+        } else if(relativeTime.includes("minute")) {
+            let m = parseInt(relativeTime.split(" ")[0])
+            current = new Date(current.getTime() - (1000 * 60 * m))
+            exact = true
         }
 
-        return `${year}-${month + 1}-${day}`
+        return (exact ? current.toISOString() : `${year}-${month + 1}-${day}`)
     },
 
     "approxSubcount": function(count) {
@@ -2241,7 +2266,7 @@ module.exports = {
         client.setClientversion("20.51")
         client.setOsname("Android")
         client.setOsversion("14")
-        //client.setHl("pl")
+        client.setHl("en")
         client.setGl("US")
         client.setPlreq("4001214430065260964")
         client.setScreenwidth(411)
@@ -2269,6 +2294,16 @@ module.exports = {
         ovs.setTwo(2)
         ovs.setInittimems(Date.now())
         root.addSets(ovs)
+        if(yt2009exports.read().potBytes && yt2009exports.read().potKey) {
+            let pot = new p.root.serviceIntegrityDimensionsMsg()
+            let serviceContent = new p.root.serviceIntegrityDimensionsMsg.container()
+            let content = new p.root.serviceIntegrityDimensionsMsg.container.contents()
+            content.setEncryptdata(yt2009exports.read().potBytes)
+            content.setTokendata(yt2009exports.read().potKey)
+            serviceContent.addContent(content)
+            pot.setContain(serviceContent)
+            root.addServiceintegritydimensions(pot)
+        }
         callback(root.serializeBinary())
     })},
 

@@ -68,7 +68,8 @@ var languageData_EN = {
         "global-no-doodles": "disables doodles -- seasonal youtube logos",
         "global-annotation-redirect": "redirects all youtube.com links within annotations to yt2009",
         "global-shows-tab": "shows a Shows tab (only for demo, doesn't actually work)",
-        "global-thumbnail-proxy": "routes thumbnails through yt2009 to fix them on networks that might block youtube."
+        "global-thumbnail-proxy": "routes thumbnails through yt2009 to fix them on networks that might block youtube.",
+        "global-unasciify-login": "disables removing non-ascii characters from login names. will still be asciified in sync."
     },
 
     "elements": {
@@ -132,7 +133,10 @@ var languageData_EN = {
         (leaving this box empty/different value = max.)",
 
         "#hpr_notice": "homepage_recommended is located in the Add/Remove Modules section on the homepage.",
-        "#leg_annot_notice": "annotation_gradients is not accurate to its flash counterpart.<br>it was added as the previous html5 annotations' implementation had them."
+        "#leg_annot_notice": "annotation_gradients is not accurate to its flash counterpart.<br>it was added as the previous html5 annotations' implementation had them.",
+
+        "#toggle-f-ref": "(click here for flash player settings)",
+        "#pchelper-ref": "(or click here for pchelper-related settings)"
     },
 
     "placeholders": {

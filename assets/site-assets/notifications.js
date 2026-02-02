@@ -10,7 +10,7 @@ function nlToArray(nl) {
 }
 
 var ntf_r = new XMLHttpRequest()
-ntf_r.open("GET", "/get_notifications")
+ntf_r.open("GET", "/get_notifications?r=" + Math.random())
 ntf_r.send(null)
 ntf_r.onreadystatechange = function(e) {
     if((ntf_r.readyState == 4 || this.readyState == 4 || e.readyState == 4)
@@ -26,17 +26,31 @@ ntf_r.onreadystatechange = function(e) {
         }
         
         // only include unread notifications in inbox
-        var point = localStorage.lastNotif || 0
+        if(!localStorage.lastMsgs) {
+            localStorage.lastMsgs = "[]"
+        }
+        var lastMsgs = JSON.parse(localStorage.lastMsgs)
         // parse and put in numbers
         notifications = JSON.parse(ntf_r.responseText)
         var uploads = 0;
         var comments = 0;
         var messages = 0;
+        var notificationIds = notifications.map(function(z) {
+            return z.notificationId
+        })
+        var indexes = lastMsgs.map(function(z) {
+            return notificationIds.indexOf(z)
+        }).sort(function(a,b) {
+            return a - b;
+        })
+        var newNotifs = (typeof(indexes[0]) == "number" && indexes[0] !== -1)
+                      ? indexes[0] : notifications.length
+        var iteratedNotifs = 0;
         notifications.forEach(function(n) {
-            if(localStorage.filtered.indexOf(n.time || n.notificationId) !== -1
-            || parseInt(n.time || n.notificationId) <= point) return;
+            if(iteratedNotifs >= newNotifs) return;
             switch(n.type) {
-                case "comment": {
+                case "comment":
+                case "reply": {
                     comments++;
                     break;
                 }
@@ -49,6 +63,7 @@ ntf_r.onreadystatechange = function(e) {
                     break;
                 }
             }
+            iteratedNotifs++
         })
 
         // counter next to username

@@ -65,6 +65,9 @@
 
 		<h4 id="i_header">flagi do yt2009<br>każda z tych flag zmienia w pewien sposób funkcjonalność. najedź na checkbox aby zobaczyć co.<br>ta funkcja wymaga włączonych cookies. jak nie działa to najpierw to sprawdź.<br><br>jeśli chcesz użyć flagi tylko raz, dodaj parametr flags w url'u.</h4>
 
+		<a href="/toggle_f" id="toggle-f-ref">(ustawienia flash playera)</a><br>
+		<!--yt2009_pchelper_ref-->
+
 		<a href="javascript:toggleExportMenu();">EXPORT MENU &raquo;</a>
 		<div class="hid" id="export-menu">
 			<p>YT2009 EXPORT SETTINGS<br>
@@ -303,7 +306,9 @@
 			<input type="checkbox" id="global-shows-tab" title="pokazuje zakładkę Shows pod wyszukiwarką (nic nie robi, pod pokaz)">
 			<label for="global-shows-tab">shows_tab</label><br>
 			<input type="checkbox" id="global-thumbnail-proxy" title="miniaturki będą przechodzić przez yt2009, naprawiając je w sieciach które blokują youtube.">
-			<label for="global-thumbnail-proxy">thumbnail_proxy</label>
+			<label for="global-thumbnail-proxy">thumbnail_proxy</label><br>
+			<input type="checkbox" id="global-unasciify-login" title="wyłącza przekształcanie zalogowanych nazw. do funkcjonalności sync te nazwy będą dalej upraszczane.">
+			<label for="global-unasciify-login">unasciify_login</label>
 		</div>
 		<a class="yt-button yt-button-primary" href="#" onclick="update_cookies();"><span id="i_save">zapisz</span></a><br>
 

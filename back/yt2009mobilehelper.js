@@ -656,8 +656,62 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
     },
 
     "personalizedRelated": function(req, res) {
+        function addJsonVideo(s) {
+            let l = s.lockupMetadata.lockupMetadataViewModel
+            let title = l.title.content;
+            let metadataParts = l.metadata.contentMetadataViewModel.metadataRows
+            metadataParts = metadataParts.filter(s => {
+                return s
+                    && s.metadataParts
+                    && s.metadataParts[0]
+                    && s.metadataParts[0].text
+            })
+            if(!metadataParts[0]) return;
+            metadataParts = metadataParts[0].metadataParts[0].text.content;
+            if(!metadataParts) return;
+            let id = s.dragAndDropUrl.split("v=")[1].split("&")[0]
+            let relative = utils.relativeToAbsoluteApprox(
+                metadataParts.split(" · ")[2]
+            )
+            let length = utils.time_to_seconds(s.thumbnail.timestampText)
+            let views = utils.approxSubcount(
+                metadataParts.split(" · ")[1].split(" ")[0]
+            )
+            if(isNaN(parseInt(views))) {
+                views = 0
+            }
+            let authorFull = metadataParts.split(" · ")[0]
+            let author = s.avatar.endpoint.innertubeCommand.browseEndpoint
+            let authorHandle = ""
+            let authorId = ""
+            if(author.canonicalBaseUrl
+            && author.canonicalBaseUrl.includes("/@")) {
+                authorHandle = author.canonicalBaseUrl.split("/@")[1]
+            }
+            try {
+                if(s.avatar.endpoint.innertubeCommand
+                    .browseEndpoint.browseId) {
+                        authorId = s.avatar.endpoint.innertubeCommand
+                                .browseEndpoint.browseId
+                    }
+            }
+            catch(error){}
+
+            if(!authorId || !authorId) return;
+
+            return {
+                "id": id,
+                "title": title,
+                "authorId": authorId,
+                "authorHandle": authorHandle,
+                "views": views,
+                "length": length,
+                "upload": relative,
+                "authorFull": authorFull
+            }
+        }
+
         let device = pullDeviceId(req)
-        let protoShortcut = this.parseProtoViewmodelNext
         let videoId = req.originalUrl.split("videos/")[1].split("/related")[0]
         res.set("content-type", "application/xml")
         let fullRes = templates.gdata_feedStart
@@ -682,16 +736,11 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                     "continuation": token
                 })
             }).then(r => {r.json().then(r => {
-                if(JSON.stringify(r).includes("video_lockup_with_attachment.eml")
-                && JSON.stringify(r).includes("elementRenderer")) {
-                    console.log("viewmodel related; try protobuf request")
-                    retryProto()
-                    return;
-                }
                 if(!r.continuationContents) {
                     res.send(templates.gdata_emptyfeed)
                     return;
                 }
+                let videos = []
                 r = r.continuationContents.sectionListContinuation.contents[0]
                      .itemSectionRenderer.contents;
                 r.forEach(s => {
@@ -699,118 +748,65 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         s = s.elementRenderer.newElement.type.componentType
                              .model.videoWithContextModel.videoWithContextData
                              .videoData
-                        let title = s.metadata.title;
-                        let id = s.dragAndDropUrl.split("v=")[1].split("&")[0]
-                        let relative = utils.relativeToAbsoluteApprox(
-                            s.metadata.metadataDetails.split(" · ")[2]
-                        )
-                        let length = utils.time_to_seconds(s.thumbnail.timestampText)
-                        let views = utils.approxSubcount(
-                            s.metadata.metadataDetails.split(" · ")[1].split(" ")[0]
-                        )
-                        let author = s.avatar.endpoint.innertubeCommand.browseEndpoint
-                        if(author.canonicalBaseUrl
-                        && author.canonicalBaseUrl.includes("/@")) {
-                            author = author.canonicalBaseUrl.split("/@")[1]
-                        } else {
-                            author = utils.asciify(
-                                s.metadata.metadataDetails.split(" · ")[0],
-                                true, true
-                            )
-                            if(!author
-                            && s.avatar.endpoint.innertubeCommand
-                            .browseEndpoint.browseId) {
-                                author = s.avatar.endpoint.innertubeCommand
-                                          .browseEndpoint.browseId
-                            }
-                        }
-                        if(!length) return;
-
-                        fullRes += templates.gdata_feedVideo(
-                            id, title, author, views, length, "-",
-                            relative, "-", "-", mobileflags.get_flags(req).watch
-                        )
+                        videos.push(addJsonVideo(s))
                     }
                     catch(error){}
                 })
 
-                fullRes += templates.gdata_feedEnd;
-                res.send(fullRes)
+                let fetchesRequired = 0;
+                let fetchesCompleted = 0;
+
+                if(config.data_api_key) {
+                    fetchesRequired++
+
+                    let videoIds = []
+                    let requestedParts = ["viewCount", "publishedAt", "title"]
+
+                    videos.forEach(v => {
+                        if(v && v.id) {
+                            videoIds.push(v.id)
+                        }
+                    })
+
+                    utils.dataApiBulk(videoIds, requestedParts, (apid) => {
+                        for(let id in apid) {
+                            let videoData = apid[id]
+                            let rel = videos.filter(s => {
+                                return s.id == id
+                            })[0]
+                            let i = videos.indexOf(rel)
+                            if(i !== null && i !== undefined && i >= 0) {
+                                videos[i].upload = videoData.publishedAt
+                                videos[i].views = videoData.viewCount
+                                videos[i].title = videoData.title
+                                videos[i].dataApi = true;
+                            }
+                        }
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            applyResponse()
+                        }
+                    })
+                }
+
+                function applyResponse() {
+                    videos.forEach(v => {
+                        let author = v.authorHandle || v.authorId || ""
+                        fullRes += templates.gdata_feedVideo(
+                            v.id, v.title, author, v.views, v.length, "-",
+                            v.upload, "-", "-",
+                            mobileflags.get_flags(req).watch,
+                            null, {"authorFull": v.authorFull,
+                            "authorId": v.authorId}
+                        )
+                    })
+                    fullRes += templates.gdata_feedEnd;
+                    res.send(fullRes)
+                }
+                if(fetchesCompleted >= fetchesRequired) {
+                    applyResponse()
+                }
             })})
-
-            function retryProto() {
-                let root = new protobufNextReq.root()
-                let context = new protobufNextReq.root.contextType()
-                let client = new protobufNextReq.root.contextType.clientType()
-                client.setClientnumber(3)
-                client.setClientversion("20.51.39")
-                client.setOsname("Android")
-                client.setOsversion("14")
-                client.setAndroidsdkversion(34)
-                context.addClient(client)
-                root.setContinuationtoken(token)
-                root.addContext(context)
-                let pbmsg = root.serializeBinary()
-
-                h["Content-Type"] = "application/x-protobuf"
-                h["x-goog-api-format-version"] = "2"
-                fetch("https://youtubei.googleapis.com/youtubei/v1/next", {
-                    "method": "POST",
-                    "headers": h,
-                    "body": pbmsg
-                }).then(s => (s.text().then(s => {
-                    let videos = protoShortcut(s)
-                    let fetchesRequired = 0;
-                    let fetchesCompleted = 0;
-
-                    if(config.data_api_key) {
-                        fetchesRequired++
-
-                        let videoIds = []
-                        let requestedParts = ["viewCount", "publishedAt", "title"]
-
-                        videos.forEach(v => {videoIds.push(v.id)})
-
-                        utils.dataApiBulk(videoIds, requestedParts, (apid) => {
-                            for(let id in apid) {
-                                let videoData = apid[id]
-                                let rel = videos.filter(s => {
-                                    return s.id == id
-                                })[0]
-                                let i = videos.indexOf(rel)
-                                if(i !== null && i !== undefined && i >= 0) {
-                                    videos[i].upload = videoData.publishedAt
-                                    videos[i].views = videoData.viewCount
-                                    videos[i].title = videoData.title
-                                    videos[i].dataApi = true;
-                                }
-                            }
-                            fetchesCompleted++
-                            if(fetchesCompleted >= fetchesRequired) {
-                                applyResponse()
-                            }
-                        })
-                    }
-
-                    function applyResponse() {
-                        videos.forEach(v => {
-                            let author = v.authorHandle || v.authorId || ""
-                            fullRes += templates.gdata_feedVideo(
-                                v.id, v.title, author, v.views, v.length, "-",
-                                v.upload, "-", "-",
-                                mobileflags.get_flags(req).watch,
-                                null, {"authorFull": v.authorFull,
-                                "authorId": v.authorId}
-                            )
-                        })
-                        fullRes += templates.gdata_feedEnd;
-                        res.send(fullRes)
-                    }
-                    if(fetchesCompleted >= fetchesRequired) {
-                        applyResponse()
-                    }
-                })))
-            }
         })
     },
 
@@ -2755,6 +2751,353 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             })})
         }, req)
     },
+
+    "getNotifications": function(req, callback) {
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            callback([])
+            return;
+        }
+
+        let notificationList = []
+        let parsedNotifications = []
+
+        let neededVideos = []
+
+        function notifId(n) {
+            return crypto.createHash("sha1").update(
+                `${n.from}${n.type}${n.commentContent||n.id||n.title||""}`
+            ).digest("hex").substring(0, 16)
+        }
+
+        function parseFromItemSection(i) {
+            try {
+                i = i.itemSectionRenderer.contents
+                i.forEach(n => {
+                    try {
+                        let z = n.elementRenderer.newElement.type
+                                 .componentType.model;
+                        notificationList.push(
+                            z.expandableInboxNotificationModel
+                         || z.inboxNotificationModel
+                        )
+                    }
+                    catch(error) {
+                        console.log(error)
+                    }
+                })
+            }
+            catch(error){
+                console.log(error)
+            }
+        }
+
+        function parseExpandableNotification(n) {
+            let h = n.header;
+            let ns = n.notifications;
+
+            let person = h.metadata.header.content;
+            let type = h.metadata.shortMessageFormatted
+                        .content.toLowerCase();
+            let avatar = null;
+            try {
+                avatar = utils.saveAvatar(h.avatar.image.sources[0].url)
+                avatar = "/avatar_wait?av=" + avatar
+            }
+            catch(error){}
+            let parsedType = ""
+            if(type.includes("uploaded")) {
+                parsedType = "upload"
+            }
+
+            ns.forEach(a => {
+                if(parsedType == "upload") {
+                    let title = a.metadata.shortMessageFormatted
+                                 .content;
+                    let date = a.metadata.sentTimeText
+                    let command = a.onTap.innertubeCommand
+                    let videoId = ""
+                    if(command.watchEndpoint) {
+                        videoId = command.watchEndpoint.videoId;
+                    } else if(command.reelWatchEndpoint) {
+                        videoId = command.reelWatchEndpoint.videoId;
+                    }
+                    if(!videoId) return;
+                    let time = new Date(
+                        utils.relativeToAbsoluteApprox(date)
+                    ).getTime()
+                    let notif = {
+                        "from": person,
+                        "type": "upload",
+                        "date": date,
+                        "title": utils.xss(title),
+                        "id": videoId,
+                        "time": time,
+                        "thumbnail": avatar,
+                        "p": true,
+                        "needed": true
+                    }
+                    notif.notificationId = notifId(notif);
+                    parsedNotifications.push(notif)
+                }
+            })
+        }
+
+        function parseStandardNotification(n) {
+            n = n.inboxNotification
+            if(!n) return;
+            let person = utils.xss(n.metadata.header.content);
+            let type = n.metadata.shortMessageFormatted.content.toLowerCase();
+            let c = n.metadata.shortMessageFormatted.content;
+            let sentTime = n.metadata.sentTimeText
+            let avatar = null;
+            try {
+                avatar = utils.saveAvatar(n.avatar.image.sources[0].url)
+                avatar = "/avatar_wait?av=" + avatar
+            }
+            catch(error){}
+            let parsedType = ""
+            if(type.includes("upload")) {
+                parsedType = "upload"
+            } else if(type.includes("live now")) {
+                parsedType = "live"
+            } else if(type.includes("comment")) {
+                parsedType = "comment"
+            } else if(type.includes("replied")) {
+                parsedType = "reply"
+            } else if(person.toLowerCase().includes("like")) {
+                parsedType = "like"
+            } else if(person.toLowerCase().includes("❤")) {
+                parsedType = "heart"
+            }
+
+            if(!parsedType) return;
+            
+            let content = ""
+            switch(parsedType) {
+                case "upload": {
+                    let title = n.metadata.shortMessageFormatted
+                                 .content;
+                    title = title.split("Uploaded")
+                    title.shift()
+                    title = title.join("Uploaded")
+                    if(title.startsWith(": ")) {
+                        title = title.replace(": ", "")
+                    }
+                    let date = n.metadata.sentTimeText
+                    let command = n.onTap.innertubeCommand
+                    let videoId = ""
+                    if(command.watchEndpoint) {
+                        videoId = command.watchEndpoint.videoId;
+                    } else if(command.reelWatchEndpoint) {
+                        videoId = command.reelWatchEndpoint.videoId;
+                    }
+                    if(!videoId) return;
+                    let time = new Date(
+                        utils.relativeToAbsoluteApprox(date)
+                    ).getTime()
+                    let notif = {
+                        "from": person,
+                        "type": "upload",
+                        "date": date,
+                        "title": utils.xss(title),
+                        "id": videoId,
+                        "time": time,
+                        "thumbnail": avatar,
+                        "p": true
+                    }
+                    notif.notificationId = notifId(notif)
+                    parsedNotifications.push(notif)
+                    return;
+                }
+                case "live": {
+                    break;
+                }
+                case "comment": {
+                    content = c.split("Comment")
+                    content.shift()
+                    content = content.join("Comment")
+                    if(content.includes("\"")) {
+                        content = content.split("\"")
+                        content.shift()
+                        content.pop()
+                        content = content.join("\"")
+                    }
+                    break;
+                }
+                case "reply": {
+                    content = c.split("Replied")
+                    content.shift()
+                    content = content.join("Replied")
+                    if(content.includes("\"")) {
+                        content = content.split("\"")
+                        content.shift()
+                        content.pop()
+                        content = content.join("\"")
+                    }
+                    break;
+                }
+                case "like": {
+                    let videoId = n.inboxNotificationThumbnail
+                                   .thumbnail.image.sources[0].url;
+                    videoId = videoId.split("vi/")[1].substring(0,11)
+                    content = [
+                        "Congratulations! Your comment got a like:",
+                        n.metadata.shortMessageFormatted.content
+                    ].join(" ")
+                    avatar = "/assets/site-assets/comment-notification-star.png"
+                    let notif = {
+                        "id": videoId,
+                        "from": "Comment Like",
+                        "content": utils.xss(content),
+                        "needed": true,
+                        "p": true,
+                        "date": sentTime,
+                        "thumbnail": avatar,
+                        "type": "message",
+                        "additionalHeader": "has_video_data",
+                        "parsableType": "comment_like"
+                    }
+                    notif.notificationId = notifId(notif)
+                    parsedNotifications.push(notif)
+                    return;
+                }
+                case "heart": {
+                    let videoId = n.inboxNotificationThumbnail
+                                   .thumbnail.image.sources[0].url;
+                    videoId = videoId.split("vi/")[1].substring(0,11)
+                    let content = [
+                        n.metadata.header.content,
+                        n.metadata.shortMessageFormatted.content
+                    ].join(": ")
+                    if(n.metadata.header.content.includes("@")) {
+                        person = n.metadata.header.content
+                                  .split("@")[1]
+                                  .split(" ")[0]
+                                  .split("!")[0]
+                    } else {
+                        person = "Comment Heart"
+                    }
+                    let notif = {
+                        "id": videoId,
+                        "from": person,
+                        "content": utils.xss(content),
+                        "needed": true,
+                        "p": true,
+                        "date": sentTime,
+                        "thumbnail": avatar,
+                        "type": "message",
+                        "additionalHeader": "has_video_data",
+                        "parsableType": "comment_heart"
+                    }
+                    notif.notificationId = notifId(notif)
+                    parsedNotifications.push(notif)
+                    return;
+                }
+            }
+
+            let videoId = n.inboxNotificationThumbnail
+                           .thumbnail.image.sources[0].url;
+            videoId = videoId.split("vi/")[1].substring(0,11)
+
+            if(!neededVideos.includes(videoId)) {
+                neededVideos.push(videoId)
+            }
+
+            let notif = {
+                "from": person.replace("@", ""),
+                "thumbnail": avatar,
+                "commentContent": utils.xss(content),
+                "type": parsedType,
+                "date": sentTime,
+                "id": videoId,
+                "needed": true,
+                "time": new Date(
+                    utils.relativeToAbsoluteApprox(sentTime)
+                ).getTime(),
+                "p": true
+            }
+            notif.notificationId = notifId(notif)
+            parsedNotifications.push(notif)
+        }
+
+        setupYouTube(device, (h) => {
+            fetch("https://www.youtube.com/youtubei/v1/browse", {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "browseId": "FEnotifications_inbox"
+                })
+            }).then(r => {r.json().then(r => {
+                //fs.writeFileSync("./" + Date.now() + ".json", JSON.stringify(r))
+                try {
+                    r = r.contents.singleColumnBrowseResultsRenderer.tabs[0]
+                        .tabRenderer.content.sectionListRenderer.contents
+                    r = r.filter(s => {
+                        return s && (JSON.stringify(s).includes(
+                            "expandableInboxNotificationModel"
+                        ) || JSON.stringify(s).includes(
+                            "inboxNotification"
+                        ))
+                    })
+                    r.forEach(i => {
+                        parseFromItemSection(i)
+                    })
+                }
+                catch(error) {
+                    console.log(error)
+                    callback([])
+                }
+
+                notificationList.forEach(n => {
+                    if(!n) return;
+                    if(n.notifications) {
+                        // expandable notifications
+                        parseExpandableNotification(n)
+                    } else {
+                        parseStandardNotification(n)
+                    }
+                })
+
+                function sendNotifications() {
+                    parsedNotifications = parsedNotifications.sort((a,b) => {
+                        return b.time - a.time
+                    })
+                    callback(parsedNotifications)
+                }
+
+                if(neededVideos.length >= 1
+                && config.data_api_key) {
+                    utils.dataApiBulk(neededVideos, [
+                        "title", "description"
+                    ], (data) => {
+                        let copy = parsedNotifications;
+                        for(let v in data) {
+                            copy = parsedNotifications.map((a) => {
+                                if(a.needed && a.id == v) {
+                                    a.title = utils.xss(
+                                        data[v].title || ""
+                                    )
+                                    a.description = utils.xss(
+                                        data[v].description || ""
+                                    )
+                                    a.needed = null;
+                                    delete a.needed;
+                                }
+                                return a;
+                            })
+                        }
+                        parsedNotifications = copy;
+                        sendNotifications()
+                    })
+                } else {
+                    sendNotifications()
+                }
+
+            })})
+        }, req)
+    }
 }
 
 function pullFirstGoogleAuth(email, token, callback) {

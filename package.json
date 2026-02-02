@@ -1,6 +1,6 @@
 {
   "name": "yt2009",
-  "version": "1.24.2.1",
+  "version": "1.25",
   "description": "2009 frontend for youtube",
   "main": "back/backend.js",
   "scripts": {
@@ -17,10 +17,10 @@
     "google-protobuf": "3.21.2",
     "maxmind-db-reader": "^0.2.1",
     "node-fetch": "^2.6.7",
-    "node-html-parser": "^5.3.3",
+    "node-html-parser": "5.3.3",
     "readline-sync": "^1.4.10",
     "ws": ">=1.1.5"
   },
   "author": "dxegom",
-  "license": "ISC"
+  "license": "Apache-2.0"
 }

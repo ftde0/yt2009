@@ -1,9 +1,4 @@
 // yt2009inbox
-// a good portion of this code was initially in relay-notifications.js,
-// but since relay isn't much of a thing anymore it's been moved
-// and is now used as cross-instance sync
-
-var ogRelay = false;
 
 function nlToArray(nl) {
     var array = []
@@ -16,14 +11,13 @@ function nlToArray(nl) {
     return array;
 }
 
-var r = new XMLHttpRequest()
-r = new XMLHttpRequest()
-if(ogRelay) {
-    r.open("GET", "http://127.0.0.1:" + relayPort + "/get_notifications")
-    r.setRequestHeader("auth", relayKey)
-} else {
-    r.open("GET", "/get_notifications")
+if(!window.localStorage || !window.JSON || !document.querySelector) {
+    alert("your browser does not support this feature.")
 }
+var r = new XMLHttpRequest()
+r.open("GET", "/get_notifications?r=" + Math.random())
+var unreadMsgs = []
+var notifications = []
 r.send(null)
 r.onreadystatechange = function(e) {
     if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)
@@ -37,7 +31,10 @@ r.onreadystatechange = function(e) {
         && !localStorage.msgCache) {
             localStorage.msgCache = "[]"
         }
-        var point = localStorage.lastNotif || 0
+        if(!localStorage.lastMsgs) {
+            localStorage.lastMsgs = "[]"
+        }
+        var lastMsgs = JSON.parse(localStorage.lastMsgs)
         var msgCache = JSON.parse(localStorage.msgCache)
         // parse and put in numbers
         notifications = JSON.parse(r.responseText)
@@ -54,14 +51,22 @@ r.onreadystatechange = function(e) {
         var uploads = 0;
         var comments = 0;
         var messages = 0;
+        var notificationIds = notifications.map(function(z) {
+            return z.notificationId
+        })
+        var indexes = lastMsgs.map(function(z) {
+            return notificationIds.indexOf(z)
+        }).sort(function(a,b) {
+            return a - b;
+        })
+        var newNotifs = typeof(indexes[0]) == "number"
+                      ? indexes[0] : notifications.length
+        var iteratedNotifs = 0;
         notifications.forEach(function(n) {
-            if(n.time) {
-                n.notificationId = n.time;
-            }
-            if(localStorage.filtered.indexOf(n.notificationId) !== -1
-            || parseInt(n.time || n.notificationId) <= point) return;
+            if(iteratedNotifs >= newNotifs) return;
             switch(n.type) {
-                case "comment": {
+                case "comment":
+                case "reply": {
                     comments++;
                     total++
                     break;
@@ -80,13 +85,14 @@ r.onreadystatechange = function(e) {
                     break;
                 }
             }
+            unreadMsgs.push(n.notificationId)
+            iteratedNotifs++
         })
         localStorage.msgCache = JSON.stringify(msgCache)
         // last seen notification for homepage
-        var lastSeen = notifications[0]
-        if(lastSeen && lastSeen.notificationId) {
-            localStorage.lastNotif = lastSeen.notificationId
-        }
+        localStorage.lastMsgs = JSON.stringify(notifications.map(function(z) {
+            return z.notificationId
+        }).slice(0,5))
         function cHide(f) {
             f.querySelector(".no-msgs").className += " hid"
             var c = f.querySelector(".msgs").className
@@ -151,6 +157,14 @@ function renderNotifications(type) {
                 msg.className += " even"
             }
 
+            // TODO: keep last 5 in read store
+            // so we dont get erroneous notifications abt youtube reordering for no reason
+
+            // read?
+            if(unreadMsgs.indexOf(n.notificationId) !== -1) {
+                msg.className += " unread"
+            }
+
             // fill values
             var filler = document.createElement("td")
             filler.innerHTML = '<input id="all-items-checkbox" type="checkbox">'
@@ -175,17 +189,28 @@ function renderNotifications(type) {
             var uploadTitle = ""
             switch(n.type) {
                 case "comment": {
-                    text = "Comment on your video: " + n.title
+                    text = "Comment on your video"
+                         + (n.commentContent ? ": " + n.commentContent : "")
+                    if(text.length > 64) {
+                        text = text.substring(0, 64) + "..."
+                    }
+                    break;
+                }
+                case "reply": {
+                    text = "Reply to your comment"
+                         + (n.commentContent ? ": " + n.commentContent : "")
                     if(text.length > 64) {
                         text = text.substring(0, 64) + "..."
                     }
                     break;
                 }
                 case "upload": {
-                    var title = ""
-                    if(n.defaultText.indexOf("uploaded:") !== -1) {
+                    var title = n.title || ""
+                    if(n.defaultText
+                    && n.defaultText.indexOf("uploaded:") !== -1) {
                         title = n.defaultText.split(" uploaded:")[1]
-                    } else if(n.defaultText.indexOf("is live:") !== -1) {
+                    } else if(n.defaultText
+                    && n.defaultText.indexOf("is live:") !== -1) {
                         title = n.defaultText.split(" is live:")[1]
                     }
                     text = from.innerHTML + " sent you a video: " + title
@@ -208,7 +233,7 @@ function renderNotifications(type) {
             // date
             var date = document.createElement("td")
             date.className = "date collapsed"
-            date.innerHTML = n.time ? renderDateFromUnix(n.time) : n.date
+            date.innerHTML = n.date || (n.time ? renderDateFromUnix(n.time) : n.date)
             msg.appendChild(date)
 
             // expand data
@@ -223,7 +248,7 @@ function renderNotifications(type) {
             expandContent.innerHTML = '\
             <b>' + msg.querySelector(".subject.collapsed").innerHTML + '</b>\
             <br><br>'
-            if(n.from) {
+            if(n.from && !n.p) {
                 expandContent.innerHTML += text + "<br><br>"
                 
                 // reply button
@@ -239,11 +264,13 @@ function renderNotifications(type) {
 
             // specific expand content for each type
             switch(n.type) {
-                case "comment": {
+                case "comment":
+                case "reply": {
                     // comment content pulled from notif text
-                    var comment = n.defaultText.split(" commented:")[1]
+                    var comment = n.commentContent
+                               || n.defaultText.split(" commented:")[1]
                                                .replace("\"", "");
-                    comment = comment.substring(0, comment.length - 1)
+                    //comment = comment.substring(0, comment.length - 1)
                     expandContent.innerHTML += comment + "<br><br>"
 
                     // video from its data
@@ -260,12 +287,20 @@ function renderNotifications(type) {
                     ))
                     break;
                 }
+                case "message": {
+                    if(n.additionalHeader == "has_video_data") {
+                        expandContent.appendChild(renderVideoByData(
+                            n.id, n.title, n.description
+                        ))
+                    }
+                    break;
+                }
             }
 
             var expandDate = document.createElement("td")
             expandDate.innerHTML = date.innerHTML;
             expandDate.className = "date expanded"
-            if(n.from) {
+            if(n.from && !n.p) {
                 var actions = document.createElement("div")
                 actions.style.float = "left"
                 actions.style.marginTop = "55px"
@@ -308,6 +343,32 @@ function renderNotifications(type) {
     if(index == 0) {
         renderNotifications("e")
     }
+
+    setTimeout(function() {
+        switch(preopenFolder) {
+            case "personal": {
+                openMsgs(document.querySelector(".folder.messages"))
+                break;
+            }
+            case "comments": {
+                openComments(document.querySelector(".folder.comments"))
+                break;
+            }
+            case "videos": {
+                openShared(document.querySelector(".folder.shared"))
+                break;
+            }
+            case "invites": {
+                openEmpty(document.querySelector(".folder.invites"))
+                break;
+            }
+            case "responses": {
+                openEmpty(document.querySelector(".folder.responses"))
+                break;
+            }
+        }
+        preopenFolder = null;
+    }, 25)
 }
 
 // inbox: change folders
@@ -390,7 +451,7 @@ function renderVideoByData(id, title, description) {
     vData.className = "video-main-content"
     vData.innerHTML = '\
     <div class="video-mini-title">\
-        <a href="' + watchUrl + '" rel="nofollow">' + title + '</a>\
+        <a href="' + watchUrl + '" rel="nofollow">' + (title || "") + '</a>\
     </div>\
     <div class="video-description">' + (description || "") + '</div>'
     video.appendChild(vData)
@@ -580,4 +641,11 @@ function markSpam(msg) {
             }
         }
     }
+}
+
+// auto-go to folder (actual switch happens after notification render)
+var preopenFolder = false
+if(location.href.indexOf("folder=") !== -1) {
+    var folder = location.href.split("folder=")[1].split("&")[0].split("#")[0]
+    preopenFolder = folder;
 }

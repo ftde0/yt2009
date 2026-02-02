@@ -16,8 +16,31 @@ var modlist = {
     "inschrt": "IMC"
 }
 
-function moveUp(m) {
-    var tempModule = moduleSetup
+function fallbackGetModules() {
+    // re-get modules when nonexistent ones are attempted to be moved
+    var reverseGlobalModlist = {}
+    for(var mod in modlist) {
+        if(modlist[mod]) {
+            reverseGlobalModlist[modlist[mod]] = mod;
+        }
+    }
+    var mlist = []
+    var mods = document.getElementById("homepage-main-content")
+               .getElementsByTagName("div");
+    for(var i in mods) {
+        if(mods[i]
+        && mods[i].className
+        && mods[i].className.indexOf("feedmodule-anchor") !== -1) {
+            if(mods[i].id.indexOf("feedmodule-") == -1) return;
+            var modId = mods[i].id.split("feedmodule-")[1].split(" ")[0]
+            mlist.push(reverseGlobalModlist[modId])
+        }
+    }
+    return mlist.join(",")
+}
+
+function moveUp(m, retryData) {
+    var tempModule = retryData || moduleSetup
     var moduleBefore = ""
     var modules = tempModule.split(",")
     var index = 0;
@@ -35,6 +58,11 @@ function moveUp(m) {
     tempModule = tempModule.split(",,").join(",")
 
     var p = document.getElementById("feedmodule-" + modlist[moduleBefore])
+    if(!p) {
+        if(retryData) return;
+        moveUp(m, fallbackGetModules())
+        return;
+    }
     var prevModuleElemnt = {
         "id": p.id,
         "c": p.getAttribute("class"),
@@ -65,8 +93,8 @@ function moveUp(m) {
     document.cookie = cookie.join("")
 }
 
-function moveDown(m) {
-    var tempModule = moduleSetup
+function moveDown(m, retryData) {
+    var tempModule = retryData || moduleSetup
     var moduleAfter = ""
     var modules = tempModule.split(",")
     var index = 0;
@@ -83,6 +111,11 @@ function moveDown(m) {
     tempModule = tempModule.split(",,").join(",")
 
     var p = document.getElementById("feedmodule-" + modlist[moduleAfter])
+    if(!p) {
+        if(retryData) return;
+        moveDown(m, fallbackGetModules())
+        return;
+    }
     var prevModuleElemnt = {
         "id": p.id,
         "c": p.getAttribute("class"),

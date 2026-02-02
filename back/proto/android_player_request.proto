@@ -54,11 +54,14 @@ message root {
     optional int32 contentCheckOk = 5;
     string pps = 12;
     message serviceIntegrityDimensionsMsg {
-        message contents {
-            optional bytes encryptData = 1;
-            optional bytes tokenData = 2;
+        message container {
+            message contents {
+                optional bytes encryptData = 1;
+                optional bytes tokenData = 2;
+            }
+            repeated contents content = 1;
         }
-        repeated contents content = 1;
+        container contain = 1;
     }
     repeated serviceIntegrityDimensionsMsg serviceIntegrityDimensions = 27;
     message otherVariousSets {

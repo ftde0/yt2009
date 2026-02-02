@@ -47,8 +47,7 @@ let loginData = {
 }
 try {loginData = require("./androiddata.json")}
 catch(error) {}
-
-
+let datasyncId = null;
 
 const failMsg = `
 
@@ -254,6 +253,26 @@ token:<input type="text" name="token" required><br>
 
     "getData": function() {
         return loginData;
+    },
+
+    "getDatasyncId": function(callback) {
+        if(datasyncId) {
+            callback(datasyncId)
+            return;
+        }
+        let pullTries = 0;
+        let x = setInterval(() => {
+            if(pullTries >= 50) {
+                callback(null)
+                clearInterval(x)
+                return;
+            }
+            if(datasyncId) {
+                callback(datasyncId)
+                clearInterval(x)
+                return;
+            }
+        }, 100)
     }
 }
 
@@ -340,6 +359,14 @@ function testSignIn() {
             .contents[0].accountItemSectionRenderer.contents.forEach(a => {
                 if(a.accountItem && a.accountItem.isSelected) {
                     a = a.accountItem;
+                    try {
+                        datasyncId = a.serviceEndpoint.signInEndpoint
+                                      .directSigninIdentity.datasyncIdToken
+                                      .datasyncIdToken
+                    }
+                    catch(error) {
+                        console.log(`datasync id pull fail! ${error}`)
+                    }
                     if(a.channelHandle && a.channelHandle.runs[0]) {
                         console.log("[android] account used: " + a.channelHandle.runs[0].text)
                     } else if(a.accountName && a.accountName.runs[0]) {

@@ -567,6 +567,10 @@
     top: 7px;
 }
 
+.progress_container, .progress_container * {
+    user-select: none;
+}
+
 .embed-play-btn {
     position: absolute;
     background-image: url("/player-imgs/play-btn-opt.png");
@@ -1018,7 +1022,8 @@
     width: 75px;
 }
 
-.quality_selector .sr_indicator {
+.quality_selector .sr_indicator,
+.quality_selector .hbr_indicator {
     display: inline-block;
     font-size: 10px;
     position: relative;
@@ -1026,10 +1031,12 @@
     left: 4px;
 }
 
-.quality_selector .sr_indicator .ip2 {
+.quality_selector .sr_indicator .ip2,
+.quality_selector .hbr_indicator .ip2 {
     color: #bd0000;
 }
 
-.quality_selector li:hover .sr_indicator .ip2 {
+.quality_selector li:hover .sr_indicator .ip2,
+.quality_selector li:hover .hbr_indicator .ip2 {
     color: white;
 }
