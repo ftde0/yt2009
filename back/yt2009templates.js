@@ -1898,8 +1898,9 @@ module.exports = {
         <span>“${term}”</span>
     </div>`
     },
-    "latestChip": "8gYuGix6KhImCiQ2N2FiOTYwMC0wMDAwLTI0N2QtYjAyYi01ODI0MjljNmI1ZjggBA%3D%3D",
-    "popularChip": "8gYuGix6KhImCiQ2N2FiOTYwMC0wMDAwLTI0N2QtYjAyYi01ODI0MjljNmI1ZjggAg%3D%3D",
+    "latestChip": "8gZYGlZ6VBImCiQ2OWRlMDk5Ny0wMDAwLTJhMjItYTRkMS1mNDAzMDQzOTNjMDQgBEIoCiQ2OWRlMDk5Ny0wMDAwLTJhMjItYTRkMS1mNDAzMDQzOTNjMDQYBA%3D%3D",
+    "popularChip": "8gZYGlZ6VBImCiQ2OWRlMDk5Ny0wMDAwLTJhMjItYTRkMS1mNDAzMDQzOTNjMDQgAkIoCiQ2OWRlMDk5Ny0wMDAwLTJhMjItYTRkMS1mNDAzMDQzOTNjMDQYAg%3D%3D",
+    "liveVideosChip": "8gZYGlZyVBImCiQ2OWUwZWMwNy0wMDAwLTI1YzctOWEyYS1mNDAzMDQ1ZGIzNDAoDEIoCiQ2OWUwZWMwNy0wMDAwLTI1YzctOWEyYS1mNDAzMDQ1ZGIzNDAYDA%3D%3D",
     "replyTemplate": function(commentIndex, video, loginSimulateName) {
         return `
     <div id="div_comment_form_id_${commentIndex}">

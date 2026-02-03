@@ -278,13 +278,20 @@ if(!config.disableWs) {
                         break;
                     }
                     case "version-warning": {
-                        if(m.version !== version) {
-                            yt2009_home({
-                                "type": "version-warning",
-                                "version": m.version,
-                                "current": version
-                            }, () => {})
-                        }
+                        yt2009_home({
+                            "type": "version-warning",
+                            "version": m.version,
+                            "current": version
+                        }, () => {})
+                        let msg = [
+                            "=========\n\n",
+                            "your yt2009 version is out of date",
+                            "and may cause issues with core features",
+                            "(video playback, page loading, etc..)",
+                            "update for best experience.\n\n",
+                            "========="
+                        ].join("\n")
+                        console.log(msg)
                         break;
                     }
                     case "c-sup-data": {

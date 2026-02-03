@@ -772,7 +772,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         for(let id in apid) {
                             let videoData = apid[id]
                             let rel = videos.filter(s => {
-                                return s.id == id
+                                return s && s.id == id
                             })[0]
                             let i = videos.indexOf(rel)
                             if(i !== null && i !== undefined && i >= 0) {

@@ -317,6 +317,7 @@ module.exports = function(req, res) {
     if(customHomepageText) {
         addNotice = true;
         noticeText = require("./config.json").customHomepageText
+                   || customHomepageText
     }
 
     let ytsessions = {

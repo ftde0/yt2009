@@ -18,7 +18,7 @@ const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
 const overrideBgs = require("./channel_backgrounds.json")
 const customChannel = require("./proto/yt2009_channel_pb")
-const yt2009homepage = require("./yt2009homepage")
+const yt2009homepage = require("./yt2009homepage");
 const devTimings = false;
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
@@ -174,9 +174,7 @@ module.exports = {
                 // pull videos at the same time
                 // shortens load times
                 this.get_direct_by_chipparam(
-                    "8gYuGix6KhImCiQ2N2ViM2Y1NS0wMDAwLTI2ZWEtYjE4NS01ODI0MjliZTA1NjggAg%3D%3D",
-                    id,
-                    (vids) => {
+                    templates.popularChip, id, (vids) => {
                         fullData.videos = vids;
                         writeTimingData("separate videos fetch")
                         fetchesCompleted++
@@ -188,9 +186,7 @@ module.exports = {
 
                 // also get live videos if there
                 this.get_direct_by_chipparam(
-                    "8gYuGixyKhImCiQ2YTUwNjI4MS0wMDAwLTJlN2MtYmYzOS1mNDAzMDQzOTIwODgoDg%3D%3D",
-                    id,
-                    (vids) => {
+                    templates.liveVideosChip, id, (vids) => {
                         let liveVids = vids.filter(s => {return (!s.views)})
                         fullData.liveVideos = liveVids;
                         writeTimingData("separate live videos fetch")
@@ -2977,9 +2973,7 @@ module.exports = {
             ).toString("base64"))
         }
         
-        fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-            yt2009html.get_api_key()
-        }`, {
+        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
             "headers": yt2009constants.headers,
             "referrer": "https://www.youtube.com/",
             "referrerPolicy": "strict-origin-when-cross-origin",
