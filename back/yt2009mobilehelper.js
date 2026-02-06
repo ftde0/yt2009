@@ -791,6 +791,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
 
                 function applyResponse() {
                     videos.forEach(v => {
+                        if(!v || !v.id) return;
                         let author = v.authorHandle || v.authorId || ""
                         fullRes += templates.gdata_feedVideo(
                             v.id, v.title, author, v.views, v.length, "-",

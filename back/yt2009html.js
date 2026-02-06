@@ -227,7 +227,7 @@ module.exports = {
         }
         let callbacksMade = 0;
         let combinedResponse = {}
-        fetch(`https://www.youtube.com/youtubei/v1/next?prettyPrint=false`, {
+        fetch(`https://www.youtube.com/youtubei/v1/next?prettyPrint=false&fields=contents`, {
             "headers": signedInNext ? rHeaders : constants.headers,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -620,7 +620,9 @@ module.exports = {
                 data.tags = videoData.videoDetails.keywords || [];
                 data.related = []
                 data.length = parseInt(videoData.videoDetails.lengthSeconds)
-                if(videoData.microformat) {
+                if(videoData.category) {
+                    data.category = videoData.category;
+                } else if(videoData.microformat) {
                     try {
                         data.category = videoData.microformat
                                         .playerMicroformatRenderer.category
@@ -628,8 +630,6 @@ module.exports = {
                     catch(error) {
                         data.category = "People & Blogs"
                     }
-                } else if(videoData.category) {
-                    data.category = videoData.category;
                 } else {
                     data.category = "People & Blogs"
                 }

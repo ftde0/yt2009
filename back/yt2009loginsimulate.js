@@ -59,7 +59,11 @@ module.exports = function(req, code, returnNoLang) {
         }
     }
 
-    let unasciifyLogin = flags.includes("unasciify_login")
+    let unasciifyLogin = false;
+    try {
+        unasciifyLogin = (flags && flags.includes("unasciify_login"))
+    }
+    catch(error){unasciifyLogin = false;}
 
     if(loggedInUsername) {
         if(unasciifyLogin) {

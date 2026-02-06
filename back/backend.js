@@ -7147,7 +7147,7 @@ app.get("/minipicty", (req, res) => {
     {"send": function(data) {
         try {
             if(data && data.avatar) {
-                res.redirect(data.avatar)
+                res.redirect("/avatar_wait?av=" + data.avatar)
             } else {
                 res.redirect("/assets/site-assets/default.png")
             }

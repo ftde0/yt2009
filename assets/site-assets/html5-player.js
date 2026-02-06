@@ -3132,7 +3132,7 @@ function initAsSabr() {
         "timedCooldown": false,
         "timedSabrFetchAborted": false,
         "lastRequestFailCount": 0,
-        "readAhead": 14,
+        "readAhead": 45,
         "defaultLongReadaheadSet": false
     }
 	
@@ -3458,12 +3458,14 @@ function initAsSabr() {
     // watch for new buffer fetches
     video.addEventListener("timeupdate", function() {
         if(!sabrData.defaultLongReadaheadSet
+        && video.duration >= (60 * 20)) {
+            sabrData.defaultLongReadaheadSet = true;
+            sabrData.readAhead = 240
+        }
+        if(!sabrData.defaultLongReadaheadSet
         && video.duration >= (60 * 3)) {
             sabrData.defaultLongReadaheadSet = true;
-            sabrData.readAhead = 50
-        }
-        if(video.duration >= (60 * 30)) {
-            sabrData.readAhead = 120
+            sabrData.readAhead = 90
         }
 
         if(video.currentTime > 120

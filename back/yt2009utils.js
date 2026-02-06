@@ -2980,6 +2980,20 @@ module.exports = {
                 "X-Goog-Visitor-Id", yt2009exports.read().visitor
             ))
         }
+        let potBase64 = null;
+        if(yt2009exports.read().potBytes && yt2009exports.read().potKey) {
+            let pb = require("./proto/android_pot_pb")
+            let potMsg = new pb.potResult()
+            potMsg.setData(yt2009exports.read().potBytes)
+            potMsg.setToken(yt2009exports.read().potKey)
+            let potWrap = new pb.wrapper()
+            potWrap.setData(potMsg)
+            potBase64 = Buffer.from(potWrap.serializeBinary())
+                              .toString("base64")
+                              .split("+").join("-")
+                              .split("/").join("_")
+                              .split("=").join("");
+        }
         player.setRequestbody(JSON.stringify({
             "context": {
                 "client": {
@@ -2996,21 +3010,13 @@ module.exports = {
             "videoId": id,
             "contentCheckOk": true,
             "racyCheckOk": true,
-            "params": "YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D"
+            "params": "YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D",
+            "serviceIntegrityDimensions": {
+                "poToken": potBase64
+            }
         }))
         player.setUseproxydeprecated(true)
-        player.setFive(true)
         player.setSkipencrypt(true)
-        player.setSeven(true)
-        player.setEight(true)
-        player.setNine(true)
-        player.setTen(true)
-        player.setEleven(true)
-        player.setTwelve(true)
-        player.setThirteen(true)
-        player.setFourteen(true)
-        player.setFifteen(true)
-        player.setSixteen(true)
         wrappedRequest.setReq(player)
         wrappedRequest.setSeventeenint(1)
         req.setRequest(wrappedRequest)
