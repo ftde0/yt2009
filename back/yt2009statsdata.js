@@ -85,21 +85,19 @@ function estViewCountAtTime(v, date) {
 
 // get user's country by querying their about tab
 function getUserCountry(id, callback) {
-    let chip = require("./proto/popularVidsChip_pb")
-    let continuation = new chip.vidsChip()
-    let msg = new chip.vidsChip.nestedMsg1()
-    msg.setChannelid(id)
-    msg.setChipparam(
+    let chip = require("./proto/browse_navigation_pb")
+    let continuation = new chip.root()
+    let msg = new chip.root.browseNavigation()
+    msg.setBrowseid(id)
+    msg.setParams(
         "8gYrGimaASYKJDY3NjRkNGE0LTAwMDAtMjAwOS05ZGIxLWFjM2ViMTQ4NzVhNA%3D%3D"
     )
-    continuation.addMsg(msg)
+    continuation.setMsg(msg)
     let chipToken = encodeURIComponent(Buffer.from(
         continuation.serializeBinary()
     ).toString("base64"))
 
-    fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-        yt2009html.get_api_key()
-    }`, {
+    fetch(`https://www.youtube.com/youtubei/v1/browse`, {
         "headers": yt2009constants.headers,
         "referrer": "https://www.youtube.com/",
         "referrerPolicy": "strict-origin-when-cross-origin",

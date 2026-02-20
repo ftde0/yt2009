@@ -111,6 +111,23 @@
 			</div>
 		</div>
 
+		<hr>
+
+		<div class="presetsgroup">
+			<h2 id="flag-preset-header">presety flag</h2>
+			<span id="flag-preset-intro">jeśli nie wiesz co tu ustawić, możesz skorzystać z któregoś z tych presetów.</span><br><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="set_preset('focus_new');"><span>focus_new</span></a>
+			<span id="focus-new-preset-description">pokazuj nowe dane gdzie możliwe</span><br><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="set_preset('daily');"><span>daily</span></a>
+			<span id="daily-preset-description">nowe dane + szybsze działanie</span><br><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="set_preset('oldvids');"><span>oldvids</span></a>
+			<span id="oldvids-preset-description">pokazuj tylko stare filmy do oglądania, pokazuj zaniżone dane dla doświadczenia "starej" wersji platformy, stare komentarze</span><br><br>
+			<a class="yt-button yt-button-primary" href="#" onclick="set_preset('focus_new');"><span>wayback</span></a>
+			<span id="wayback-preset-description">oldvids + dane z wayback machine gdzie to możliwe</span>
+		</div>
+
+		<hr>
+
 		<div class="group1">
 			<h2>/watch</h2>
 			<input type="checkbox" id="watch-allow-clientside-ryd" title="nie czeka jeśli api return youtube dislike zajmuje dłużej niż zazwyczaj żeby otrzymać ocenę w gwiazdkach.">
@@ -245,6 +262,8 @@
 			<label for="channel-realistic-view-count">realistic_view_count</label><br>
 			<input type="checkbox" id="channel-remove-username-space" title="usuwa spacje z nazw użytkowników">
 			<label for="channel-remove-username-space">remove_username_space</label><br>
+			<input type="checkbox" id="channel-show-times" title="pokazuje czasy trwania filmów">
+			<label for="channel-show-times">show_times</label><br>
 			<input type="checkbox" id="channel-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
 			<label for="channel-username-asciify">username_asciify</label><br>
 			<input type="checkbox" id="channel-wayback-features" title="użyj zapisów z Wayback Machine na yt2009">
@@ -260,8 +279,6 @@
 
 		<div class="group4">
 			<h2>/, /videos, /channels, /my_subscriptions</h2>
-			<input type="checkbox" id="mainpage-disable-fallback" title="ukrywa ostrzeżenie o trybu fallback">
-			<label for="mainpage-disable-fallback">disable_fallback</label><br>
 			<i id="hpr_notice">homepage_recommended jest od teraz w sekcji Add/Remove Modules na stronie głównej.</i><br>
 			<input type="checkbox" id="mainpage-new-recommended" title="pokaże nowe filmy na sekcji polecanych.">
 			<label for="mainpage-new-recommended">new_recommended</label><br>
@@ -681,6 +698,202 @@
 			}
 
 			alert(importMsg)
+		}
+
+		// flag preset
+		function set_preset(name) {
+			var language = (document.getElementById("lang-en").checked) ? "en" : "pl"
+			var enableSabr = (
+				window.MediaSource
+    			&& window.MediaSource.isTypeSupported("video/mp4; codecs=\"avc1.4D4028\"")
+    			&& window.MediaSource.isTypeSupported("audio/mp4; codecs=\"mp4a.40.2\"")
+			)
+			var message = "continue?"
+			switch(language) {
+				case "pl": {
+					message = [
+						"ustawienie presetu flagi usunie wyczyści wszystkie inne",
+						"flagi ustawione wcześniej (poza login_simulate). kontynuować?"
+					].join(" ")
+					break;
+				}
+				case "en": {
+					message = [
+						"setting a flag preset will clear other selections",
+						"(aside from login_simulate). continue?"
+					].join(" ")
+					break;
+				}
+			}
+			var a = confirm(message)
+			if(!a) return;
+			var loginSimulateName = false;
+			if(document.cookie
+			&& document.cookie.indexOf("login_simulate") !== -1) {
+				loginSimulateName = document.cookie
+									.split("login_simulate")[1]
+									.split(":")[0].split(";")[0]
+			}
+			
+			var watchFlags = ""
+			var resultFlags = ""
+			var channelFlags = ""
+			var homepageFlags = ""
+			var globalFlags = ""
+
+			var autohd = false;
+
+			switch(name) {
+				case "focus_new": {
+					watchFlags = [
+						"share_behavioronly_remove",
+						"watch_modern_features",
+						"turn_down_lights"
+					].join(":")
+					autohd = true;
+					channelFlags = "disable_old_banners"
+					homepageFlags = "new_recommended"
+					globalFlags = [
+						"new_suggestions",
+						"no_controls_fade"
+					].join(":")
+					break;
+				}
+				case "daily": {
+					watchFlags = [
+						"allow_clientside_ryd",
+						"hd_1080",
+						"share_behavioronly_remove",
+						"turn_down_lights",
+						"watch_modern_features"
+					].join(":")
+					autohd = true;
+					channelFlags = [
+						"disable_old_banners",
+						"show_times"
+					].join(":")
+					homepageFlags = "new_recommended"
+					globalFlags = [
+						"always_captions",
+						"disable_autocc",
+						"new_suggestions",
+						"unasciify_login",
+						"no_controls_fade"
+					].join(":")
+					break;
+				}
+				case "oldvids": {
+					watchFlags = [
+						"comments_remove_future",
+						"default_avataradapt",
+						"distill_description",
+						"distill_tags",
+						"enable_stats_countback",
+						"exp_related",
+						"fake_upload_dateadapt",
+						"old_banners",
+						"old_match_exp_rel",
+						"realistic_view_count",
+						"username_asciify"
+					].join(":")
+					resultFlags = [
+						"author_old_names",
+						"only_old",
+						"realistic_view_count",
+						"username_asciify"
+					].join(":")
+					channelFlags = [
+						"author_old_names",
+						"auto_user",
+						"default_avataradapt",
+						"no_community",
+						"no_live",
+						"only_old",
+						"realistic_view_count",
+						"username_asciify"
+					].join(":")
+					homepageFlags = [
+						"realistic_view_count",
+						"username_asciify"
+					].join(":")
+					globalFlags = [
+						"always_annotations",
+						"author_old_avatar",
+						"autogen_thumbnails",
+						"fake_dates",
+						"no_controls_fade"
+					].join(":")
+					break;
+				}
+				case "wayback": {
+					watchFlags = [
+						"comments_remove_future",
+						"default_avataradapt",
+						"distill_description",
+						"distill_tags",
+						"enable_stats_countback",
+						"exp_related",
+						"fake_upload_dateadapt",
+						"old_banners",
+						"old_match_exp_rel",
+						"realistic_view_count",
+						"username_asciify",
+						"wayback_featuresall"
+					].join(":")
+					resultFlags = [
+						"author_old_names",
+						"only_old",
+						"realistic_view_count",
+						"username_asciify"
+					].join(":")
+					channelFlags = [
+						"author_old_names",
+						"auto_user",
+						"default_avataradapt",
+						"no_community",
+						"no_live",
+						"only_old",
+						"realistic_view_count",
+						"username_asciify",
+						"wayback_featuresall"
+					].join(":")
+					homepageFlags = [
+						"realistic_view_count",
+						"username_asciify"
+					].join(":")
+					globalFlags = [
+						"always_annotations",
+						"author_old_avatar",
+						"autogen_thumbnails",
+						"fake_dates",
+						"no_controls_fade"
+					].join(":")
+					break;
+				}
+			}
+
+			if(enableSabr) {
+				watchFlags += ":exp_sabr"
+			}
+			if((name == "focus_new" || name == "daily") && enableSabr) {
+				watchFlags += ":exp_sabr_enable_superresolution"
+			}
+			if(loginSimulateName) {
+				globalFlags += ":login_simulate" + loginSimulateName
+			}
+			
+			var cookieSuffix = "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			document.cookie = "watch_flags=" + watchFlags + cookieSuffix
+			document.cookie = "results_flags=" + resultFlags + cookieSuffix
+			document.cookie = "channel_flags=" + channelFlags + cookieSuffix
+			document.cookie = "mainpage_flags=" + homepageFlags + cookieSuffix
+			document.cookie = "global_flags=" + globalFlags + cookieSuffix
+			if(autohd) {
+				document.cookie = "playback_quality=2" + cookieSuffix
+			}
+
+			alert("preset set to " + name + ".")
+			location.href = "/yt2009_flags.htm?r=" + Math.random()
 		}
 	</script>
 </body>

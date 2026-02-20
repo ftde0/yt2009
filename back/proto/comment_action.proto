@@ -1,0 +1,14 @@
+syntax = "proto3";
+package comment_action;
+
+message root {
+    int32 action = 1;
+    /*
+    ^^
+    9 = select (poll)
+    10 = deselect (poll)
+    */
+    string id = 3;
+    string channelId = 11;
+    optional int32 pollSelectionId = 12;
+}

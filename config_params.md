@@ -18,7 +18,7 @@ inside you will find the properties you have set up using yt2009setup.js:
 other params you can set:
 
 - `tokens` - an array of access tokens required to access if prod is used
-- `fallbackMode` - doesn't use the saved cache, shows a fallback notice on homepage. deprecated
+- `fallbackMode` - doesn't use the saved cache. deprecated
 - `overrideMaster` - use a different master server for comments/video sync
 - `disableWs` - disable the use of a master server altogether
 - `templocked_tokens` - an array of access tokens that will be redirected to /t.htm

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package browseNavigation;
+
+message root {
+    string dummy = 1;
+    message browseNavigation {
+        string browseId = 2;
+        string params = 3;
+    }
+    browseNavigation msg = 80226972;
+}

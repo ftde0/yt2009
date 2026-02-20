@@ -812,3 +812,122 @@ function playnav_more(continuation, otherContainer) {
         
     }, false)
 }
+
+// community tab polls
+var pchelper_polls_called = false;
+function callPchelperPolls() {
+    function countBreakup(count) {
+        count = count.toString();
+        count = count.split("").reverse().join("").match(/.{1,3}/g).reverse()
+        var i = 0;
+        count.forEach(function(c) {
+            count[i] = c.split("").reverse().join("")
+            i++;
+        })
+        count = count.join(",")
+        return count;
+    }
+    if(pchelper_polls_called) return;
+    pchelper_polls_called = true;
+    var r = new XMLHttpRequest();
+    r.open("GET", "/pchelper_channel_polls?rt=" + Date.now())
+    r.setRequestHeader("source", location.pathname)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        if(r.status == 400) {
+            // add signin buttons to all options
+            var options = nlToArray(
+                document.querySelectorAll(".poll-option")
+            )
+            nlToArray(options).forEach(function(z) {
+                z.addEventListener("click", function() {
+                    var c = confirm([
+                        "You must be signed in to vote on polls.",
+                        "Open signin window?"
+                    ].join(" "))
+                    if(c) {
+                        window.open("/mh_pc_intro")
+                    }
+                }, false)
+            })
+            return;
+        }
+        r = JSON.parse(r.responseText)
+        var translations = r.languageTranslations;
+        function renderPollPercentages() {
+            for(var pollId in r) {
+                if(!document.getElementById("poll-" + pollId)) return;
+                var pollJson = r[pollId]
+                var hasPicked = !!(pollJson.filter(function(s) {
+                    return s.picked !== null && s.picked !== undefined
+                })[0])
+                if(!hasPicked) return;
+                pollJson.forEach(function(choice) {
+                    var state = choice.picked
+                            ? choice.selectedStateData
+                            : choice.unselectedStateData
+                    var voteCount = countBreakup(state.voteCount)
+                    var votePercent = state.votePercentage;
+                    var pollObject = document.getElementById("poll-" + pollId)
+                    var options = nlToArray(
+                        pollObject.querySelectorAll(".poll-option")
+                    )
+                    var option = options[choice.id]
+                    option.querySelector(".option-fill").innerHTML = ""
+                    var fill = document.createElement("span")
+                    fill.style.width = votePercent;
+                    fill.className = "option-fill-indicator"
+                    option.querySelector(".option-fill").appendChild(fill)
+                    
+                    var title = option.querySelector("span")
+                    title.innerHTML = choice.text
+                                    .split("<").join("&lt;")
+                                    .split(">").join("&gt;")
+                    title.innerHTML += " - " + voteCount + translations.vote_suffix
+                    if(choice.picked) {
+                        title.innerHTML += translations.vote_voted
+                    }
+                })
+            }
+        }
+        for(var pollId in r) {
+            if(!document.getElementById("poll-" + pollId)) return;
+            var pollJson = r[pollId]
+            var pollObject = document.getElementById("poll-" + pollId)
+            var options = nlToArray(
+                pollObject.querySelectorAll(".poll-option")
+            )
+            // add events to placeholder options
+            var tIndex = 0;
+            nlToArray(options).forEach(function(z) {
+                z.className += " poll-option-" + tIndex
+                z.addEventListener("click", function() {
+                    var id = parseInt(
+                        z.className.split("poll-option-")[1]
+                         .split(" ")[0].substring(0,2)
+                    )
+                    var pollId = z.parentNode.id.split("poll-")[1].split(" ")[0]
+                    r[pollId] = r[pollId].map(function(a) {
+                        a.picked = false;
+                        return a;
+                    })
+                    r[pollId][id].picked = true;
+
+                    var sr = new XMLHttpRequest();
+                    sr.open("POST", "/pchelper_comment_action?rt=" + Date.now())
+                    sr.send(r[pollId][id].selectedPollAction)
+                    
+                    renderPollPercentages();
+                }, false)
+                tIndex++
+            })
+            // modify them if already had an answer
+            var isPicked = !!(pollJson.filter(function(s) {
+                return s.picked !== null && s.picked !== undefined
+            })[0])
+            if(isPicked) {
+                renderPollPercentages()
+            }
+        }
+    }, false)
+}

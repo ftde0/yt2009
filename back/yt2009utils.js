@@ -25,6 +25,7 @@ let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
 let fmodeCommunityPictureIds = {}
 let wyjebaData = {}
+let syncComments = {}
 
 let downloadRetryMax = 5;
 if(config.dl_max_retry && !isNaN(parseInt(config.dl_max_retry))) {
@@ -980,9 +981,7 @@ module.exports = {
     },
 
     "channelGetSectionByParam": function(browseId, param, callback) {
-        fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-            yt2009exports.read().api_key
-        }`, {
+        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
             "headers": constants.headers,
             "referrer": "https://www.youtube.com/",
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -1271,7 +1270,7 @@ module.exports = {
         
         function parseResponse(r) {
             // parse formats
-            if(!r.streamingData) {
+            if(!r.streamingData && retriedOs) {
                 callback(false)
                 yt2009exports.updateFileDownload(fname, 2)
                 return;
@@ -1357,24 +1356,6 @@ module.exports = {
                             funcRef(id, (res => {
                                 callback(result)
                             }), false, quality, rp)
-                            return;
-                            downloadInParts_file(
-                                h264DashAudioUrl,
-                                audioFile,
-                                (f) => {
-                                    if(feedback !== "RETRY") {
-                                        audioDownloadDone = true;
-                                        if(audioDownloadDone
-                                        && videoDownloadDone) {
-                                            onFormatsDone()
-                                        }
-                                    } else {
-                                        callback(false)
-                                        return;
-                                    }
-                                },
-                                true
-                            )
                             return;
                         }
                         audioDownloadDone = true;
@@ -1561,9 +1542,6 @@ module.exports = {
         if(yt2009exports.read().players[id]) {
             devlog(`using cached streamingdata for ${id} download`)
             parseResponse(yt2009exports.read().players[id])
-            /*setTimeout(() => {
-                yt2009exports.delete("players", id)
-            }, 200)*/
             return;
         }
 
@@ -1580,7 +1558,8 @@ module.exports = {
             rHeaders["x-goog-visitor-id"] = yt2009exports.read().visitor
         }
 
-        if(config.wyjeba_typu_onesie) {
+        if(config.wyjeba_typu_onesie
+        || yt2009exports.read().session_use_onesie) {
             this.wyjebaTypuOnesie(id, (data) => {
                 parseResponse(data)
             })
@@ -1605,7 +1584,7 @@ module.exports = {
             return;
         }
 
-        fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
+        fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
             "headers": rHeaders,
             "referrer": "https://www.youtube.com/watch?v=" + id,
             "referrerPolicy": "origin-when-cross-origin",
@@ -1633,7 +1612,8 @@ module.exports = {
     },
 
     "pullBarePlayer": function(id, callback) {
-        if(config.wyjeba_typu_onesie) {
+        if(config.wyjeba_typu_onesie
+        || yt2009exports.read().session_use_onesie) {
             this.wyjebaTypuOnesie(id, (data) => {
                 callback(data)
             })
@@ -1645,7 +1625,7 @@ module.exports = {
             let d = yt2009signin.getData().yAuth
             rHeaders.Authorization = `Bearer ${d}`
         }
-        fetch("https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
+        fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
             "headers": rHeaders,
             "referrer": "https://www.youtube.com/watch?v=" + id,
             "referrerPolicy": "origin-when-cross-origin",
@@ -2113,15 +2093,9 @@ module.exports = {
         return displayDates
     },
     "latestCustomComments": function(limit) {
-        let comments = {}
-        if(fs.existsSync("./cache_dir/comments.json")) {
-            comments = JSON.parse(
-                fs.readFileSync("./cache_dir/comments.json").toString()
-            )
-        }
         let commentsA = []
-        for(let i in comments) {
-            comments[i].forEach(comment => {
+        for(let i in syncComments) {
+            syncComments[i].forEach(comment => {
                 if(!comment.time) return;
                 let commentObject = JSON.parse(JSON.stringify(comment))
                 commentObject.video = i;
@@ -2365,9 +2339,9 @@ module.exports = {
         }
     },
 
-    "dataApiBulk": function(ids, requestedData, callback) {
+    "dataApiBulk": function(ids, requestedData, callback, mode) {
         let results = {}
-        if(!config.data_api_key) {
+        if(!config.data_api_key || ids.length == 0) {
             callback({})
             return;
         }
@@ -2397,13 +2371,15 @@ module.exports = {
                 }
                 case "viewCount":
                 case "likeCount":
-                case "commentCount": {
+                case "commentCount":
+                case "subscriberCount": {
                     if(!requestedParts.includes("statistics")) {
                         requestedParts.push("statistics")
                     }
                     break;
                 }
-                case "duration": {
+                case "duration":
+                case "itemCount": {
                     if(!requestedParts.includes("contentDetails")) {
                         requestedParts.push("contentDetails")
                     }
@@ -2414,8 +2390,20 @@ module.exports = {
 
         requestedParts = requestedParts.join(",")
 
+        let urlPart = "videos"
+        switch(mode) {
+            case "channels": {
+                urlPart = "channels"
+                break;
+            }
+            case "playlists": {
+                urlPart = "playlists"
+                break;
+            }
+        }
+
         let url = [
-            "https://www.googleapis.com/youtube/v3/videos",
+            "https://www.googleapis.com/youtube/v3/" + urlPart,
             "?part=" + requestedParts,
             "&id=" + ids,
             "&key=" + config.data_api_key
@@ -2501,15 +2489,19 @@ module.exports = {
                             "time": time,
                             "authorText": xss(authorText),
                             "authorId": authorId,
-                            "authorUrl": `/channel/${authorId}`
+                            "authorUrl": `/channel/${authorId}`,
+                            "postId": post.postId
                         }
                         if(post.backstageAttachment
                         && post.backstageAttachment.videoRenderer) {
                             let v = post.backstageAttachment.videoRenderer
-                            let id = v.videoId;
-                            let title = v.title.runs[0].text
-                            parsedPost.embedVideoId = id;
-                            parsedPost.embedVideoTitle = xss(title)
+                            if(v.videoId) {
+                                // video available
+                                let id = v.videoId.slice(0,11);
+                                let title = v.title.runs[0].text
+                                parsedPost.embedVideoId = id;
+                                parsedPost.embedVideoTitle = xss(title)
+                            }
                         }
                         function parseImageRenderer(t) {
                             let img = {}
@@ -2544,10 +2536,23 @@ module.exports = {
                             })
                             parsedPost.attachments = multiImgs
                         }
+                        if(post.backstageAttachment
+                        && post.backstageAttachment.pollRenderer) {
+                            let p = post.backstageAttachment.pollRenderer
+                            let choices = []
+                            p.choices.forEach(c => {
+                                choices.push({
+                                    "text": c.text.runs[0].text/*,
+                                    "voteCount": parseInt(c.numVotes),
+                                    "percent": c.votePercentage.simpleText*/
+                                })
+                            })
+                            parsedPost.poll = choices
+                        }
                         
                         posts.push(parsedPost)
                     }
-                    catch(error) {}
+                    catch(error) {console.log(error)}
                 }
             })
         }
@@ -2563,18 +2568,19 @@ module.exports = {
             return input.split("<").join("&lt;")
                         .split(">").join("&gt;")
         }
+        if(!runs || !runs.forEach) return ""
         runs.forEach(run => {
             if(run.navigationEndpoint
             && JSON.stringify(run.navigationEndpoint).includes("/watch?v=")) {
                 let id = JSON.stringify(run.navigationEndpoint)
-                         .split("/watch?v=")[1];
+                         .split("/watch?v=")[1].substring(0,11);
                 a.push(`<a href="/watch?v=${id}">
                 ${run.text}
                 </a>`)
             } else if(run.navigationEndpoint
             && JSON.stringify(run.navigationEndpoint).includes("/channel/")) {
                 let id = JSON.stringify(run.navigationEndpoint)
-                         .split("/channel/")[1];
+                         .split("/channel/")[1].substring(0,24);
                 a.push(`<a href="/channel/${id}">
                 ${run.text}
                 </a>`)
@@ -3113,6 +3119,10 @@ module.exports = {
                 }
             })})
         }, 250)
+    },
+
+    "passSyncComments": function(cmts) {
+        syncComments = cmts;
     }
 }
 

@@ -13,13 +13,7 @@
 
 var jspb = require('google-protobuf');
 var goog = jspb;
-var global =
-    (typeof globalThis !== 'undefined' && globalThis) ||
-    (typeof window !== 'undefined' && window) ||
-    (typeof global !== 'undefined' && global) ||
-    (typeof self !== 'undefined' && self) ||
-    (function () { return this; }).call(null) ||
-    Function('return this')();
+var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
 
 goog.exportSymbol('proto.bare_android_request.root', null, global);
 goog.exportSymbol('proto.bare_android_request.root.contextType', null, global);
@@ -128,7 +122,9 @@ proto.bare_android_request.root.toObject = function(includeInstance, msg) {
   var f, obj = {
     contextList: jspb.Message.toObjectList(msg.getContextList(),
     proto.bare_android_request.root.contextType.toObject, includeInstance),
-    browseid: jspb.Message.getFieldWithDefault(msg, 2, "")
+    browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    params: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    continuation: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -174,6 +170,14 @@ proto.bare_android_request.root.deserializeBinaryFromReader = function(msg, read
       var value = /** @type {string} */ (reader.readString());
       msg.setBrowseid(value);
       break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setParams(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setContinuation(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -215,6 +219,20 @@ proto.bare_android_request.root.serializeBinaryToWriter = function(message, writ
   if (f.length > 0) {
     writer.writeString(
       2,
+      f
+    );
+  }
+  f = message.getParams();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getContinuation();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
       f
     );
   }
@@ -376,7 +394,8 @@ proto.bare_android_request.root.contextType.clientType.prototype.toObject = func
 proto.bare_android_request.root.contextType.clientType.toObject = function(includeInstance, msg) {
   var f, obj = {
     clientnumber: jspb.Message.getFieldWithDefault(msg, 16, 0),
-    clientversion: jspb.Message.getFieldWithDefault(msg, 17, "")
+    clientversion: jspb.Message.getFieldWithDefault(msg, 17, ""),
+    d: jspb.Message.getFieldWithDefault(msg, 46, 0)
   };
 
   if (includeInstance) {
@@ -421,6 +440,10 @@ proto.bare_android_request.root.contextType.clientType.deserializeBinaryFromRead
       var value = /** @type {string} */ (reader.readString());
       msg.setClientversion(value);
       break;
+    case 46:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setD(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -464,6 +487,13 @@ proto.bare_android_request.root.contextType.clientType.serializeBinaryToWriter =
       f
     );
   }
+  f = message.getD();
+  if (f !== 0) {
+    writer.writeInt32(
+      46,
+      f
+    );
+  }
 };
 
 
@@ -500,6 +530,24 @@ proto.bare_android_request.root.contextType.clientType.prototype.getClientversio
  */
 proto.bare_android_request.root.contextType.clientType.prototype.setClientversion = function(value) {
   return jspb.Message.setProto3StringField(this, 17, value);
+};
+
+
+/**
+ * optional int32 d = 46;
+ * @return {number}
+ */
+proto.bare_android_request.root.contextType.clientType.prototype.getD = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 46, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.bare_android_request.root.contextType.clientType} returns this
+ */
+proto.bare_android_request.root.contextType.clientType.prototype.setD = function(value) {
+  return jspb.Message.setProto3IntField(this, 46, value);
 };
 
 
@@ -594,6 +642,42 @@ proto.bare_android_request.root.prototype.getBrowseid = function() {
  */
 proto.bare_android_request.root.prototype.setBrowseid = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string params = 3;
+ * @return {string}
+ */
+proto.bare_android_request.root.prototype.getParams = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.bare_android_request.root} returns this
+ */
+proto.bare_android_request.root.prototype.setParams = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string continuation = 7;
+ * @return {string}
+ */
+proto.bare_android_request.root.prototype.getContinuation = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.bare_android_request.root} returns this
+ */
+proto.bare_android_request.root.prototype.setContinuation = function(value) {
+  return jspb.Message.setProto3StringField(this, 7, value);
 };
 
 

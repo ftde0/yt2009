@@ -12,6 +12,9 @@ const protoAnalytics = require("./proto/analytics_screen_request_pb")
 const metadataUpdate = require("./proto/android_metadata_update_pb")
 const userMetadata = require("./proto/android_user_metadata_pb")
 const customChannel = require("./proto/yt2009_channel_pb")
+const customizableRequest = require("./proto/bare_android_request_pb")
+const browseNavigation = require("./proto/browse_navigation_pb")
+const commentActions = require("./proto/comment_action_pb")
 const androidHeaders = {
     "Accept": "*/*",
     "Accept-Language": "en-US;q=0.7,en;q=0.3",
@@ -382,10 +385,15 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                             || !v.viewCountText) return;
                             let a = v.shortBylineText.runs[0]
                             let handle = false;
+                            let authorId = false;
+                            let authorFull = false;
 
                             try {
                                 let c = a.navigationEndpoint.browseEndpoint
                                         .canonicalBaseUrl;
+                                authorId = a.navigationEndpoint.browseEndpoint
+                                            .browseId;
+                                authorFull = a.text;
                                 if(c.startsWith("/@")) {
                                     handle = c.split("/@")[1];
                                 }
@@ -409,7 +417,11 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                                     ),
                                     "-", utils.relativeToAbsoluteApprox(
                                         v.publishedTimeText.runs[0].text
-                                    ), "-", "-", mobileflags.get_flags(req).watch
+                                    ), "-", "-", mobileflags.get_flags(req).watch,
+                                    null, {
+                                        "authorId": authorId,
+                                        "authorFull": authorFull
+                                    }
                                 )
                                 //console.log("successfully added video " + v.videoId)
                             }
@@ -3097,6 +3109,157 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 }
 
             })})
+        }, req)
+    },
+
+    "channelForPolls": function(req, res) {
+        let device = pullDeviceId(req);
+        if(!userdata[device]
+        || !req.headers
+        || !req.headers.source) {
+            res.sendStatus(400)
+            return;
+        }
+
+        require("./yt2009channels").get_id(req.headers.source, (uid) => {
+            if(!uid) {
+                res.sendStatus(400)
+                return;
+            }
+            let continuation = new browseNavigation.root()
+            let navi = new browseNavigation.root.browseNavigation()
+            navi.setBrowseid(uid)
+            navi.setParams("EgVwb3N0cw%3D%3D")
+            continuation.setMsg(navi)
+            continuation = Buffer.from(continuation.serializeBinary())
+
+            let root = new customizableRequest.root()
+            let context = new customizableRequest.root.contextType()
+            let client = new customizableRequest.root.contextType.clientType()
+            client.setClientnumber(3)
+            client.setClientversion("20.51.39")
+            client.setD(1)
+            context.addClient(client)
+            root.addContext(context)
+            root.setContinuation(
+                encodeURIComponent(continuation.toString("base64"))
+            )
+            let pbmsg = Buffer.from(root.serializeBinary())
+
+            setupYouTube(device, (h) => {
+                h["Content-Type"] = "application/x-protobuf"
+                h["x-goog-api-format-version"] = "2"
+                fetch("https://youtubei.googleapis.com/youtubei/v1/browse?alt=json", {
+                    "method": "POST",
+                    "headers": h,
+                    "body": pbmsg
+                }).then(r => {r.json().then(r => {
+                    let outputData = {}
+
+                    let c = []
+                    c = r.continuationContents.sectionListContinuation
+                         .contents[0].itemSectionRenderer.contents;
+                    c = c.filter(s => {
+                        return JSON.stringify(s).includes("pollPostRootModel")
+                    }).map(s => {
+                        try {
+                            return s.elementRenderer.newElement.type
+                                    .componentType.model.pollPostRootModel
+                                    .data.pollAttachment.pollAttachmentViewModel
+                                    .choices;
+                        }
+                        catch(error) {return null;}
+                    }).filter(s => {return !!s})
+                    c.forEach(pollChoices => {
+                        let postId = false;
+                        let choices = []
+                        pollChoices.forEach(choice => {
+                            choice = choice.pollChoiceViewModel
+                            postId = commentActions.root.deserializeBinary(
+                                choice.selectedPollAction.split("%")[0]
+                            ).toObject().id
+
+                            if(userdata[device].commentActions
+                            && userdata[device].commentActions[postId] !== null
+                            && userdata[device].commentActions[postId] !== undefined) {
+                                let action = userdata[device]
+                                             .commentActions[postId]
+                                choice.picked = (action == choice.id)
+                            }
+
+                            choices.push(choice)
+                        })
+                        outputData[postId] = choices
+                    })
+
+                    let translation = templates.pollChoiceTranslations(req)
+                    outputData.languageTranslations = translation;
+
+                    if(req.query.format !== "html") {
+                        res.send(outputData)
+                    } else {
+                        let prebuiltHTML = []
+                        for(let p in outputData) {
+                            prebuiltHTML.push([
+                                "POLL-DATA-" + p,
+                                templates.pollChoiceRender(outputData[p], req)
+                            ].join("========="))
+                        }
+                        res.send(prebuiltHTML.join("\n"))
+                    }
+                    
+                })})
+            }, req)
+        })
+    },
+
+    "performCommentAction": function(req, res) {
+        let device = pullDeviceId(req);
+        if(!req.body || !req.body.toString
+        || !userdata[device]) {
+            res.sendStatus(400)
+            return;
+        }
+        // write action to pchelper userdata
+        let actionToken = req.body.toString()
+        let actionTokenDeserialized = {}
+        try {
+            actionTokenDeserialized = commentActions.root.deserializeBinary(
+                actionToken.split("%")[0]
+            ).toObject()
+        }
+        catch(error) {}
+        if(!actionTokenDeserialized.id) {
+            res.sendStatus(500)
+            return;
+        }
+        if(!userdata[device].commentActions) {
+            userdata[device].commentActions = {}
+        }
+        let postId = actionTokenDeserialized.id
+        if(actionTokenDeserialized.pollselectionid !== null
+        && actionTokenDeserialized.pollselectionid !== undefined) {
+            let selectId = actionTokenDeserialized.pollselectionid
+            userdata[device].commentActions[postId] = selectId
+        }
+        fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+        // send to youtube
+        setupYouTube(device, (h) => {
+            let url = [
+                "https://youtubei.googleapis.com",
+                "/youtubei/v1/comment/perform_comment_action",
+                "?prettyPrint=false"
+            ].join("")
+            fetch(url, {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "actions": [actionToken]
+                })
+            }).then(r => {
+                res.status(r.status).send("innertube_response=" + r.status)
+            })
         }, req)
     }
 }

@@ -212,6 +212,7 @@
 								</div>
 							</div>
 							<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="viewingHistoryClear();"><span>lang_userpage_clear_history</span></a>
+							<a class="yt-button yt-button-primary" id="" style="" href="#" onclick="removeSelectedElements();"><span>lang_userpage_history_rm_selected</span></a>
 						</div>
 						<div id="messages" class="yt-message-panel hidden"></div>
 						<div id="grid-view">
@@ -339,6 +340,92 @@
 	<a name="pageBottom"></a>
 	<script>
 		var lsViewStringPrefix = "lang_userpage_views_prefix";
+
+		function removeSelectedElements() {
+			// get ids of selected elements
+			var removeIds = []
+			var removeVideoElements = []
+			var divs = document.getElementById("table")
+							   .getElementsByTagName("div");
+			for(var div in divs) {
+				if(divs[div]
+				&& divs[div].className
+				&& divs[div].className == "video") {
+					var checkbox = divs[div].getElementsByTagName("input")[0]
+					if(checkbox.checked) {
+						removeIds.push(checkbox.getAttribute("value"))
+						removeVideoElements.push(divs[div])
+					}
+				}
+			}
+
+			// remove from localstorage
+			if(window.localStorage
+			&& window.localStorage.watch_history
+			&& window.JSON) {
+				var history = JSON.parse(localStorage.watch_history)
+				history = history.filter(function(e) {
+					return e.id && removeIds.indexOf(e.id) == -1
+				})
+				localStorage.watch_history = JSON.stringify(history)
+			}
+
+			// remove from cookies
+			function removeFromCookieValue(cookie) {
+				cookie = cookie.split(":")
+				var newCookie = []
+				for(var vid in cookie) {
+					vid = cookie[vid]
+					if(vid && vid.indexOf("&") && vid.split("&")[2]
+					&& removeIds.indexOf(vid.split("&")[2]) == -1) {
+						newCookie.push(vid)
+					}
+				}
+				newCookie = newCookie.join(":") + ":"
+				return newCookie;
+			}
+			if(document.cookie
+			&& document.cookie.indexOf("watch_history") !== -1) {
+				var mainCookie = document.cookie
+								 .split("watch_history=")[1]
+								 .split(";")[0];
+				var backupCookies = {}
+				if(document.cookie.indexOf("watch_history_backup") !== -1) {
+					var cookies = document.cookie.split(";")
+					for(var cookie in cookies) {
+						if(cookies[cookie]
+						&& cookies[cookie].indexOf("watch_history_backup") !== -1) {
+							var name = cookies[cookie].split("=")[0].replace(" ", "")
+							var value = cookies[cookie].split("=")[1]
+							backupCookies[name] = value;
+						}
+					}
+				}
+				mainCookie = removeFromCookieValue(mainCookie)
+				for(var cookie in backupCookies) {
+					if(cookie.indexOf("watch_history_backup") !== -1) {
+						backupCookies[cookie] = removeFromCookieValue(
+							backupCookies[cookie]
+						)
+					}
+				}
+				
+
+				var cookieSuffix = "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+				document.cookie = "watch_history=" + mainCookie + cookieSuffix
+				for(var cookie in backupCookies) {
+					if(cookie.indexOf("watch_history_backup") !== -1) {
+						document.cookie = cookie + "="
+										+ backupCookies[cookie]
+										+ cookieSuffix
+					}
+				}
+			}
+
+			setTimeout(function() {
+				location.reload()
+			}, 200)
+		}
 	</script>
 	<script src="/assets/site-assets/yt2009_userpage_common.js"></script>
 	<script src="/assets/site-assets/yt2009langpicker.js"></script>

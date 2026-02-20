@@ -29,8 +29,14 @@ const EXTRA_RISK_BLOCK = true; //EXPERIMENT: reduce number of /player requests
 // to hopefully reduce IP blocks that started happening recently
 // when hosting on datacenter IPs
 const ANDROID_REQ_UA = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+let frequentRestartEnvironmentDisablePotgen = false;
+if(process && process.argv && process.argv.includes
+&& process.argv.includes("--frequent-restart-environment-disable-potgen")) {
+    frequentRestartEnvironmentDisablePotgen = true;
+    console.log(`!! potgen disabled! playback will NOT work in this mode! !!`)
+}
 let visitorId = ""
-if(EXTRA_RISK_BLOCK) {
+if(EXTRA_RISK_BLOCK && !frequentRestartEnvironmentDisablePotgen) {
     fetch("https://youtubei.googleapis.com/youtubei/v1/visitor_id", {
         "body": JSON.stringify({
             "context": {
@@ -116,6 +122,7 @@ let custom_comments = {}
 if(fs.existsSync("./cache_dir/comments.json")) {
     try {
         custom_comments = require("./cache_dir/comments.json")
+        yt2009utils.passSyncComments(custom_comments)
     }
     catch(error) {}
 }
@@ -138,7 +145,8 @@ let oldCommentsWrite = setInterval(function() {
 let sups = []
 
 module.exports = {
-    "innertube_get_data": function(id, callback, pullChannelEarly) {
+    "innertube_get_data": function(id, callback, pullChannelEarly, isRetry) {
+        let retryMirror = this.innertube_get_data;
         let useAndroidPlayer = true;
 
         let timer = 0;
@@ -159,7 +167,6 @@ module.exports = {
 
         if(JSON.stringify(innertube_context) == "{}") {
             innertube_context = constants.cached_innertube_context
-            api_key = this.get_api_key()
         }
 
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
@@ -279,6 +286,30 @@ module.exports = {
             if(devTimings) {
                 console.log("/player received", timer)
             }
+            if((r
+            && r.playabilityStatus
+            && r.playabilityStatus.status !== "OK"
+            && r.playabilityStatus.reason
+            && r.playabilityStatus.reason.includes("Sign in to confirm")
+            && !config.wyjeba_typu_onesie)
+            && !isRetry) {
+                if(config.env == "dev") {
+                    console.log(`[${id}] got login required! retrying`)
+                }
+                retryMirror(id, callback, pullChannelEarly, true)
+                return;
+            }
+            if(r
+            && r.streamingData
+            && r.streamingData.serverAbrStreamingUrl
+            && isRetry) {
+                if(config.env == "dev") {
+                    console.log(`[${id}] retry got successful streams!`)
+                }
+                yt2009exports.writeData("session_use_onesie", true)
+            } else if(isRetry && config.env == "dev") {
+                console.log(`[${id}] retrying failed, must login`)
+            }
             if(useAndroidPlayer) {
                 if(r.streamingData) {
                     yt2009exports.extendWrite("players", id, r)
@@ -315,7 +346,9 @@ module.exports = {
                 stopTimer()
             }
         }
-        if(config.wyjeba_typu_onesie) {
+        if(config.wyjeba_typu_onesie
+        || yt2009exports.read().session_use_onesie
+        || isRetry) {
             yt2009utils.wyjebaTypuOnesie(id, (player) => {
                 onPlayerReceived(player)
             })
@@ -750,9 +783,18 @@ module.exports = {
                                             .thumbnailBadgeViewModel
                                             .text;
                                 }
+                                if(o.thumbnailBottomOverlayViewModel
+                                && o.thumbnailBottomOverlayViewModel.badges) {
+                                    time = o.thumbnailBottomOverlayViewModel
+                                            .badges[0]
+                                            .thumbnailBadgeViewModel
+                                            .text;
+                                }
                             })
                         }
-                        catch(error){}
+                        catch(error){
+                            console.log(error)
+                        }
                         if(!time
                         || time.toLowerCase().includes("live")
                         || time.toLowerCase().includes("short")
@@ -926,6 +968,12 @@ module.exports = {
                 }
                 data.extendedItagData = []
                 videoData.streamingData.adaptiveFormats.forEach(quality => {
+                    if(quality.qualityLabel
+                    && quality.qualityLabel.includes("s")) {
+                        quality.qualityLabel = quality.qualityLabel.replace(
+                            "s", "p"
+                        )
+                    }
                     if(quality.qualityLabel) {
                         let xtags = false;
 						if(quality.xtags) {
@@ -1383,7 +1431,7 @@ module.exports = {
         }
         if(custom_comments[data.id]) {
             try {
-                custom_comments.forEach(c => {vCustomComments.push(c)})
+                custom_comments[data.id].forEach(c => {vCustomComments.push(c)})
             }
             catch(error){}
         }
@@ -2912,13 +2960,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
         if(flags.includes("share_behavior")) {
             if(shareBehaviorServices[
-                flags.split("share_behavior")[1].split(":")[0]
+                flags.split("share_behavior")[1].split(":")[0].split(";")[0]
             ]) {
+                let set = flags.split("share_behavior")[1]
+                               .split(":")[0]
+                               .split(";")[0]
                 code = code.replace(
                     `<!--yt2009_share_insert-->`,
-                    createShareHTML(shareBehaviorServices[
-                        flags.split("share_behavior")[1].split(":")[0]
-                    ])
+                    createShareHTML(shareBehaviorServices[set])
                 )
             } else {
                 code = code.replace(
@@ -3784,6 +3833,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
     "receive_update_custom_comments": function(comments) {
         custom_comments = comments;
+        yt2009utils.passSyncComments(custom_comments)
     },
 
     "custom_comments": function() {

@@ -49,6 +49,7 @@ module.exports = {
         let p = playbackSessions[playbackSession]
         let createProto = this.createProto
         let parseResponse = this.parseResponse
+        let selfRef = this.handlePlayer;
 		
 		let customItag = false;
 		if(req.query.user_video_itag
@@ -92,14 +93,6 @@ module.exports = {
             catch(error) {
                 console.log(error)
             }
-
-            /*let applicableItags = {
-                "1080p": [304, 137],
-                "720p": [299, 136],
-                "480p": [135],
-                "audio": [140, 139],
-                "lq": [134, 133, 160]
-            }*/
 
             let vItags = [134, 133]
             //let vq = "lq"
@@ -315,7 +308,8 @@ module.exports = {
             if(config.env == "dev") {
                 console.log(`using clean player for ${playbackSession}`)
             }
-            if(config.wyjeba_typu_onesie) {
+            if(config.wyjeba_typu_onesie
+            || yt2009exports.read().session_use_onesie) {
                 yt2009utils.wyjebaTypuOnesie(p.id, (data) => {
                     data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
                     data.ustreamer = data.playerConfig.mediaCommonConfig
@@ -389,7 +383,21 @@ module.exports = {
                         return a;
                     }
                     if(!formats) {
-                        console.log(`no streamingData for sabr!`)
+                        console.log(`[sabr/${playbackSession}] no streams`)
+                        if(b.toString().includes("Sign in to confirm")
+                        && !req.retry
+                        && !config.wyjeba_typu_onesie
+                        && !yt2009exports.read().session_use_onesie) {
+                            // retry
+                            try {
+                                console.log("^^ retrying")
+                                console.log("if this keeps failing restart yt2009")
+                                req.retry = true;
+                                selfRef(playbackSession, offset, req, callback)
+                            }
+                            catch(error){}
+                            return;
+                        }
                         if(config.env == "dev") {
                             let a = "sabr-error-" + Date.now()
                             console.log(`saving pb response to ./${a}`)
@@ -397,6 +405,10 @@ module.exports = {
                         }
                         callback(false)
                         return;
+                    }
+                    if(req.retry) {
+                        // retry worked, mark for other players
+                        yt2009exports.writeData("session_use_onesie", true)
                     }
                     if(formats.dashformatList) {
                         if(!bp.streamingData) {

@@ -45,10 +45,10 @@ var languageData_EN = {
         "channel-only-old": "will only show videos uploaded in the specified date range on channels (default before 2010-04-01)",
         "channel-realistic-view-count": "more realistic for 2009 view counts",
         "channel-remove-username-space": "removes spaces from usernames",
+        "channel-show-times": "shows time durations of videos",
         "channel-username-asciify": "remove special characters from usernames",
         "channel-wayback-features": "use Wayback Machine data for yt2009",
 
-        "mainpage-disable-fallback": "hides fallback mode warning",
         "mainpage-new-recommended": "will show new videos on the recommended section",
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
         "mainpage-remove-username-space": "removes spaces from usernames",
@@ -134,6 +134,13 @@ var languageData_EN = {
 
         "#hpr_notice": "homepage_recommended is located in the Add/Remove Modules section on the homepage.",
         "#leg_annot_notice": "annotation_gradients is not accurate to its flash counterpart.<br>it was added as the previous html5 annotations' implementation had them.",
+
+        "#flag-preset-header": "flag presets",
+        "#flag-preset-intro": "if you don't know what flags you should pick, you can use one of the presets here.",
+        "#focus-new-preset-description": "show new data where possible",
+        "#daily-preset-description": "new data + faster page loads",
+        "#oldvids-preset-description": "only show old videos, show dialed-back stats for an &quot;old&quot; experience, old comments",
+        "#wayback-preset-description": "oldvids + wayback machine data where possible",
 
         "#toggle-f-ref": "(click here for flash player settings)",
         "#pchelper-ref": "(or click here for pchelper-related settings)"

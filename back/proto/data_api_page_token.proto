@@ -1,0 +1,7 @@
+syntax = "proto3";
+package data_api_page_token;
+
+message root {
+    int32 index = 1;
+    bool isPrev = 2;
+}

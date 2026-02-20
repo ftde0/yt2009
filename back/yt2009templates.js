@@ -451,7 +451,7 @@ module.exports = {
 		</div>
 	</div>
     `,
-    "videoCell": function(id, title, protocol, uploaderName, uploaderUrl, views, flags, noLang) {
+    "videoCell": function(id, title, protocol, uploaderName, uploaderUrl, views, flags, noLang, length) {
         let thumbUrl = utils.getThumbUrl(id, flags)
         let viewCount = noLang ? `lang_views_prefix${utils.countBreakup(utils.bareCount(views))}lang_views_suffix`
                       : views
@@ -472,6 +472,7 @@ module.exports = {
                             <div class="addtoQL90"><a href="#" ql="${id}" title="${noLang ? "lang_add_to_ql": "Add Video to Quickist"}"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(uploaderName.split(" ").join(""))}')"></button></a>
                                 <div class="hid quicklist-inlist"><a href="#">${noLang ? "lang_ql_added" : "Added to Quicklist"}</a></div>
                             </div>
+                            ${length ? `<div class="video-time"><a id="video-run-time-${id}" href="/watch?v=${id}" rel="nofollow">${length}</a></div>` : ""}
                         </div>
                     </div>
                 </div>
@@ -652,13 +653,13 @@ module.exports = {
             </div>
                 `
     },
-    "playnavVideo": function(video, video_index, views, upload_date, ratings, protocol, live) {
+    "playnavVideo": function(video, video_index, views, upload_date, ratings, protocol, live, time) {
         return `
         <div class="playnav-item playnav-video ${video_index == 0 ? "selected playnav-item-selected" : ""} ${live ? "playnav-live-video" : ""}" id="playnav-video-${video.id}" onclick="switchVideo(this);return false;">
             <div id="playnav-video-play-${video.id}-selector" class="selector"></div>
             <div class="content">
                 <div class="playnav-video-thumb link-as-border-color">
-                    <a class="video-thumb-90 no-quicklist" href="#"><img title="${video.title.split('"').join("&quot;")}" src="${video.thumbnail.replace("http", protocol)}" class="vimg90 yt-uix-hovercard-target" alt="${video.title.split('"').join("&quot;")}"></a>
+                    <a class="video-thumb-90 no-quicklist" href="#"><img title="${video.title.split('"').join("&quot;")}" src="${video.thumbnail.replace("http", protocol)}" class="vimg90 yt-uix-hovercard-target" alt="${video.title.split('"').join("&quot;")}">${time ? `<div class="video-time"><span>${time}</span></div>` : ""}</a>
         
                 </div>
                 <div class="playnav-video-info">
@@ -2661,8 +2662,6 @@ module.exports = {
         <div class="clear"></div>
     </div>`,
     "friendtivity_comment": function(video, comment_author, comment_content, flags) {
-        /*id, title, description, upload, viewcount,
-                                    authorurl, authorname, vidlength,*/
         let upload = utils.unixToRelative(new Date(video.upload).getTime())
         if(new Date(video.upload).getFullYear() <= 2010) {
             upload = utils.unixToRelative(
@@ -2674,17 +2673,19 @@ module.exports = {
             )
         }
 
-        let author = video.author_handle
+        let author = video.author_handle || video.author_name
         if(!author
         && flags.includes("remove_username_space")) {
             comment_author = comment_author.split(" ").join("")
             video = JSON.parse(JSON.stringify(video))
             video.author_name = video.author_name.split(" ").join("")
+            author = video.author_name;
         } else if(!author
         && flags.includes("username_asciify")) {
             comment_author = utils.asciify(comment_author)
             video = JSON.parse(JSON.stringify(video))
             video.author_name = utils.asciify(video.author_name)
+            author = video.author_name;
         }
 
         let viewCount = video.viewCount
@@ -3468,7 +3469,14 @@ term='channel'/>
                 }
             })
         }
-        return `<tr id="feed_item_${index}" valign="top">
+        let pollAnswersHTML = ""
+        if(p.poll) {
+            p.poll.forEach(o => {
+                pollAnswersHTML += `<div class="poll-option"><span>${utils.xss(o.text)}</span><div class="option-fill"><span class="generic-vote-button">lang_channel_poll_vote_option</span></div></div>`
+            })
+            pollAnswersHTML += `<script>setTimeout(function(){callPchelperPolls();},100);</script>`
+        }
+        return `<tr id="feed_item_${index}"${p.postId ? ` class="community-post-${p.postId}"` : ""} valign="top">
 			<td class="feed_icon"><img src="/assets/site-assets/pixel-vfl73.gif" class="icon-BUL"></td>
 			<td>
 				<div class="feed_title">
@@ -3476,13 +3484,12 @@ term='channel'/>
                     <span class="feed-content">${p.text}</span>
 					<span class="timestamp">(${p.time})</span>
 				</div>
-				<div class="centerpiece">
-                    ${imagesHTML}
-                    ${p.embedVideoId && p.embedVideoTitle ? 
+				<div class="centerpiece"${p.poll ? ` id="poll-${p.postId}"` : ""}>
+                    ${imagesHTML}${p.embedVideoId && p.embedVideoTitle ? 
                     `<div style="float:left; margin-right: 8px;"><a href="/watch?v=${p.embedVideoId}" rel="nofollow"><img style="width: 60px; height: 45px; border: 1px solid;" src="${utils.getThumbUrl(p.embedVideoId, req)}" class="link-as-border-color"></a></div>
 					<div>
 						<a href="/watch?v=${p.embedVideoId}" rel="nofollow">${p.embedVideoTitle}</a>
-					</div>` : ""}
+					</div>` : ""}${p.poll ? `<span><b>lang_channel_poll_vote_intro</b></span>${pollAnswersHTML}` : ""}
 				</div>
 			</td>
 			<td class="feed_delete">&nbsp;</td>
@@ -3793,5 +3800,34 @@ video_id=${req.query.video_id}`.split("\n").join("&"))
 
     "web_playlists_loadmore_btn": function(token) {
         return `<div id="continuation-load-container"><a class="yt-button yt-button-primary" href="javascript:void(0)" onclick="loadmore_pl('${token}');"><span>lang_vl_loadmore</span></a></div>`
+    },
+
+    "pollChoiceRender": function(choices, req) {
+        let html = ""
+        if(!choices.forEach) return "";
+        choices.forEach(c => {
+            let voteCountIndifferent = `${utils.xss(c.text)}`
+            let voteCountUnpickedText = `${utils.xss(c.text)} - ${utils.countBreakup(c.unselectedStateData.voteCount)}lang_channel_poll_vote_count_suffix`
+            let voteCountPickedText = `${utils.xss(c.text)} - ${utils.countBreakup(c.selectedStateData.voteCount)}lang_channel_poll_vote_count_suffix lang_channel_poll_vote_already_picked`
+            let voteCountText = (c.picked !== null && c.picked !== undefined) ? (c.picked ? voteCountPickedText : voteCountUnpickedText) : voteCountIndifferent
+            let innerContent = `<span class="generic-vote-button">lang_channel_poll_vote_option</span>`
+            if(c.picked !== null && c.picked !== undefined) {
+                let stateData = c.picked ? c.selectedStateData : c.unselectedStateData;
+                let votePercentage = utils.bareCount(stateData.votePercentage)
+                innerContent = `<span class="option-fill-indicator" style="width: ${votePercentage}%"></span>`
+            }
+            let embeddedJs = [
+                `pickPollOption('${c.selectedPollAction}')`
+            ].join("")
+            html += `<div class="poll-option"><span>${voteCountText}</span><div class="option-fill option-state-${c.picked ? "" : "un"}picked" onclick="${embeddedJs}">${innerContent}</div></div>`
+        })
+        return langs.apply_lang_to_code(html, req);
+    },
+
+    "pollChoiceTranslations": function(req) {
+        return {
+            "vote_suffix": langs.apply_lang_to_code("lang_channel_poll_vote_count_suffix", req),
+            "vote_voted": langs.apply_lang_to_code("lang_channel_poll_vote_already_picked", req)
+        }
     }
 }

@@ -113,9 +113,7 @@ module.exports = {
                 let fullData = {}
 
                 // clean fetch the channel
-                fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                    yt2009html.get_api_key()
-                }`, {
+                fetch(`https://www.youtube.com/youtubei/v1/browse`, {
                     "headers": yt2009constants.headers,
                     "referrer": "https://www.youtube.com/",
                     "referrerPolicy": "strict-origin-when-cross-origin",
@@ -204,12 +202,12 @@ module.exports = {
                 )
 
                 // community tab
-                const browseNavigation = require("./proto/popularVidsChip_pb")
-                let communityCont = new browseNavigation.vidsChip()
-                let msg = new browseNavigation.vidsChip.nestedMsg1()
-                msg.setChannelid(id)
-                msg.setChipparam("EgVwb3N0c6oDCAoEUlVGQigK8gYECgJKAA")
-                communityCont.addMsg(msg)
+                const browseNavigation = require("./proto/browse_navigation_pb")
+                let communityCont = new browseNavigation.root()
+                let msg = new browseNavigation.root.browseNavigation()
+                msg.setBrowseid(id)
+                msg.setParams("EgVwb3N0c6oDCAoEUlVGQigK8gYECgJKAA")
+                communityCont.setMsg(msg)
                 let communityTab = encodeURIComponent(Buffer.from(
                     communityCont.serializeBinary()
                 ).toString("base64").replace("+", "-"))
@@ -1548,7 +1546,9 @@ module.exports = {
                         upload_date, yt2009languages.get_language(req)
                     ) : "",
                     ratings_est,
-                    req.protocol
+                    req.protocol,
+                    false,
+                    flags.includes("show_times") ? video.length : ""
                 )
                 video_index++;
             })
@@ -1588,7 +1588,9 @@ module.exports = {
                         upload_date, yt2009languages.get_language(req)
                     ) : "",
                     ratings_est,
-                    req.protocol
+                    req.protocol,
+                    false,
+                    flags.includes("show_times") ? video.length : ""
                 )
                 video_index++;
             })
@@ -2542,9 +2544,32 @@ module.exports = {
         }
 
         // wait for legacy img tryout complete
+        function setDefaults() {
+            code = code.split(`yt2009_main_bg`).join(
+                yt2009utils.createRgb([200, 200, 200])
+            )
+            code = code.split(`yt2009_innerbox_main_bg`).join(
+                yt2009utils.createRgb([200, 200, 200])
+            )
+            code = code.split(`yt2009_darker_bg`).join(
+                yt2009utils.createRgb([135, 135, 135])
+            )
+            code = code.split("yt2009_text_color").join("black")
+            code = code.split("yt2009_title_text_color").join("black")
+            code = code.split("yt2009_wrapper_title_text_color").join("black")
+            code = code.split("yt2009_link_color").join("black")
+            code = code.split("yt2009_black").join("icon_black")
+            ac()
+        }
         if(!flags.includes("disable_old_banners")) {
             let y = setInterval(() => {
                 let utd = n_impl_yt2009channelcache.read("main")[data.id]
+
+                if(!utd) {
+                    setDefaults()
+                    clearInterval(y)
+                    return;
+                }
 
                 if(!utd.oldTryoutComplete) return;
 
@@ -2579,21 +2604,7 @@ module.exports = {
                         applyColor(dominantColor)
                     })
                 } else {
-                    code = code.split(`yt2009_main_bg`).join(
-                        yt2009utils.createRgb([200, 200, 200])
-                    )
-                    code = code.split(`yt2009_innerbox_main_bg`).join(
-                        yt2009utils.createRgb([200, 200, 200])
-                    )
-                    code = code.split(`yt2009_darker_bg`).join(
-                        yt2009utils.createRgb([135, 135, 135])
-                    )
-                    code = code.split("yt2009_text_color").join("black")
-                    code = code.split("yt2009_title_text_color").join("black")
-                    code = code.split("yt2009_wrapper_title_text_color").join("black")
-                    code = code.split("yt2009_link_color").join("black")
-                    code = code.split("yt2009_black").join("icon_black")
-                    ac()
+                    setDefaults()
                 }
             }, 100)
         } else {
@@ -2610,21 +2621,7 @@ module.exports = {
                     applyColor(dominantColor)
                 })
             } else {
-                code = code.split(`yt2009_main_bg`).join(
-                    yt2009utils.createRgb([200, 200, 200])
-                )
-                code = code.split(`yt2009_innerbox_main_bg`).join(
-                    yt2009utils.createRgb([200, 200, 200])
-                )
-                code = code.split(`yt2009_darker_bg`).join(
-                    yt2009utils.createRgb([135, 135, 135])
-                )
-                code = code.split("yt2009_text_color").join("black")
-                code = code.split("yt2009_title_text_color").join("black")
-                code = code.split("yt2009_wrapper_title_text_color").join("black")
-                code = code.split("yt2009_link_color").join("black")
-                code = code.split("yt2009_black").join("icon_black")
-                ac()
+                setDefaults()
             }
         }
 
@@ -2737,9 +2734,7 @@ module.exports = {
         // add video count to user caches without them
         userid_cache.read(url, (id) => {
             // clean fetch the channel
-            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                yt2009html.get_api_key()
-            }`, {
+            fetch(`https://www.youtube.com/youtubei/v1/browse`, {
                 "headers": yt2009constants.headers,
                 "referrer": "https://www.youtube.com/",
                 "referrerPolicy": "strict-origin-when-cross-origin",
@@ -2829,9 +2824,7 @@ module.exports = {
                 }
                 // clean fetch for handle
                 else {
-                    fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                        yt2009html.get_api_key()
-                    }`, {
+                    fetch(`https://www.youtube.com/youtubei/v1/browse`, {
                         "headers": yt2009constants.headers,
                         "referrer": "https://www.youtube.com/",
                         "referrerPolicy": "strict-origin-when-cross-origin",
@@ -2962,12 +2955,12 @@ module.exports = {
         if(chipParam.startsWith("DIRECT:")) {
             chip = chipParam.replace("DIRECT:", "")
         } else {
-            const popularVids = require("./proto/popularVidsChip_pb")
-            let vidsContinuation = new popularVids.vidsChip()
-            let msg = new popularVids.vidsChip.nestedMsg1()
-            msg.setChannelid(channelId)
-            msg.setChipparam(chipParam)
-            vidsContinuation.addMsg(msg)
+            const browseNavigation = require("./proto/browse_navigation_pb")
+            let vidsContinuation = new browseNavigation.root()
+            let msg = new browseNavigation.root.browseNavigation()
+            msg.setBrowseid(channelId)
+            msg.setParams(chipParam)
+            vidsContinuation.setMsg(msg)
             chip = encodeURIComponent(Buffer.from(
                 vidsContinuation.serializeBinary()
             ).toString("base64"))

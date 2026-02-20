@@ -2652,3 +2652,84 @@ if(document.querySelector(".yt2009_marking_fetch_playlist_client")) {
         setTimeout(function() {scrollToVideo()}, 100)
     }, false)
 }
+
+/*
+======
+pchelper community polls
+======
+*/
+
+var pchelper_polls_called = false;
+function callPchelperPolls(comesFromS) {
+    if(pchelper_polls_called && !comesFromS) return;
+    pchelper_polls_called = true;
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/pchelper_channel_polls?rt=" + Math.random() + "&format=html")
+    r.setRequestHeader("source", location.href)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            handleResponse()
+        }
+    }
+    function handleResponse() {
+        if(r.status == 400) {
+            // add signin buttons to all options
+            var options = nlToArray(
+                document.querySelectorAll(".poll-option")
+            )
+            nlToArray(options).forEach(function(z) {
+                z.addEventListener("click", function() {
+                    var c = confirm([
+                        "You must be signed in to vote on polls.",
+                        "Open signin window?"
+                    ].join(" "))
+                    if(c) {
+                        window.open("/mh_pc_intro")
+                    }
+                }, false)
+            })
+            return;
+        }
+        r = r.responseText.split("\n")
+        var visiblePolls = []
+        var pollData = []
+        for(var p in r) {
+            var a = r[p]
+            if(a.indexOf && a.indexOf("POLL-DATA-") !== -1) {
+                // valid pollData
+                var pollId = a.split("POLL-DATA-")[1].split("=========")[0]
+                if(document.getElementById("poll-" + pollId)) {
+                    visiblePolls.push(document.getElementById("poll-" + pollId))
+                    pollData.push(a.split("=========")[1])
+                }
+            }
+        }
+        for(var p in visiblePolls) {
+            try {
+                visiblePolls[p].innerHTML = pollData[p]
+            }
+            catch(error){}
+        }
+    }
+}
+function pickPollOption(pollActionKey) {
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("POST", "/pchelper_comment_action?rt=" + Math.random())
+    r.send(pollActionKey)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            setTimeout(function() {callPchelperPolls(true)}, 200)
+        }
+    }
+}

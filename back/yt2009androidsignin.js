@@ -5,6 +5,7 @@ const fetch = require("node-fetch")
 const fs = require("fs")
 const config = require("./config.json")
 const readline = require("readline-sync");
+const yt2009exports = require("./yt2009exports")
 const uida = "1234567890abcde".split("")
 const androidHeaders = {
     "Accept": "*/*",
@@ -53,9 +54,15 @@ const failMsg = `
 
 ==================================
 
-your setup may require you to use
+your setup *may* require you to use
 a youtube account to continue using
 yt2009.
+
+(msg: "$1")
+
+if video playback doesn't work
+(watchpages not loading, infinite loading,
+sabr errors),
 
 go to http://${config.ip}:${config.port}/gredir
 and return to this console window
@@ -148,14 +155,12 @@ if(!loginData.yExpire) {
             && r.playabilityStatus.reason
             && r.playabilityStatus.reason.includes("Sign in to confirm"))
             || test_alwayssign) {
-
-
                 gredir_work = true;
-                console.log(failMsg)
+                console.log(failMsg.replace("$1", r.playabilityStatus.reason))
                 setTimeout(() => {
                     gredir_work = false;
                 }, 1000 * 60 * 5)
-
+                yt2009exports.writeData("session_use_onesie", true)
             } else if(r.playabilityStatus
             && r.playabilityStatus.status !== "OK"
             && r.playabilityStatus.reason) {

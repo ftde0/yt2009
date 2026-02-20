@@ -88,14 +88,7 @@ if(config.env == "dev") {
     ${version}, ${launchTime}
         `);
     });
-} else if(config.env == "prod") {
-    if(config.useSSL) {
-        const server = https.createServer({
-            cert: fs.readFileSync(config.SSLCertPath),
-            key: fs.readFileSync(config.SSLKeyPath)
-        }, app).listen(config.SSLPort)    
-    }
-    
+} else if(config.env == "prod") {  
     app.listen(config.port, () => {
         console.log(`
     ==========
@@ -106,6 +99,34 @@ if(config.env == "dev") {
     ==========
         `);
     });
+}
+
+if(config.useSSL) {
+    const server = https.createServer({
+        cert: fs.readFileSync(config.SSLCertPath),
+        key: fs.readFileSync(config.SSLKeyPath)
+    }, app).listen(config.SSLPort)    
+}
+
+
+
+function showUnsupportedConfigMsg() {
+    console.log(`
+        
+    an unsupported config combination detected!
+    (config set to "prod" + no tokens)
+    
+    this setup will not receive support,
+    and may cause problems in the future.
+    
+`)
+}
+if(config.env == "prod" && (!config.tokens
+|| (config.tokens && config.tokens.includes("*")))) {
+    setInterval(() => {
+        showUnsupportedConfigMsg()
+    }, (1000 * 60 * 30))
+    showUnsupportedConfigMsg()
 }
 
 if(require("os").totalmem() <= 110000000) {
@@ -396,13 +417,43 @@ app.get('/', (req,res) => {
             vList.push(c.video)
         })
         if(vList[0]
-        && yt2009.get_cache_video(vList[0]).id) {
+        && yt2009.get_cache_video(vList[0]).id
+        && !config.data_api_key) {
             yt2009_home(req, res)
             return;
         }
-        yt2009.bulk_get_videos(vList, () => {
-            yt2009_home(req, res)
-        })
+        if(config.data_api_key) {
+            yt2009_utils.dataApiBulk(
+                vList,
+                ["title", "publishedAt", "channelId", "channelTitle",
+                "duration", "viewCount", "description"],
+                (vids) => {
+                    let newVlist = {}
+                    for(let id in vids) {
+                        let vid = vids[id]
+                        newVlist[id] = {
+                            "source": "data_api",
+                            "author_name": vid.channelTitle,
+                            "author_url": "/channel/" + vid.channelId,
+                            "description": vid.description,
+                            "length": yt2009_utils.seconds_to_time(
+                                yt2009_utils.dataApiDurationSeconds(vid.duration)
+                            ),
+                            "viewCount": vid.viewCount,
+                            "title": vid.title,
+                            "id": id,
+                            "upload": vid.publishedAt
+                        }
+                    }
+                    req.embeddedVideoData = newVlist
+                    yt2009_home(req, res)
+                }
+            )
+        } else {
+            yt2009.bulk_get_videos(vList, () => {
+                yt2009_home(req, res)
+            })
+        }
         return;
     }
     yt2009_home(req, res)
@@ -528,15 +579,6 @@ app.get("/watch", (req, res) => {
         disableDownloads,
         true
     )
-})
-
-
-app.get("/watch_feather", (req, res) => {
-    res.send(`[yt2009] watch_feather nie jest już wspierane. 
-    włącz tryb Feather z TestTube, aby użyć Feather.<br><br>
-    watch_feather is not supported anymore.
-    turn on the Feather mode from TestTube to use Feather.<br><br>
-    <a href="/feather_beta">feather &gt;&gt;</a>`)
 })
 
 /*
@@ -700,7 +742,7 @@ app.get("/read2", (req, res) => {
 // /profile endpoint used by annotations
 app.get("/profile", (req, res) => {
     if(!req.query.user) {
-        res.send("[yt2009] brak parametru user. / no user parameter.")
+        res.redirect("/")
         return;
     }
     res.redirect("/user/" + req.query.user)
@@ -861,20 +903,8 @@ app.get("/results", (req, res) => {
         flags = ""
     }
 
-    if(query.length == 0) {
-        res.send(`[yt2009] wyszukiwania powinny mieć co najmniej 1 znak
-                / searches should have at least 1 character`)
-        return;
-    }
-
     yt2009_search.get_search(query, decodeURIComponent(flags), req.query,
     (data) => {
-        if(!data) {
-            res.send(
-                `[yt2009] coś poszło nie tak w parsowaniu wyników
-                / something went wrong while parsing the results`)
-            return;
-        }
         res.send(yt2009_search.apply_search_html(
             data, query, flags, req
         ))
@@ -1691,12 +1721,18 @@ app.get("/channel_get_playlist", (req, res) => {
         res.redirect("/unauth.htm")
         return;
     }
+    let showTimes = (
+        req.headers
+     && req.headers.cookie
+     && req.headers.cookie.includes("show_times")
+    )
     let videosHTML = ``
     yt2009_playlists.parsePlaylist(req.headers.id, (list) => {
         let video_index = 0;
         list.videos.forEach(video => {
             videosHTML += yt2009_templates.playnavVideo(
-                video, video_index, "", "", 0, req.protocol
+                video, video_index, "", "", 0, req.protocol,
+                false, (showTimes ? video.time : "")
             )
 
             video_index++;
@@ -3488,9 +3524,17 @@ app.get("/yt2009_recommended", (req, res) => {
                 if(v.includes("<feed xmlns")) return;
                 let id = v.split(`/feeds/api/videos/`)[1].split(`</id>`)[0]
                 let title = v.split(`<title type='text'>`)[1].split("</title>")[0]
-                let creatorName = yt2009_utils.xss(decodeURIComponent(
-                    v.split(`<name>`)[1].split("</name>")[0]
-                ))
+                let creatorName = ""
+                try {
+                    creatorName = yt2009_utils.xss(
+                        v.split("<yt9full>")[1].split("</yt9full>")[0]
+                    )
+                }
+                catch(error) {
+                    creatorName = yt2009_utils.xss(decodeURIComponent(
+                        v.split(`<name>`)[1].split("</name>")[0]
+                    ))
+                }
                 let creatorUrl = "/@" + creatorName
                 if(creatorName.startsWith("UC")) {
                     creatorUrl = "/channel/" + creatorName
@@ -3500,6 +3544,14 @@ app.get("/yt2009_recommended", (req, res) => {
                 let length = yt2009_utils.seconds_to_time(
                     v.split(`<yt:duration seconds='`)[1].split(`'`)[0]
                 )
+                let creatorId = false;
+                try {
+                    creatorId = v.split("<yt9aid>")[1].split("</yt9aid>")[0]
+                    if(creatorId) {
+                        creatorUrl = "/channel/" + creatorId
+                    }
+                }
+                catch(error) {}
                 videoSuggestions.push({
                     "o": true,
                     "upload": "",
@@ -3590,12 +3642,13 @@ app.get("/yt2009_recommended", (req, res) => {
                 page.forEach(video => {
                     pagedHTML += yt2009_templates.videoCell(
                         video.id,
-                        video.title,
+                        yt2009_utils.xss(video.title),
                         req.protocol,
-                        video.creatorName,
+                        yt2009_utils.xss(video.creatorName),
                         video.creatorUrl,
                         video.views,
-                        req, true
+                        req, true,
+                        video.length
                     )
                 })
                 pagedHTML += "</div>"
@@ -3649,7 +3702,8 @@ app.get("/yt2009_recommended", (req, res) => {
                     video.creatorName,
                     video.creatorUrl,
                     video.views,
-                    req, true
+                    req, true,
+                    video.length
                 )
             } else {
                 if(!listStyle) {
@@ -4407,7 +4461,10 @@ app.get("/search_channel", (req, res) => {
                 views,
                 upload,
                 Math.floor(yt2009_utils.bareCount(views) / 150),
-                req.protocol
+                req.protocol,
+                false,
+                (channelFlags.includes("show_times")
+                ? (result.length || result.time) : false)
             )
             i++
         })
@@ -4561,7 +4618,10 @@ app.get("/channel_sort", (req, res) => {
                 views,
                 upload,
                 Math.floor(yt2009_utils.bareCount(views) / 150),
-                req.protocol
+                req.protocol,
+                false,
+                (channelFlags.includes("show_times")
+                ? (result.length || result.time || false) : "")
             )
             i++
         })
@@ -5773,9 +5833,22 @@ cfg.ac (merged)
 let exceptions = [
     "uncaughtException", "unhandledRejection"
 ]
+const bugFoundMsg = [
+    `^^^`,
+    ((config.env == "prod" && (!config.tokens
+    || (config.tokens && config.tokens.includes("*"))))
+    ? `this was likely NOT meant to happen!`
+    : `this wasn't likely meant to happen!`),
+    `make sure you're on the latest version of yt2009,`,
+    `if this problem still happens and you're able to`,
+    `reproduce it consistently, check if it has an issue`,
+    `on https://github.com/ftde0/yt2009/issues .`,
+    `if it doesn't, make one!`,
+    `ver: ${version}`
+].join("\n")
 exceptions.forEach(e => {
     process.on(e, (msg) => {
-        console.log(msg)
+        console.log(msg + "\n" + (msg.stack || "") + "\n\n\n" + bugFoundMsg)
     })
 })
 
@@ -6461,6 +6534,12 @@ app.get("/pchelper_insights", (req, res) => {
         res.send(response)
     })
 })
+app.get("/pchelper_channel_polls", (req, res) => {
+    mobileHelper.channelForPolls(req, res)
+})
+app.post("/pchelper_comment_action", (req, res) => {
+    mobileHelper.performCommentAction(req, res)
+})
 
 /*
 ======
@@ -6610,7 +6689,8 @@ app.get("/stream_get_fragment", (req, res) => {
         // no need to request new /player
         processPlayer()
     } else {
-        if(config.wyjeba_typu_onesie) {
+        if(config.wyjeba_typu_onesie
+        || yt2009_exports.read().session_use_onesie) {
             yt2009_utils.wyjebaTypuOnesie(v, (data) => {
                 data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
                 if(data.sabrUrl && data.sabrUrl.includes("expire=")) {

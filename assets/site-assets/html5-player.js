@@ -1117,6 +1117,12 @@ function animSeek(point, callback) {
 var videoEnded = false;
 var openSectionIndex = 0;
 function showEndscreen() {
+    setTimeout(function() {
+        if(mainElement.querySelector(".embed-play-btn")) {
+            $(".embed-play-btn").style.display = "none"
+        }
+    }, 10)
+
     var sections = document.querySelectorAll(".endscreen-section")
     videoEnded = true;
     if(video.className && video.className.indexOf("showing-endscreen") == -1) {

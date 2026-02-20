@@ -331,5 +331,10 @@
     "watch_replies_more": "More replies",
     "watch_comments_disabled_notice": "Adding comments has been disabled for this video.",
     "watch_comment_pinned": "■ Pinned",
-    "watch_comment_hearted_prefix": "♥ from "
+    "watch_comment_hearted_prefix": "♥ from ",
+    "userpage_history_rm_selected": "Remove",
+    "channel_poll_vote_intro": "Vote on a poll:",
+    "channel_poll_vote_option": "Click to vote",
+    "channel_poll_vote_count_suffix": " votes",
+    "channel_poll_vote_already_picked": " --> picked"
 }

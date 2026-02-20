@@ -10,6 +10,7 @@ const config = require("./config.json")
 const fs = require("fs")
 const search_code = fs.readFileSync("../search-generic-page.htm").toString();
 const searchParams = require("./proto/search_request_params_pb")
+const dataApiPageToken = require("./proto/data_api_page_token_pb")
 
 let cache = require("./cache_dir/search_cache_manager")
 
@@ -34,10 +35,13 @@ module.exports = {
             useProto = true
         }
 
+        let useDataApi = false;
+
         // sort options for search
         if(params.search_sort) {
             switch(params.search_sort) {
                 case "video_date_uploaded": {
+                    useDataApi = true;
                     paramsMsg.setSort(2)
                     break;
                 }
@@ -50,6 +54,11 @@ module.exports = {
                     break;
                 }
             }
+        }
+
+        if(useDataApi && config.data_api_key) {
+            this.perform_data_api_search(query, params, callback, flags)
+            return;
         }
 
         // upload date filter
@@ -399,6 +408,15 @@ module.exports = {
         ).replace(
             "url_plus_type_all", url_without_type
         )
+
+        // data api key-specifics
+        if(!config.data_api_key) {
+            code = code.split(
+                "yt2009-hide-if-no-data-api-key"
+            ).join(
+                "yt2009-hide-if-no-data-api-key hid"
+            )
+        }
 
         code = require("./yt2009loginsimulate")(flags, code, true)
         
@@ -832,19 +850,312 @@ module.exports = {
         return resultSyntax;
     },
 
-    "get_channel_vids_from_search": function(channelName, additionalQuery, params, channelId) {
-        // loop search pages until we get 10 vids from a channel
-        let matchingResults = []
-        let page = 1;
-        let getSearch = this.get_search
-        function getNextPage() {
-            let p = params || {};
-            p.page = page;
-            getSearch(`${channelName} ${additionalQuery}`, "", p,
-            (data) => {
-                console.log(data)
-            }, "", false)
+    "perform_data_api_search": function(query, params, callback, flags) {
+        let url = [
+            "https://www.googleapis.com/youtube/v3/search?part=snippet",
+            "&q=" + query,
+            "&key=" + config.data_api_key,
+            "&maxResults=20",
+            "&part=snippet"
+        ]
+
+        switch(params.search_sort) {
+            case "video_date_uploaded": {
+                url.push("&order=date")
+                break;
+            }
+            case "video_view_count": {
+                url.push("&order=viewCount")
+                break;
+            }
+            case "video_avg_rating": {
+                url.push("&order=rating")
+                break;
+            }
+        }
+
+        if(params.uploaded && !flags.includes("only_old")) {
+            // params.uploaded and no only_old
+            switch(params.uploaded) {
+                case "h": {
+                    let date = new Date(
+                        Date.now() - (1000 * 60 * 60)
+                    ).toISOString()
+                    url.push("&publishedAfter=" + date)
+                    break;
+                }
+                case "d": {
+                    let date = new Date(
+                        Date.now() - (1000 * 60 * 60 * 24)
+                    ).toISOString()
+                    url.push("&publishedAfter=" + date)
+                    break;
+                }
+                case "w": {
+                    let date = new Date(
+                        Date.now() - (1000 * 60 * 60 * 24 * 7)
+                    ).toISOString()
+                    url.push("&publishedAfter=" + date)
+                    break;
+                }
+                case "m": {
+                    let date = new Date(
+                        Date.now() - (1000 * 60 * 60 * 24 * 31)
+                    ).toISOString()
+                    url.push("&publishedAfter=" + date)
+                    break;
+                }
+                case "y": {
+                    let date = new Date(
+                        Date.now() - (1000 * 60 * 60 * 24 * 365)
+                    ).toISOString()
+                    url.push("&publishedAfter=" + date)
+                    break;
+                }
+            }
+        } else if(params.uploaded) {
+            // params.uploaded + only_old, adjust only_old to our pick
+            // same as in get_search
+            query = query.replace(" " + this.handle_only_old(flags), "")
+            let onlyOld = this.handle_only_old(flags)
+            if(onlyOld.includes(" ")) {
+                onlyOld = onlyOld.split(" ")[1]
+            }
+            let onlyOldDate = new Date(onlyOld)
+            let diffUnix = 0
+            switch(params.uploaded) {
+                case "d": {
+                    diffUnix = 1000 * 60 * 60 * 24
+                    break;
+                }
+                case "w": {
+                    diffUnix = 1000 * 60 * 60 * 24 * 7
+                    break;
+                }
+                case "m": {
+                    diffUnix = 1000 * 60 * 60 * 24 * 31
+                    break;
+                }
+            }
+            let after = new Date(onlyOldDate - diffUnix)
+            let afterStr = after.getFullYear()
+                         + "-" + (after.getMonth() + 1)
+                         + "-" + after.getDate()
+            query += " before:" + onlyOld + " after:" + afterStr
+        }
+
+        // features
+        if(params.closed_captions) {
+            url.push("&videoCaption=closedCaption")
+        }
+        if(params.high_definition) {
+            url.push("&videoDefinition=high")
+        }
+        if(params.three_d) {
+            url.push("&videoDimension=3d")
+        }
+        if(params.creative_commons) {
+            url.push("&videoLicense=creativeCommon")
+        }
+
+        // all/channel/playlists
+        switch(params.search_type) {
+            case "search_videos": {
+                url.push("&type=video")
+                break;
+            }
+            case "search_users": {
+                url.push("&type=channel")
+                break;
+            }
+            case "search_playlists": {
+                url.push("&type=playlist")
+                break;
+            }
+        }
+
+        switch(params.search_duration) {
+            case "short": {
+                url.push("&videoDuration=short")
+                break;
+            }
+            case "long": {
+                url.push("&videoDuration=long")
+                break;
+            }
+        }
+
+        // craft a data api page token for paged results
+        let index = 0;
+        let pageToken = false;
+        if(params.page && !params.custom_index
+        && !isNaN(parseInt(params.page))) {
+            params.custom_index = (parseInt(params.page) - 1) * 20
+        }
+        if(params.custom_index && !isNaN(parseInt(params.custom_index))) {
+            index = parseInt(params.custom_index)
+            pageToken = new dataApiPageToken.root()
+            pageToken.setIndex(index)
+            pageToken = Buffer.from(pageToken.serializeBinary())
+                              .toString("base64")
+                              .split("+").join("-")
+                              .split("/").join("_")
+                              .split("=").join("");
+            url.push("&pageToken=" + pageToken)
         }
         
+        // call
+        let results = []
+        let videosToFetch = []
+        let channelsToFetch = []
+        let playlistsToFetch = []
+        let fetchesDone = 0;
+        let fetchesRequired = 3;
+        url = url.join("")
+        fetch(url, {
+            "headers": yt2009contants.headers,
+            "method": "GET"
+        }).then(r => {try {r.json().then(r => {
+            function markFetchDone() {
+                fetchesDone++
+                if(fetchesDone >= fetchesRequired) {
+                    if(r.pageInfo) {
+                        results.push({
+                            "type": "metadata",
+                            "resultCount": r.pageInfo.totalResults
+                        })
+                    }
+                    callback(results)
+                }
+            }
+            if(!r.error && r.items) {
+                // backport to yt2009 cache friendly format
+                r.items.forEach(item => {
+                    switch(item.id&&item.id.kind) {
+                        case "youtube#video": {
+                            videosToFetch.push(item.id.videoId)
+                            let isLive = (
+                                item.snippet.liveBroadcastContent
+                             && item.snippet.liveBroadcastContent == "live"
+                            )
+                            results.push({
+                                "type": isLive ? "live-video" : "video",
+                                "id": item.id.videoId,
+                                "title": item.snippet.title,
+                                "views": "",
+                                "thumbnail": "http://i.ytimg.com/vi/"
+                                            + item.id.videoId
+                                            + "/hqdefault.jpg",
+                                "description": item.snippet.description,
+                                "time": "",
+                                "author_name": item.snippet.channelTitle,
+                                "author_url": `/channel/${item.snippet.channelId}`,
+                                "author_handle": false,
+                                "upload": yt2009utils.unixToRelative(
+                                    new Date(item.snippet.publishTime).getTime()
+                                )
+                            })
+                            break;
+                        }
+                        case "youtube#channel": {
+                            channelsToFetch.push(item.snippet.channelId)
+                            results.push({
+                                "type": "channel",
+                                "name": item.snippet.title,
+                                "avatar": yt2009utils.saveAvatar(
+                                    item.snippet.thumbnails.default.url
+                                ),
+                                "url": `/channel/${item.snippet.channelId}`,
+                                "id": item.snippet.channelId,
+                                "subscribers": "0 subscribers"
+                            })
+                            break;
+                        }
+                        case "youtube#playlist": {
+                            playlistsToFetch.push(item.id.playlistId)
+                            let firstVideo = false;
+                            try {
+                                firstVideo = item.snippet.thumbnails.default
+                                                 .url.split("vi/")[1]
+                                                 .split("/")[0]
+                                                 .substring(0,11)
+                            }
+                            catch(error){}
+                            results.push({
+                                "type": "playlist",
+                                "id": item.id.playlistId,
+                                "name": item.snippet.title,
+                                "firstVideoId": firstVideo,
+                                "videos": []
+                            })
+                            videosToFetch.push(firstVideo)
+                            break;
+                        }
+                    }
+                })
+
+
+                yt2009utils.dataApiBulk(videosToFetch, [
+                    "title", "viewCount", "duration"
+                ], (data => {
+                    results = results.map(z => {
+                        if(z.type == "video" && data[z.id]) {
+                            let v = data[z.id]
+                            z.time = yt2009utils.seconds_to_time(
+                                yt2009utils.dataApiDurationSeconds(v.duration)
+                            )
+                            z.views = yt2009utils.countBreakup(v.viewCount)
+                                    + " views"
+                        } else if(z.type == "playlist"
+                        && data[z.firstVideoId]) {
+                            let v = data[z.firstVideoId]
+                            let vl = [{
+                                "type": "playlist-video",
+                                "length": yt2009utils.seconds_to_time(
+                                    yt2009utils.dataApiDurationSeconds(v.duration)
+                                ),
+                                "title": v.title,
+                                "id": z.firstVideoId
+                            }]
+                            z.videos = vl;
+                        }
+                        return z;
+                    })
+                    markFetchDone()
+                }))
+
+                yt2009utils.dataApiBulk(channelsToFetch, [
+                    "subscriberCount"
+                ], (data => {
+                    results = results.map(z => {
+                        if(z.type == "channel" && data[z.id]) {
+                            let subs = data[z.id].subscriberCount
+                            z.subscribers = yt2009utils.approxSubcount(subs)
+                                          + " subscriber"
+                                          + (subs !== 1 ? "s" : "")
+                        }
+                        return z;
+                    })
+                    markFetchDone()
+                }), "channels")
+
+                yt2009utils.dataApiBulk(playlistsToFetch, [
+                    "itemCount"
+                ], (data => {
+                    results = results.map(z => {
+                        if(z.type == "playlist" && data[z.id]) {
+                            let vids = data[z.id].itemCount
+                            z.videoCount = vids.toString();
+                        }
+                        return z;
+                    })
+                    markFetchDone()
+                }), "playlists")
+            } else {
+                callback([])
+            }
+        })}catch(error){
+            callback([])
+        }})
     }
 }

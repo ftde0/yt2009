@@ -6,9 +6,12 @@ message root {
         message clientType {
             int32 clientNumber = 16;
             string clientVersion = 17;
+            int32 d = 46;
         }
         repeated clientType client = 1;
     }
     repeated contextType context = 1;
     string browseId = 2;
+    string params = 3;
+    string continuation = 7;
 }

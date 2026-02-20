@@ -222,6 +222,11 @@ module.exports = function(req, res) {
                 if(comments.length == 0) return;
                 comments.forEach(cmt => {
                     let video = yt2009html.get_cache_video(cmt.video)
+                    if((!video || !video.title)
+                    && req.embeddedVideoData
+                    && req.embeddedVideoData[cmt.video]) {
+                        video = req.embeddedVideoData[cmt.video]
+                    }
                     if(!video || !video.title) return;
                     cellsHTML += templates.friendtivity_comment(
                         video, cmt.author, cmt.text, flags
@@ -299,20 +304,8 @@ module.exports = function(req, res) {
         )
     }
 
-
-    // fallback notification
     let addNotice = false;
     let noticeText = "";
-    if(require("./config.json").fallbackMode
-    && (!req.headers.cookie
-    || (req.headers.cookie
-    && !req.headers.cookie.includes("disable_fallback")))) {
-        addNotice = true;
-        noticeText = "yt2009 was loaded in fallback mode."
-                   + " it may have happened after multiple"
-                   + " failed restarts. some features may not"
-                   + " work correctly."
-    }
 
     if(customHomepageText) {
         addNotice = true;
