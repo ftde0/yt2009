@@ -1,0 +1,40 @@
+syntax = "proto3";
+package creator_request;
+
+message chipRender {
+    message run {
+        string videoId = 1;
+        string channelId = 2;
+    }
+    message contents {
+        int32 relCurrentTime = 1;
+        run channelId = 2;
+        int32 timeId = 3;
+        /*
+
+        whole period = 1
+
+        last 7 days = 6
+        last 28 days = 7
+        last 90 days = 13
+        last 365 days = 14
+
+        (current) month = 12
+        before month = 22
+        2mo before = 23
+
+        year before = 15
+        current year = 16
+        */
+    }
+    contents content = 1;
+}
+
+message creatorChipConfig {
+    chipRender chip = 502358640;
+}
+
+message communityDetailParams {
+    int32 requestId = 2;
+    string channelId = 3;
+}

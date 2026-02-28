@@ -2542,12 +2542,22 @@ module.exports = {
                             let choices = []
                             p.choices.forEach(c => {
                                 choices.push({
-                                    "text": c.text.runs[0].text/*,
-                                    "voteCount": parseInt(c.numVotes),
-                                    "percent": c.votePercentage.simpleText*/
+                                    "text": c.text.runs[0].text
                                 })
                             })
                             parsedPost.poll = choices
+                        }
+                        if(post.backstageAttachment
+                        && post.backstageAttachment.quizRenderer) {
+                            let p = post.backstageAttachment.quizRenderer
+                            let choices = []
+                            p.choices.forEach(c => {
+                                choices.push({
+                                    "text": c.text.runs[0].text,
+                                    "isCorrect": c.isCorrect
+                                })
+                            })
+                            parsedPost.quizChoices = choices;
                         }
                         
                         posts.push(parsedPost)
@@ -2946,8 +2956,8 @@ module.exports = {
             `&opr=1`,
             `&por=1`,
             `&onem=1`,
-            `&pvi=137,136,135,134,133,160`,
-            `&pai=140`,
+            `&pvi=134,133,160`,
+            `&pai=139,140`,
             `&rn=1`
         ].join("")
 
@@ -3123,6 +3133,13 @@ module.exports = {
 
     "passSyncComments": function(cmts) {
         syncComments = cmts;
+    },
+
+    "base64toUrl": function(s) {
+        if(!s) return ""
+        return s.split("+").join("-")
+                .split("/").join("_")
+                .split("=").join("")
     }
 }
 

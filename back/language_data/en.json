@@ -336,5 +336,9 @@
     "channel_poll_vote_intro": "Vote on a poll:",
     "channel_poll_vote_option": "Click to vote",
     "channel_poll_vote_count_suffix": " votes",
-    "channel_poll_vote_already_picked": " --> picked"
+    "channel_poll_vote_already_picked": " --> picked",
+    "channel_quiz_vote_intro": "Pick a correct answer:",
+    "channel_quiz_vote_option": "Click to pick",
+    "channel_quiz_vote_correct": "Correct! (^^)",
+    "channel_quiz_vote_incorrect": "Incorrect [x_x]"
 }

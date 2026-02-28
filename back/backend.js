@@ -5521,26 +5521,7 @@ app.get("/insight_ajax", (req, res) => {
                         countriesParam.push(c)
                     }
                 })
-
-                // slight tints on common countries (na/random parts of asia)
-                /*let rCountries = []
-                reverseContinents["North America"].forEach(c => {
-                    rCountries.push(c)
-                })
-                reverseContinents["Asia"].forEach(c => {
-                    rCountries.push(c)
-                })
-                rCountries.forEach(c => {
-                    if(!countriesParam.includes(c)) {
-                        percentagesParam.push(Math.floor(Math.random() * 10) + 10)
-                        countriesParam.push(c)
-                    }
-                })
                 
-                while(percentagesParam.join().split(",").length > countriesParam.join("").length / 2) {
-                    percentagesParam.shift()
-                }*/
-
                 // render map
                 let mapUrl = [
                     "/chart?cht=t&chs=350x170",
@@ -5566,6 +5547,10 @@ app.get("/insight_ajax", (req, res) => {
 app.get("/chart", (req, res) => {
     if(req.query.chtm == "world") {
         yt2009charts.genWorld(req, res)
+        return;
+    }
+    if(req.query.cht == "bhs") {
+        yt2009charts.genBar(req, res)
         return;
     }
     yt2009charts.gen(req, res)

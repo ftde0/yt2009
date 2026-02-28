@@ -49,6 +49,7 @@ let loginData = {
 try {loginData = require("./androiddata.json")}
 catch(error) {}
 let datasyncId = null;
+let isFirstSignin = false;
 
 const failMsg = `
 
@@ -372,6 +373,33 @@ function testSignIn() {
                     catch(error) {
                         console.log(`datasync id pull fail! ${error}`)
                     }
+
+                    // generate pot bound to user
+                    if(isFirstSignin && datasyncId) {
+                        const yt2009pot = require("./yt2009pot")
+                        yt2009pot.generatePo(datasyncId, (data) => {
+                            yt2009exports.writeData("potBytes", data.encryptData)
+                            yt2009exports.writeData("potKey", data.backup)
+                            yt2009exports.writeData(
+                                "potgenTemporarilyTakenover", true
+                            )
+                            if(config.env == "dev") {
+                                let msg = [
+                                    "generated pot:",
+                                    "encryptdata - " + data.encryptData
+                                                           .toString("hex"),
+                                    "backup - " + data.backup.toString("hex"),
+                                    "valid for (s) - " + data.valid
+                                ].join("\n")
+                                console.log(msg + "\n")
+                            }
+                            // regenerate pot close to end of validity
+                            setTimeout(() => {
+                                createPot(datasyncId)
+                            }, (data.valid - 1800) * 1000)
+                        })
+                    }
+
                     if(a.channelHandle && a.channelHandle.runs[0]) {
                         console.log("[android] account used: " + a.channelHandle.runs[0].text)
                     } else if(a.accountName && a.accountName.runs[0]) {
@@ -444,6 +472,7 @@ function signIn(email, token) {
             let token = r.split("Token=")[1].split("\n")[0]
             let auth = r.split("Auth=")[1].split("\n")[0]
 
+            isFirstSignin = true;
 
             // we've got android auth!
             loginData.email = email;

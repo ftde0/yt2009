@@ -861,33 +861,34 @@ function callPchelperPolls() {
                 var hasPicked = !!(pollJson.filter(function(s) {
                     return s.picked !== null && s.picked !== undefined
                 })[0])
-                if(!hasPicked) return;
-                pollJson.forEach(function(choice) {
-                    var state = choice.picked
-                            ? choice.selectedStateData
-                            : choice.unselectedStateData
-                    var voteCount = countBreakup(state.voteCount)
-                    var votePercent = state.votePercentage;
-                    var pollObject = document.getElementById("poll-" + pollId)
-                    var options = nlToArray(
-                        pollObject.querySelectorAll(".poll-option")
-                    )
-                    var option = options[choice.id]
-                    option.querySelector(".option-fill").innerHTML = ""
-                    var fill = document.createElement("span")
-                    fill.style.width = votePercent;
-                    fill.className = "option-fill-indicator"
-                    option.querySelector(".option-fill").appendChild(fill)
-                    
-                    var title = option.querySelector("span")
-                    title.innerHTML = choice.text
-                                    .split("<").join("&lt;")
-                                    .split(">").join("&gt;")
-                    title.innerHTML += " - " + voteCount + translations.vote_suffix
-                    if(choice.picked) {
-                        title.innerHTML += translations.vote_voted
-                    }
-                })
+                if(hasPicked) {
+                    pollJson.forEach(function(choice) {
+                        var state = choice.picked
+                                ? choice.selectedStateData
+                                : choice.unselectedStateData
+                        var voteCount = countBreakup(state.voteCount)
+                        var votePercent = state.votePercentage;
+                        var pollObject = document.getElementById("poll-" + pollId)
+                        var options = nlToArray(
+                            pollObject.querySelectorAll(".poll-option")
+                        )
+                        var option = options[choice.id]
+                        option.querySelector(".option-fill").innerHTML = ""
+                        var fill = document.createElement("span")
+                        fill.style.width = votePercent;
+                        fill.className = "option-fill-indicator"
+                        option.querySelector(".option-fill").appendChild(fill)
+                        
+                        var title = option.querySelector("span")
+                        title.innerHTML = choice.text
+                                        .split("<").join("&lt;")
+                                        .split(">").join("&gt;")
+                        title.innerHTML += " - " + voteCount + translations.vote_suffix
+                        if(choice.picked) {
+                            title.innerHTML += translations.vote_voted
+                        }
+                    })
+                }
             }
         }
         for(var pollId in r) {
@@ -930,4 +931,16 @@ function callPchelperPolls() {
             }
         }
     }, false)
+}
+
+function markQuizAnswer(answerElement, addString) {
+    var options = answerElement.parentNode;
+    var spans = options.getElementsByTagName("span")
+    for(var span in spans) {
+        span = spans[span]
+        if(span && span.className && span.className == "generic-vote-button") {
+            span.innerHTML = ""
+        }
+    }
+    answerElement.getElementsByTagName("span")[1].innerHTML = addString
 }

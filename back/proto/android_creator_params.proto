@@ -1,0 +1,38 @@
+syntax = "proto3";
+package android_creator_requests;
+import "creator_request.proto";
+
+message extendedTabRequest {
+    message tabIdentifier {
+        message tabIdRun {
+            string id = 1;
+        }
+        tabIdRun run = 1;
+    }
+    tabIdentifier tabId = 1001;
+    message extendedContent {
+        optional creator_request.chipRender.contents useChip = 1;
+        repeated bytes returnDataOption = 3;
+    }
+    extendedContent content = 1006;
+}
+
+message videoDetailRequest {
+    string videoId = 1;
+}
+
+message request {
+    message tabData {
+        int32 tabId = 1;
+    }
+    tabData tab = 1;
+    extendedTabRequest etab = 3;
+    string videoId = 1000;
+    string channelId = 1001;
+}
+
+message root {
+    videoDetailRequest fevideoDetail = 29;
+    request request = 32;
+    optional creator_request.communityDetailParams communityDetailRequest = 153;
+}

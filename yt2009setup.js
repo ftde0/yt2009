@@ -74,18 +74,6 @@ do you want to use SSL on a second port?`)
             )
         }
     }
-
-    // tokens
-    let rawTokens = ""
-    while(rawTokens !== "n"
-    && rawTokens !== "y") {
-        rawTokens = readline.question(
-            "\n\ndisable tokens requirement? will set tokens as [\"*\"]. (y/n): "
-        ).toLowerCase()
-        if(rawTokens == "y") {
-            cfg.tokens = ["*"]
-        }
-    }
 }
 
 cfg.auto_maintain = false;

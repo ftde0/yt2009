@@ -6582,7 +6582,7 @@ td.spons-vid-thumb .user-thumb-jumbo img {
 }
 
 #feed_insight_map-content, #feed_insight_chart-content {
-  height: 220px;
+  padding-bottom: 8px;
 }
 
 #feed_insight_map-content .feedmodule-body,

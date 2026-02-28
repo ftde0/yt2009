@@ -11,7 +11,7 @@ module.exports = {
                  "\\", "<", ">", "^",
                  "(", ")", "[", "]",
                  "{", "}", "$", "\n",
-                 "\r", "~", "#"]
+                 "\r", "~", "#", "\""]
         d.forEach(b => {
             s = s.split(b).join("")
         })
@@ -55,6 +55,10 @@ module.exports = {
                  .replace(/[^a-zA-Z0-9]/g, "").trim()
         }
 
+        if(req.query.chtr == 1) {
+            bg = "transparent"
+        }
+
         let borderColor = "#000000"
         if(req.query.chco) {
             borderColor = "#" + req.query.chco.substring(0, 6)
@@ -83,6 +87,10 @@ module.exports = {
             yText.push(this.countBreakup(Math.floor(max / 3)))
             yText.push(0)
             yText = yText.reverse()
+        } else if(req.query.chxr
+        && yText[0]
+        && yText[0].includes(",")) {
+            yText = yText[0].split(",")
         }
         if(req.query.chxl) {
             let chxl = req.query.chxl
@@ -171,16 +179,22 @@ module.exports = {
         sizes = sizes.sort((a, b) => b - a)
         if(sizes.length == 0) {sizes = [0]}
 
+        let lessSpace = (size[0] <= 400 && yText.length >= 1)
+
         // place X text
         let xStart = ((sizes[0] / 100) + 0.01) * size[0]
         let xSize = (1 - (sizes[0] / 100) - 0.04) * size[0]
+        if(lessSpace) {
+            xStart = ((sizes[0] / 100) + 0.05) * size[0]
+            xSize = (1 - (sizes[0] / 100) - 0.07) * size[0]
+        }
         let xYPlacement = 0.99 * size[1]
         xText.forEach(d => {
             if(d.t) {
                 d.t = this.s(d.t)
             }
             command.push(
-                `-draw "text ${xStart + ((xSize / 100) * d.p)},${xYPlacement} '${d.t}'"`
+                `-draw "text ${xStart + ((xSize / (!lessSpace ? 100 : 105)) * d.p)},${xYPlacement} '${d.t}'"`
             )
         })
 
@@ -189,6 +203,16 @@ module.exports = {
         let chartYStart = 0.04 * size[1]
         let chartXSize = (1 - (sizes[0] / 100)) * size[0]
         let chartYSize = 0.86 * size[1]
+        if(size[1] < 100 && req.query.chxl) {
+            // better scaling for lower res and comments
+            chartYSize = size[1] - 20
+        }
+
+        // more spacing for smaller charts and labels
+        if(lessSpace) {
+            chartXStart =  ((sizes[0] / 100) + 0.08) * size[0]
+            chartXSize = (1 - (sizes[0] / 100) - 0.1) * size[0]
+        }
 
         // line percentages
         let lines = [5, 35, 67, 99]
@@ -199,6 +223,17 @@ module.exports = {
                 `-draw "line ${chartXStart},${y} ${0.99 * size[0]},${y}"`
             )
         })
+
+        // grid lines
+        if(req.query.chgr == "1") {
+            let yLines = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+            yLines.forEach(l => {
+                let x = chartXStart + ((chartXSize / 100) * l)
+                command.push(
+                    `-draw "line ${x},${chartYStart} ${x},${chartYStart+chartYSize}"`
+                )
+            })
+        }
 
         // place chart points
         let points = []
@@ -431,14 +466,26 @@ module.exports = {
         if(config.env == "dev") {
             console.log(command.join(" "))
         }
-        command.push(`"${fullF}"`)
+        let processOptions = {}
+        if(req.query.int_opt == 1) {
+            // or not
+            processOptions.encoding = "buffer"
+            command.push(`PNG:-`)
+        } else {
+            command.push(`"${fullF}"`)
+        }
 
         command = command.join(" ").split(";").join("")
         if(process.platform == "linux" || process.platform == "darwin") {
             command = command.split("#").join("\\#")
         }
 
-        child_process.exec(command, (e, so, se) => {
+        child_process.exec(command, processOptions, (e, so, se) => {
+            if(req.query.int_opt == 1) {
+                res.setHeader("content-type", "image/png")
+                res.send(Buffer.from(so))
+                return;
+            }
             if(!e && !se) {
                 fs.chmodSync(fullF, 0o755)
                 res.setHeader("Content-Type", "image/png")
@@ -528,6 +575,188 @@ module.exports = {
             console.log(command.join(" ").split(";").join(""))
         }
         child_process.exec(command.join(" ").split(";").join(""), (e, so, se) => {
+            if(!e && !se) {
+                fs.chmodSync(fullF, 0o755)
+                res.setHeader("Content-Type", "image/png")
+                res.send(fs.readFileSync(fullF))
+            } else {
+                res.send(e + " " + se)
+            }
+            setTimeout(function() {
+                try {
+                    fs.unlinkSync(fullF)
+                }
+                catch(error) {}
+            }, 3000)
+        })
+    },
+
+    "genBar": function(req, res) {
+        // gather data
+        let size = [400, 200]
+        if(req.query.chs
+        && req.query.chs.includes("x")) {
+            size = req.query.chs.split("x")
+            size[0] = Math.min(parseInt(size[0]), 1000)
+            size[1] = Math.min(parseInt(size[1]), 1000)
+        }
+
+        let barColor = "#ffcc33"
+        if(req.query.chco) {
+            barColor = "#" + req.query.chco.substring(0, 6)
+                        .replace(/[^a-zA-Z0-9]/g, "").trim()
+        }
+
+        let scale = 100
+        if(req.query.chds) {
+            scale = parseFloat(
+                req.query.chds.replace("0,", "")
+                .replace(/[^0-9+.]/g, "").trim()
+            )
+            scale = Math.abs(scale)
+        }
+
+        let bars = []
+        if(req.query.chxl) {
+            bars = req.query.chxl
+                   .replace("1:|", "")
+                   .replace("1:", "")
+                   .split("|")
+                   .map(s => {return this.s(s)});
+        }
+
+        let barsValues = {}
+        if(req.query.chd) {
+            req.query.chd = req.query.chd.replace("t:", "").split(",")
+            let index = 0;
+            bars.forEach(name => {
+                barsValues[name] = parseInt(this.s(req.query.chd[index]))
+                index++
+            })
+        }
+
+        let command = [
+            `magick -size ${size[0]}x${size[1]} xc:#ffffff -fill #757575`,
+            `-font Arial -pointsize 11`
+        ]
+
+        // calculate start offsets, sizes...
+        let putLabelsOnTop = !(req.query.chbtm==1)
+        let chartHeight = Math.floor(size[1] - 35) + (!putLabelsOnTop ? 10 : 0);
+        let chartYStart = putLabelsOnTop ? 22 : 10
+        let barHeight = Math.floor(((size[1] - 35) / bars.length) - 5)
+        let longestName = JSON.parse(JSON.stringify(bars)).sort((a,b) => {
+            return b.length - a.length
+        })[0]
+        let barsXSize = longestName.length * 6 // approx 6 pixels wide characters
+        let barsXStart = 3 // start 3px in
+        let usePercent = (req.query.chpct == 1)
+        let chartXStart = barsXStart + barsXSize + 3 // 3px end padding
+        let chartXSize = size[0] - chartXStart - 7 // 7px end padding
+        if(usePercent) {
+            chartXSize -= 10
+        }
+
+        // draw chart skeleton
+        
+        // left border
+        command.push([
+            `-draw "line ${chartXStart-1},${chartYStart} `,
+            `${chartXStart-1},${chartYStart + chartHeight}"`
+        ].join(""))
+        // bottom border
+        let bottomBorderY = chartYStart + chartHeight
+        command.push([
+            `-draw "line ${chartXStart-1},${bottomBorderY} `,
+            `${chartXStart+chartXSize},${bottomBorderY}"`
+        ].join(""))
+        // dashed lines at set percentages
+        let dashedInterlines = [25, 50, 75, 100]
+        command.push(`-strokewidth 0.5`)
+        command.push(`-fill #ffffff`)
+        dashedInterlines.forEach(i => {
+            let x = chartXStart + ((chartXSize / 100) * i)
+            command.push([
+                `-draw "stroke #afafaf stroke-dasharray 5 5 `,
+                `line ${x},${chartYStart} ${x},${bottomBorderY}"`
+            ].join(""))
+        })
+        command.push(`-fill #757575`)
+
+        // draw bars
+        let barIndex = 0;
+        for(let barName in barsValues) {
+            let barY = barHeight * barIndex + (5 * barIndex)
+            let absBarY = chartYStart + barY
+            let barValue = barsValues[barName]
+            let barXSize = Math.floor((barValue / scale) * chartXSize)
+            command.push([
+                `-draw "fill ${barColor} rectangle ${chartXStart},${absBarY} `,
+                `${chartXStart + barXSize},${absBarY + barHeight}"`
+            ])
+
+            // bar text
+            let barTextY = Math.floor((absBarY + (barHeight / 2))) + 2
+            command.push(
+                `-draw "text 4,${barTextY} '${barName}'"`
+            )
+
+            barIndex++
+        }
+
+        // x text
+        let numbers = [0]
+        while(numbers[numbers.length - 1] !== scale) {
+            numbers.push(numbers[numbers.length - 1] + 1)
+        }
+        if(numbers.length > 10) {
+            // let's do steps instead
+            // (e.g. scale == 100 == 0,20,40,60,80,100)
+            numbers = [
+                0,
+                Math.floor(scale / 4),
+                Math.floor(scale / 4) * 2,
+                Math.floor(scale / 4) * 3,
+                scale
+            ]
+        }
+        let numberIndex = 0;
+        let suffix = usePercent ? "%" : ""
+        numbers.forEach(n => {
+            let numberX = chartXStart
+                        + ((chartXSize / (numbers.length - 1)) * numberIndex)
+                        - (n.toString().length * 4)
+            numberX = Math.floor(numberX)
+            let numberY = putLabelsOnTop
+                        ? 16
+                        : (chartYStart + chartHeight + 13)
+            command.push(
+                `-draw "text ${numberX},${numberY} '${n}${suffix}'"`
+            )
+            numberIndex++
+        })
+
+        // generate chart temp file
+        let fname = Date.now() + "_cha.png"
+        if(!fs.existsSync(`${__dirname}/../assets/charts_temp/`)) {
+            fs.mkdirSync(
+                `${__dirname}/../assets/charts_temp/`,
+                {"recursive": true}
+            )
+        }
+        let fullF = `${__dirname}/../assets/charts_temp/${fname}`
+
+        if(config.env == "dev") {
+            console.log(command.join(" "))
+        }
+        command.push(`"${fullF}"`)
+
+        command = command.join(" ").split(";").join("")
+        if(process.platform == "linux" || process.platform == "darwin") {
+            command = command.split("#").join("\\#")
+        }
+
+        child_process.exec(command, (e, so, se) => {
             if(!e && !se) {
                 fs.chmodSync(fullF, 0o755)
                 res.setHeader("Content-Type", "image/png")

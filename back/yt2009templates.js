@@ -3476,6 +3476,12 @@ term='channel'/>
             })
             pollAnswersHTML += `<script>setTimeout(function(){callPchelperPolls();},100);</script>`
         }
+        let quizAnswersHTML = ""
+        if(p.quizChoices) {
+            p.quizChoices.forEach(o => {
+                quizAnswersHTML += `<div class="quiz-option" onclick="markQuizAnswer(this,'${o.isCorrect ? "lang_channel_quiz_vote_correct" : "lang_channel_quiz_vote_incorrect"}');"><span>${utils.xss(o.text)}</span><div class="option-fill"><span class="generic-vote-button">lang_channel_quiz_vote_option</span></div></div>`
+            })
+        }
         return `<tr id="feed_item_${index}"${p.postId ? ` class="community-post-${p.postId}"` : ""} valign="top">
 			<td class="feed_icon"><img src="/assets/site-assets/pixel-vfl73.gif" class="icon-BUL"></td>
 			<td>
@@ -3489,7 +3495,7 @@ term='channel'/>
                     `<div style="float:left; margin-right: 8px;"><a href="/watch?v=${p.embedVideoId}" rel="nofollow"><img style="width: 60px; height: 45px; border: 1px solid;" src="${utils.getThumbUrl(p.embedVideoId, req)}" class="link-as-border-color"></a></div>
 					<div>
 						<a href="/watch?v=${p.embedVideoId}" rel="nofollow">${p.embedVideoTitle}</a>
-					</div>` : ""}${p.poll ? `<span><b>lang_channel_poll_vote_intro</b></span>${pollAnswersHTML}` : ""}
+					</div>` : ""}${p.poll ? `<span><b>lang_channel_poll_vote_intro</b></span>${pollAnswersHTML}` : ""}${p.quizChoices ? `<span><b>lang_channel_quiz_vote_intro</b></span>${quizAnswersHTML}` : ""}
 				</div>
 			</td>
 			<td class="feed_delete">&nbsp;</td>

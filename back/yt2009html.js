@@ -83,6 +83,7 @@ if(EXTRA_RISK_BLOCK && !frequentRestartEnvironmentDisablePotgen) {
 }
 
 function createPot(visitorId) {
+    if(yt2009exports.read().potgenTemporarilyTakenover) return;
     yt2009pot.generatePo(visitorId, (data) => {
         yt2009exports.writeData("potBytes", data.encryptData)
         yt2009exports.writeData("potKey", data.backup)
@@ -175,7 +176,25 @@ module.exports = {
             rHeaders.Authorization = `Bearer ${d}`
         }
 
+        function markCallbackDone() {
+            callbacksMade++
+            /*let useTurbocharge = false;
+            if(useTurbocharge
+            && callbacksList.includes("data_api")
+            && callbacksList.includes("player")) {
+                //shhh
+                callback(combinedResponse)
+                stopTimer()
+                return;
+            }*/
+            if(callbacksMade == callbacksRequired) {
+                callback(combinedResponse)
+                stopTimer()
+            }
+        }
+
         let callbacksRequired = 2;
+        let callbacksList = []
         if(config.data_api_key && useAndroidPlayer) {
             callbacksRequired++
             // some category ids match 2009 ids but not all
@@ -218,18 +237,12 @@ module.exports = {
                         combinedResponse.publishDate = s.publishedAt
                     }
                 }
-                callbacksMade++
-                if(callbacksMade == callbacksRequired) {
-                    callback(combinedResponse)
-                    stopTimer()
-                }
+                callbacksList.push("data_api")
+                markCallbackDone()
             })}catch(error){
                 console.log(error)
-                callbacksMade++
-                if(callbacksMade == callbacksRequired) {
-                    callback(combinedResponse)
-                    stopTimer()
-                }
+                callbacksList.push("data_api")
+                markCallbackDone()
             }})
         }
         let callbacksMade = 0;
@@ -256,11 +269,8 @@ module.exports = {
             for(let i in r) {
                 combinedResponse[i] = r[i]
             }
-            callbacksMade++
-            if(callbacksMade == callbacksRequired) {
-                callback(combinedResponse)
-                stopTimer()
-            }
+            callbacksList.push("next")
+            markCallbackDone()
         })})
 
         let playerContext = JSON.parse(JSON.stringify(innertube_context))
@@ -340,11 +350,8 @@ module.exports = {
             for(let i in r) {
                 combinedResponse[i] = r[i]
             }
-            callbacksMade++
-            if(callbacksMade == callbacksRequired) {
-                callback(combinedResponse)
-                stopTimer()
-            }
+            callbacksList.push("player")
+            markCallbackDone()
         }
         if(config.wyjeba_typu_onesie
         || yt2009exports.read().session_use_onesie

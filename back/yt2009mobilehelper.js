@@ -14,6 +14,7 @@ const userMetadata = require("./proto/android_user_metadata_pb")
 const customChannel = require("./proto/yt2009_channel_pb")
 const customizableRequest = require("./proto/bare_android_request_pb")
 const browseNavigation = require("./proto/browse_navigation_pb")
+const creatorRequestSpecifics = require("./proto/creator_request_pb")
 const commentActions = require("./proto/comment_action_pb")
 const androidHeaders = {
     "Accept": "*/*",
@@ -2052,6 +2053,11 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
     },
 
     "openBrowseId": function(req, callback) {
+        let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
         pullUserIdFromDevice(pullDeviceId(req), (id) => {
             if(id.type) {
                 callback(false)
@@ -3260,6 +3266,85 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             }).then(r => {
                 res.status(r.status).send("innertube_response=" + r.status)
             })
+        }, req)
+    },
+
+    "openInsightRequest": function(
+        req, endpoint, params, callback, requireFullResponse,
+        timelyChip
+    ) {
+        const timelyChipReadout = {
+            "whole": 1,
+            "week": 6,
+            "28days": 7,
+            "90days": 13,
+            "365days": 14,
+            "thisMonth": 12,
+            "lastMonth": 22,
+            "twoMonthsPrior": 23,
+            "yearBefore": 15,
+            "thisYear": 16
+        }
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
+        let root = new customizableRequest.root()
+        let context = new customizableRequest.root.contextType()
+        let client = new customizableRequest.root.contextType.clientType()
+        client.setClientnumber(14) // ANDROID_CREATOR
+        client.setClientversion("25.49.100")
+        context.addClient(client)
+        root.addContext(context)
+        if(params.browseId) {
+            root.setBrowseid(params.browseId)
+        }
+        if(params.params) {
+            root.setParams(params.params)
+        }
+        if(params.continuation) {
+            root.setContinuation(params.continuation)
+        }
+        if(params.creatorQuery) {
+            root.setCreatorquery(params.creatorQuery)
+        }
+        if(timelyChip) {
+            let chip = new creatorRequestSpecifics.creatorChipConfig()
+            let chipMsg = new creatorRequestSpecifics.chipRender()
+            let chipContent = new creatorRequestSpecifics.chipRender.contents()
+            chipContent.setRelcurrenttime(Math.floor(Date.now() / 1000))
+            let crun = new creatorRequestSpecifics.chipRender.run()
+            if(params.ownChannelId) {
+                crun.setChannelid(params.ownChannelId)
+            } else if(params.videoId) {
+                crun.setVideoid(params.videoId)
+            }
+            chipContent.setChannelid(crun)
+            chipContent.setTimeid(
+                timelyChipReadout[timelyChip] || timelyChip || 7
+            )
+            chipMsg.setContent(chipContent)
+            chip.setChip(chipMsg)
+            root.setChipconfig(chip)
+        }
+        root.setNavigationtype(0) // "BROWSE_NAVIGATION_TYPE_REPLACE_ALL"
+        let pbmsg = Buffer.from(root.serializeBinary())
+        setupYouTube(device, (h) => {
+            let url = [
+                "https://youtubei.googleapis.com/youtubei/v1/" + endpoint,
+                "?prettyPrint=false&alt=json",
+                (!requireFullResponse ? "&fields=contents" : ""),
+            ].join("")
+            h["Content-Type"] = "application/x-protobuf"
+            h["x-goog-api-format-version"] = "2"
+            fetch(url, {
+                "method": "POST",
+                "headers": h,
+                "body": pbmsg
+            }).then(r => {r.json().then(r => {
+                callback(r)
+            })})
         }, req)
     }
 }

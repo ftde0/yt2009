@@ -15,6 +15,8 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
 
+var creator_request_pb = require('./creator_request_pb.js');
+goog.object.extend(proto, creator_request_pb);
 goog.exportSymbol('proto.bare_android_request.root', null, global);
 goog.exportSymbol('proto.bare_android_request.root.contextType', null, global);
 goog.exportSymbol('proto.bare_android_request.root.contextType.clientType', null, global);
@@ -124,7 +126,10 @@ proto.bare_android_request.root.toObject = function(includeInstance, msg) {
     proto.bare_android_request.root.contextType.toObject, includeInstance),
     browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
     params: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    continuation: jspb.Message.getFieldWithDefault(msg, 7, "")
+    continuation: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    creatorquery: jspb.Message.getFieldWithDefault(msg, 11, ""),
+    navigationtype: jspb.Message.getFieldWithDefault(msg, 15, 0),
+    chipconfig: (f = msg.getChipconfig()) && creator_request_pb.creatorChipConfig.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -177,6 +182,19 @@ proto.bare_android_request.root.deserializeBinaryFromReader = function(msg, read
     case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setContinuation(value);
+      break;
+    case 11:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCreatorquery(value);
+      break;
+    case 15:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setNavigationtype(value);
+      break;
+    case 18:
+      var value = new creator_request_pb.creatorChipConfig;
+      reader.readMessage(value,creator_request_pb.creatorChipConfig.deserializeBinaryFromReader);
+      msg.setChipconfig(value);
       break;
     default:
       reader.skipField();
@@ -234,6 +252,28 @@ proto.bare_android_request.root.serializeBinaryToWriter = function(message, writ
     writer.writeString(
       7,
       f
+    );
+  }
+  f = message.getCreatorquery();
+  if (f.length > 0) {
+    writer.writeString(
+      11,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 15));
+  if (f != null) {
+    writer.writeInt32(
+      15,
+      f
+    );
+  }
+  f = message.getChipconfig();
+  if (f != null) {
+    writer.writeMessage(
+      18,
+      f,
+      creator_request_pb.creatorChipConfig.serializeBinaryToWriter
     );
   }
 };
@@ -678,6 +718,97 @@ proto.bare_android_request.root.prototype.getContinuation = function() {
  */
 proto.bare_android_request.root.prototype.setContinuation = function(value) {
   return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * optional string creatorQuery = 11;
+ * @return {string}
+ */
+proto.bare_android_request.root.prototype.getCreatorquery = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.bare_android_request.root} returns this
+ */
+proto.bare_android_request.root.prototype.setCreatorquery = function(value) {
+  return jspb.Message.setProto3StringField(this, 11, value);
+};
+
+
+/**
+ * optional int32 navigationType = 15;
+ * @return {number}
+ */
+proto.bare_android_request.root.prototype.getNavigationtype = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 15, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.bare_android_request.root} returns this
+ */
+proto.bare_android_request.root.prototype.setNavigationtype = function(value) {
+  return jspb.Message.setField(this, 15, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.bare_android_request.root} returns this
+ */
+proto.bare_android_request.root.prototype.clearNavigationtype = function() {
+  return jspb.Message.setField(this, 15, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.bare_android_request.root.prototype.hasNavigationtype = function() {
+  return jspb.Message.getField(this, 15) != null;
+};
+
+
+/**
+ * optional creator_request.creatorChipConfig chipConfig = 18;
+ * @return {?proto.creator_request.creatorChipConfig}
+ */
+proto.bare_android_request.root.prototype.getChipconfig = function() {
+  return /** @type{?proto.creator_request.creatorChipConfig} */ (
+    jspb.Message.getWrapperField(this, creator_request_pb.creatorChipConfig, 18));
+};
+
+
+/**
+ * @param {?proto.creator_request.creatorChipConfig|undefined} value
+ * @return {!proto.bare_android_request.root} returns this
+*/
+proto.bare_android_request.root.prototype.setChipconfig = function(value) {
+  return jspb.Message.setWrapperField(this, 18, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.bare_android_request.root} returns this
+ */
+proto.bare_android_request.root.prototype.clearChipconfig = function() {
+  return this.setChipconfig(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.bare_android_request.root.prototype.hasChipconfig = function() {
+  return jspb.Message.getField(this, 18) != null;
 };
 
 

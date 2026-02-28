@@ -1,5 +1,6 @@
 syntax = "proto3";
 package bare_android_request;
+import "creator_request.proto";
 
 message root {
     message contextType {
@@ -14,4 +15,7 @@ message root {
     string browseId = 2;
     string params = 3;
     string continuation = 7;
+    string creatorQuery = 11;
+    optional int32 navigationType = 15;
+    optional creator_request.creatorChipConfig chipConfig = 18;
 }

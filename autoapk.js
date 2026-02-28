@@ -1,3 +1,5 @@
+/*DEPRECATED - MAY BE REMOVED AT ANY TIME*/
+
 const child_process = require("child_process")
 const fs = require("fs")
 const fetch = require("node-fetch")
@@ -16,6 +18,15 @@ depending on your config.
 when reporting an issue, send the FULL log
 of the command, INCLUDING all the arguments
 you may have used and your OS.\n\n\n\n`)
+console.log(`AUTOAPK IS DEPRECATED
+
+due to various minor differences in versions,
+autoapk could always produce unpredictable results,
+and that's beside not supporting v1.6.21 and lower.
+
+follow apk_setup.md manually to get an actual usable apk.
+
+AUTOAPK IS SET TO BE REMOVED AT ANY TIME.\n\n\n`.repeat(5))
 
 /*
 =======
@@ -229,7 +240,7 @@ function apkStart() {
     }
     catch(error) {}
 
-    fs.copyFileSync(newApkPath, `${workingDir}/youtube_patched.apk`)
+    fs.copyFileSync(newApkPath, `${workingDir}/youtube_changed.apk`)
     console.log(`\n\npatching complete! your new APK is at:
-${workingDir}/youtube_patched.apk`)
+${workingDir}/youtube_changed.apk`)
 }

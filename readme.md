@@ -51,7 +51,7 @@ install an older one to host yt2009 on windows 7:
 npm install express@4.17.1
 ```
 
-if still facing issues take a look at [#243](github.com/ftde0/yt2009/issues/243).
+if still facing issues take a look at [#243](https://github.com/ftde0/yt2009/issues/243).
 
 ## updating
 
@@ -107,6 +107,3 @@ over time some tools and documentation was written about yt2009. for an easy ref
 - [docker.md](docker.md) - yt2009 setup with docker. also listed in the setup section. (thanks, breakgimme!)
 - [flash_additions.md](flash_additions.md) - some info on caption and annotations modules within the default 2009 flash player.
 - [flash_player_patch.md](flash_player_patch.md) - manual patch info for using flash players with yt2009.
-
-
-- [autoapk.js](autoapk.js) - a node cli file to automatically patch APKs supported by yt2009. your mileage may vary.

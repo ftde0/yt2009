@@ -2680,20 +2680,22 @@ function callPchelperPolls(comesFromS) {
     function handleResponse() {
         if(r.status == 400) {
             // add signin buttons to all options
-            var options = nlToArray(
-                document.querySelectorAll(".poll-option")
-            )
-            nlToArray(options).forEach(function(z) {
-                z.addEventListener("click", function() {
-                    var c = confirm([
-                        "You must be signed in to vote on polls.",
-                        "Open signin window?"
-                    ].join(" "))
-                    if(c) {
-                        window.open("/mh_pc_intro")
+            var options = document.querySelectorAll(".poll-option")
+            for(var z in options) {
+                z = options[z]
+                try {
+                    z.onclick = function() {
+                        var c = confirm([
+                            "You must be signed in to vote on polls.",
+                            "Open signin window?"
+                        ].join(" "))
+                        if(c) {
+                            window.open("/mh_pc_intro")
+                        }
                     }
-                }, false)
-            })
+                }
+                catch(error){}
+            }
             return;
         }
         r = r.responseText.split("\n")

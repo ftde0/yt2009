@@ -1847,7 +1847,7 @@ module.exports = {
         =======
         */
         let returnNoLang = req.headers.cookie.includes("lang=") || req.query.hl || false
-        code = require("./yt2009loginsimulate")(flags, code, returnNoLang)
+        code = require("./yt2009loginsimulate")(req, code, returnNoLang)
 
         /*
         =======

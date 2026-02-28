@@ -16,18 +16,11 @@ const youtubeSig = Buffer.from(
     `3d7a1223019aa39d9ea0e3436ab7c0896bfb4fb679f4de5fe7c23f326c8f994a`, "hex"
 )
 const youtubePkgname = "com.google.android.youtube"
+let resp = null;
 
 module.exports = {
-    "generatePo": function(visitor, callback) {
-        fetch(poUrl, {
-            "method": "POST",
-            "headers": {
-                "content-type": "application/x-protobuf",
-                "user-agent": "GmsCore/250832016"
-            },
-            "body": poReq
-        }).then(r => {r.buffer().then(d => {
-            let resp = pb.potResponse.deserializeBinary(d).toObject()
+    "generatePo": function(visitor, callback, canUseExistingChallenge) {
+        function packagePot() {
             let potDescriptorToken = resp.desc;
             if(typeof(potDescriptorToken) == "string") {
                 potDescriptorToken = Buffer.from(resp.desc, "base64")
@@ -57,6 +50,21 @@ module.exports = {
                 "backup": potBackup,
                 "valid": resp.time || 7200
             })
+        }
+        if(canUseExistingChallenge) {
+            packagePot()
+            return;
+        }
+        fetch(poUrl, {
+            "method": "POST",
+            "headers": {
+                "content-type": "application/x-protobuf",
+                "user-agent": "GmsCore/250832016"
+            },
+            "body": poReq
+        }).then(r => {r.buffer().then(d => {
+            resp = pb.potResponse.deserializeBinary(d).toObject()
+            packagePot()
         })})
     }
 }
