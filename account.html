@@ -1,71 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>YourCRT</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 2rem;
-      background: #fafafa;
-      color: #222;
-    }
-    header, footer {
-      text-align: center;
-      margin: 1rem 0;
-    }
-    nav ul {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-    }
-    nav a {
-      text-decoration: none;
-      color: #0078ff;
-    }
-    section {
-      margin-top: 2rem;
-    }
-    h2 {
-      border-bottom: 2px solid #ddd;
-      padding-bottom: .5rem;
-      margin-bottom: 1rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Login</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>YourCRT</h1>
-    <nav>
-      <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="contact.html">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <section>
-    <h2>Introduction</h2>
-    <p>This is a modernized version of the account page.</p>
-  </section>
-
-  <section>
-    <h2>Features</h2>
-
-    <h3>Feature 1</h3>
-    <p>Details about feature 1.</p>
-
-    <h3>Feature 2</h3>
-    <p>Details about feature 2.</p>
-  </section>
-
-  <footer>
-    <p>© 2026 YourCRT SA.</p>
-  </footer>
+    <h1>Login</h1>
+    <div>
+        <button id="discordLogin">Login with Discord</button>
+        <button id="robloxLogin">Login with Roblox</button>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $('#discordLogin').click(function() {
+                // Redirect to Discord OAuth 2.0
+                window.location.href = 'https://discord.com/oauth2/authorize?client_id=YOUR_CREDENTIALS&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=identify';
+            });
+            $('#robloxLogin').click(function() {
+                // Redirect to Roblox OAuth 2.0
+                window.location.href = 'https://www.roblox.com/oauth/authorize?client_id=YOUR_CREDENTIALS&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=identify';
+            });
+        });
+    </script>
 </body>
 </html>
