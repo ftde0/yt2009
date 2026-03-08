@@ -1290,6 +1290,7 @@ module.exports = {
             if(!r.streamingData.adaptiveFormats) {
                 r.streamingData.adaptiveFormats = []
             }
+            let sabrEnforced = false;
             r.streamingData.adaptiveFormats.forEach(q => {
                 if(q.mimeType.includes("audio/mp4")) {
                     if(q.isOriginal !== null && q.isOriginal !== undefined
@@ -1307,8 +1308,28 @@ module.exports = {
                 && !qualities[q.qualityLabel]) {
                     q.dash = true;
                     qualities[q.qualityLabel] = q;
+                    if(!q.url) {
+                        sabrEnforced = true;
+                    }
                 }
             })
+
+            if(sabrEnforced
+            && quality
+            && quality !== "360p") {
+                if(config.env == "dev") {
+                    console.log(`[${id}] sabr experiment enforced! using that`)
+                }
+                yt2009exports.read().sabrMirror.download(id, quality, (c) => {
+                    if(c) {
+                        callback(c.replace("/assets/", ""))
+                    } else {
+                        callback(false)
+                    }
+                })
+                return;
+            }
+
             if(audioFormats.length > 0) {
                 audioFormats = audioFormats.sort((a, b) => b.bitrate - a.bitrate)
             }
@@ -1415,37 +1436,22 @@ module.exports = {
                 return;
             }
 
-            downloadInParts_file(
-                qualities[quality].url,
-                "../assets/" + id + "-temp-" + quality + ".mp4",
-                ((feedback) => {
-                    if(feedback == "RETRY") {
-                        devlog("RETRY dash video download")
-                        downloadInParts_file(
-                            qualities[quality].url,
-                            "../assets/" + id + "-temp-" + quality + ".mp4",
-                            ((feedback) => {
-                                devlog("retry status: " + feedback)
-                                if(feedback !== "RETRY") {
-                                    videoDownloadDone = true;
-                                    if(audioDownloadDone || !downloadAudio) {
-                                        onFormatsDone()
-                                    }
-                                } else {
-                                    callback(false)
-                                }
-                            }),
-                            fname
-                        )
-                        return;
-                    }
-                    videoDownloadDone = true;
-                    if(audioDownloadDone || !downloadAudio) {
-                        onFormatsDone()
-                    }
-                }),
-                fname
-            )
+            if(qualities[quality].url) {
+                downloadInParts_file(
+                    qualities[quality].url,
+                    "../assets/" + id + "-temp-" + quality + ".mp4",
+                    ((feedback) => {
+                        if(feedback == "RETRY") {
+                            devlog("adaptive 403")
+                        }
+                        videoDownloadDone = true;
+                        if(audioDownloadDone || !downloadAudio) {
+                            onFormatsDone()
+                        }
+                    }),
+                    fname
+                )
+            }
 
             // merge formats once both are ready
             function onFormatsDone() {
@@ -2771,7 +2777,8 @@ module.exports = {
                         "baseUrl": url,
                         "vssId": vss,
                         "languageCode": languagecode,
-                        "trackName": trackname
+                        "trackName": trackname,
+                        "kind": track.kind
                     })
                 })
                 bp.captions = {

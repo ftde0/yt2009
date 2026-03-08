@@ -65,9 +65,6 @@ module.exports = {
             }
             if(yt2009exports.read().players[id]) {
                 parsePlayer(yt2009exports.read().players[id])
-                setTimeout(() => {
-                    yt2009exports.delete("players", id)
-                }, 200)
             } else {
                 yt2009html.innertube_get_data(id, (player) => {
                     parsePlayer(player)

@@ -1006,7 +1006,6 @@ module.exports = {
                     }
                     if(quality.qualityLabel
                     && !data.qualities.includes(quality.qualityLabel)
-                    && quality.url
                     && quality.mimeType
                     && quality.mimeType.includes("avc")) {
                         data.qualities.push(quality.qualityLabel)

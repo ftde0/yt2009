@@ -3017,6 +3017,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 
             let videoId = n.inboxNotificationThumbnail
                            .thumbnail.image.sources[0].url;
+            if(!videoId) return;
             videoId = videoId.split("vi/")[1].substring(0,11)
 
             if(!neededVideos.includes(videoId)) {

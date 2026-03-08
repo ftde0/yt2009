@@ -8,10 +8,12 @@ const yt2009constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const config = require("./config.json")
 const child_process = require("child_process")
+const fs = require("fs")
 const audioItags = [139, 140]
 
 let players = {}
 let playbackSessions = {}
+let downloadProgresses = []
 
 module.exports = {
     "initPlaybackSession": function(id, videoQualities) {
@@ -33,10 +35,6 @@ module.exports = {
         }
 
         return `/sabr_playback?pid=${rid}`;
-        /*
-        if(players[id] && Date.now() <= players[id].expire) {
-
-        }*/
     },
 
     "handlePlayer": function(playbackSession, offset, req, callback) {
@@ -252,6 +250,16 @@ module.exports = {
                             if(p.pongItag) {
                                 data.itag = preferedVideoFmt.itag
                             }
+                            if(req.query.return_video_length) {
+                                try {
+                                    let z = players[p.id]
+                                    let l = z.videoDetails.lengthSeconds
+                                    data.videoLength = l;
+                                }
+                                catch(error) {
+                                    console.log(error, players[p.id])
+                                }
+                            }
                             callback(data)
                         }
                     }, (redir) => {
@@ -283,19 +291,13 @@ module.exports = {
             players[p.id].sabrUrl = players[p.id].streamingData
                                     .serverAbrStreamingUrl
             try {
-                let expiry = players[p.id].streamingData.adaptiveFormats[0]
-                             .url.split("expire=")[1].split("&")[0]
+                let expiry = players[p.id].sabrUrl
+                             .split("expire=")[1].split("&")[0]
                 players[p.id].expiry = parseInt(expiry) * 1000
             }
             catch(error) {
-                if(players[p.id].streamingData
-                && players[p.id].streamingData.expiresInSeconds) {
-                    players[p.id].expiry = players[p.id].streamingData
-                                           .expiresInSeconds - 60
-                } else {
-                    let twoHours = 7200 * 1000
-                    players[p.id].expiry = Date.now() + twoHours
-                }
+                let twoHours = 7200 * 1000
+                players[p.id].expiry = Date.now() + twoHours
             }
         }
         if(players[p.id] && players[p.id].expiry - 60000 >= Date.now()
@@ -323,6 +325,7 @@ module.exports = {
                         data.expiry = Date.now() + (7200 * 1000) // 2 hrs
                     }
                     players[p.id] = data;
+                    processPlayer(players[p.id])
                 })
                 return;
             }
@@ -420,6 +423,26 @@ module.exports = {
                                 backportFormat(f)
                             )
                         })
+                    }
+
+                    if(req.query.return_video_length) {
+                        let a = resp.toObject()
+                        if(a.videometadataList && a.videometadataList[0]) {
+                            let m = a.videometadataList[0]
+                            bp.videoDetails = {
+                                "lengthSeconds": (
+                                    (m.videolength&&m.videolength.toString())
+                                    || "0"
+                                )
+                            }
+                        }
+                    }
+
+                    if(expire == "0"
+                    && formats.serverabrstreamingurl
+                    && formats.serverabrstreamingurl.includes("expire=")) {
+                        expire = formats.serverabrstreamingurl
+                                 .split("expire=")[1].split("&")[0]
                     }
 
                     let ustreamerConfig = resp.toObject()
@@ -933,7 +956,336 @@ module.exports = {
         }
 
         parserStart()
+    },
+
+    "download": function(id, quality, callback) {
+        let fIndicator = `${id}`
+        if(quality && quality !== "360p") {
+            fIndicator += `-${quality}`
+        }
+        if(downloadProgresses.includes(fIndicator)) {
+            // sabr download of this video already running, wait for complete
+            let x = setInterval(() => {
+                if(!downloadProgresses.includes(fIndicator)) {
+                    clearInterval(x)
+                    callback(`/assets/${fIndicator}.mp4`)
+                }
+            }, 500)
+            return;
+        }
+        if(config.env == "dev") {
+            console.log(`starting sabr download of ${fIndicator}`)
+        }
+        function freeupProgress() {
+            downloadProgresses = downloadProgresses.filter(s => {
+                return s !== fIndicator
+            })
+        }
+        downloadProgresses.push(fIndicator)
+        let fReq = {
+            "headers": {},
+            "query": {
+                "hd": 1,
+                "return_video_length": 1
+                //"force_replayer": 0/1
+            }
+        }
+        // list of available qualities (handler will use top available from those)
+        let qList = ["360p", "240p", "144p"]
+        switch(quality) {
+            case "1080p": {
+                fReq.headers.cookie = "hd_1080"
+                qList = ["1080p", "720p", "480p", "360p", "240p", "144p"]
+                break;
+            }
+            case "720p": {
+                qList = ["720p", "480p", "360p", "240p", "144p"]
+                break;
+            }
+            case "480p": {
+                qList = ["480p", "360p", "240p", "144p"]
+                break;
+            }
+        }
+        function remuxFragments(files, extension, callback) {
+            // i would never write this normally
+            // but has to be done here. RIP.
+            let newFileNames = []
+            files = JSON.parse(JSON.stringify(files))
+            function runFile() {
+                let ffmpegCmd = [
+                    "ffmpeg",
+                    "-y",
+                    `-i "${__dirname}/${files[0]}"`,
+                    "-c copy",
+                    `"${__dirname}/${files[0]}-re.${extension}"`
+                ].join(" ")
+                child_process.exec(ffmpegCmd, (error, stdout, stderr) => {
+                    newFileNames.push(`${files[0]}-re.${extension}`)
+                    files.shift()
+                    if(files[0]) {
+                        runFile()
+                    } else {
+                        callback(newFileNames)
+                    }
+                })
+            }
+            if(files[0]) {
+                runFile()
+            }
+        }
+        let s = this.initPlaybackSession(id, qList).split("pid=")[1]
+        let thisRef = this;
+        let writtenVideoFiles = []
+        let writtenAudioFiles = []
+        let receivedPartIndexes = []
+        let receivedParts = {}
+        let offsetSeconds = 0;
+        let videoLength = 0;
+        let concurrentReplayerCount = 0;
+        function downloadPart() {
+            // receive parts
+            thisRef.handlePlayer(s, offsetSeconds * 1000, fReq, (data) => {
+                if(fReq.query.force_replayer) {
+                    fReq.query.force_replayer = null;
+                    delete fReq.query.force_replayer;
+                }
+                if(!data) {
+                    callback(false)
+                    freeupProgress()
+                    return;
+                }
+                let partCount = 0;
+                for(let part in data) {
+                    //console.log(`got response part ${part}`)
+                    switch(part) {
+                        case "xtags":
+                        case "usedXtag":
+                        case "videoMime":
+                        case "itag": {
+                            break;
+                        }
+                        case "videoLength": {
+                            videoLength = parseInt(data[part])
+                            break;
+                        }
+                        default: {
+                            let o = offsetSeconds.toString()
+                            if(!receivedParts[o]) {
+                                receivedParts[o] = []
+                                receivedPartIndexes.push(o)
+                            }
+                            receivedParts[o].push(part)
+                            let fname = `../assets/${s}-${part}`
+                            partCount++
+                            if(!fs.existsSync(fname)) {
+                                //console.log(`received ${s}-${part}`)
+                                let itag = parseInt(part.split("-")[0])
+                                if(audioItags.includes(itag)) {
+                                    // is audio itag
+                                    writtenAudioFiles.push(fname)
+                                } else {
+                                    // is video
+                                    writtenVideoFiles.push(fname)
+                                }
+                                fs.writeFileSync(fname, data[part])
+                            }
+                            break;
+                        }
+                    }
+                }
+                if(offsetSeconds >= videoLength) {
+                    // end of video
+
+                    let remuxCallbacksDone = 0;
+                    let remuxCallbacksRequired = 2;
+                    let remuxedFiles = []
+                    // remux audio fragments
+                    let audioAssetsFname = `../assets/assets-${s}-audio`
+                    remuxFragments(writtenAudioFiles, "m4a", (files) => {
+                        files.forEach(f => {
+                            remuxedFiles.push(f)
+                        })
+                        remuxCallbacksDone++
+                        files = files.map(s => {
+                            return `file '${__dirname}/${s}'`
+                        })
+                        fs.writeFileSync(
+                            audioAssetsFname,
+                            files.join("\n")
+                        )
+                    })
+
+                    // remux video fragments
+
+                    // list all video fragments
+                    let videoAssetsFname = `../assets/assets-${s}-video`
+                    remuxFragments(writtenVideoFiles, "mp4", (files) => {
+                        files.forEach(f => {
+                            remuxedFiles.push(f)
+                        })
+                        remuxCallbacksDone++
+                        files = files.map(s => {
+                            return `file '${__dirname}/${s}'`
+                        })
+                        fs.writeFileSync(
+                            videoAssetsFname,
+                            files.join("\n")
+                        )
+                    })
+
+                    // create end fname
+                    let targetFname = `/assets/${id}`
+                    if(quality && quality !== "360p") {
+                        targetFname += "-" + quality + ".mp4"
+                    } else {
+                        targetFname += ".mp4"
+                    }
+
+                    // call ffmpeg to merge all together
+                    // first audio-video parts to ones,
+                    // then both of those to create a target mp4
+                    let callbacksRequired = 3;
+                    let callbacksDone = 0;
+                    function callFfmpeg(fileList, target, callback) {
+                        let ffmpegCmd = [
+                            "ffmpeg",
+                            "-y",
+                            "-safe 0",
+                            "-f concat",
+                            `-i "${__dirname}/${fileList}"`,
+                            "-c copy",
+                            `"${__dirname}/..${target}"`
+                        ].join(" ")
+                        //console.log(`calling ${ffmpegCmd}`)
+                        child_process.exec(ffmpegCmd, (error, stdout, stderr) => {
+                            if(fs.existsSync(`..${target}`)) {
+                                callback(target)
+                            } else {
+                                callback(false)
+                            }
+                        })
+                    }
+
+                    let check = setInterval(() => {
+                        if(remuxCallbacksDone >= remuxCallbacksRequired) {
+                            markCallbackDone(true)
+                            clearInterval(check)
+                            callFfmpeg(
+                                audioAssetsFname,
+                                targetFname + "-a.m4a",
+                                (c) => {
+                                    markCallbackDone(c)
+                                }
+                            )
+                            callFfmpeg(
+                                videoAssetsFname,
+                                targetFname + "-v.mp4",
+                                (c) => {
+                                    markCallbackDone(c)
+                                }
+                            )
+                        }
+                    }, 200)
+
+                    let completeStatuses = []
+                    function markCallbackDone(c) {
+                        completeStatuses.push(c)
+                        callbacksDone++
+                        if(callbacksDone >= callbacksRequired
+                        && !completeStatuses.filter(z => {
+                            return !z
+                        })[0]) {
+                            // all completed well?
+                            let ffmpegCmd = [
+                                "ffmpeg",
+                                "-y",
+                                `-i "${__dirname}/..${targetFname}-a.m4a"`,
+                                `-i "${__dirname}/..${targetFname}-v.mp4"`,
+                                "-map 0:a",
+                                "-map 1:v",
+                                "-c:v copy",
+                                "-c:a copy",
+                                `"${__dirname}/..${targetFname}"`
+                            ].join(" ")
+                            child_process.exec(ffmpegCmd, (e, so, se) => {
+                                if(fs.existsSync(`..${targetFname}`)) {
+                                    callback(targetFname)
+                                    freeupProgress()
+                                } else {
+                                    callback(false)
+                                    freeupProgress()
+                                }
+                                setTimeout(() => {
+                                    remuxedFiles.forEach(f => {
+                                        try {
+                                            fs.unlink(f, (e) => {})
+                                        }
+                                        catch(error){}
+                                    })
+                                    writtenAudioFiles.forEach(f => {
+                                        try {
+                                            fs.unlink(f, (e) => {})
+                                        }
+                                        catch(error){}
+                                    })
+                                    writtenVideoFiles.forEach(f => {
+                                        try {
+                                            fs.unlink(f, (e) => {})
+                                        }
+                                        catch(error){}
+                                    })
+                                    try {
+                                        fs.unlink(
+                                            `..${targetFname}-a.m4a`, (e) => {}
+                                        )
+                                        fs.unlink(
+                                            `..${targetFname}-v.mp4`, (e) => {}
+                                        )
+                                        fs.unlink(audioAssetsFname, (e) => {})
+                                        fs.unlink(videoAssetsFname, (e) => {})
+                                    }
+                                    catch(error){}
+                                }, 1000)
+                            })
+                        } else if(callbacksDone >= callbacksRequired) {
+                            callback(false);
+                            freeupProgress()
+                        }
+                    }
+
+                    return;
+                }
+                if(partCount >= 1) {
+                    // safe to call next
+                    concurrentReplayerCount = 0;
+                    let timeout = 150;
+                    if(offsetSeconds >= 180) {
+                        timeout = 350
+                    }
+                    setTimeout(() => {
+                        offsetSeconds += 5
+                        downloadPart()
+                    }, 150)
+                } else {
+                    // no parts? try recalling
+                    concurrentReplayerCount++
+                    if(concurrentReplayerCount > 3) {
+                        // not!
+                        callback(false)
+                        freeupProgress()
+                        return;
+                    }
+                    fReq.query.force_replayer = 1
+                    setTimeout(() => {
+                        downloadPart()
+                    }, 500)
+                }
+            })
+        }
+        downloadPart()
     }
 }
 
 yt2009exports.writeData("umpParseFun", module.exports.parseResponse)
+yt2009exports.writeData("sabrMirror", module.exports)

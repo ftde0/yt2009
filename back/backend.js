@@ -2649,72 +2649,6 @@ app.get("/exp_hd", (req, res) => {
         return;
     }
 
-    if(config.priv_exp_stream && req.headers.range
-    && yt2009_utils.privExpStreamEligible(req)) {
-        let partSize = (1024 * 1024 * 2)
-        let partSent = false;
-        let fname = `${id}-${quality}`
-        if(yt2009_exports.getStatus(fname) !== 1
-        && quality == "1080p"
-        && yt2009_exports.getStatus(`${id}-720p`)) {
-            fname = `${id}-720p`
-        }
-        let fpath = `../assets/${fname}`
-        let callbackId;
-        let start = 0;
-        let end = -1;
-        let range = req.headers.range
-        if(range && range.includes("bytes=")) {
-            if(!isNaN(parseInt(range.split("bytes=")[1].split("-")[0]))) {
-                start = parseInt(range.split("bytes=")[1].split("-")[0])
-            }
-        }
-        res.status(206)
-        res.set("accept-ranges", "bytes")
-        res.set("content-type", "video/mp4")
-        function sendPart(full) {
-            if(end == -1) {
-                end = start + partSize
-            }
-            res.set(
-                "content-range",
-                "bytes " + start + "-" + (full - 1) + "/" + full
-            )
-            fs.createReadStream(fname, {"start": start, "end": end}).pipe(res)
-
-            if(callbackId) {
-                yt2009_exports.unregisterExtendCallback(callbackId)
-            }
-        }
-        if(yt2009_exports.getStatus(id)
-        && yt2009_exports.getStatus(id) < 2) {
-            console.log("// incomplete download HD")
-            callbackId = yt2009_exports.registerExtendCallback(
-                "verboseDownloadProgress", fname, () => {
-                    // download state changed
-                    let s = yt2009_exports.read().verboseDownloadProgress[fname]
-                    console.log(s)
-
-                    end = start + partSize
-
-                    if(s.type == "DASH"
-                    && s.state == "MERGE_STARTED"
-                    && fs.existsSync(fpath)
-                    && fs.statSync(fpath).size >= start + end + (512 * 1024)
-                    && !partSent) {
-                        // ready to send part
-                        let fullSize = s.videoFileSize
-                                     + s.audioFileSize
-                                     + (512 * 1024)
-                        console.log("// ready to send part - partially downloaded video: " + start)
-                        sendPart(fullSize)
-                        partSent = true;
-                    }
-                }
-            )
-        }
-    }
-
     if(fs.existsSync(`../assets/${id}-${quality}.mp4`)
     && fs.statSync(`../assets/${id}-${quality}.mp4`).size > 5) {
         res.redirect(`/assets/${id}-${quality}.mp4?ac=${Math.random()}`)
@@ -3915,44 +3849,6 @@ function pullNewSuggestions(q, callback) {
         callback(response)
     })})
 }
-
-/*
-======
-retry video download using a different format id than 18 (360p)
-as sometimes it's not available
-(example: https://www.youtube.com/watch?v=auzfTPp4moA)
-======
-*/
-app.get("/retry_video", (req, res) => {
-    let id = req.query.video_id.substring(0, 11)
-                .replace(/[^a-zA-Z0-9+\-+_]/g, "")
-
-    // check if there actually is a need to retry download
-    if(fs.existsSync(`../assets/${id}.mp4`)
-    && fs.statSync(`../assets/${id}.mp4`).size > 0) {
-        res.redirect(`/assets/${id}.mp4`)
-        return;
-    }
-
-    if(fs.existsSync(`../assets/${id}.mp4`)
-    && fs.statSync(`../assets/${id}.mp4`).size == 0) {
-        fs.unlinkSync(`../assets/${id}.mp4`)
-    }
-
-    // retry if so
-    if(yt2009_exports.getStatus(id)) {
-        // wait for mp4 while it's downloading
-        yt2009_exports.waitForStatusChange(id, () => {
-            try {
-                res.redirect("/assets/" + id + ".mp4")
-            }catch(error) {}
-        })
-        return;
-    }
-    yt2009_utils.saveMp4(id, (path => {
-        res.redirect("/assets/" + id + ".mp4")
-    }))
-})
 
 /*
 ======

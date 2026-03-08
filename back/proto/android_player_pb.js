@@ -4661,6 +4661,7 @@ proto.android_player.root.captionTracks.contents.captionTrack.toObject = functio
     proto.android_player.textRuns.toObject, includeInstance),
     vssid: jspb.Message.getFieldWithDefault(msg, 3, ""),
     languagecode: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    kind: jspb.Message.getFieldWithDefault(msg, 5, ""),
     istranslatable: jspb.Message.getFieldWithDefault(msg, 7, 0),
     trackname: jspb.Message.getFieldWithDefault(msg, 11, "")
   };
@@ -4715,6 +4716,10 @@ proto.android_player.root.captionTracks.contents.captionTrack.deserializeBinaryF
     case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setLanguagecode(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setKind(value);
       break;
     case 7:
       var value = /** @type {number} */ (reader.readInt32());
@@ -4779,6 +4784,13 @@ proto.android_player.root.captionTracks.contents.captionTrack.serializeBinaryToW
   if (f.length > 0) {
     writer.writeString(
       4,
+      f
+    );
+  }
+  f = message.getKind();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
       f
     );
   }
@@ -4888,6 +4900,24 @@ proto.android_player.root.captionTracks.contents.captionTrack.prototype.getLangu
  */
 proto.android_player.root.captionTracks.contents.captionTrack.prototype.setLanguagecode = function(value) {
   return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional string kind = 5;
+ * @return {string}
+ */
+proto.android_player.root.captionTracks.contents.captionTrack.prototype.getKind = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.android_player.root.captionTracks.contents.captionTrack} returns this
+ */
+proto.android_player.root.captionTracks.contents.captionTrack.prototype.setKind = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 

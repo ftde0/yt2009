@@ -91,6 +91,7 @@ message root {
                 repeated textRuns name = 2;
                 string vssId = 3;
                 string languageCode = 4;
+                string kind = 5;
                 optional int32 isTranslatable = 7;
                 string trackName = 11;
             }
