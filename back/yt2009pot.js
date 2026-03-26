@@ -21,6 +21,15 @@ let resp = null;
 module.exports = {
     "generatePo": function(visitor, callback, canUseExistingChallenge) {
         function packagePot() {
+            if(!resp) {
+                // disabled potgen
+                callback({
+                    "encryptData": Buffer.from([1]),
+                    "backup": Buffer.from([1]),
+                    "valid": 86400
+                })
+                return;
+            }
             let potDescriptorToken = resp.desc;
             if(typeof(potDescriptorToken) == "string") {
                 potDescriptorToken = Buffer.from(resp.desc, "base64")

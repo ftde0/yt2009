@@ -736,40 +736,48 @@ module.exports = {
             numberIndex++
         })
 
-        // generate chart temp file
-        let fname = Date.now() + "_cha.png"
-        if(!fs.existsSync(`${__dirname}/../assets/charts_temp/`)) {
-            fs.mkdirSync(
-                `${__dirname}/../assets/charts_temp/`,
-                {"recursive": true}
-            )
-        }
-        let fullF = `${__dirname}/../assets/charts_temp/${fname}`
-
         if(config.env == "dev") {
             console.log(command.join(" "))
         }
-        command.push(`"${fullF}"`)
+        command.push(`PNG:-`)
 
         command = command.join(" ").split(";").join("")
         if(process.platform == "linux" || process.platform == "darwin") {
             command = command.split("#").join("\\#")
         }
 
-        child_process.exec(command, (e, so, se) => {
-            if(!e && !se) {
-                fs.chmodSync(fullF, 0o755)
-                res.setHeader("Content-Type", "image/png")
-                res.send(fs.readFileSync(fullF))
-            } else {
-                res.send(e + " " + se)
-            }
-            setTimeout(function() {
-                try {
-                    fs.unlinkSync(fullF)
-                }
-                catch(error) {}
-            }, 3000)
+        child_process.exec(command, {"encoding": "buffer"}, (e, so, se) => {
+            res.setHeader("content-type", "image/png")
+            res.send(Buffer.from(so))
+        })
+    },
+
+    "intGenFillBar": function(req, res) {
+        let width = parseInt(req.query.w) || 65
+        let filledPercent = parseInt(req.query.p) || 0
+        if(isNaN(width) || isNaN(filledPercent)
+        || width > 1000 || filledPercent > 100) {
+            res.sendStatus(400)
+            return;
+        }
+        let filledWidth = Math.floor(width * (filledPercent / 100))
+        let barBgPath = `'${__dirname}/../assets/site-assets/insight-bar-bg.png'`
+        barBgPath = barBgPath.split("\\").join("/")
+        let barFPath = `'${__dirname}/../assets/site-assets/insight-bar-fill1.png'`
+        barFPath = barFPath.split("\\").join("/")
+
+        let cmd = [
+            "magick",
+            "-size " + width + "x9",
+            "xc:white",
+            `-draw "image Over 0,0 ${width},9 ${barBgPath}"`,
+            `-draw "image Over 0,0 ${filledWidth},9 ${barFPath}"`,
+            "PNG:-"
+        ].join(" ")
+
+        child_process.exec(cmd, {"encoding": "buffer"}, (e, so, se) => {
+            res.setHeader("content-type", "image/png")
+            res.send(Buffer.from(so))
         })
     }
 }

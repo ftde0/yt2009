@@ -235,19 +235,44 @@ module.exports = {
             }).then(r => (r.json().then(r => {
                 let resultsToCallback = []
                 resultsToCallback = yt2009utils.search_parse(r)
-                
-                // cache only if no live videos
-                let liveVidCount = resultsToCallback.filter(s => {
-                    return s.type == "live-video"
-                }).length
-                if(liveVidCount == 0) {
-                    cache.write(
-                        query + protoFinal,
-                        JSON.parse(JSON.stringify(resultsToCallback))
-                    )
+
+                function returnResults() {
+                    // cache only if no live videos
+                    let liveVidCount = resultsToCallback.filter(s => {
+                        return s.type == "live-video"
+                    }).length
+                    if(liveVidCount == 0) {
+                        cache.write(
+                            query + protoFinal,
+                            JSON.parse(JSON.stringify(resultsToCallback))
+                        )
+                    }
+                    
+                    callback(JSON.parse(JSON.stringify(resultsToCallback)))
                 }
-                
-                callback(JSON.parse(JSON.stringify(resultsToCallback)))
+
+                if(config.data_api_key) {
+                    // un-autotranslate video data with data api
+                    let videos = JSON.parse(JSON.stringify(resultsToCallback))
+                                 .filter(s => {
+                                    return s.type == "video"
+                                        || s.type == "live-video"
+                                 }).map(s => {return s.id})
+                    let props = ["title", "description"]
+                    yt2009utils.dataApiBulk(videos, props, (dataApiR) => {
+                        resultsToCallback = resultsToCallback.map(r => {
+                            if((r.type == "video" || r.type == "live-video")
+                            || dataApiR[r.id]) {
+                                r.title = dataApiR[r.id].title || ""
+                                r.description = dataApiR[r.id].description || ""
+                            }
+                            return r;
+                        })
+                        returnResults()
+                    })
+                } else {
+                    returnResults()
+                }
             })))
         }
     },

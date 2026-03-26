@@ -279,6 +279,7 @@ function initPlayer(parent, fullscreenEnabled) {
                 if(qsel.className.indexOf(" hid") == -1) {
                     qsel.className += " hid"
                 }
+				removeCtxmenu()
             }
         }, false)
 
@@ -915,6 +916,7 @@ volume_btn.addEventListener("mouseover", function() {
         if(qsel.className.indexOf(" hid") == -1) {
             qsel.className += " hid"
         }
+		removeCtxmenu()
     }
     try {
         $(".video_controls .fullscreen").style.backgroundPosition = "0px 0px"
@@ -964,6 +966,7 @@ $(".timer").addEventListener("mouseover", function() {
         if(qsel.className.indexOf(" hid") == -1) {
             qsel.className += " hid"
         }
+		removeCtxmenu()
     }
 
     mousedown = false;
@@ -989,6 +992,7 @@ if(document.querySelector(".fullscreen")) {
             if(qsel.className.indexOf(" hid") == -1) {
                 qsel.className += " hid"
             }
+			removeCtxmenu()
         }
 
         non_css_anim_remove(player_add_popout, "bottom", 25, -59)
@@ -1333,6 +1337,7 @@ player_add_btn.addEventListener("mouseover", function() {
         if(qsel.className.indexOf(" hid") == -1) {
             qsel.className += " hid"
         }
+		removeCtxmenu()
     }
 }, false)
 
@@ -1424,6 +1429,7 @@ setTimeout(function() {
 }, 1000)
 
 var seekMoveDebounce = false
+var usesStoryboardedSeeker = false;
 var seekbarElements = $(".seek, .elapsed, .loaded, .seek_btn")
 for(var s in seekbarElements) {
     if(seekbarElements[s].className) {
@@ -1438,6 +1444,10 @@ for(var s in seekbarElements) {
             
             var offsetX = e.pageX || e.clientX
             var offsetY = $(".seek").getBoundingClientRect().top - 31
+            if(usesStoryboardedSeeker) {
+                offsetY -= 21
+                offsetX -= 34
+            }
 
             // if someone asks me why 16 i'll tell them idk but it works
             if(mainElement !== document) {
@@ -1448,7 +1458,8 @@ for(var s in seekbarElements) {
                 offsetX -= 16
             }
         
-            $(".seek_time").className = "seek_time"
+            var storyboardSuffix = usesStoryboardedSeeker ? " uses_storyboard" : ""
+            $(".seek_time").className = "seek_time" + storyboardSuffix
             $(".seek_time").style.top = offsetY + "px"
             $(".seek_time").style.left = offsetX + "px"
             
@@ -1472,6 +1483,19 @@ for(var s in seekbarElements) {
                 / seekbar.getBoundingClientRect().width
             ) * duration
             time_hovered = Math.min(time_hovered, duration)
+            if(usesStoryboardedSeeker && storyboardTotalImgs
+            && document.querySelector(".storyboard_sheet")) {
+                var timePerImg = Math.round(video.duration / storyboardTotalImgs)
+                var imageIndex = Math.floor(time_hovered / timePerImg)
+                imageIndex = Math.abs(Math.min(imageIndex, storyboardTotalImgs))
+                var imageRow = Math.floor(imageIndex / storyboardImgsPerRow)
+                var firstImageInRow = storyboardImgsPerRow * imageRow
+                var indexInRow = imageIndex - firstImageInRow
+                var positionY = imageRow * 48
+                var positionX = indexInRow * 64
+                var pos = "-" + positionX + "px" + " " + "-" + positionY + "px"
+                $(".storyboard_sheet").style.backgroundPosition = pos
+            }
             time_hovered = seconds_to_time(Math.floor(time_hovered))
             if(time_hovered.indexOf("-") == 0) {
                 time_hovered = "0:00"
@@ -3258,8 +3282,40 @@ function initAsSabr() {
             qList.className = "qualities"
 
             var moreSpacedPicker = false;
+            var qualityPrefData = {
+                "tier1": [],
+                "tier2": []
+            }
 
             window.sabrExactRes.forEach(function(q) {
+                function adjustHDBtn(cHeight) {
+                    var h = cHeight || q[2]
+                    if(h >= 720 && !sabrHd
+                    && mainElement.querySelector(".hq.hd")
+                    && mainElement.querySelector(".hd.hd")
+                      .className.indexOf(" enabled") == -1) {
+                        sabrHd = true;
+                        mainElement.querySelector(".hq.hd").className = "hq hd enabled"
+                    } else if(h == 480 && !sabrHd
+                    && !mainElement.querySelector(".hq.hd")
+                    && mainElement.querySelector(".hq")
+                    && mainElement.querySelector(".hq")
+                      .className.indexOf(" enabled") == -1) {
+                        sabrHd = true;
+                        mainElement.querySelector(".hq").className = "hq enabled"
+                    } else if(h < 720
+                    && mainElement.querySelector(".hq.hd")
+                    && mainElement.querySelector(".hq.hd.enabled")) {
+                        sabrHd = false;
+                        mainElement.querySelector(".hq.hd").className = "hq hd"
+                    } else if(h < 480
+                    && mainElement.querySelector(".hq")
+                    && mainElement.querySelector(".hq.enabled")) {
+                        sabrHd = false;
+                        mainElement.querySelector(".hq").className = "hq"
+                    }
+                }
+
                 var isSr = false;
                 var srIndicator = false;
                 if(q[5] && q[5].partList) {
@@ -3293,6 +3349,37 @@ function initAsSabr() {
                     srIndicator.appendChild(srIp3)
                 }
                 if(isSr && !enablesSr) return;
+
+                if(window.localStorage
+                && window.localStorage.sabrQualityPref) {
+                    try {
+                        var qualityPref = JSON.parse(
+                            window.localStorage.sabrQualityPref
+                        )
+                        var videoHeight = false;
+                        if(q[0] == qualityPref[0]) {
+                            // perfect match, tier1
+                            qualityPrefData.tier1.push([q[0],q[2]])
+                        } else if(q[1] == qualityPref[1]) {
+                            // resolution match but itag not, tier2
+                            qualityPrefData.tier2.push([q[0],q[2]])
+                        }
+
+
+                        if(qualityPrefData.tier1
+                        && qualityPrefData.tier1.length >= 1) {
+                            sabrData.customVideoItag = qualityPrefData.tier1[0][0]
+							sabrData.initialItagSetDefault = true;
+                            adjustHDBtn(qualityPrefData.tier1[0][1])
+                        } else if(qualityPrefData.tier2
+                        && qualityPrefData.tier2.length >= 1) {
+                            sabrData.customVideoItag = qualityPrefData.tier2[0][0]
+							sabrData.initialItagSetDefault = true;
+                            adjustHDBtn(qualityPrefData.tier2[0][1])
+                        }
+                    }
+                    catch(error){}
+                }
 
                 var hbrIndicator = false;
                 if(q[0] == 214 || q[0] == 216) {
@@ -3330,39 +3417,16 @@ function initAsSabr() {
                 }
                 qElement.appendChild(qName)
                 qElement.onclick = function() {
+                    removeCtxmenu()
                     if(sabrData.lastCustomItag) {
                         sabrData.lastCustomItag = false;
                     }
                     sabrData.customVideoItag = q[0]
                     requestSabr(Math.floor(video.currentTime * 1000), "FORCE")
-
-
-                    if(q[2] >= 720 && !sabrHd
-                    && mainElement.querySelector(".hq.hd")
-                    && mainElement.querySelector(".hd.hd")
-                      .className.indexOf(" enabled") == -1) {
-                        sabrHd = true;
-                        mainElement.querySelector(".hq.hd").className = "hq hd enabled"
-                    } else if(q[2] == 480 && !sabrHd
-                    && !mainElement.querySelector(".hq.hd")
-                    && mainElement.querySelector(".hq")
-                    && mainElement.querySelector(".hq")
-                      .className.indexOf(" enabled") == -1) {
-                        sabrHd = true;
-                        mainElement.querySelector(".hq").className = "hq enabled"
-                    } else if(q[2] < 720
-                    && mainElement.querySelector(".hq.hd")
-                    && mainElement.querySelector(".hq.hd.enabled")) {
-                        sabrHd = false;
-                        mainElement.querySelector(".hq.hd").className = "hq hd"
-                    } else if(q[2] < 480
-                    && mainElement.querySelector(".hq")
-                    && mainElement.querySelector(".hq.enabled")) {
-                        sabrHd = false;
-                        mainElement.querySelector(".hq").className = "hq"
-                    }
+                    adjustHDBtn()
                 }
                 qElement.oncontextmenu = function(e) {
+                    removeCtxmenu()
                     var playerX = 0;
                     var playerY = 0;
                     if(mainElement.getBoundingClientRect) {
@@ -3371,6 +3435,21 @@ function initAsSabr() {
                     }
                     var x = (e.clientX || e.pageX || 0) - playerX
                     var y = (e.clientY || e.pageY || 0) - playerY
+                    var ctxMenu = document.createElement("div")
+                    ctxMenu.className = "player-context-menu"
+                    ctxMenu.style.left = x + "px"
+                    ctxMenu.style.top = y + "px"
+                    var btn = document.createElement("span")
+                    btn.className = "context-option"
+                    btn.innerHTML = "Set as default"
+                    ctxMenu.appendChild(btn)
+                    btn.addEventListener("click", function() {
+                        window.localStorage.sabrQualityPref = JSON.stringify(q)
+                        try {qElement.click()}
+                        catch(error){}
+                        removeCtxmenu()
+                    }, false)
+                    mainElement.appendChild(ctxMenu)
                     return false;
                 }
                 qList.appendChild(qElement)
@@ -3400,6 +3479,10 @@ function initAsSabr() {
                 mouseOnHq = false;
             }, false)
 
+            qContainer.addEventListener("click", function(e) {
+                removeCtxmenu()
+            }, false)
+
             qContainer.addEventListener("mouseout", function(e) {
                 var mouse_left = e.pageX || e.clientX;
                 var mouse_top = e.pageY || e.clientY;
@@ -3407,6 +3490,7 @@ function initAsSabr() {
                 || (checkBounds(qContainer, mouse_left, mouse_top)
                 && qContainer.className.indexOf(" hid") == -1)) return;
                 qContainer.className += " hid"
+                removeCtxmenu()
             }, false)
         }
     }
@@ -3573,7 +3657,10 @@ function initAsSabr() {
     })
 }
 
-function sabrQualityChanged() {
+function sabrQualityChanged(source) {
+	if(source == "HQBTN" && sabrData.initialItagSetDefault) {
+		sabrData.customVideoItag = null;
+	}
     // force refetch for new quality
     sabrData.addedSegments = []
     //v.pause()
@@ -3939,8 +4026,8 @@ those can be changed at any time:<br>\
         container.appendChild(titleLabel)
 
         var subtitle = document.createElement("p")
-        subtitle.innerHTML = "as of yt2009 1.22, your browser can now\
-        fully stream<br>videos on watchpages, without the need to store them."
+        subtitle.innerHTML = "your browser can fully stream\
+        <br>videos on watchpages, without the need to store them."
         container.appendChild(subtitle)
 
         var o1 = createOption(
@@ -4411,4 +4498,120 @@ function handleWatchpagePchelperRelated(r) {
     // TODO
     // playback broke entirely while this was being added soo
     var videos = []
+}
+
+// storyboard
+var storyboardWidth = 0;
+var storyboardHeight = 0;
+var storyboardTotalRows = 0;
+var storyboardImgsPerRow = 0;
+var storyboardTotalImgs = 0;
+function initStoryboard() {
+    if(!window.Uint8Array) return;
+    usesStoryboardedSeeker = true;
+    $(".seek_time").className = "seek_time uses_storyboard hid"
+    var container = document.createElement("div")
+    container.className = "storyboard_container"
+    var image = document.createElement("span")
+    var id = window.currentId || window.currentVideo;
+    if(!id) {
+        if(location.href.indexOf("v=") !== -1) {
+            id = location.href.split("v=")[1].split("#")[0].split("&")[0]
+        } else if(location.href.indexOf("embed/") !== -1) {
+            id = location.href.split("embed/")[1].split("?")[0].split("#")[0]
+        }
+    }
+    image.style.background = 'url("/storyboard_fetch?video_id=' + id + '")'
+    image.className = "storyboard_sheet"
+    container.appendChild(image)
+    $(".seek_time").appendChild(container)
+
+    // extract data of storyboard without spec from jpeg header
+    // this works bc 2009 storyboards have constants: jpeg, 64x48 per thumb
+    var r = new XMLHttpRequest();
+    r.open("GET", "/storyboard_fetch?video_id=" + id)
+    r.responseType = "arraybuffer"
+    r.send(null)
+    function padStart(t, length, filler) {
+        if(typeof(t) !== "string") return "";
+        if(t.padStart) {
+            return t.padStart(length,filler)
+        } else {
+            if(t.length < length) {
+                while(t.length !== length) {
+                    t = filler + t
+                }
+            }
+        }
+        return t;
+    }
+    r.addEventListener("load", function(e) {
+        if(r.status >= 400) {
+            usesStoryboardedSeeker = false;
+            $(".seek_time").className = "seek_time hid"
+            container.parentNode.removeChild(container)
+            return;
+        }
+        function readInt(byteLength, customSet, customCursor) {
+            var ownC = customCursor || cursor || 0
+            var ownS = customSet || s;
+            var x = ownS.slice(ownC,ownC+(byteLength||2))
+            var bytes = []
+            for(var i in x) {
+                bytes.push(padStart(x[i].toString("16"), 2, "0"))
+            }
+            bytes = bytes.join("")
+            if(!customCursor) {
+                cursor += byteLength||2
+            }
+            return parseInt(bytes, 16)
+        }
+        var s = new Uint8Array(r.response);
+        function getNextJPEGBlock() {
+            cursor++
+            var headerType = s.slice(cursor,cursor+1)
+            cursor++
+            var headerLength = readInt(2)
+            cursor -= 2
+            var header = s.slice(cursor,cursor+headerLength)
+            cursor += headerLength
+            return {
+                "type": headerType,
+                "data": header
+            }
+        }
+        var cursor = 20;
+        var nearBlocks = []
+        while(nearBlocks.length !== 5) {
+            nearBlocks.push(getNextJPEGBlock())
+        }
+
+        nearBlocks.forEach(function(b) {
+            if(b.type == 192 || b.type == 193 || b.type == 194) {
+                // skip length and precision (3b) and read ints
+                storyboardHeight = readInt(2, b.data, 3)
+                storyboardWidth = readInt(2, b.data, 5)
+                storyboardTotalRows = storyboardHeight / 48
+                storyboardImgsPerRow = storyboardWidth / 64
+                storyboardTotalImgs = storyboardTotalRows * storyboardImgsPerRow
+            }
+        })
+    }, false)
+}
+try {
+    if(document.cookie
+    && document.cookie.indexOf("use_storyboard") !== -1) {
+        setTimeout(function() {initStoryboard()}, 300)
+    }
+}
+catch(error){}
+
+function removeCtxmenu() {
+    if(mainElement.querySelector(".player-context-menu")) {
+        try {
+            var ctx = mainElement.querySelector(".player-context-menu")
+            ctx.parentNode.removeChild(ctx)
+        }
+        catch(error){}
+    }
 }

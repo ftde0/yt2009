@@ -1,0 +1,600 @@
+<link rel="stylesheet" href="/assets/site-assets/www-the-rest-vfl120680.css">
+<link rel="stylesheet" href="/assets/site-assets/www-my_account_base-vfl153434.css">
+<link rel="stylesheet" href="/assets/site-assets/www-my_videos-vfl121286.css">
+<style type="text/css">
+	#mymedia #messages-new-playlist,
+	#mymedia #messages-addto-playlist {
+		margin-bottom: 10px;
+	}
+	#mymedia #dialog-new-playlist,
+	#mymedia #dialog-addto-playlist {
+		width: 350px;
+	}
+	#mymedia #addto-playlist-checklist {
+		height: 100px;
+		overflow: auto;
+		border: 1px solid #999;
+	}
+	#mymedia #expand-view .video-details .video-title {
+		margin-bottom: 10px;
+	}
+	#mymedia #expand-view .video-details .video-title a {
+		color: #03c;
+		font-size: 14px;
+		font-weight: bold;
+		text-decoration: none;
+	}
+	#mymedia .sort-field {
+		border-left: 1px solid #666;
+		margin-left: 8px;
+		padding-left: 8px;
+	}
+	#mymedia .sort-field-first {
+		margin-left: 8px;
+	}
+	#mymedia a.sort-field,
+	#mymedia a.sort-field-first {
+		text-decoration: none;
+	}
+</style>
+<style>
+	#videos .video {
+		height: 180px !important;
+	}
+	.blankmessage {
+		margin-top: 15px;
+		margin-bottom: 15px;
+	}
+	.panel {
+		padding: 10px 10px;
+		vertical-align: top;
+	}
+	.panel .dialog-title a {
+		font-weight: bold;
+	}
+	.panel span {
+		color: #666;
+	}
+	td.video-entry {
+		width: 240px;
+	}
+	.top-videos-heading {
+		color: #a3a3a3;
+		border-bottom: 1px #a3a3a3 solid;
+	}
+	.top-videos-heading.black-text {
+		color: black;
+		border-bottom: 1px black solid;
+	}
+	td.video-views-entry {
+		width: 115px;
+	}
+	.top-videos-heading.black-text .video-entry {
+		width: 190px;
+	}
+	.top-videos-heading.black-text .video-views-entry {
+		width: 130px;
+	}
+	tr.odd {
+		background-color: #ececec;
+	}
+	.number {
+		width: 24px;
+		display: inline-block;
+		text-align: right;
+		margin-right: 7px;
+	}
+	#button-timefilter {
+		float: right;
+		margin-top: -28px;
+	}
+	#mymedia {
+		overflow: visible;
+	}
+	.active-chart {
+		border: 1px black solid;
+		width: 351px;
+		overflow: hidden;
+	}
+	.active-chart-preview-part {
+		width: 351px;
+		height: 45px;
+		user-select: none;
+	}
+	.active-chart-preview-part .layer {
+		width: 351px;
+		height: 45px;
+		display: block;
+		position: relative;
+	}
+	.active-chart-preview-part .window.part1 {
+		position: relative;
+		display: block;
+		height: 45px;
+		background: white;
+		top:-2px;
+	}
+	.active-chart-preview-part .layer-bottom {
+		top: -45px;
+	}
+	.active-chart-preview-part .layer-overlay-top-left {
+		top: -90px;
+		cursor: w-resize;
+	}
+	.active-chart-preview-part .window.part2 {
+		position: relative;
+		display: block;
+		height: 52px;
+		border-left: 1px black solid;
+		border-right: 1px black solid;
+		border-bottom: 1px black solid;
+		top:-138px;
+		cursor: w-resize;
+	}
+	.active-chart .heading {
+		height: 14px;
+		border-bottom: 1px #666 solid;
+		padding: 3px 6px;
+		color: black;
+	}
+	.active-chart .heading span {
+		color: black;
+		font-weight: bold;
+	}
+	.active-chart .heading a {
+		text-decoration: underline;
+	}
+	.active-chart .indicator-bar {
+		position: relative;
+		width: 100%;
+		height: 16px;
+		margin-top: -16px;
+		background-color: #c9def4;
+		display: block;
+	}
+	#active-chart-views-lifetime {
+		height: 250px;
+		overflow: hidden;
+	}
+	.wide-videos-panel td.video-entry {
+		width: 365px;
+	}
+	.wide-videos-panel td.video-views-entry {
+		width: 360px;
+	}
+	.wide-videos-panel .visual-bar {
+		width: 315px;
+	}
+	#loading-msg {
+		padding: 10px 10px;
+	}
+	.community-engaging .visual-bar {
+		width: 90px;
+	}
+	.textbox {
+		border: 1px solid #aaa;
+		width: 305px;
+	}
+	#table.search-table .video-data * {
+		float: left;
+	}
+	#mymedia #table.search-table #heading-title {
+		width: 600px;
+	}
+	#table.search-table .video-title,
+	#table.search-table .publish-date {
+		margin-top: 5px;
+		margin-left: 5px
+	}
+	#mymedia #list-pane .folder.selected.extended {
+		background: #ccc url(/assets/site-assets/insight-mmgrad-self.png) repeat-x scroll 0 0;
+	}
+	.vtop {
+		vertical-align: top;
+	}
+	.part-holder.part-name {
+		margin-left: 5px;
+	}
+	#baseDiv.has-video-card #mymedia #view-pane .header {
+		height: 75px;
+	}
+	#baseDiv.has-video-card #mymedia #list-pane {
+		margin-top: 50px;
+	}
+	#video-card .video-card-info {
+		margin-left: 70px;
+	}
+	#audience-retention {
+		width: 357px;
+		height: 280px;
+		background-image: url("/assets/site-assets/heat-chart.png");
+	}
+	#audience-retention img {
+		margin-left: 37px;
+	}
+	#hot-spots-introduction {
+		padding: 10px 10px;
+	}
+	#retention-bar {
+		width: 11px;
+		height: 280px;
+		position: relative;
+		top: -274px;
+	}
+	#retention-bar-line {
+		display: block;
+		width: 2px;
+		height: 270px;
+		background: #cc6664;
+		position: relative;
+		left: 5px;
+	}
+	#retention-bar-arrow {
+		width: 11px;
+		height: 15px;
+		display: block;
+		background: url("/assets/site-assets/arrow-pointer.png");
+	}
+</style>
+<div id="mymedia">
+	<div class="page-heading">
+		<div>
+			<div id="my-account-header">
+				<h1>
+					<span class="yt-menulink yt-menulink-primary" id="" style="" onmouseenter="this.className += ' yt-menulink-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menulink-primary-hover', '');"><a class="yt-menulink-btn yt-button yt-button-primary" href="/account" onclick="">My Account</a><a class="yt-menulink-arr" href="/account" onclick=""></a>
+						<ul class="yt-menulink-menu">
+							<li><a href="/inbox?folder=messages&amp;action_message=1" onclick="">Inbox</a></li>
+							<li><a href="/my_videos" onclick="">Videos, Favorites and Playlists</a></li>
+							<li><a href="/my_subscriptions" onclick="">Subscriptions</a></li>
+							<li><a href="/address_book" onclick="">Address Book</a></li>
+							<li><a href="/account" onclick="">Account Settings</a></li>
+							<li><a href="/my_profile" onclick="">My Channel</a></li>
+							<li><a href="/my_videos_insight" onclick="">Insight: Statistics and Data</a></li>
+						</ul>
+					</span>
+					&nbsp;<span class="subSep">/</span>&nbsp;
+					<span>lang_insight_header</span>
+				</h1>
+			</div>
+		</div>
+	</div>
+	<div id="nav-pane">
+		<div class="header">
+		</div>
+		<div id="list-pane">
+			<div class="folder selected"><a class="name" href="/my_videos_insight">lang_insight_top_folder</a></div>
+			<div class="subfolder selected" id="subfolder-summary" onclick="switchSubfolder('SUMMARY',this)"><a class="name" href="#">lang_insight_subfolder_summary</a></div>
+            <div class="subfolder" id="subfolder-views" onclick="switchSubfolder('VIEWS',this)"><a class="name" href="#">lang_insight_subfolder_views</a></div>
+            <div class="subfolder" id="subfolder-demographics" onclick="switchSubfolder('DEMOGRAPHICS',this)"><a class="name" href="#">lang_insight_subfolder_demographics</a></div>
+            <div class="subfolder" id="subfolder-community" onclick="switchSubfolder('COMMUNITY',this)"><a class="name" href="#">lang_insight_subfolder_community</a></div>
+		</div>
+	</div>
+	<div id="view-pane">
+		<div class="header">
+			<div id="video-card"></div>
+			<h2 id="view-header">Insight</h2>
+			<div class="action-button" id="button-timefilter">
+				<span class="yt-menubutton yt-menubutton-primary" id="" style="" onmouseenter="this.className += ' yt-menubutton-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menubutton-primary-hover', '');"><a class="yt-menubutton-btn yt-button yt-button-primary" href="#" onclick="return false;"><span id="button-current-time">yt2009_insight_load_time</span></a><a class="yt-menubutton-arr yt-button yt-button-primary" href="#" onclick="return false;"><button></button><span></span></a>
+					<ul class="yt-menubutton-menu" id="menu-dates">
+						<!--yt2009_insight_dates-->
+					</ul>
+				</span>
+			</div>
+		</div>
+        <div class="splitter">
+            <div class="view">
+                <div class="settings">
+					<div class="search">
+						<input type="text" class="textbox" autocomplete="off" spellcheck="false" id="video-search-input"/>
+						<button class="yt-button" onclick="insightPerformSearch()">lang_insight_search_btn</button>
+						<img src="/assets/site-assets/pixel-vfl73.gif" height="20" width="20" style="vertical-align: middle;">
+					</div>
+				</div>
+                <div id="content" style="background-color: white;">
+                    lang_insight_loading_text
+                </div>
+            </div>
+        </div>
+	</div>
+</div>
+<script>
+	var lsViewStringPrefix = "Views: ";
+</script>
+<script src="/assets/site-assets/yt2009_userpage_common.js"></script>
+<script>
+	var CURRENT_TAB = "SUMMARY"
+	var TIMEID = 7;
+	var OT_SEARCH = ""
+	var VIDEOID = ""
+	var HAS_INITIAL_VIDEO_DATA = false;
+	var ON_VIDEO_DISABLE_TABS = ["SUMMARY", "VIEWS", "DEMOGRAPHICS", "COMMUNITY"]
+	if(location.href && location.href.indexOf("video_id=") !== -1) {
+		VIDEOID = location.href.split("video_id=")[1]
+						  .split("&")[0]
+						  .substring(0,11);
+	}
+	var ACTIVE_CHART_TIME_ZOOM = {
+		6: 7,
+		7: 28,
+		13: 90,
+		14: 365,
+		12: 31,
+		22: 62,
+		23: 93
+	}
+	function refreshInsightTab() {
+		if(VIDEOID
+		&& !ON_VIDEO_DISABLE_TABS.indexOf) {
+			// alt approach to get out of video views
+			var altWayOutElements = [
+				"subfolder-summary",
+				"subfolder-views",
+				"subfolder-demographics",
+				"subfolder-community"
+			]
+			for(var id in altWayOutElements) {
+				id = altWayOutElements[id]
+				if(document.getElementById(id)
+				&& document.getElementById(id).getElementsByTagName) {
+					try {
+						var a = document.getElementById(id)
+								.getElementsByTagName("a")[0];
+						a.setAttribute("href", "/my_videos_insight")
+					}
+					catch(error){}
+				}
+			}
+		}
+		document.getElementById("content").innerHTML = '<span id="loading-msg">lang_insight_loading_text</span>'
+		var r;
+		if (window.XMLHttpRequest) {
+			r = new XMLHttpRequest()
+		} else {
+			r = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		if(OT_SEARCH) {
+			CURRENT_TAB = "SEARCH"
+		}
+		var url = [
+			"/insight_amogus?time_id=" + TIMEID + "&tab=" + CURRENT_TAB,
+			"&r=" + Math.random()
+		]
+		if(OT_SEARCH) {
+			url.push("&query=" + OT_SEARCH)
+			OT_SEARCH = ""
+		}
+		if(VIDEOID) {
+			url.push("&video_id=" + VIDEOID)
+		}
+		if(!HAS_INITIAL_VIDEO_DATA && VIDEOID) {
+			url.push("&no_initial_data=1")
+		}
+		r.open("GET", url.join(""))
+		r.send(null)
+		r.onreadystatechange = function(e) {
+			if((r.readyState && r.readyState == 4)
+			|| (this.readyState && this.readyState == 4) 
+			|| (e.readyState && e.readyState == 4)) {
+				// special handling for video metadata
+				if(r.responseText.indexOf("----VIDEO-FOLDER----") !== -1
+				&& r.responseText.indexOf("----VIDEO-CARD----") !== -1) {
+					HAS_INITIAL_VIDEO_DATA = true;
+					var folders = document.getElementById("list-pane")
+										  .getElementsByTagName("div")
+					for(var f in folders) {
+						f = folders[f]
+						if(f
+						&& f.className
+						&& f.className.indexOf(" selected") !== -1) {
+							f.className = f.className.replace(" selected", "")
+						}
+					}
+					var folder = r.responseText
+								  .split("----VIDEO-FOLDER----")[1]
+								  .split("----VIDEO-FOLDER-END----")[0];
+					document.getElementById("list-pane").innerHTML += folder
+					var card = r.responseText
+								.split("----VIDEO-CARD----")[1]
+								.split("----VIDEO-CARD-END----")[0];
+					document.getElementById("baseDiv").className += " has-video-card"
+					document.getElementById("video-card").innerHTML = card;
+					CURRENT_TAB = "VVIEWS"
+					refreshInsightTab()
+					return;
+				}
+				// normal otherwise
+				document.getElementById("content").innerHTML = r.responseText
+				if(document.getElementById("active-chart-views-lifetime")) {
+					activateChart("active-chart-views-lifetime")
+					setTimeout(function() {
+						activeChartZoom(
+							"active-chart-views-lifetime",
+							ACTIVE_CHART_TIME_ZOOM[TIMEID] || 28
+						)
+					}, 300)
+				}
+				// video hot spots preview
+				setTimeout(function() {
+					if(document.getElementsByTagName("iframe")[0]
+					&& document.getElementsByTagName("iframe")[0].contentWindow
+					&& document.getElementsByTagName("iframe")[0]
+							   .contentWindow.document
+					&& document.getElementsByTagName("iframe")[0].contentWindow
+							   .document.getElementsByTagName("video")[0]) {
+						var video = document.getElementsByTagName("iframe")[0]
+											.contentWindow.document
+											.getElementsByTagName("video")[0];
+						var poll = setInterval(function() {
+							if(video.duration && video.duration >= 0.1) {
+								// video playing, activate hotspots bar
+								clearInterval(poll)
+								insightHotspotsActivate(video)
+							}
+						}, 100)
+					}
+				}, 250)
+			}
+		}
+		var currentItem = ""
+		try {
+			currentItem = document.querySelector(".subfolder.selected")
+			document.getElementById("view-header").innerHTML = currentItem.getElementsByTagName("a")[0].innerHTML
+		}
+		catch(error) {}
+	}
+	refreshInsightTab()
+	function loadDate(dateId, dateElement) {
+		TIMEID = dateId;
+		document.getElementById("button-current-time").innerHTML = dateElement.innerHTML
+		refreshInsightTab()
+	}
+	function switchSubfolder(name, element) {
+		if(VIDEOID
+		&& ON_VIDEO_DISABLE_TABS.indexOf
+		&& ON_VIDEO_DISABLE_TABS.indexOf(name) !== -1) {
+			location.href = "/my_videos_insight"
+		}
+		CURRENT_TAB = name;
+		var folders = document.getElementById("list-pane").getElementsByTagName("div")
+		for(var f in folders) {
+			f = folders[f]
+			if(f && f.className && f.className.indexOf("subfolder selected") !== -1) {
+				f.className = f.className.replace(" selected", "")
+			}
+		}
+		element.className += " selected"
+		refreshInsightTab()
+	}
+	function activateChart(chartId) {
+		var element = document.getElementById(chartId)
+		var overlayLeft = false;
+		var windowPart2 = false;
+		var spans = element.getElementsByTagName("span")
+		for(var s in spans) {
+			s = spans[s]
+			if(s
+			&& s.className
+			&& s.className.indexOf("layer-overlay-top-left") !== -1) {
+				overlayLeft = s;
+			} else if(s
+			&& s.className
+			&& s.className.indexOf("window part2") !== -1) {
+				windowPart2 = s;
+			}
+		}
+		overlayLeft.onmousemove = function(e) {
+			if(!e) {
+				e = window.event
+			}
+			chartZoomMouseEvent(e, chartId)
+		}
+		windowPart2.onmousemove = function(e) {
+			if(!e) {
+				e = window.event
+			}
+			chartZoomMouseEvent(e, chartId)
+		}
+	}
+	function activeChartZoom(element, dayCount) {
+		element = document.getElementById(element)
+		var isComment = element.getElementsByTagName("div")[0]
+				   		.getAttribute("data-is-comment-chart")
+		var img = element.getElementsByTagName("img")[0]
+		var userToken = img.getAttribute("data-user-token")
+		img.src = [
+			"/insight_viewcount_customs",
+			"?user=" + userToken,
+			dayCount ? ("&time=" + dayCount) : "",
+			isComment ? ("&is_comment=1") : ""
+		].join("")
+		var fullDays = parseInt(
+			element.getElementsByTagName("div")[0]
+				   .getAttribute("data-total-zoom-time")
+		);
+		var partOfWhole = dayCount
+						? (dayCount / fullDays)
+						: 1;
+		var overlayLeft = false;
+		var windowPart1 = false;
+		var windowPart2 = false;
+		var spans = element.getElementsByTagName("span")
+		for(var s in spans) {
+			s = spans[s]
+			if(s
+			&& s.className
+			&& s.className.indexOf("layer-overlay-top-left") !== -1) {
+				overlayLeft = s;
+			} else if(s
+			&& s.className
+			&& s.className.indexOf("window part1") !== -1) {
+				windowPart1 = s;
+			} else if(s
+			&& s.className
+			&& s.className.indexOf("window part2") !== -1) {
+				windowPart2 = s;
+			}
+		}
+		var cover = (100 - Math.floor(partOfWhole * 100))
+		overlayLeft.style.width = cover + "%"
+		windowPart1.style.left = cover + "%"
+		windowPart1.style.width = (100 - cover) + "%"
+		windowPart2.style.left = cover + "%"
+		windowPart2.style.width = (100 - cover) + "%"
+	}
+	var chartZoomMouseDebounce = false;
+	function chartZoomMouseEvent(e, element) {
+		if(!((e.button == 1) || (e.buttons == 1))
+		|| chartZoomMouseDebounce) return;
+		chartZoomMouseDebounce = true;
+		setTimeout(function() {
+			chartZoomMouseDebounce = false;
+		}, 150)
+		var x = e.clientX || e.screenX;
+		var bounds = document
+					 .getElementById(element)
+					 .getBoundingClientRect();
+		x -= (bounds.left || bounds.x);
+		var width = bounds.width || 351;
+		var partOfWhole = (x / width)
+		var fullDays = parseInt(
+			document.getElementById(element)
+			  		.getElementsByTagName("div")[0]
+				    .getAttribute("data-total-zoom-time")
+		);
+		
+		var approxPointedDay = (fullDays / 100) * (partOfWhole * 100)
+		var approxRemoveDays = fullDays - approxPointedDay;
+		activeChartZoom(element, Math.floor(approxRemoveDays))
+	}
+	function insightPerformSearch() {
+		var input = document.getElementById("video-search-input").value;
+		OT_SEARCH = input;
+		refreshInsightTab()
+		document.getElementById("video-search-input").value = ""
+	}
+	function insightHotspotsActivate(video) {
+		// video == <video> element of pchelper video
+		var retentionBar = document.createElement("div")
+		retentionBar.id = "retention-bar"
+		var baseLeftOffset = 36;
+		var chartWidth = 314;
+		retentionBar.style.left = "36px"
+
+		document.getElementById("audience-retention").appendChild(retentionBar)
+
+		var barLine = document.createElement("span")
+		barLine.id = "retention-bar-line"
+		retentionBar.appendChild(barLine)
+
+		var barArrow = document.createElement("span")
+		barArrow.id = "retention-bar-arrow"
+		retentionBar.appendChild(barArrow)
+
+		
+		video.ontimeupdate = function() {
+			var complete = (video.currentTime / video.duration)
+			var left = baseLeftOffset + Math.floor(chartWidth * complete)
+			retentionBar.style.left = left + "px"
+		}
+	}
+</script>

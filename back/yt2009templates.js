@@ -965,8 +965,13 @@ module.exports = {
     var s = document.createElement("style")
     s.innerHTML = "video {height: calc(100% - 25px) !important;}#watch-player-div {background: black !important;}"
     document.body.appendChild(s)`,
-    "embedVideoSources": function(id) {
+    "embedVideoSources": function(id, req) {
+		let usePchelper = false;
+		if(req && req.query && req.query.with_pchelper == "1") {
+			usePchelper = true;
+		}
         let mp4Path = `/get_video?video_id=${id}/mp4`
+		mp4Path += (usePchelper ? "&with_pchelper=1" : "")
         let ogvPath = `/assets/${id}.ogg`
         if(id.includes("googlevideo")) {
             mp4Path = id;
@@ -1751,9 +1756,10 @@ module.exports = {
                     </div>
                     <div style="clear: both;"></div>
                     <div class="video-buttons">
-                        <a class="yt-button" id="" href="/watch?v=${v.id}"><span>Play</span></a>
+                        <a class="yt-button" id="" href="/watch?v=${v.id}${privacy == "Private" ? "&with_pchelper=1" : ""}"><span>Play</span></a>
                         <a class="yt-button" id="" href="/my_videos_edit?video_id=${v.id}"><span>Edit</span></a>
                         ${v.downloadUrl ? `<a class="yt-button" target="_blank" id="" href="https://www.youtube.com${v.downloadUrl}"><span>Download MP4</span></a>` : ""}
+						<a class="yt-button" id="" href="/my_videos_insight?video_id=${v.id}"><span>Insight</span></a>
                         <a class="yt-button" id="delete-video-button" href="javascript:void(0)" onclick="deletePrompt('${v.id}')"><span>Delete</span></a>
                         <form action="/my_videos_delete" method="POST" class="hid" id="video-delete-${v.id}">
                         <input type="hidden" name="video_ids" value="${v.id}">
@@ -3564,12 +3570,12 @@ term='channel'/>
         $(".video_controls .hq").addEventListener("click", function() {
             if(!sabrHd) {
                 sabrHd = true;
-                sabrQualityChanged()
+                sabrQualityChanged("HQBTN")
                 $("video").innerHTML = "";
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
             } else {
                 sabrHd = false;
-                sabrQualityChanged()
+                sabrQualityChanged("HQBTN")
                 $("video").innerHTML = "";
                 $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
             }
@@ -3835,5 +3841,347 @@ video_id=${req.query.video_id}`.split("\n").join("&"))
             "vote_suffix": langs.apply_lang_to_code("lang_channel_poll_vote_count_suffix", req),
             "vote_voted": langs.apply_lang_to_code("lang_channel_poll_vote_already_picked", req)
         }
+    },
+	
+	"privateVideoIndicator": `<div id="watch-private-box">lang_watch_private_video_infobox</div>`,
+
+    "ownedVideoBox": function(id) {
+        return `<div id="watch-owned-video-panel">
+        <div id="watch-owned-video-panel-inner">
+            <span class="bold">lang_watch_video_owner_options</span>
+            <div id="video-owned-video-panel-buttons">
+                <a class="yt-button" href="/my_videos_edit?video_id=${id}"><span>lang_watch_video_owner_edit</span></a>
+                <a class="yt-button" href="/my_videos_insight?video_id=${id}"><span>lang_watch_video_owner_insight</span></a>
+            </div>
+        </div>
+    </div>`
+    },
+
+    "insightSummary": function(chartUrl, topContentHTML, genderChart, viewerChart, mapUrl) {
+        return `<tr>
+<td class="panel">
+<h3 class="dialog-title"><a href="javascript:void(0)">lang_insight_title_views</a></h3>
+<span>lang_insight_subtitle_views</span><br>
+<img src="${chartUrl.join("")}"/>
+</td>
+<td class="panel">
+<h3 class="dialog-title"><a href="javascript:void(0)">lang_insight_title_myvideos</a></h3>
+<table>
+<tr class="heading top-videos-heading">
+<td class="video-entry">lang_insight_table_header_video</td>
+<td class="video-views-entry">lang_insight_table_header_views</td>
+</tr>
+${topContentHTML}
+</table>
+</td>
+</tr>
+<tr>
+<td class="panel">
+<h3 class="dialog-title"><a href="javascript:void(0)">lang_insight_title_demographics</a></h3>
+<span>lang_insight_subtitle_demographics</span><br>
+<img src="${genderChart}" style="display:block;" onerror="this.style.display = 'none';"/>
+<img src="${viewerChart}" style="display:block;" onerror="this.style.display = 'none';"/>
+</td>
+<td class="panel">
+<h3 class="dialog-title">lang_insight_title_popularity</h3>
+<span>lang_insight_subtitle_popularity</span><br>
+<img src="${mapUrl}" style="width:355px;border: 2px black solid;"/>
+</td>
+</tr>`
+    },
+
+    "insightVideoHotspots": function(retentionChartUrl, videoEmbed) {
+        return `<p id="hot-spots-introduction" class="grayText">lang_insight_hotspots_introduction</p><tr>
+<td class="panel">
+<div id="audience-retention">
+<img src="${retentionChartUrl}" draggable="false"/>
+</div>
+</td>
+<td class="panel">${videoEmbed}</td>
+</tr>`
+    },
+
+    "insightVideoCommunity": function(dayCount, viewDurationChart, d, viewDurationChartFull, videoDeviceType) {
+        return `<tr>
+<td class="panel">
+<span>lang_insight_subtitle_watchtime</span><br>
+<div class="active-chart-container" id="active-chart-views-lifetime">
+<div class="active-chart" data-total-zoom-time="${dayCount}">
+<div class="heading smallText">
+<span>lang_insight_activechart_zoom</span>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',1)">lang_insight_activechart_1</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',5)">lang_insight_activechart_2</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',31)">lang_insight_activechart_3</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',93)">lang_insight_activechart_4</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',186)">lang_insight_activechart_5</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',365)">lang_insight_activechart_6</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime')">lang_insight_activechart_7</a>
+</div>
+<img src="${viewDurationChart}" id="active-chart-img" data-user-token="${d.userToken}"/>
+<span class="indicator-bar"></span>
+</div>
+<div class="active-chart-preview-part">
+<span class="part window part1"></span>
+<span class="layer layer-bottom" style="background-image:url('${viewDurationChartFull.active}')"></span>
+<span class="layer layer-overlay-top-left" style="background-image:url('${viewDurationChartFull.inactive}');"></span>
+<span class="part window part2"></span>
+</div>
+</div>
+</td>
+<td class="panel">
+<table>
+<tbody>
+<tr class="heading top-videos-heading black-text">
+<td class="video-entry bold"><h3>lang_insight_table_header_devices</h3></td>
+<td class="video-views-entry bold"><h3>lang_insight_table_header_usage</h3></td>
+</tr>
+${videoDeviceType}
+</tbody>
+</table>
+</td>
+</tr>`
+    },
+
+    "insightVideoDiscovery": function(videoSourcesHTML) {
+        return `<tr>
+<td class="panel wide-videos-panel" colspan="2">
+<h3 class="dialog-title">lang_insight_title_topvids</h3>
+<table>
+<tr class="heading top-videos-heading">
+<td class="video-entry">lang_insight_table_header_source</td>
+<td class="video-views-entry">lang_insight_table_header_alt_views</td>
+</tr>
+${videoSourcesHTML}
+</tr>`
+    },
+
+    "insightVideoViews": function(dayCount, videoViewChart, d, videoViewChartFull, mapUrl) {
+        return `<tr>
+<td class="panel">
+<span>lang_insight_subtitle_times</span><br>
+<div class="active-chart-container" id="active-chart-views-lifetime">
+<div class="active-chart" data-total-zoom-time="${dayCount}">
+<div class="heading smallText">
+<span>lang_insight_activechart_zoom</span>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',1)">lang_insight_activechart_1</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',5)">lang_insight_activechart_2</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',31)">lang_insight_activechart_3</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',93)">lang_insight_activechart_4</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',186)">lang_insight_activechart_5</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',365)">lang_insight_activechart_6</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime')">lang_insight_activechart_7</a>
+</div>
+<img src="${videoViewChart}" id="active-chart-img" data-user-token="${d.userToken}"/>
+<span class="indicator-bar"></span>
+</div>
+<div class="active-chart-preview-part">
+<span class="part window part1"></span>
+<span class="layer layer-bottom" style="background-image:url('${videoViewChartFull.active}')"></span>
+<span class="layer layer-overlay-top-left" style="background-image:url('${videoViewChartFull.inactive}');"></span>
+<span class="part window part2"></span>
+</div>
+</div>
+</td>
+<td class="panel">
+<img src="${mapUrl}" style="width:355px;border: 2px black solid;margin-top: 15px;"/>
+</td>
+</tr>`
+    },
+
+    "insightSearch": function(creatorVideosQueryHTML) {
+        return `</tbody></table><table id="table" class="search-table">
+<thead>
+<tr id="headings">
+<td id="heading-check" class="first-heading"></td>
+<td id="heading-title" class="heading"><div>lang_insight_search_vtitle</div></td>
+<td id="heading-views" class="heading"><div>lang_insight_search_vviews</div></td>
+</tr>
+</thead>
+<tbody>${creatorVideosQueryHTML}</tbody>
+</table>`
+    },
+
+    "insightCommunityEngagement": function(commentDayCount, commentedChartUrl, d, commentedFullChartUrl, topCommentContentHTML) {
+        return `<tr>
+<td class="panel">
+<span>lang_insight_subtitle_engagements</span><br>
+<div class="active-chart-container" id="active-chart-views-lifetime">
+<div class="active-chart" data-total-zoom-time="${commentDayCount}" data-is-comment-chart="1">
+<div class="heading smallText">
+<span>lang_insight_activechart_zoom</span>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',1)">lang_insight_activechart_1</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',5)">lang_insight_activechart_2</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',31)">lang_insight_activechart_3</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',93)">lang_insight_activechart_4</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',186)">lang_insight_activechart_5</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',365)">lang_insight_activechart_6</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime')">lang_insight_activechart_7</a>
+</div>
+<img src="${commentedChartUrl}" id="active-chart-img" data-user-token="${d.userToken}"/>
+<span class="indicator-bar"></span>
+</div>
+<div class="active-chart-preview-part">
+<span class="part window part1"></span>
+<span class="layer layer-bottom" style="background-image:url('${commentedFullChartUrl.active}')"></span>
+<span class="layer layer-overlay-top-left" style="background-image:url('${commentedFullChartUrl.inactive}');"></span>
+<span class="part window part2"></span>
+</div>
+</div>
+</td>
+<td class="panel community-engaging">
+<table>
+<tr class="heading top-videos-heading black-text">
+<td class="video-entry bold"><h3>lang_insight_table_header_engvideos</h3></td>
+<td class="video-views-entry bold"><h3>lang_insight_table_header_engpercent</h3></td>
+</tr>
+${topCommentContentHTML}
+</table>
+</td>
+</tr>`
+    },
+
+    "insightDemographics": function(largeAgeChart, largeGenderChart) {
+        return `<tr>
+<td class="panel">
+<h3 class="dialog-title">lang_insight_title_agerange</h3>
+<img src="${largeAgeChart}"/>
+</td>
+<td class="panel">
+<h3 class="dialog-title">lang_insight_title_genderrange</h3>
+<img src="${largeGenderChart}"/>
+</td>
+</tr>`
+    },
+
+    "insightViews": function(dayCount, viewsTabChartUrls, d, mapUrl, topContentHTML) {
+        return `<tr>
+<td class="panel">
+<span>lang_insight_subtitle_views</span><br>
+<div class="active-chart-container" id="active-chart-views-lifetime">
+<div class="active-chart" data-total-zoom-time="${dayCount}">
+<div class="heading smallText">
+<span>lang_insight_activechart_zoom</span>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',1)">lang_insight_activechart_1</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',5)">lang_insight_activechart_2</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',31)">lang_insight_activechart_3</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',93)">lang_insight_activechart_4</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',186)">lang_insight_activechart_5</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime',365)">lang_insight_activechart_6</a>
+<a href="javascript:activeChartZoom('active-chart-views-lifetime')">lang_insight_activechart_7</a>
+</div>
+<img src="${viewsTabChartUrls.highQualityUrls[0]}" id="active-chart-img" data-user-token="${d.userToken}"/>
+<span class="indicator-bar"></span>
+</div>
+<div class="active-chart-preview-part">
+<span class="part window part1"></span>
+<span class="layer layer-bottom" style="background-image:url('${viewsTabChartUrls.bottomPreview}')"></span>
+<span class="layer layer-overlay-top-left" style="background-image:url('${viewsTabChartUrls.bottomPreviewInactivePart}');"></span>
+<span class="part window part2"></span>
+</div>
+</div>
+</td>
+<td class="panel">
+<img src="${mapUrl}" style="width:355px;border:1px black solid;margin-top:15px;"/>
+</td>
+</tr>
+<tr>
+<td class="panel wide-videos-panel" colspan="2">
+<h3 class="dialog-title">lang_insight_title_topvids</h3>
+<table>
+<tr class="heading top-videos-heading">
+<td class="video-entry">lang_insight_table_header_video</td>
+<td class="video-views-entry">lang_insight_table_header_views</td>
+</tr>
+${topContentHTML}
+</table>
+</td>
+</tr>`
+    },
+
+    "insightPervideoHeadings": function(thumbnail, title, publishDate, viewCount) {
+        return `</tbody></table>
+----VIDEO-FOLDER----
+<div class="folder selected extended">
+<table>
+<tbody>
+<tr>
+<td class="vtop">
+<div class="part-holder part-thumb">
+<div class="video-thumb-micro">
+<img src="${thumbnail}" draggable="false"/>
+</div>
+</div>
+</td>
+<td>
+<div class="part-holder part-name">
+<a class="name" href="javascript:void(0)">${title}</a>
+</div>
+</td>
+</tbody>
+</table>
+</div>
+<div class="subfolder selected" onclick="switchSubfolder('VVIEWS', this)">
+<a class="name" href="javascript:void(0)">lang_insight_subfolder_views</a>
+</div>
+<div class="subfolder" onclick="switchSubfolder('VDISCOVERY', this)">
+<a class="name" href="javascript:void(0)">lang_insight_subfolder_discovery</a>
+</div>
+<div class="subfolder" onclick="switchSubfolder('VDEMOGRAPHICS', this)">
+<a class="name" href="javascript:void(0)">lang_insight_subfolder_demographics</a>
+</div>
+<div class="subfolder" onclick="switchSubfolder('VCOMMUNITY', this)">
+<a class="name" href="javascript:void(0)">lang_insight_subfolder_community</a>
+</div>
+<div class="subfolder" onclick="switchSubfolder('VHOTSPOTS', this)">
+<a class="name" href="javascript:void(0)">lang_insight_subfolder_hotspots</a>
+</div>
+----VIDEO-FOLDER-END----
+----VIDEO-CARD----
+<div class="floatL">
+<div class="video-thumb-small">
+<img src="${thumbnail}" draggable="false"/>
+</div>
+</div>
+<div class="video-card-info">
+<h3>${title}</h3>
+<div class="info-line">
+<span class="grayText">lang_insight_videocard_published</span>
+<span>${publishDate}</span>
+</div>
+<div class="info-line">
+<span class="grayText">lang_insight_videocard_viewcount</span>
+<span>${viewCount || "-"}</span>
+</div>
+</div>
+----VIDEO-CARD-END----`
+    },
+
+    "insightSearchVideo": function(i, id, thumbnail, title, publishDate, views) {
+        return `
+<tr class="video ${(i % 2 == 0) ? "even" : "odd"}">
+<td></td>
+<td class="video-data">
+<div class="video-thumb-micro">
+<a href="/my_videos_insight?video_id=${id}">
+<img src="${thumbnail}" draggable="false"/>
+</a>
+</div>
+<a href="/my_videos_insight?video_id=${id}" class="video-title">${title}</a>
+<span class="publish-date"> - ${publishDate}</span>
+</td>
+<td>${views}</td>
+</tr>`
+    },
+
+    "insightTableVideo": function(i, id, title, percent, imgUrl) {
+        return `
+    <tr class="top-video-entry ${i % 2 !== 0 ? "odd" : "even"}">
+    <td title="${title.split("\"").join("&quot;")}"><a href="${id ? `/my_videos_insight?video_id=${id}` : "#"}">${title}</a></td>
+    <td><span class="number">${percent}</span><img src="${imgUrl}"/></td>
+    </tr>`
+    },
+
+    "miniPlHeader": function(name) {
+        return `<a style="text-decoration:none;margin-bottom:4px;display:block;margin-top:-10px" class="title title-text-color"><span id="playnav-playlist-playlists-all-title" class="title">${utils.xss(name)}</span></a>`
     }
 }

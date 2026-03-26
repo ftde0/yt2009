@@ -1628,6 +1628,7 @@ function openPlaylist(element, switchMode) {
         }
         r.open("GET", "/channel_get_playlist?r=" + Math.random().toString())
         r.setRequestHeader("id", element.getAttribute("data-id"))
+        r.setRequestHeader("fmode-titles", "1")
         r.send(null)
         r.onreadystatechange = function(e) {
             if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
@@ -2573,7 +2574,12 @@ try {
         document.getElementById("watch-related-discoverbox"),
         "video-entry"
     )
-    if(related.length <= 0) {
+	var usingPchelper = (
+		window.location
+	 && location.href
+	 && location.href.indexOf("with_pchelper=1") !== -1
+	)
+    if(related.length <= 0 && !usingPchelper) {
         var channelVids = document.getElementById("watch-channel-videos-panel")
                         .getElementsByTagName("h2")[0]
         toggleExpander(channelVids)

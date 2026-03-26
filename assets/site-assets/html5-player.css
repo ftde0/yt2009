@@ -710,7 +710,10 @@
     padding: 1px 2px;
 }
 
-.captions_popup_container li:hover, .audio_track_more:hover, .quality_selector li:hover {
+.captions_popup_container li:hover,
+.audio_track_more:hover,
+.quality_selector li:hover,
+.player-context-menu .context-option:hover {
     background: #333333;
 }
 
@@ -1038,5 +1041,58 @@
 
 .quality_selector li:hover .sr_indicator .ip2,
 .quality_selector li:hover .hbr_indicator .ip2 {
+    color: white;
+}
+
+
+
+.seek_time.uses_storyboard {
+    background-image: url("/player-imgs/seek_time_storyboarded.png");
+    width: 103px;
+    height: 47px;
+}
+
+.seek_time.uses_storyboard .seek_time_text {
+    position: relative;
+    left: 33px;
+}
+
+.seek_time.uses_storyboard .storyboard_container {
+    position: absolute;
+    left: 4px;
+    top: 3px;
+    width: 64px;
+    height: 36px;
+    overflow: hidden;
+    display: block;
+    background: url("/assets/site-assets/icn_loading_animated-vfl24663.gif") center center no-repeat;
+}
+
+.seek_time.uses_storyboard .storyboard_container .storyboard_sheet {
+    width: 64px;
+    height: 48px;
+    display: block;
+    position: relative;
+    top: -6px;
+    background-repeat: no-repeat;
+}
+
+.player-context-menu {
+    position: absolute;
+    padding: 2px 1px;
+    background-image: url("/player-imgs/captions-popup-base.png");
+	background-size: contain;
+	border: 2px #a9aaa9 solid;
+    user-select: none;
+    z-index: 7;
+    min-width: 81px;
+}
+
+.player-context-menu .context-option {
+    cursor: pointer;
+    padding: 2px 3px;
+}
+
+.player-context-menu .context-option:hover {
     color: white;
 }

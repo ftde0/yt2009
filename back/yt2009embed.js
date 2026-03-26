@@ -85,7 +85,11 @@ module.exports = function(req, res) {
     let live = req.query.live || false
     let sabr = (req.headers && req.headers.cookie
                 && req.headers.cookie.includes("exp_sabr"))
-
+	let usePchelper = (req && req.query && req.query.with_pchelper == "1");
+	if(usePchelper) {
+		sabr = false;
+	}
+	
     // authorized?
     if(utils.isAuthorized(req)) {
         if(config.env == "dev") {
@@ -357,7 +361,7 @@ module.exports = function(req, res) {
     if(!waitForOgv) {
         res.send(code.replace(
             "mp4_files",
-            templates.embedVideoSources(id)
+            templates.embedVideoSources(id, req)
         ))
         return;
     }

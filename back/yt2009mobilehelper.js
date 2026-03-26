@@ -16,6 +16,8 @@ const customizableRequest = require("./proto/bare_android_request_pb")
 const browseNavigation = require("./proto/browse_navigation_pb")
 const creatorRequestSpecifics = require("./proto/creator_request_pb")
 const commentActions = require("./proto/comment_action_pb")
+const yt2009pot = require("./yt2009pot")
+const playerRequestProto = require("./proto/android_player_request_pb")
 const androidHeaders = {
     "Accept": "*/*",
     "Accept-Language": "en-US;q=0.7,en;q=0.3",
@@ -1616,19 +1618,45 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             callback(false)
             return;
         }
-        setupYouTube(device, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/player", {
-                "headers": h,
-                "method": "POST",
-                "body": JSON.stringify({
-                    "context": androidContext,
-                    "videoId": req.query.video_id
-                }),
-                "agent": yt2009utils.createFetchAgent()
-            }).then(r => {r.json().then(r => {
-                callback(r)
-            })})
-        })
+		let pot = null;
+		let waitForPot = false;
+		if(req.usePot) {
+			waitForPot = true;
+			this.openDatasyncId(req, (datasync) => {
+				yt2009pot.generatePo(datasync, (pot) => {
+					let potContainer = new playerRequestProto.root
+										   .serviceIntegrityDimensionsMsg
+										   .container()
+					let potContent = new playerRequestProto.root
+										 .serviceIntegrityDimensionsMsg
+										 .container.contents()
+					potContent.setEncryptdata(pot.encryptData)
+					potContent.setTokendata(pot.backup)
+					potContainer.addContent(potContent)
+					pot = utils.base64toUrl(Buffer.from(
+						potContainer.serializeBinary()
+					).toString("base64"))
+					doRequest()
+				}, true)
+			})
+		}
+		function doRequest() {
+			setupYouTube(device, (h) => {
+				fetch("https://www.youtube.com/youtubei/v1/player", {
+					"headers": h,
+					"method": "POST",
+					"body": JSON.stringify({
+						"context": androidContext,
+						"videoId": req.query.video_id.substring(0,11),
+						"serviceIntegrityDimensions": pot
+					}),
+					"agent": yt2009utils.createFetchAgent()
+				}).then(r => {r.json().then(r => {
+					callback(r)
+				})})
+			})
+		}
+		if(!waitForPot) {doRequest()}
     },
 
     "applyUpdateMetadata": function(req, res) {
@@ -3347,7 +3375,24 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 callback(r)
             })})
         }, req)
-    }
+    },
+
+    "openDatasyncId": function(req, callback) {
+		let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            callback(false)
+            return;
+        }
+		pullAllYouTubeAccounts(userdata[device], (data) => {
+			let datasyncId = false;
+			data.forEach(a => {
+                if(a.selected) {
+                    datasyncId = a.datasyncId
+                }
+            })
+            callback(datasyncId)
+		})
+	}
 }
 
 function pullFirstGoogleAuth(email, token, callback) {

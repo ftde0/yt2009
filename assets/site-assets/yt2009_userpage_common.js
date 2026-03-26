@@ -159,7 +159,10 @@ if(window.localStorage) {
     var path = location.pathname.split("?")[0].split("&")[0]
     switch(path) {
         case "/my_favorites": {
-            storageObject = JSON.parse(localStorage.favorites)
+            try {
+				storageObject = JSON.parse(localStorage.favorites)
+			}
+			catch(error) {}
             if(storageObject[0] !== "PCHELPER_MANAGED") {
                 buildList()
             } else {

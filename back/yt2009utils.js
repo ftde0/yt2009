@@ -1270,11 +1270,15 @@ module.exports = {
         
         function parseResponse(r) {
             // parse formats
-            if(!r.streamingData && retriedOs) {
+            if(!r.streamingData) {
                 callback(false)
                 yt2009exports.updateFileDownload(fname, 2)
                 return;
             }
+			let downloadingPrivateVideo = (
+				r.videoDetails
+			 && r.videoDetails.isPrivate
+			);
             let qualities = {}
             let h264DashAudioUrl;
             // prefer nondash formats
@@ -1400,6 +1404,11 @@ module.exports = {
                             "../assets/" + fname + ".mp4",
                             ((feedback) => {
                                 callback(`${fname}.mp4`)
+								if(downloadingPrivateVideo) {
+									yt2009exports.extendWrite(
+										"players", id, null
+									)
+								}
                                 yt2009exports.updateFileDownload(`${fname}`, 2)
                             }),
                             fname
@@ -1889,6 +1898,8 @@ module.exports = {
     },
 
     "exp_related_keyword": function(tags, title) {
+        if(!tags && !title) return "";
+
         // have video data, get related with exp_related
         let lookup_keyword = ""
 
@@ -2797,6 +2808,16 @@ module.exports = {
             }
             if(p.error) {
                 bp.playabilityStatus.reason = p.error;
+            }
+        }
+
+        if(resp.storyboardList&&resp.storyboardList[0]) {
+            let p = resp.storyboardList[0]
+            let spec = p.sbList[0].sblink
+            bp.storyboards = {
+                "playerStoryboardSpecRenderer": {
+                    "spec": spec
+                }
             }
         }
 

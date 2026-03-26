@@ -261,3 +261,32 @@ a[href="/my_videos_upload"] span {
 .extended-comment-likecount .watch-comment-voting-off {
     width: 97px;
 }
+
+#watch-private-box {
+    font-weight: bold;
+    margin-top: 5px;
+    background: rgb(255, 255, 204);
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgb(255, 204, 51);
+    border-image: initial;
+    padding: 5px;
+}
+
+.has_owned_video_box #watch-channel-vids-div {
+    margin-bottom: -1px;
+}
+
+#watch-owned-video-panel {
+    background: #e4edfc;
+    border: 1px #a4b0d6 solid;
+    margin-bottom: 10px;
+}
+
+#watch-owned-video-panel-inner {
+    margin: 11px 7px;
+}
+
+#video-owned-video-panel-buttons {
+    margin-top: 8px;
+}

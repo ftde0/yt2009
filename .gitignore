@@ -10,6 +10,7 @@ assets/*.mp3
 assets/*.m4a
 assets/*.wmv
 assets/*.avi
+assets/sbt-*
 assets/charts_temp/
 assets/user-uploads-tmp/
 back/cache_dir/annotations/*

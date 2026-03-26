@@ -37,6 +37,49 @@ module.exports = {
             `yt2009_http_root_url`
         ).join(`http://${config.ip}:${config.port}/`)
 
+        // per-site code
+        switch(path_to_content) {
+            case "insight.html": {
+                let formatDate = utils.dateFormat
+                let loadTimeId = 7;
+                let loadCurrentTimeString = "---"
+                let dateGroups = [
+                    {
+                        "6": formatDate(Date.now() - (1000 * 60 * 60 * 24 * 7)) + " - " + formatDate(Date.now()),
+                        "7": formatDate(Date.now() - (1000 * 60 * 60 * 24 * 28)) + " - " + formatDate(Date.now()),
+                        "13": formatDate(Date.now() - (1000 * 60 * 60 * 24 * 90)) + " - " + formatDate(Date.now()),
+                        "14": formatDate(Date.now() - (1000 * 60 * 60 * 24 * 365)) + " - " + formatDate(Date.now())
+                    },
+                    {
+                        "12": "This month",
+                        "22": "Last month",
+                        "23": "2 months prior"
+                    },
+                    {
+                        "1": "Whole period"
+                    }
+                ]
+                // render dates
+                let dateHTML = ``
+                dateGroups.forEach(dg => {
+                    for(let date in dg) {
+                        if(date == loadTimeId) {
+                            loadCurrentTimeString = dg[date]
+                        }
+                        dateHTML += `<li><a href="#" onclick="loadDate(${date},this);return false;">${dg[date]}</a></li>`
+                    }
+                    dateHTML += "<hr>"
+                })
+                site = site.replace(
+                    "yt2009_insight_load_time", loadCurrentTimeString
+                )
+                site = site.replace(
+                    `<!--yt2009_insight_dates-->`, dateHTML
+                )
+                break;
+            }
+        }
+
         // experimental: wordlist-based search suggestions
         // create the list in /wordlist.txt and separate suggestions
         // by newlines to use.

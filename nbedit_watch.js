@@ -225,15 +225,18 @@ if(useLocalStorage) {
         localStorage.watch_history = "[]"
     }
     watch_history = JSON.parse(localStorage.watch_history)
-    if(JSON.stringify(watch_history).indexOf(currentId) == -1) {
-        watch_history.unshift({
-            "id": currentId,
-            "title": title,
-            "views": views
-        })
+	if(JSON.stringify(watch_history).indexOf(currentId) !== -1) {
+		watch_history = watch_history.filter(function(s) {
+			return s.id !== currentId
+		})
+	}
+    watch_history.unshift({
+        "id": currentId,
+        "title": title,
+        "views": views
+    })
 
-        localStorage.watch_history = JSON.stringify(watch_history)
-    }
+    localStorage.watch_history = JSON.stringify(watch_history)
 } else {
     // cookie
     var watchHistory = ""
@@ -1735,7 +1738,12 @@ show more from if no related
 */
 var related = document.getElementById("watch-related-discoverbox")
               .getElementsByClassName("video-entry");
-if(related.length <= 0) {
+var usingPchelper = (
+	window.location
+ && location.href
+ && location.href.indexOf("with_pchelper=1") !== -1
+)
+if(related.length <= 0 && !usingPchelper) {
     var channelVids = document.getElementById("watch-channel-videos-panel")
                       .getElementsByTagName("h2")[0]
     toggleExpander(channelVids)

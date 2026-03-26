@@ -1209,7 +1209,8 @@ module.exports = {
         let useSabr = false;
         let sabrBaseUrl = ""
         if(flags.includes("exp_sabr")
-		&& !(req.query&&req.query.unsabr=="1")) {
+		&& !(req.query&&req.query.unsabr=="1")
+		&& !(req.query&&req.query.only_itag_18=="1")) {
             useSabr = true;
             sabrBaseUrl = yt2009sabr.initPlaybackSession(data.id, data.qualities)
         }
@@ -1944,7 +1945,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         uploadDate = uploadDate.replace("Streamed live on ", "")
                                 .replace("Premiered ", "")
-        if(uploadDate.includes("-")) {
+        if(uploadDate.includes("-") && uploadDate !== "-") {
             // fallback format
             let temp = new Date(uploadDate)
             uploadDate = ["Jan", "Feb", "Mar", "Apr",
@@ -1964,23 +1965,27 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         // upload date language handle
         let userLang = yt2009languages.get_language(req)
-        let upDateDay = uploadDate.split(" ")[1].replace(",", "")
-        let upDateMonth = uploadDate.split(" ")[0]
-        let upDateYear = uploadDate.split(" ")[2]
-        let languageUpDateRule = yt2009languages.raw_language_data(userLang)
-                                                .watchpageUploadDate
+        try {
+			let upDateDay = uploadDate.split(" ")[1].replace(",", "")
+			let upDateMonth = uploadDate.split(" ")[0]
+			let upDateYear = uploadDate.split(" ")[2]
+			let languageUpDateRule = yt2009languages
+									 .raw_language_data(userLang)
+									 .watchpageUploadDate
 
-        if(!languageUpDateRule) {
-            languageUpDateRule = yt2009languages.raw_language_data("en")
-                                                .watchpageUploadDate
-        }
-        uploadDate = languageUpDateRule.dateFormat.replace(
-            "[day]", upDateDay
-        ).replace(
-            "[monthcode]", languageUpDateRule.monthcodes[upDateMonth]
-        ).replace(
-            "[year]", upDateYear
-        )
+			if(!languageUpDateRule) {
+				languageUpDateRule = yt2009languages.raw_language_data("en")
+													.watchpageUploadDate
+			}
+			uploadDate = languageUpDateRule.dateFormat.replace(
+				"[day]", upDateDay
+			).replace(
+				"[monthcode]", languageUpDateRule.monthcodes[upDateMonth]
+			).replace(
+				"[year]", upDateYear
+			)
+		}
+		catch(error){}
 
 
         let channelIcon = data.author_img;
@@ -2902,6 +2907,26 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }, 300)
         }
 
+		// private video indicator
+		if(data.isPrivate) {
+			code = code.replace(
+				`<!--yt2009_pv-->`, yt2009templates.privateVideoIndicator
+			)
+		} else {
+			code = code.replace(`<!--yt2009_pv-->`, ``)
+		}
+
+        // owned video indicator
+        if(data.isOwned) {
+            code = code.replace(
+                `<!--yt2009_owned_video_panel-->`,
+                yt2009templates.ownedVideoBox(data.id)
+            )
+            code = code.replace("yt2009_cho", "has_owned_video_box")
+        } else {
+            code = code.replace(`<!--yt2009_owned_video_panel-->`, ``)
+        }
+
         // sharing
         let shareBehaviorServices = constants.shareBehaviorServices
         
@@ -3144,6 +3169,20 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 && data.tags && data.tags.length >= 1) {
                     let keywords = data.tags.join(",").split("&").join("")
                     flash_url += "&keywords=" + keywords
+                }
+
+                // storyboards
+                if(flags.includes("use_storyboards")
+                && flash_url.includes("/watch.swf")) {
+                    let storyboardUrl = [
+                        `http://${config.ip}:${config.port}`,
+                        `/storyboard_fetch?video_id=${data.id.substring(0,11)}`
+                    ].join("")
+                    storyboardUrl = encodeURIComponent(storyboardUrl)
+                    flash_url += [
+                        "&seekbar_thumbs=1",
+                        "&thumbnail_tiles_url=" + storyboardUrl
+                    ].join("")
                 }
                 
                 flash_url += render_endscreen_f()
@@ -4075,7 +4114,36 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
     "getVisitorId": function() {
         return visitorId
-    }
+    },
+	
+	"miniParse": function(playerResponse) {
+		let data = {
+			"isMiniResponse": true,
+			"upload": "-",
+			"rawResponse": playerResponse
+		}
+		let videoDetails = playerResponse.videoDetails
+		if(!videoDetails) return data;
+		data.description = videoDetails.shortDescription
+		data.viewCount = videoDetails.viewCount
+		data.author_name = videoDetails.author;
+		data.id = videoDetails.videoId;
+		data.author_url = "/channel/" + videoDetails.channelId
+		data.title = videoDetails.title
+		data.author_id = videoDetails.channelId
+		data.author_img = "/minipicty?channel=" + videoDetails.channelId
+		data.tags = videoDetails.keywords || [];
+		data.related = []
+        data.comments = []
+		data.length = parseInt(videoDetails.lengthSeconds)
+		data.freezeSync = true;
+		data.isPrivate = videoDetails.isPrivate
+        data.isOwned = videoDetails.isOwnerViewing
+		data.qualities = ["360p"]
+		data.category = "-"
+		yt2009exports.extendWrite("players", data.id, playerResponse)
+		return data;
+	}
 }
 
 let validationRan = false;

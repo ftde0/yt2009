@@ -136,7 +136,6 @@ if(require("os").totalmem() <= 110000000) {
     low RAM amount (1G or less) detected!
     you might run into issues with video encoding.
     
-    
 `)
 }
 if(config.ip == "127.0.0.1" || config.ip == "localhost") {
@@ -545,6 +544,27 @@ app.get("/watch", (req, res) => {
 
     // start ryd early
     ryd.fetch(id, (d) => {})
+
+    // withpchelper support (render only from /player)
+	if(req.query.with_pchelper
+	&& mobileHelper.hasLogin(req)) {
+		req.usePot = true;
+		req.query.only_itag_18 = true
+		req.query.video_id = id;
+		mobileHelper.pullPlayer(req, (data) => {
+			data = yt2009.miniParse(data)
+			if(!data || !data.title) {
+				res.redirect("/?ytsession=1")
+				return;
+			}
+			yt2009.applyWatchpageHtml(data, req, (code) => {
+				code = yt2009_languages.apply_lang_to_code(code, req)
+				code = yt2009_doodles.applyDoodle(code, req)
+				res.send(code)
+			})
+		})
+		return;
+	}
 
     // actual handling
     yt2009.fetch_video_data(id, (data) => {
@@ -1726,8 +1746,15 @@ app.get("/channel_get_playlist", (req, res) => {
      && req.headers.cookie
      && req.headers.cookie.includes("show_times")
     )
+    let addTitle = (
+        req.headers
+     && req.headers["fmode-titles"] == "1"
+    )
     let videosHTML = ``
     yt2009_playlists.parsePlaylist(req.headers.id, (list) => {
+        if(list.name && addTitle) {
+            videosHTML += yt2009_templates.miniPlHeader(list.name)
+        }
         let video_index = 0;
         list.videos.forEach(video => {
             videosHTML += yt2009_templates.playnavVideo(
@@ -1989,7 +2016,23 @@ app.get("/next_awesome", (req, res) => {
     yt2009_warp_swf.get_related(req, res)
 })
 app.get("/get_video", (req, res) => {
-    yt2009_warp_swf.get_flv(req, res)
+    let waitForPchelper = false;
+    if(((req && req.query && req.query.with_pchelper == "1")
+    || (req && req.query && req.query.t == "with_pchelper-1"))
+    && mobileHelper.hasLogin(req)) {
+        waitForPchelper = true;
+        req.usePot = true;
+        let id = req.query.video_id
+        mobileHelper.pullPlayer(req, (data) => {
+            yt2009_exports.extendWrite(
+                "players", id.substring(0,11), data
+            )
+            yt2009_warp_swf.get_flv(req, res)
+        })
+    }
+    if(!waitForPchelper) {
+        yt2009_warp_swf.get_flv(req, res)
+    }
 })
 
 
@@ -2115,7 +2158,8 @@ let static_sites = {
     "/wariolandshakeit2008": "wariolandshakeit2008.html",
     "/experiencewii": "wariolandshakeit2008.html",
     "/mh_pc_intro": "mh_pc_intro.html",
-    "/mh_pc_manage": "mh_pc_manage.html"
+    "/mh_pc_manage": "mh_pc_manage.html",
+    "/my_videos_insight": "insight.html"
 }
 for(let site in static_sites) {
     app.get(site, (req, res) => {
@@ -5449,6 +5493,10 @@ app.get("/chart", (req, res) => {
         yt2009charts.genBar(req, res)
         return;
     }
+    if(req.query.cht == "intf") {
+        yt2009charts.intGenFillBar(req, res)
+        return;
+    }
     yt2009charts.gen(req, res)
 })
 
@@ -7312,6 +7360,22 @@ app.get("/fmodecomunitab", (req, res) => {
     }
     yt2009_utils.fmodeComunitab.request(req, res)
 })
+
+/*
+======
+register insight-related endpoints
+======
+*/
+require("./yt2009insight").set(app)
+
+/*
+======
+register storyboard
+======
+*/
+if(fs.existsSync("./yt2009storyboard.js")) {
+    require("./yt2009storyboard").set(app)
+}
 
 /*
 pizdec
