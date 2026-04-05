@@ -232,6 +232,11 @@ module.exports = {
                     if(r.length < 1000) {
                         console.log(`malformed resp? ${r.toString("base64")}`)
                     }
+                    let parseOptions = {};
+                    if(req && req.query && req.query.return_part_lengths) {
+                        parseOptions.returnPartLengths = true;
+                        //console.log("returning lenghts")
+                    }
                     parseResponse(r, (data) => {
                         if(data.type && data.type == "redirect") {
                             // redo request with new url
@@ -260,6 +265,8 @@ module.exports = {
                                     console.log(error, players[p.id])
                                 }
                             }
+
+                            //console.log(data)
                             callback(data)
                         }
                     }, (redir) => {
@@ -268,7 +275,7 @@ module.exports = {
                             //console.log("received sabr redir", redir)
                             players[p.id].sabrUrl = redir;
                         }
-                    })
+                    }, parseOptions)
                 })})
             }
             pull()
@@ -516,7 +523,7 @@ module.exports = {
         return abrReq.serializeBinary()
     },
 
-    "parseResponse": function(r, fCallback, redirCallback, parseAsOnesieWyjebka) {
+    "parseResponse": function(r, fCallback, redirCallback, parseOptions) {
         // root ump parse logic
         // https://github.com/LuanRT/googlevideo/blob/main/src/core/UMP.ts
         // https://github.com/LuanRT/googlevideo/blob/main/src/core/ChunkedDataBuffer.ts
@@ -778,7 +785,7 @@ module.exports = {
             }
         }
 
-        if(parseAsOnesieWyjebka) {
+        if(parseOptions && parseOptions.parseAsOnesieWyjebka) {
             let parts = []
             let umpParse = new ump(new chunkedDataBuffer([r]))
             umpParse.parse(function(part) {
@@ -802,6 +809,7 @@ module.exports = {
         let videoInit;
         let fragments = {}
         let fullRes = r;
+        let contentLengths = {}
 
         // concat fragments and write
         function finalize() {
@@ -827,6 +835,10 @@ module.exports = {
                 }
 
                 finalFragments[n] = wholeChunk
+            }
+
+            if(parseOptions && parseOptions.returnPartLengths) {
+                finalFragments.contentLengths = contentLengths;
             }
 
             // output callback
@@ -876,6 +888,24 @@ module.exports = {
                     return s.chunknumber == chunk;
                 })[0]
                 var mdata = m.data.slice(1)
+
+                // content times if needed
+                if(parseOptions
+                && parseOptions.returnPartLengths
+                && header.chunkmediadata) {
+                    try {
+                        let ts = header.chunkmediadata.timescale
+                        // resulting values are in seconds
+                        let start = header.chunkmediadata.starttime / ts;
+                        let length = header.chunkmediadata.length / ts;
+                        let id = header.itag + "-" + header.totalchunknumber;
+                        contentLengths[id] = {
+                            "s": start,
+                            "l": length
+                        }
+                    }
+                    catch(error) {}
+                }
 
                 // should fill init
                 if(header.isinitchunk) {
@@ -986,7 +1016,8 @@ module.exports = {
             "headers": {},
             "query": {
                 "hd": 1,
-                "return_video_length": 1
+                "return_video_length": 1,
+                "return_part_lengths": 1
                 //"force_replayer": 0/1
             }
         }
@@ -1013,6 +1044,9 @@ module.exports = {
             let newFileNames = []
             files = JSON.parse(JSON.stringify(files))
             function runFile() {
+                /*let chunkId = files[0].split(s + "-")[1]
+                console.log(chunkId, contentLengths[chunkId])
+                return;*/
                 let ffmpegCmd = [
                     "ffmpeg",
                     "-y",
@@ -1043,6 +1077,7 @@ module.exports = {
         let offsetSeconds = 0;
         let videoLength = 0;
         let concurrentReplayerCount = 0;
+        let contentLengths = {}
         function downloadPart() {
             // receive parts
             thisRef.handlePlayer(s, offsetSeconds * 1000, fReq, (data) => {
@@ -1067,6 +1102,12 @@ module.exports = {
                         }
                         case "videoLength": {
                             videoLength = parseInt(data[part])
+                            break;
+                        }
+                        case "contentLengths": {
+                            for(let p in data[part]) {
+                                contentLengths[p] = data[part][p]
+                            }
                             break;
                         }
                         default: {

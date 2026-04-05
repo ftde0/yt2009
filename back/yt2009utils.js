@@ -2812,13 +2812,16 @@ module.exports = {
         }
 
         if(resp.storyboardList&&resp.storyboardList[0]) {
-            let p = resp.storyboardList[0]
-            let spec = p.sbList[0].sblink
-            bp.storyboards = {
-                "playerStoryboardSpecRenderer": {
-                    "spec": spec
+            try {
+                let p = resp.storyboardList[0]
+                let spec = p.sbList[0].sblink
+                bp.storyboards = {
+                    "playerStoryboardSpecRenderer": {
+                        "spec": spec
+                    }
                 }
             }
+            catch(error) {}
         }
 
         return bp;
@@ -2973,7 +2976,7 @@ module.exports = {
                         }
                         catch(error){}
                     })
-                }, false, true)
+                }, false, {"parseAsOnesieWyjebka": true})
             })})
         }
 

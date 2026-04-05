@@ -263,8 +263,11 @@ module.exports = {
                         resultsToCallback = resultsToCallback.map(r => {
                             if((r.type == "video" || r.type == "live-video")
                             || dataApiR[r.id]) {
-                                r.title = dataApiR[r.id].title || ""
-                                r.description = dataApiR[r.id].description || ""
+                                try {
+                                    r.title = dataApiR[r.id].title || ""
+                                    r.description = dataApiR[r.id].description || ""
+                                }
+                                catch(error){}
                             }
                             return r;
                         })

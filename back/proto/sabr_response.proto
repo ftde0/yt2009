@@ -3,6 +3,12 @@ package sabr_response;
 
 /*chunk metadata sent before each chunk*/
 
+message chunkMediaData {
+    int32 startTime = 1;
+    int32 length = 2;
+    int32 timeScale = 3;
+}
+
 message root {
     optional int32 chunkNumber = 1; /*starts with 0 for each sabr response*/
     string videoId = 2;
@@ -15,4 +21,5 @@ message root {
     optional int32 chunkOffsetMs = 11; /* per-itag, WEB only? */
     int32 partLengthMs = 12; /* WEB only? */
     int64 contentSize = 14;
+    chunkMediaData chunkMediaData = 15;
 }

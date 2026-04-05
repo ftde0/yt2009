@@ -490,6 +490,9 @@ function video_pause() {
 
 // play/pause
 video.addEventListener("click", function() {
+    if(mainElement.querySelector(".player-context-menu")) {
+        return false;
+    }
     if(!video.paused) {
         video_pause();
         flash_middle_btn("pause")
@@ -2006,6 +2009,7 @@ function annotationsMain() {
         }, false)
         sizeAnnotationsContainer()
         annotation43()
+        attachContextmenuListener(ac)
     }
 
     if(annotationsEnabled) {
@@ -3538,7 +3542,10 @@ function initAsSabr() {
                 }
                 catch(error) {
                     console.log("AUD", error)
+                    // try reinit player
                     clearInterval(vbq)
+                    initAsSabr()
+                    return;
                 }
                 sabrData.appendQueue.shift()
             }
@@ -4615,3 +4622,191 @@ function removeCtxmenu() {
         catch(error){}
     }
 }
+
+// player context menu
+function attachContextmenuListener(element) {
+    var usesModernFeatures = (
+        document.cookie
+     && document.cookie.indexOf
+     && document.cookie.indexOf("watch_modern_features") !== -1
+    )
+    if(!usesModernFeatures) return;
+    var ctxMenuElements = [
+        ["Loop", function() {
+            video.loop = !video.loop
+            if(video.loop) {
+                try {
+                    $(".option-loop").innerHTML = "[x] Loop"
+                }
+                catch(error){}
+            } else {
+                try {
+                    $(".option-loop").innerHTML = "Loop"
+                }
+                catch(error){}
+            }
+            if(window.sabrData) {
+                // playing in sabr
+                if(sabrData.fEndCallback) {
+                    if(video.loop) {
+                        sabrData.ogFendCallback = sabrData.fEndCallback;
+                        sabrData.fEndCallback = function() {
+                            video.currentTime = 0;
+                        }
+                    } else if(sabrData.ogFendCallback) {
+                        sabrData.fEndCallback = sabrData.ogFendCallback;
+                        sabrData.ogFendCallback = null;
+                    } else {
+                        sabrData.fEndCallback = null;
+                    }
+                } else {
+                    sabrData.fEndCallback = function() {
+                        video.currentTime = 0;
+                    }
+                }
+            }
+            removeCtxmenu()
+        }]
+    ]
+    if(video.requestPictureInPicture) {
+        ctxMenuElements.push([
+            "Enter picture-in-picture", function() {
+                video.requestPictureInPicture()
+                removeCtxmenu()
+            }
+        ])
+    } else if(!document.querySelector(".annotations_container")
+    && navigator.userAgent && navigator.userAgent.indexOf("Firefox/") !== -1) {
+        ctxMenuElements.push([
+            "Enter picture-in-picture", function() {
+                var message = [
+                    "Your browser does not appear to support picture-in-picture",
+                    "via this context menu.",
+                    "You may use SHIFT+[Right click] on the player to enable."
+                ].join(" ")
+                alert(message)
+            }
+        ])
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText) {
+        ctxMenuElements.push(["Copy video URL (www.youtube.com)", function() {
+            var id = window.currentId || window.currentVideo;
+            if(!id) {
+                if(location.href.indexOf("v=") !== -1) {
+                    id = location.href.split("v=")[1].split("#")[0]
+                                 .split("&")[0]
+                } else if(location.href.indexOf("embed/") !== -1) {
+                    id = location.href.split("embed/")[1].split("?")[0]
+                                 .split("#")[0]
+                }
+            }
+            navigator.clipboard.writeText(
+                "http://www.youtube.com/watch?v=" + id
+            )
+        }])
+    }
+    ctxMenuElements.push(["Stats for nerds", function() {
+        removeCtxmenu()
+        function removeSfn() {
+            var p = document.querySelector(".stats-for-nerds").parentNode;
+            p.removeChild(document.querySelector(".stats-for-nerds"))
+        }
+        if(document.querySelector(".stats-for-nerds")) {
+            removeSfn()
+        }
+        function genStatsString() {
+            var s = [
+                "video size: " + video.videoWidth + "x" + video.videoHeight,
+                "volume (0-1): " + video.volume,
+                "sabr: " + !!(window.sabrData)
+            ]
+            if(window.sabrData) {
+                var itag = sabrData.customVideoItag || "[auto]"
+                s.push("")
+                s.push("[sabr log below]")
+                s.push("segments added: " + sabrData.addedSegments.length)
+                s.push("lastRequestFailCount: "+sabrData.lastRequestFailCount)
+                s.push("ended: " + sabrData.fEnd)
+                s.push("user video itag: " + itag)
+                s.push("video mime: " + sabrData.videoMime)
+                s.push("pending fetch: " + sabrData.waitingSabrFetch)
+            }
+            s = s.map(function(e) {
+                return "<span>" + e + "</span>"
+            })
+            return s.join("<br>")
+        }
+        function updateSfn() {
+            e.querySelector("div").innerHTML = genStatsString()
+        }
+        var x = setInterval(function() {
+            if(!document.querySelector(".stats-for-nerds")) {
+                clearInterval(x)
+                return;
+            }
+            updateSfn()
+        }, 100)
+        var e = document.createElement("div")
+        e.className = "stats-for-nerds"
+        e.innerHTML = "<p class=\"sfn-close-btn\">[x]</p><div></div>"
+        mainElement.appendChild(e)
+        e.querySelector(".sfn-close-btn").onclick = function() {
+            removeSfn()
+        }
+    }])
+    element.oncontextmenu = function(e) {
+        var addedOptions = 0;
+        removeCtxmenu()
+        var playerX = 0;
+        var playerY = 0;
+        if(mainElement.getBoundingClientRect) {
+            playerX = Math.floor(mainElement.getBoundingClientRect().left)
+            playerY = Math.floor(mainElement.getBoundingClientRect().top)
+        }
+        var x = (e.clientX || e.pageX || 0) - playerX
+        var y = (e.clientY || e.pageY || 0) - playerY
+        var ctxMenu = document.createElement("div")
+        ctxMenu.className = "player-context-menu multiple-options"
+        ctxMenu.style.left = x + "px"
+        ctxMenu.style.top = y + "px"
+        ctxMenuElements.forEach(function(e) {
+            if(addedOptions >= 1) {
+                var hr = document.createElement("hr")
+                ctxMenu.appendChild(hr)
+            }
+            var btn = document.createElement("span")
+            var optionClass = e[0].split(" ").join("").toLowerCase()
+            btn.className = "context-option option-" + optionClass
+            btn.innerHTML = e[0]
+            switch(optionClass) {
+                case "loop": {
+                    if(video.loop) {
+                        btn.innerHTML = "[x] " + e[0]
+                    }
+                    break;
+                }
+            }
+            ctxMenu.appendChild(btn)
+            btn.addEventListener("click", e[1], false)
+            addedOptions++
+        })
+        mainElement.appendChild(ctxMenu)
+        return false;
+    }
+    element.addEventListener("click", function(e) {
+        if(mainElement.querySelector(".player-context-menu")) {
+            removeCtxmenu()
+            if(e && e.preventDefault) {
+                e.preventDefault()
+            }
+            return false;
+        }
+    }, false)
+    $(".video_controls").addEventListener("click", function() {
+        removeCtxmenu()
+    }, false)
+    $(".video_controls").addEventListener("mouseover", function() {
+        removeCtxmenu()
+    }, false)
+}
+attachContextmenuListener(video)

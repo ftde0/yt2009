@@ -1090,9 +1090,33 @@
 
 .player-context-menu .context-option {
     cursor: pointer;
+    padding-left: 3px;
+    display: block;
+}
+
+.player-context-menu.multiple-options .context-option {
     padding: 2px 3px;
 }
 
 .player-context-menu .context-option:hover {
     color: white;
+}
+
+.player-context-menu hr {
+    margin: 1px;
+}
+
+.stats-for-nerds {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    background: rgba(0,0,0,0.4);
+    color: white;
+    padding: 5px 5px;
+    z-index: 4;
+}
+
+.stats-for-nerds .sfn-close-btn {
+    display: block;
+    cursor: pointer;
 }

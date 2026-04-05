@@ -2727,7 +2727,7 @@ module.exports = {
                     <div class="video-long-title">
                         <a id="video-short-title-${video.id}" href="/watch?v=${video.id}" class="yt-uix-hovercard-target" title="${video.title.split('"').join("&quot;")}" rel="nofollow">${utils.xss(video.title)}</a>
                     </div>
-                    <div class="video-description">${video.description.length > 100 ? (video.description.substring(0, 100) + "...") : video.description}</div>
+                    <div class="video-description">${video.description && video.description.length > 100 ? (video.description.substring(0, 100) + "...") : (video.description || "")}</div>
                     <div class="video-facets">
                         <span id="video-average-rating-${video.id}" class="video-rating-list ">
                             <div>

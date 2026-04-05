@@ -3069,6 +3069,43 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             parsedNotifications.push(notif)
         }
 
+        function finalizeNotifications() {
+            function sendNotifications() {
+                parsedNotifications = parsedNotifications.sort((a,b) => {
+                    return b.time - a.time
+                })
+                callback(parsedNotifications)
+            }
+
+            if(neededVideos.length >= 1
+            && config.data_api_key) {
+                utils.dataApiBulk(neededVideos, [
+                    "title", "description"
+                ], (data) => {
+                    let copy = parsedNotifications;
+                    for(let v in data) {
+                        copy = parsedNotifications.map((a) => {
+                            if(a.needed && a.id == v) {
+                                a.title = utils.xss(
+                                    data[v].title || ""
+                                )
+                                a.description = utils.xss(
+                                    data[v].description || ""
+                                )
+                                a.needed = null;
+                                delete a.needed;
+                            }
+                            return a;
+                        })
+                    }
+                    parsedNotifications = copy;
+                    sendNotifications()
+                })
+            } else {
+                sendNotifications()
+            }
+        }
+
         setupYouTube(device, (h) => {
             fetch("https://www.youtube.com/youtubei/v1/browse", {
                 "method": "POST",
@@ -3078,7 +3115,20 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                     "browseId": "FEnotifications_inbox"
                 })
             }).then(r => {r.json().then(r => {
-                //fs.writeFileSync("./" + Date.now() + ".json", JSON.stringify(r))
+                if((r.error && r.error.message
+                && r.error.message.includes("convert server response"))
+                || req.query.test_force_proto == 1) {
+                    if(config.env == "dev") {
+                        console.log("pchelper notifications fail, retry proto")
+                    }
+                    // needs proto retry
+                    this.notificationsProto(req, (n) => {
+                        parsedNotifications = n.parsedNotifications
+                        neededVideos = n.neededVideos
+                        finalizeNotifications()
+                    })
+                    return;
+                }
                 try {
                     r = r.contents.singleColumnBrowseResultsRenderer.tabs[0]
                         .tabRenderer.content.sectionListRenderer.contents
@@ -3107,42 +3157,303 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                         parseStandardNotification(n)
                     }
                 })
+                
+                finalizeNotifications()
+            })})
+        }, req)
+    },
 
-                function sendNotifications() {
-                    parsedNotifications = parsedNotifications.sort((a,b) => {
-                        return b.time - a.time
+    "notificationsProtoShortcut": function(f) {
+        // protoShortcut -- application-specific and a **shortcut**
+        // way of extraction!! will skip a few things!!!
+        // we just hope that the googlys will fix their jsons 
+        // (for users with new messages?) and this can be removed shortly
+        function notifId(n) {
+            return crypto.createHash("sha1").update(
+                `${n.from}${n.type}${n.commentContent||n.id||n.title||""}`
+            ).digest("hex").substring(0, 16)
+        }
+
+        let neededVideos = []
+        let parsedNotifications = []
+        let notifs = f.split("*inbox_notification.eml") // ignore expandable
+        notifs.shift()
+        notifs.forEach(n => {
+            let parsedType = ""
+            let notificationEntry = {}
+            if(n.includes("Uploaded: ")) {
+                parsedType = "upload"
+            } else if(n.includes("Replied: ")) {
+                parsedType = "reply"
+            } else if(n.includes("Commented: ")) {
+                parsedType = "comment"
+            } else if(n.includes("You got a like")) {
+                parsedType = "like"
+            }
+
+            let sentDate = ""
+            let lines = n.split("\n")
+            function getSentDate() {
+                let possibilities = [
+                    "second ago",
+                    "seconds ago",
+                    "minute ago",
+                    "minutes ago",
+                    "hour ago",
+                    "hours ago",
+                    "day ago",
+                    "days ago",
+                    "week ago",
+                    "weeks ago",
+                    "month ago",
+                    "months ago",
+                    "year ago",
+                    "years ago"
+                ]
+                let possibilitiesLine = ""
+                possibilities.forEach(p => {
+                    let line = lines.filter(s => {
+                        return s.includes(p)
                     })
-                    callback(parsedNotifications)
-                }
-
-                if(neededVideos.length >= 1
-                && config.data_api_key) {
-                    utils.dataApiBulk(neededVideos, [
-                        "title", "description"
-                    ], (data) => {
-                        let copy = parsedNotifications;
-                        for(let v in data) {
-                            copy = parsedNotifications.map((a) => {
-                                if(a.needed && a.id == v) {
-                                    a.title = utils.xss(
-                                        data[v].title || ""
-                                    )
-                                    a.description = utils.xss(
-                                        data[v].description || ""
-                                    )
-                                    a.needed = null;
-                                    delete a.needed;
-                                }
-                                return a;
-                            })
+                    if(line[0]) {
+                        possibilitiesLine = line[0].split(" ago")[0] + " ago"
+                        possibilitiesLine = possibilitiesLine.split("")
+                        while(possibilitiesLine[0]
+                        && possibilitiesLine[0].charCodeAt(0) < 48) {
+                            possibilitiesLine.shift()
                         }
-                        parsedNotifications = copy;
-                        sendNotifications()
-                    })
-                } else {
-                    sendNotifications()
+                        possibilitiesLine = possibilitiesLine.join("")
+                    }
+                })
+                sentDate = possibilitiesLine
+            }
+
+            let sender = ""
+            function getSender() {
+                let isDiscarded = false;
+                let line = lines.filter(s => {
+                    return ((s.includes("Roboto-Bold")
+                        && s.includes("2\x11"))
+                        || (s.includes("Roboto-Bold")
+                        && lines[lines.indexOf(s) - 1].includes("2\x11")))
+                })
+                if(line[0]) {
+                    line = line[0]
+                    if(!line.includes("2\x11")) {
+                        let i = lines.indexOf(line)
+                        line = lines[i - 1] // should be on line before
+                        if(!line.includes("2\x11")) {
+                            // parsing error, discard
+                            isDiscarded = true;
+                        }
+                    }
+                    if(isDiscarded) return ""
+                    line = line.split("")
+                    while(line[0] && line[0].charCodeAt(0) < 48) {
+                        line.shift()
+                    }
+                    line = line.join("").split("2\x11")[0]
+                    sender = line;
+                }
+            }
+
+            let senderAvatar = ""
+            function getSenderAvatar() {
+                let line = lines.filter(s => {
+                    return (s.includes("yt3.ggpht.com")
+                        || s.includes("googleusercontent.com"))
+                })
+                if(line[0]) {
+                    line = "http" + line[0].split("http")[1].split(" ")[0]
+                    senderAvatar = line;
+                }
+            }
+
+            let videoId = ""
+            function getVideoId() {
+                let line = lines.filter(s => {
+                    return ((s.includes("vi_webp/")
+                        || s.includes("vi/"))
+                        && (s.includes("default.")
+                        || s.includes("frame0.")))
+                })
+                if(line[0]) {
+                    line = line[0].split(/vi\_webp|vi/).filter(s => {
+                        return s.includes("default.") || s.includes("frame0.")
+                    })[0].split("/")[1]
+                    if(line.length == 11) {
+                        videoId = line
+                        if(!neededVideos.includes(videoId)) {
+                            neededVideos.push(videoId)
+                        }
+                    }
+                }
+            }
+
+            function fillAsCommentNotification(type, content) {
+                getSentDate()
+                getVideoId()
+                getSender()
+                getSenderAvatar()
+                let time = new Date(
+                    utils.relativeToAbsoluteApprox(sentDate)
+                ).getTime()
+                notificationEntry = {
+                    "from": sender.replace("@", ""),
+                    "thumbnail": senderAvatar,
+                    "commentContent": utils.xss(content),
+                    "type": type,
+                    "date": sentDate,
+                    "id": videoId,
+                    "time": time,
+                    "needed": true,
+                    "p": true
+                }
+                notificationEntry.notificationId = notifId(notificationEntry)
+                parsedNotifications.push(notificationEntry)
+            }
+
+            switch(parsedType) {
+                case "upload": {
+                    let title = n.split("Uploaded: ")[1].split("\x04")[0]
+                    if(title.endsWith("2")) {
+                        title = title.split("2")
+                        title.pop()
+                        title = title.join("2")
+                    }
+                    getSentDate()
+                    getSender()
+                    getSenderAvatar()
+                    getVideoId()
+                    if(title && sentDate && sender && senderAvatar && videoId) {
+                        let time = new Date(
+                            utils.relativeToAbsoluteApprox(sentDate)
+                        ).getTime()
+                        notificationEntry = {
+                            "from": sender,
+                            "type": "upload",
+                            "date": sentDate,
+                            "title": utils.xss(title),
+                            "id": videoId,
+                            "time": time,
+                            "thumbnail": senderAvatar,
+                            "p": true
+                        }
+                        notificationEntry.notificationId = notifId(
+                            notificationEntry
+                        )
+                        parsedNotifications.push(notificationEntry)
+                    }
+                    break;
+                }
+                case "comment": {
+                    let l = lines.filter(s => {
+                        return s.includes("Commented: ")
+                    })[0].split("Commented: ")[1]
+                    l = l.split("2\x04")[0]
+                    if(l.startsWith("\"")) {
+                        l = l.split("\"")
+                        l.shift()
+                        l.pop()
+                        l = l.join("\"")
+                    }
+                    let content = l;
+                    fillAsCommentNotification("comment", content)
+                    break;
+                }
+                case "reply": {
+                    let l = lines.filter(s => {
+                        return s.includes("Replied: ")
+                    })[0].split("Replied: ")[1]
+                    l = l.split("2\x04")[0]
+                    if(l.startsWith("\"")) {
+                        l = l.split("\"")
+                        l.shift()
+                        l.pop()
+                        l = l.join("\"")
+                    }
+                    let content = l;
+                    fillAsCommentNotification("comment", content)
+                    break;
+                }
+                case "like": {
+                    let l = lines[lines.indexOf(lines.filter(s => {
+                        return s.includes("You got a like")
+                    })[0]) - 1]
+                    let content = l.split("2\x04")[0].split("\"")
+                    content.shift()
+                    content.pop()
+                    content = content.join("\"")
+                    getSentDate()
+                    getVideoId()
+                    let t = "/assets/site-assets/comment-notification-star.png"
+                    if(content && sentDate && videoId) {
+                        let time = new Date(
+                            utils.relativeToAbsoluteApprox(sentDate)
+                        ).getTime()
+                        content = [
+                            "Congratulations! Your comment got a like:",
+                            content
+                        ].join(" ")
+                        notificationEntry = {
+                            "id": videoId,
+                            "from": "Comment Like",
+                            "content": utils.xss(content),
+                            "needed": true,
+                            "p": true,
+                            "date": sentDate,
+                            "time": time,
+                            "thumbnail": t,
+                            "type": "message",
+                            "additionalHeader": "has_video_data",
+                            "parsableType": "comment_like"
+                        }
+                        notificationEntry.notificationId = notifId(
+                            notificationEntry
+                        )
+                        parsedNotifications.push(notificationEntry)
+                    }
+                    break;
+                }
+            }
+        })
+
+        return {
+            "parsedNotifications": parsedNotifications,
+            "neededVideos": neededVideos
+        }
+    },
+
+    "notificationsProto": function(req, callback) {
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            callback([])
+            return;
+        }
+        setupYouTube(device, (h) => {
+            let url = [
+                "https://youtubei.googleapis.com/youtubei/v1/browse",
+                "?alt=proto&fields=contents"
+            ].join("")
+            fetch(url, {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "browseId": "FEnotifications_inbox"
+                })
+            }).then(r => {r.text().then(r => {
+                let notifications = {
+                    "parsedNotifications": [], "neededVideos": []
+                }
+                try {
+                    notifications = this.notificationsProtoShortcut(r)
+                }
+                catch(error) {
+                    console.log(error)
                 }
 
+                callback(notifications)
             })})
         }, req)
     },
@@ -3392,7 +3703,34 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             })
             callback(datasyncId)
 		})
-	}
+	},
+
+    "openRequestTest": function(req, callbac) {
+        let device = pullDeviceId(req);
+        if(!req.body || !req.body.toString
+        || !userdata[device]) {
+            res.sendStatus(400)
+            return;
+        }
+        let alt = req.query.alt || "json"
+        let domain = "www.youtube.com"
+        if(alt !== "json") {
+            domain = "youtubei.googleapis.com"
+        }
+        setupYouTube(device, (h) => {
+            fetch("https://"+ domain +"/youtubei/v1/browse?fields=contents&alt=" + alt, {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "browseId": req.query.browse_id || "FEnotifications_inbox",
+                    "params": req.query.params || null
+                })
+            }).then(r => {r.buffer().then(r => {
+                callbac(r)
+            })})
+        }, req)
+    }
 }
 
 function pullFirstGoogleAuth(email, token, callback) {
