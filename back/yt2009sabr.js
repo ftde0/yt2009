@@ -1,11 +1,11 @@
 // SABR lib for yt2009
 const fetch = require("node-fetch")
-const playerResponsePb = require("./proto/android_player_pb")
 const sabrResponsePb = require("./proto/sabr_response_pb")
 const yt2009utils = require("./yt2009utils")
 const yt2009signin = require("./yt2009androidsignin")
 const yt2009constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
+const yt2009mobilehelper = require("./yt2009mobilehelper")
 const config = require("./config.json")
 const child_process = require("child_process")
 const fs = require("fs")
@@ -16,7 +16,7 @@ let playbackSessions = {}
 let downloadProgresses = []
 
 module.exports = {
-    "initPlaybackSession": function(id, videoQualities) {
+    "initPlaybackSession": function(id, videoQualities, extraProperties) {
         let rid = ""
         let chars = "qwertyuiopasdfghjklzxcvbnm1234567890_-".split("")
         while(rid.length !== 16) {
@@ -32,6 +32,12 @@ module.exports = {
         playbackSessions[rid] = {
             "id": id,
             "qualities": videoQualities
+        }
+
+        if(extraProperties) {
+            for(let p in extraProperties) {
+                playbackSessions[rid][p] = extraProperties[p]
+            }
         }
 
         return `/sabr_playback?pid=${rid}`;
@@ -197,15 +203,25 @@ module.exports = {
 
             // create request proto payload
             let videoFmt = preferedVideoFmt.itag;
-            let videoLmt = preferedVideoFmt.lastchanged;
+            let videoLmt = preferedVideoFmt.lastchanged
+                        || parseInt(preferedVideoFmt.lastModified)
 			let videoXtags = preferedVideoFmt.xtags
             let audioFmt = preferedAudioFmt.itag
             let audioLmt = preferedAudioFmt.lastchanged
+                        || parseInt(preferedAudioFmt.lastModified)
             let audioXtags = preferedAudioFmt.xtags || ""
+            let pchelperBoundPot = (p.pchelperBindingReq
+                                 && p.pchelperBindingReq.potBytes
+                                 && p.pchelperBindingReq.potKey)
+                                 ? [
+                                    p.pchelperBindingReq.potBytes,
+                                    p.pchelperBindingReq.potKey
+                                 ]
+                                 : false;
             let protoReq = createProto(
                 videoFmt, videoLmt, audioFmt,
                 audioLmt, audioXtags, r.ustreamer,
-                offset, videoXtags
+                offset, videoXtags, pchelperBoundPot
             )
 
             // send request
@@ -218,6 +234,7 @@ module.exports = {
                     callback(false)
                     return;
                 }
+                let gotRedirectData = false;
                 //console.log("trying pull with " + r.sabrUrl)
                 fetch(r.sabrUrl, {
                     "method": "POST",
@@ -230,7 +247,7 @@ module.exports = {
                     pull()
                 }).then(r => {if(!r || !r.status) return;r.buffer().then(r => {
                     if(r.length < 1000) {
-                        console.log(`malformed resp? ${r.toString("base64")}`)
+                        console.log(`no media response? ${r.toString("base64")}`)
                     }
                     let parseOptions = {};
                     if(req && req.query && req.query.return_part_lengths) {
@@ -255,6 +272,9 @@ module.exports = {
                             if(p.pongItag) {
                                 data.itag = preferedVideoFmt.itag
                             }
+                            if(gotRedirectData) {
+                                data.hasRedirect = true;
+                            }
                             if(req.query.return_video_length) {
                                 try {
                                     let z = players[p.id]
@@ -272,8 +292,8 @@ module.exports = {
                     }, (redir) => {
                         if(redir) {
                             // use for later request
-                            //console.log("received sabr redir", redir)
                             players[p.id].sabrUrl = redir;
+                            gotRedirectData = true;
                         }
                     }, parseOptions)
                 })})
@@ -286,26 +306,26 @@ module.exports = {
         if(req.query.force_replayer) {
             console.log(`[sabr/${playbackSession}] force replayer called!`)
         }
+        function extractPlayerData(data) {
+            data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
+            data.ustreamer = data.playerConfig.mediaCommonConfig
+                                 .mediaUstreamerRequestConfig
+                                 .videoPlaybackUstreamerConfig;
+            if(data.sabrUrl && data.sabrUrl.includes("expire=")) {
+                data.expiry = parseInt(
+                    data.sabrUrl.split("expire=")[1].split("&")[0]
+                ) * 1000
+            } else {
+                data.expiry = Date.now() + (7200 * 1000) // 2 hrs
+            }
+            players[p.id] = data;
+        }
         if(!players[p.id] && yt2009exports.read().players[p.id]) {
             if(config.env == "dev") {
                 console.log(`using cached exports player for ${playbackSession}`)
             }
             players[p.id] = yt2009exports.read().players[p.id]
-            players[p.id].ustreamer = players[p.id].playerConfig
-                                      .mediaCommonConfig
-                                      .mediaUstreamerRequestConfig
-                                      .videoPlaybackUstreamerConfig
-            players[p.id].sabrUrl = players[p.id].streamingData
-                                    .serverAbrStreamingUrl
-            try {
-                let expiry = players[p.id].sabrUrl
-                             .split("expire=")[1].split("&")[0]
-                players[p.id].expiry = parseInt(expiry) * 1000
-            }
-            catch(error) {
-                let twoHours = 7200 * 1000
-                players[p.id].expiry = Date.now() + twoHours
-            }
+            extractPlayerData(players[p.id])
         }
         if(players[p.id] && players[p.id].expiry - 60000 >= Date.now()
         && !req.query.force_replayer) {
@@ -317,21 +337,23 @@ module.exports = {
             if(config.env == "dev") {
                 console.log(`using clean player for ${playbackSession}`)
             }
+            if(p.pchelperBindingReq) {
+                p.pchelperBindingReq.usePot = true;
+                p.pchelperBindingReq.callbackPot = true;
+                p.pchelperBindingReq.query = {
+                    "video_id": p.id
+                }
+                yt2009mobilehelper.pullPlayer(p.pchelperBindingReq, (d) => {
+                    p.pchelperBindingReq.potBytes = d[1]
+                    p.pchelperBindingReq.potKey = d[2]
+                    extractPlayerData(d[0])
+                    processPlayer(players[p.id])
+                })
+            }
             if(config.wyjeba_typu_onesie
             || yt2009exports.read().session_use_onesie) {
                 yt2009utils.wyjebaTypuOnesie(p.id, (data) => {
-                    data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
-                    data.ustreamer = data.playerConfig.mediaCommonConfig
-                                         .mediaUstreamerRequestConfig
-                                         .videoPlaybackUstreamerConfig;
-                    if(data.sabrUrl && data.sabrUrl.includes("expire=")) {
-                        data.expiry = parseInt(
-                            data.sabrUrl.split("expire=")[1].split("&")[0]
-                        ) * 1000
-                    } else {
-                        data.expiry = Date.now() + (7200 * 1000) // 2 hrs
-                    }
-                    players[p.id] = data;
+                    extractPlayerData(data)
                     processPlayer(players[p.id])
                 })
                 return;
@@ -352,123 +374,18 @@ module.exports = {
                     "body": pbmsg,
                     "agent": yt2009utils.createFetchAgent()
                 }).then(r => {r.buffer().then(b => {
-                    let resp = playerResponsePb.root.deserializeBinary(b)
-                    let formats = resp.toObject().formatsList[0]
-                    let bp = {} //bp -- backport
-                    let expire = "0"
-                    function backportFormat(f) {
-                        let a = JSON.parse(JSON.stringify(f))
-                        a.qualityLabel = f.qualitylabel;
-                        a.bitrate = f.totalbitrate;
-                        a.mimeType = f.mimetype;
-                        a.itag = f.formatid
-                        if(f.audiotrackList && f.audiotrackList[0]) {
-                            a.isOriginal = false;
-                            let at = f.audiotrackList[0]
-                            if(f.xtags) {
-                                try {
-                                    let xtagsProto = playerResponsePb.xtags
-                                                 .deserializeBinary(f.xtags);
-                                    xtagsProto = xtagsProto.toObject()
-                                    let isOg = xtagsProto.partList.filter(s => {
-                                        return s.value == "original"
-                                    })[0]
-                                    if(isOg) {
-                                        a.isOriginal = true;
-                                    }
-                                }
-                                catch(error) {}
-                            }
-                            a.audioTrack = {
-                                "label": at.displayname,
-                                "vss_id": at.vssid,
-                                "audioIsDefault": Boolean(at.isdefault)
-                            }
-                        } else {
-                            a.audioTrack = false;
-                        }
-                        if(a.url && a.url.includes("expire=")) {
-                            expire = a.url.split("expire=")[1].split("&")[0]
-                        }
-                        return a;
-                    }
-                    if(!formats) {
-                        console.log(`[sabr/${playbackSession}] no streams`)
-                        if(b.toString().includes("Sign in to confirm")
-                        && !req.retry
-                        && !config.wyjeba_typu_onesie
-                        && !yt2009exports.read().session_use_onesie) {
-                            // retry
-                            try {
-                                console.log("^^ retrying")
-                                console.log("if this keeps failing restart yt2009")
-                                req.retry = true;
-                                selfRef(playbackSession, offset, req, callback)
-                            }
-                            catch(error){}
-                            return;
-                        }
-                        if(config.env == "dev") {
-                            let a = "sabr-error-" + Date.now()
-                            console.log(`saving pb response to ./${a}`)
-                            require("fs").writeFileSync(a, b)
-                        }
-                        callback(false)
-                        return;
-                    }
-                    if(req.retry) {
-                        // retry worked, mark for other players
-                        yt2009exports.writeData("session_use_onesie", true)
-                    }
-                    if(formats.dashformatList) {
-                        if(!bp.streamingData) {
-                            bp.streamingData = {}
-                        }
-                        bp.streamingData.adaptiveFormats = []
-                        formats.dashformatList.forEach(f => {
-                            bp.streamingData.adaptiveFormats.push(
-                                backportFormat(f)
-                            )
-                        })
-                    }
-
-                    if(req.query.return_video_length) {
-                        let a = resp.toObject()
-                        if(a.videometadataList && a.videometadataList[0]) {
-                            let m = a.videometadataList[0]
-                            bp.videoDetails = {
-                                "lengthSeconds": (
-                                    (m.videolength&&m.videolength.toString())
-                                    || "0"
-                                )
-                            }
-                        }
-                    }
-
-                    if(expire == "0"
-                    && formats.serverabrstreamingurl
-                    && formats.serverabrstreamingurl.includes("expire=")) {
-                        expire = formats.serverabrstreamingurl
-                                 .split("expire=")[1].split("&")[0]
-                    }
-
-                    let ustreamerConfig = resp.toObject()
-                                          .playerconfigmsgList[0]
-                                          .mediacommonconfigmsgList[0]
-                                          .mediaustreamerconfigList[0]
-                                          .mediaustreamerrequestconfig
-                    bp.ustreamer = ustreamerConfig;
-                    bp.sabrUrl = formats.serverabrstreamingurl;
-                    bp.expiry = parseInt(expire) * 1000
-                    players[p.id] = bp;
-                    processPlayer(bp)
+                    let player = yt2009utils.protoportPlayer(b)
+                    extractPlayerData(player)
+                    processPlayer(player)
                 })})
             })
         }
     },
 
     "createProto": function(
-        videoItagN, videoLmt, audioItagN, audioLmt, audioXtags, ustreamer, offset, videoXtags
+        videoItagN, videoLmt, audioItagN, audioLmt,
+        audioXtags, ustreamer, offset, videoXtags,
+        pchelperPot
     ) {
         const requestProto = require("./proto/sabr_pb")
         let videoItag = new requestProto.itagData()
@@ -496,14 +413,22 @@ module.exports = {
         context.setTimezone("Europe/Warsaw")
         context.setDevicecodename("ranchu;")
         abrNineteen.addClient(context)
+        let potBytes = Buffer.from([1])
+        let potKey = Buffer.from([1])
         if(yt2009exports.read().potBytes && yt2009exports.read().potKey) {
-            let pot = new requestProto.serviceIntegrityDimensionsMsg()
-            let content = new requestProto.serviceIntegrityDimensionsMsg.contents()
-            content.setEncryptdata(yt2009exports.read().potBytes)
-            content.setTokendata(yt2009exports.read().potKey)
-            pot.addContent(content)
-            abrNineteen.addServiceintegritydimensions(pot)
+            potBytes = yt2009exports.read().potBytes
+            potKey = yt2009exports.read().potKey
         }
+        if(pchelperPot && pchelperPot[0] && pchelperPot[1]) {
+            potBytes = pchelperPot[0]
+            potKey = pchelperPot[1]
+        }
+        let pot = new requestProto.serviceIntegrityDimensionsMsg()
+        let content = new requestProto.serviceIntegrityDimensionsMsg.contents()
+        content.setEncryptdata(potBytes)
+        content.setTokendata(potKey)
+        pot.addContent(content)
+        abrNineteen.addServiceintegritydimensions(pot)
         let abrItagsData = new requestProto.root.sourcePlayer.abrRequestMsg()
         abrItagsData.addVideoitag(videoItag)
         abrItagsData.addAudioitag(audioItag)
@@ -1090,6 +1015,7 @@ module.exports = {
                     freeupProgress()
                     return;
                 }
+                let hasRedirect = false;
                 let partCount = 0;
                 for(let part in data) {
                     //console.log(`got response part ${part}`)
@@ -1108,6 +1034,10 @@ module.exports = {
                             for(let p in data[part]) {
                                 contentLengths[p] = data[part][p]
                             }
+                            break;
+                        }
+                        case "hasRedirect": {
+                            hasRedirect = true
                             break;
                         }
                         default: {
@@ -1310,14 +1240,16 @@ module.exports = {
                     }, 150)
                 } else {
                     // no parts? try recalling
-                    concurrentReplayerCount++
-                    if(concurrentReplayerCount > 3) {
-                        // not!
-                        callback(false)
-                        freeupProgress()
-                        return;
+                    if(!hasRedirect) {
+                        concurrentReplayerCount++
+                        if(concurrentReplayerCount > 3) {
+                            // not!
+                            callback(false)
+                            freeupProgress()
+                            return;
+                        }
+                        fReq.query.force_replayer = 1
                     }
-                    fReq.query.force_replayer = 1
                     setTimeout(() => {
                         downloadPart()
                     }, 500)

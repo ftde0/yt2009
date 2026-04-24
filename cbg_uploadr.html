@@ -31,6 +31,7 @@ if(location.href.indexOf("status=success") !== -1) {
     document.body.innerHTML = "Upload successful!"
     var p = window.parent.document
     p.getElementById("background_image").value = location.href.split("fileid=")[1].split("&")[0].split("#")[0]
+    window.parent.backgroundUploadedCallback()
 } else if(location.href.indexOf("status=error") !== -1) {
     var errorText = "An error has occurred. Try again."
     if(location.href.indexOf("etype=funsupported") !== -1) {

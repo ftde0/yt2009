@@ -2592,6 +2592,9 @@ try {
                 && e.target.nodeName.toLowerCase() !== "textarea"
                 && e.target.nodeName.toLowerCase() !== "input")
                 || !e.target) {
+                    if(window.sabrData) {
+                        sabrData.skipSource = "ARROW"
+                    }
                     video.currentTime += skipAmount
                 }
                 break;
@@ -2602,6 +2605,9 @@ try {
                 && e.target.nodeName.toLowerCase() !== "textarea"
                 && e.target.nodeName.toLowerCase() !== "input")
                 || !e.target) {
+                    if(window.sabrData) {
+                        sabrData.skipSource = "ARROW"
+                    }
                     video.currentTime -= skipAmount
                 }
             }
@@ -2981,6 +2987,7 @@ function requestSabr(offset, source, force) {
     r.open("GET", url.join(""))
     r.responseType = "arraybuffer"
     r.send(null)
+    sabrData.currentRequest = r;
     r.addEventListener("timeout", function(e) {retryRequest()}, false)
     r.addEventListener("error", function(e) {retryRequest()}, false)
     r.addEventListener("load", function(e) {
@@ -3091,9 +3098,13 @@ function requestSabr(offset, source, force) {
         var s = r.response;
         var cursor = 14 // SABER-START
 
-        if(partsInResponse == 0) {
+        if(partsInResponse == 0
+        && !r.getResponseHeader("x-yt2009-got-internal-redirect")) {
             // something might have gone terribly wrong
             retryRequest(true)
+            return;
+        } else if(partsInResponse == 0) {
+            retryRequest()
             return;
         }
 
@@ -3426,6 +3437,13 @@ function initAsSabr() {
                         sabrData.lastCustomItag = false;
                     }
                     sabrData.customVideoItag = q[0]
+                    if(sabrData.currentRequest) {
+                        try {
+                            sabrData.currentRequest.abort()
+                            sabrData.waitingSabrFetch = false;
+                        }
+                        catch(error) {}
+                    }
                     requestSabr(Math.floor(video.currentTime * 1000), "FORCE")
                     adjustHDBtn()
                 }
@@ -3527,6 +3545,7 @@ function initAsSabr() {
                 }
                 catch(error) {
                     console.log("VID", error)
+                    console.log("^^reiniting")
                     // try reinit player
                     clearInterval(vbq)
                     initAsSabr()
@@ -3542,6 +3561,7 @@ function initAsSabr() {
                 }
                 catch(error) {
                     console.log("AUD", error)
+                    console.log("^^reiniting")
                     // try reinit player
                     clearInterval(vbq)
                     initAsSabr()
@@ -3634,6 +3654,16 @@ function initAsSabr() {
             return (s.start <= vc && s.end >= vc)
         })
         if(!currentRange[0]) {
+            // force no fetch arrows
+            if(sabrData.skipSource
+            && sabrData.skipSource == "ARROW"
+            && sabrData.currentRequest) {
+                try {
+                    sabrData.currentRequest.abort()
+                }
+                catch(error) {}
+                sabrData.waitingSabrFetch = false;
+            }
             // time not buffered
             if(!sabrData.waitingSabrFetch) {
                 sabrData.waitingSabrFetch = true;
@@ -4529,6 +4559,9 @@ function initStoryboard() {
         }
     }
     image.style.background = 'url("/storyboard_fetch?video_id=' + id + '")'
+    setTimeout(function() {
+        image.style.background = 'url("/storyboard_fetch?video_id=' + id + '")'
+    }, 4000)
     image.className = "storyboard_sheet"
     container.appendChild(image)
     $(".seek_time").appendChild(container)
@@ -4689,20 +4722,28 @@ function attachContextmenuListener(element) {
         ])
     }
     if(navigator.clipboard && navigator.clipboard.writeText) {
-        ctxMenuElements.push(["Copy video URL (www.youtube.com)", function() {
-            var id = window.currentId || window.currentVideo;
-            if(!id) {
-                if(location.href.indexOf("v=") !== -1) {
-                    id = location.href.split("v=")[1].split("#")[0]
-                                 .split("&")[0]
-                } else if(location.href.indexOf("embed/") !== -1) {
-                    id = location.href.split("embed/")[1].split("?")[0]
-                                 .split("#")[0]
-                }
+        var id = window.currentId || window.currentVideo;
+        if(!id) {
+            if(location.href.indexOf("v=") !== -1) {
+                id = location.href.split("v=")[1].split("#")[0]
+                             .split("&")[0]
+            } else if(location.href.indexOf("embed/") !== -1) {
+                id = location.href.split("embed/")[1].split("?")[0]
+                             .split("#")[0]
             }
+        }
+        ctxMenuElements.push(["Copy video URL (www.youtube.com)", function() {
             navigator.clipboard.writeText(
                 "http://www.youtube.com/watch?v=" + id
             )
+            removeCtxmenu()
+        }])
+        ctxMenuElements.push(["Copy video URL w/ time (www.youtube.com)", function() {
+            var time = "&t=" + Math.floor(video.currentTime).toString()
+            navigator.clipboard.writeText(
+                "http://www.youtube.com/watch?v=" + id + time
+            )
+            removeCtxmenu()
         }])
     }
     ctxMenuElements.push(["Stats for nerds", function() {

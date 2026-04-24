@@ -1208,11 +1208,19 @@ module.exports = {
         // sabr
         let useSabr = false;
         let sabrBaseUrl = ""
+        let sabrExtraProperties = {}
+        if(flags.includes("exp_sabr")
+        && req.query
+        && req.query.with_pchelper == 1) {
+            sabrExtraProperties.pchelperBindingReq = req;
+        }
         if(flags.includes("exp_sabr")
 		&& !(req.query&&req.query.unsabr=="1")
 		&& !(req.query&&req.query.only_itag_18=="1")) {
             useSabr = true;
-            sabrBaseUrl = yt2009sabr.initPlaybackSession(data.id, data.qualities)
+            sabrBaseUrl = yt2009sabr.initPlaybackSession(
+                data.id, data.qualities, sabrExtraProperties
+            )
         }
 
         // disable playback mode picker on unsupported node hosts
@@ -1314,8 +1322,67 @@ module.exports = {
             )
         }
 
+        // add checkbox comment options as internal flags
+        if(req.headers.cookie
+        && req.headers.cookie.includes("comment_options_hprofanity=1")) {
+            flags += ":int_cmts_filter_profanity"
+            code = code.replace(
+                `id="option-hide-profanity"`,
+                `id="option-hide-profanity" checked`
+            )
+            code = code.replace(
+                "yt2009-marker-hprofanity-checked",
+                "grayText"
+            )
+        }
+
+        // sort comments by new if no wayback and picked
+        let useNewComments = false;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("comment_options_sort=1")
+        && !flags.includes("wayback_features")) {
+            code = code.replace(
+                `data-yt2009-marker-new-checked=""`, `selected`
+            )
+            code = code.replace(
+                `data-yt2009-marker-top-checked=""`, ``
+            )
+            useNewComments = true;
+            requiredCallbacks++
+        } else {
+            code = code.replace(
+                `data-yt2009-marker-new-checked=""`, ``
+            )
+            code = code.replace(
+                `data-yt2009-marker-top-checked=""`, `selected`
+            )
+        }
+
+        // filters for related
+        let videoFilters = yt2009utils.getFilterData(req)
+        function shouldFilter(id, title, creatorName, creatorUrl) {
+            return (videoFilters.videos.includes(id)
+            || videoFilters.videos.filter(s => {
+                return title.toLowerCase().includes(
+                    s.toLowerCase()
+                )
+            })[0]
+            || videoFilters.channels.filter(s => {
+                return creatorName.toLowerCase().includes(
+                    s.toLowerCase()
+                )
+            })[0]
+            || (creatorUrl
+            && creatorUrl.includes("channel/")
+            && videoFilters.channels.includes(
+                creatorUrl.split("channel/")[1]
+            ))
+            || (creatorUrl
+            && creatorUrl.startsWith("UC")
+            && videoFilters.channels.includes(creatorUrl)))
+        }
+
         // handling flag
-        
         let author_name = data.author_name;
         if(flags.includes("remove_username_space")) {
             author_name = author_name.split(" ").join("")
@@ -1839,6 +1906,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 video.uploaderName
                                 .toLowerCase()
                                 .includes("playlist")) return;
+                            if(shouldFilter(
+                                video.id, video.title, video.uploaderName
+                            )) return;
                             let views = "lang_views_prefix" + yt2009utils.countBreakup(
                                 parseInt(yt2009utils.bareCount(video.viewCount))
                             ) + "lang_views_suffix"
@@ -2238,10 +2308,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         // comments
         let comments_html = ""
-        let unfilteredCommentCount = 0;
         let topLike = 0;
         if(data.comments
-        && !flags.includes("comments_remove_future")) {
+        && !flags.includes("comments_remove_future")
+        && !useNewComments) {
 
             // hide show more comments if less than 20
             if(data.comments.length < 20) {
@@ -2493,6 +2563,77 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     callback(code)
                 }
             })
+        } else if(useNewComments) {
+            let continuation = this.create_newest_continuation(
+                data.id, Math.floor(new Date().getTime() / 1000)
+            )
+            this.request_continuation(continuation, data.id, "", (c) => {
+                c.forEach(comment => {
+                    if(comment.pinned) return;
+                    if(comment.continuation) {
+                        code = code.replace(
+                            "yt2009_comments_continuation_token",
+                            comment.continuation
+                        )
+                        return;
+                    }
+                    let id = comment.commentId || yt2009commentId(
+                        comment.authorUrl, comment.content
+                    )
+                    let likes = comment.likes ? comment.likes : 0
+                    let customRating = 0;
+                    let customData = hasComment(data.id, id)
+                    if(customData) {
+                        likes += customData.rating
+                        let token = yt2009utils.get_used_token(req)
+                        token == "" ? token = "dev" : ""
+                        if(customData.ratingSources[token]) {
+                            customRating = customData.ratingSources[token]
+                        }
+                    }
+                    if(!comment.content) return;
+                    let commentHTML = yt2009templates.videoComment(
+                        comment.authorUrl,
+                        comment.authorName,
+                        flags.includes("fake_dates")
+                        ? yt2009utils.fakeDateSmall(theoreticalIndex)
+                        : comment.time,
+                        comment.content.split("<br><br>").join("<br>"),
+                        flags,
+                        true,
+                        likes,
+                        id,
+                        comment.r
+                    )
+                
+                    if(customRating == 1) {
+                        commentHTML = commentHTML.replace(
+                            "watch-comment-up-hover",
+                            "watch-comment-up-on"
+                        )
+                    } else if(customRating == -1) {
+                        commentHTML = commentHTML.replace(
+                            "watch-comment-down-hover",
+                            "watch-comment-down-on"
+                        )
+                    }
+                
+                    comments_html += commentHTML
+                    totalCommentCount++
+                })
+                code = code.replace(`yt2009_comment_count`, totalCommentCount)
+                code = code.replace(`<!--yt2009_add_comments-->`, comments_html)
+                callbacksMade++;
+                if(devTimings) {
+                    let progress = `${callbacksMade}/${requiredCallbacks}`
+                    console.log(`new comments (${progress})`, time)
+                }
+                if(requiredCallbacks == callbacksMade) {
+                    render_endscreen();
+                    fillFlashIfNeeded();
+                    callback(code)
+                }
+            }, true)
         } else {
             code = code.replace("yt2009_hook_more_comments", "hid")
             code = code.replace(`yt2009_comment_count`, totalCommentCount)
@@ -2503,8 +2644,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let related_html = ""
         let related_index = 0;
         data.related.forEach(video => {
-            if(yt2009utils.time_to_seconds(video.length) >= 1800
-            && data.length <= 1200) return;
+            if((yt2009utils.time_to_seconds(video.length) >= 1800
+            && data.length <= 1200)
+            || shouldFilter(
+                video.id, video.title, video.creatorName, video.creatorUrl
+            )) return;
 
             // flagi
             let uploader = video.creatorName
@@ -3411,6 +3555,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }
             yt2009search.related_from_keywords(
                 lookup_keyword, data.id, flags, (html, rawData) => {
+                    // videoFilters handled in related_from_keywords
                     rawData.forEach(video => {
                         endscreen_queue.push({
                             "title": video.title,
@@ -3426,12 +3571,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     })
                     exp_related_html += html;
 
-                    // add old defualt "related" videos at the end
+                    // add old default "related" videos at the end
                     data.related.forEach(video => {
                         if(video.uploaded
                         && parseInt(video.uploaded.split(" ")[0]) >= 15
                         && video.uploaded.includes("years")
-                        && !html.includes(`data-id="${video.id}"`)) {
+                        && !html.includes(`data-id="${video.id}"`)
+                        && !shouldFilter(
+                            video.id, video.title,
+                            video.creatorName, video.creatorUrl
+                        )) {
                             // only 15 years or older & no repeats
 
                             // handle flag
@@ -3497,7 +3646,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         callback(code)
                     }
                 },
-                req.protocol, false, customOld
+                req.protocol, false, customOld, videoFilters
             )
         }
 
@@ -3582,23 +3731,46 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // channel banners
-        this.getBanner(data, flags, (banner) => {
-            let channelUrl = data.author_id
-                           ? "/channel/" + data.author_id
-                           : data.author_url
-            if(banner) {
-                code = code.replace(
-                    `<!--yt2009_bannercard-->`,
-                    yt2009templates.watchBanner(
-                        channelUrl, banner
+        let serversideBannerPull = true;
+        if(req.query.with_pchelper == 1
+        || req.query.exp_turbocharge == 1) {
+            serversideBannerPull = false;
+            requiredCallbacks--;
+        }
+        if(serversideBannerPull) {
+            this.getBanner(data, flags, (banner) => {
+                let channelUrl = data.author_id
+                            ? "/channel/" + data.author_id
+                            : data.author_url
+                if(banner) {
+                    code = code.replace(
+                        `<!--yt2009_bannercard-->`,
+                        yt2009templates.watchBanner(
+                            channelUrl, banner
+                        )
                     )
-                )
-            }
-            callbacksMade++;
-            if(devTimings) {
-                let progress = `${callbacksMade}/${requiredCallbacks}`
-                console.log(`banner (${progress})`, time)
-            }
+                }
+                callbacksMade++;
+                if(devTimings) {
+                    let progress = `${callbacksMade}/${requiredCallbacks}`
+                    console.log(`banner (${progress})`, time)
+                }
+                if(requiredCallbacks <= callbacksMade) {
+                    render_endscreen()
+                    fillFlashIfNeeded();
+                    try {
+                        callback(code)
+                    }
+                    catch(error) {}
+                }
+            })
+        } else {
+            code = code.replace(
+                `<!--yt2009_bannercard-->`,
+                `<div id="yt2009-bannercard-container"></div>
+                <script src="/assets/site-assets/yt2009csbanner.js"></script>
+                <script>placeChannelBanner("${data.author_id}")</script>`
+            )
             if(requiredCallbacks <= callbacksMade) {
                 render_endscreen()
                 fillFlashIfNeeded();
@@ -3607,7 +3779,26 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
                 catch(error) {}
             }
-        })
+        }
+
+        // comments hide all option
+        if(req.headers.cookie
+        && req.headers.cookie.includes("comment_options_hall=1")) {
+            code = code.replace(
+                "yt2009-marker-comments-collapsed-body", "hid"
+            )
+            code = code.replace(
+                "yt2009-marker-comments-collapsed-header",
+                "yt-uix-expander-collapsed"
+            )
+            code = code.replace("yt2009-marker-hall-checked", "grayText")
+            code = code.replace(
+                `id="option-hide-all"`, `id="option-hide-all" checked`
+            )
+        } else {
+            code = code.replace(" yt2009-marker-comments-collapsed-body", "")
+            code = code.replace(" yt2009-marker-comments-collapsed-header", "")
+        }
         
 
         if(requiredCallbacks == 0) {
@@ -3885,30 +4076,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         return JSON.parse(JSON.stringify(custom_comments));
     },
 
-    "get_old_comments": function(data, callback, overrideDate) {
-        // GET_OLD_COMMENTS
-        // use protobuf to generate a continuation token going
-        // as far back as any date we desire.
-        // for yt2009, if a video is uploaded before 2011, we're going to 2012.
-        // after 2011, 8 months after from the upload date.
-
-        let pbDate = "2012"
-        if(new Date(data.upload).getFullYear() >= 2011) {
-            let eightMonthsUnix = 1000 * 60 * 60 * 24 * 31 * 8
-            pbDate = new Date(data.upload).getTime() + eightMonthsUnix
-        }
-
-        if(overrideDate) {pbDate = overrideDate;}
-
-        pbDate = Math.floor(new Date(pbDate).getTime() / 1000)
-        // override cache for now to refresh for everyone
-        // to be brought back a few updates later (2025-12-29)
-        /*if(oldCommentsCache[data.id + "/" + pbDate]) {
-            callback(oldCommentsCache[data.id + "/" + pbDate])
-            return;
-        }*/
-
-        // generate get_newest_first token
+    "create_newest_continuation": function(videoId, pbDate) {
         const pb = require("./proto/newestFirstComments_pb")
         let msg = new pb.newestComments()
 
@@ -3933,12 +4101,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         .split("=").join("")
 
         // generate comment continuation token
-        let id = data.id
-
         const cmts_pb = require("./proto/cmts_pb")
         let commentRequest = new cmts_pb.comments()
         let videoMsg = new cmts_pb.comments.video()
-        videoMsg.setVideoid(id)
+        videoMsg.setVideoid(videoId)
         commentRequest.addVideomsg(videoMsg)
         commentRequest.setType(6)
 
@@ -3949,7 +4115,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         commentsReqParamsMain.setSectiontype("comments-section")
 
         let crpChild = new cmts_pb.comments.commentsReq.commentsData()
-        crpChild.setVideoid(id)
+        crpChild.setVideoid(videoId)
         crpChild.setH(1)
         commentsReqParamsMain.addCommentsdatareq(crpChild)
         commentRequest.addCommentsreqmsg(commentsReqParamsMain)
@@ -3957,6 +4123,34 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let continuationToken = encodeURIComponent(Buffer.from(
             commentRequest.serializeBinary()
         ).toString("base64"))
+        return continuationToken;
+    },
+
+    "get_old_comments": function(data, callback, overrideDate) {
+        // GET_OLD_COMMENTS
+        // use protobuf to generate a continuation token going
+        // as far back as any date we desire.
+        // for yt2009, if a video is uploaded before 2011, we're going to 2012.
+        // after 2011, 8 months after from the upload date.
+
+        let pbDate = "2012"
+        if(new Date(data.upload).getFullYear() >= 2011) {
+            let eightMonthsUnix = 1000 * 60 * 60 * 24 * 31 * 8
+            pbDate = new Date(data.upload).getTime() + eightMonthsUnix
+        }
+
+        if(overrideDate) {pbDate = overrideDate;}
+
+        pbDate = Math.floor(new Date(pbDate).getTime() / 1000)
+        // override cache for now to refresh for everyone
+        // to be brought back a few updates later (2025-12-29)
+        /*if(oldCommentsCache[data.id + "/" + pbDate]) {
+            callback(oldCommentsCache[data.id + "/" + pbDate])
+            return;
+        }*/
+
+        // generate get_newest_first token
+        let continuationToken = this.create_newest_continuation(data.id, pbDate)
 
         this.request_continuation(
             continuationToken, id, "comments_remove_future", (comments) => {
@@ -4140,6 +4334,28 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 		data.isPrivate = videoDetails.isPrivate
         data.isOwned = videoDetails.isOwnerViewing
 		data.qualities = ["360p"]
+        data.extendedItagData = []
+        if(playerResponse.streamingData
+        && playerResponse.streamingData.adaptiveFormats
+        && playerResponse.streamingData.adaptiveFormats.length >= 1) {
+            data.qualities = []
+            playerResponse.streamingData.adaptiveFormats.forEach(quality => {
+                if(quality.qualityLabel
+                && quality.qualityLabel.includes("s")) {
+                    quality.qualityLabel = quality.qualityLabel.replace(
+                        "s", "p"
+                    ).replace("p50", "p").replace("p60", "p")
+                }
+                data.qualities.push(quality.qualityLabel)
+                data.extendedItagData.push([
+                    quality.itag,quality.qualityLabel,quality.height,
+                    quality.xtags,quality.mimeType,false
+                ])
+            })
+        }
+        if(playerResponse.playbackTracking) {
+            data.playbackTracking = playerResponse.playbackTracking
+        }
 		data.category = "-"
 		yt2009exports.extendWrite("players", data.id, playerResponse)
 		return data;

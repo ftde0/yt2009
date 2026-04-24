@@ -549,14 +549,19 @@ app.get("/watch", (req, res) => {
 	if(req.query.with_pchelper
 	&& mobileHelper.hasLogin(req)) {
 		req.usePot = true;
-		req.query.only_itag_18 = true
+        req.callbackPot = true;
+		//req.query.only_itag_18 = true
 		req.query.video_id = id;
 		mobileHelper.pullPlayer(req, (data) => {
-			data = yt2009.miniParse(data)
+            let potBytes = data[1];
+            let potKey = data[2];
+			data = yt2009.miniParse(data[0])
 			if(!data || !data.title) {
 				res.redirect("/?ytsession=1")
 				return;
 			}
+            req.potBytes = potBytes;
+            req.potKey = potKey;
 			yt2009.applyWatchpageHtml(data, req, (code) => {
 				code = yt2009_languages.apply_lang_to_code(code, req)
 				code = yt2009_doodles.applyDoodle(code, req)
@@ -673,6 +678,15 @@ app.post("/morefrom_load", (req, res) => {
         )
     }
     let videosHTML = ``
+    let filters = yt2009_utils.getFilterData(req)
+    function shouldFilter(id, title) {
+        return (filters.videos.includes(id)
+        || filters.videos.filter(s => {
+            return title.toLowerCase().includes(
+                s.toLowerCase()
+            )
+        })[0])
+    }
 
 
     // default videos (without only_old OR if no videos with only_old)
@@ -683,7 +697,8 @@ app.post("/morefrom_load", (req, res) => {
         {"send": function(data) {
             if(data.videos) {
                 data.videos.forEach(video => {
-                    if(req.headers.source.includes(video.id)) return;
+                    if(req.headers.source.includes(video.id)
+                    || shouldFilter(video.id, video.title)) return;
                     videosHTML += yt2009_templates.relatedVideo(
                         video.id, video.title, req.protocol, "",
                         video.views, "#", "", channelFlags
@@ -721,7 +736,8 @@ app.post("/morefrom_load", (req, res) => {
             } else {
                 // format only_old
                 onlyOldVideos.forEach(video => {
-                    if(req.headers.source.includes(video.id)) return;
+                    if(req.headers.source.includes(video.id)
+                    || shouldFilter(video.id, video.title)) return;
                     videosHTML += yt2009_templates.relatedVideo(
                         video.id, video.title, req.protocol, "",
                         video.views, "#", "", channelFlags
@@ -1836,10 +1852,15 @@ app.get("/get_more_comments", (req, res) => {
         }
     }
     catch(error) {}
+    if(req.headers.cookie
+    && req.headers.cookie.includes("comment_options_hprofanity=1")) {
+        flags += ":int_cmts_filter_profanity"
+    }
 
     let theoreticalIndex = (pageNumber - 1) * 20
     let continuation = false;
     let comment_html = "";
+    let clientUseExtendedCount = false;
 
     function addComment(comment) {
         if(comment.pinned) return;
@@ -1861,6 +1882,9 @@ app.get("/get_more_comments", (req, res) => {
                 customRating = customData.ratingSources[token]
             }
         }
+        if(likes >= 1000) {
+            clientUseExtendedCount = true;
+        }
 
         let commentHTML = yt2009_templates.videoComment(
             comment.authorUrl,
@@ -1872,7 +1896,8 @@ app.get("/get_more_comments", (req, res) => {
             flags,
             true,
             likes,
-            commentId
+            commentId,
+            comment.r
         )
 
         if(customRating == 1) {
@@ -1890,6 +1915,39 @@ app.get("/get_more_comments", (req, res) => {
         comment_html += commentHTML
         
     }
+    
+    // sort based?
+    if((typeof(req.headers.sort) !== "undefined"
+    && req.headers.sort == "1"
+    && req.query.mode == "reload")
+    || (req.headers.cookie
+    && req.headers.cookie.includes("comment_options_sort=1")
+    && req.query.mode == "reload")) {
+        // newest comments
+        req.headers.continuation = yt2009.create_newest_continuation(
+            id, Math.floor(new Date().getTime() / 1000)
+        )
+    } else if((typeof(req.headers.sort) !== "undefined"
+    && req.headers.sort == "0"
+    && req.query.mode == "reload")
+    || (req.headers.cookie
+    && req.headers.cookie.includes("comment_options_sort=0")
+    && req.query.mode == "reload")) {
+        // default (top) comments
+        yt2009.get_video_comments(id, (data) => {
+            data.forEach(comment => {
+                addComment(comment)
+            })
+            if(continuation) {
+                comment_html += `;yt_continuation=${continuation}`
+            }
+            if(clientUseExtendedCount) {
+                res.set("x-yt2009-extend-likecount", true)
+            }
+            res.send(yt2009_languages.apply_lang_to_code(comment_html, req))
+        }, flags)
+        return;
+    }
 
     // continuation token based
     if(req.headers.continuation) {
@@ -1900,6 +1958,9 @@ app.get("/get_more_comments", (req, res) => {
                 })
                 if(continuation) {
                     comment_html += `;yt_continuation=${continuation}`
+                }
+                if(clientUseExtendedCount) {
+                    res.set("x-yt2009-extend-likecount", true)
                 }
                 res.send(yt2009_languages.apply_lang_to_code(
                     comment_html, req
@@ -1916,6 +1977,9 @@ app.get("/get_more_comments", (req, res) => {
         })
         if(continuation) {
             comment_html += `;yt_continuation=${continuation}`
+        }
+        if(clientUseExtendedCount) {
+            res.set("x-yt2009-extend-likecount", true)
         }
         res.send(yt2009_languages.apply_lang_to_code(comment_html, req))
     })
@@ -3487,6 +3551,7 @@ app.get("/yt2009_recommended", (req, res) => {
         )
         targetVideos = (listStyle ? hc : (hc * 4))
     }
+    let videoFilters = yt2009_utils.getFilterData(req)
     let processedVideos = 0;
     let videoSuggestions = []
 
@@ -3530,6 +3595,15 @@ app.get("/yt2009_recommended", (req, res) => {
                     }
                 }
                 catch(error) {}
+                if(videoFilters.channels.includes(creatorId)
+                || videoFilters.channels.filter(s => {
+                    return creatorName.toLowerCase().includes(s.toLowerCase())
+                })[0]) {
+                    if(config.env == "dev") {
+                        console.log(`filtered ${creatorName} as per settings`)
+                    }
+                    return;
+                }
                 videoSuggestions.push({
                     "o": true,
                     "upload": "",
@@ -3582,6 +3656,22 @@ app.get("/yt2009_recommended", (req, res) => {
                     "",
                     (html, rawData) => {
                         rawData.forEach(video => {
+                            let creatorId = ""
+                            if(video.creatorUrl.includes("/channel/")) {
+                                creatorId = video.creatorUrl
+                                                 .split("/channel/")[1]
+                            }
+                            if(videoFilters.channels.includes(creatorId)
+                            || videoFilters.channels.filter(s => {
+                                return video.creatorName.toLowerCase().includes(
+                                    s.toLowerCase()
+                                )
+                            })[0]) {
+                                if(config.env == "dev") {
+                                    console.log(`filtered ${creatorName} as per settings`)
+                                }
+                                return;
+                            }
                             videoSuggestions.push(video)
                         })
                         processedVideos++;
@@ -3618,6 +3708,15 @@ app.get("/yt2009_recommended", (req, res) => {
             filteredSuggestions.forEach(page => {
                 pagedHTML += yt2009_templates.csRecommendedPagedHeadin(i)
                 page.forEach(video => {
+                    if(videoFilters.videos.includes(video.id)
+                    || videoFilters.videos.filter(s => {
+                        return video.title.toLowerCase().includes(s.toLowerCase())
+                    })[0]) {
+                        if(config.env == "dev") {
+                            console.log(`filtered ${video.id} ${video.title} as per settings`)
+                        }
+                        return;
+                    }
                     pagedHTML += yt2009_templates.videoCell(
                         video.id,
                         yt2009_utils.xss(video.title),
@@ -3871,6 +3970,8 @@ function pullNewSuggestions(q, callback) {
     const fetch = require("node-fetch")
     fetch("http://suggestqueries.google.com/complete/search?ds=yt&client=androidyt&hjson=t&oe=UTF-8&q=" + q, {
         "headers": yt2009_constant.headers
+    }).catch(e => {
+        callback("")
     }).then(r => {r.json().then(r => {
         let suggestions = []
         let response = ""
@@ -5103,6 +5204,7 @@ app.post("/homepage_subscriptions", (req, res) => {
 
     // sort and send
     function presentVids(altData) {
+        let filters = yt2009_utils.getFilterData(req)
         if(!altData || altData.source !== "mobilehelper") {
             if(!subpage) {
                 combinedVideos = combinedVideos.sort(
@@ -5121,6 +5223,25 @@ app.post("/homepage_subscriptions", (req, res) => {
         let vids = (altData && altData.videoSource)
                  ? altData.videoSource
                  : combinedVideos
+
+        vids = vids.filter(s => {
+            let channelUrl = s.author_url || s.creatorUrl || ""
+            let channelId = ""
+            if(channelUrl.includes("channel/")) {
+                channelId = channelUrl.split("channel/")[1]
+            }
+            let channelName = s.author_name || s.creatorName || ""
+            return !(
+                filters.videos.includes(s.id)
+             || filters.videos.filter(vf => {
+                    return s.title.toLowerCase().includes(vf.toLowerCase())
+                })[0]
+             || filters.channels.includes(channelId)
+             || filters.channels.filter(vf => {
+                    return channelName.toLowerCase().includes(vf.toLowerCase())
+                })[0]
+            )
+        })
 
         vids.forEach(v => {
             let tv = JSON.parse(JSON.stringify(v))
@@ -5865,6 +5986,7 @@ app.get("/pchelper_related", (req, res) => {
                                .split("global_flags=")[1]
                                .split(";")[0];
     }
+    let filters = yt2009_utils.getFilterData(req)
     let oId = req.query.id;
     let fReq = {
         "originalUrl": "videos/" + oId + "/related",
@@ -5895,6 +6017,19 @@ app.get("/pchelper_related", (req, res) => {
             )
             if(v.includes("<yt9full>")) {
                 creatorName = v.split("<yt9full>")[1].split("</yt9full>")[0]
+            }
+            if(filters.videos.includes(id)
+            || filters.videos.filter(s => {
+                return title.toLowerCase().includes(s.toLowerCase())
+            })[0]
+            || filters.channels.includes(creatorId)
+            || filters.channels.filter(s => {
+                return creatorName.toLowerCase().includes(s.toLowerCase())
+            })[0]) {
+                if(config.env == "dev") {
+                    console.log(`filtering ${id} ${title} per settings`)
+                }
+                return;
             }
             html += yt2009_templates.relatedVideo(
                 id, title, req.protocol, length, views,
@@ -6932,7 +7067,19 @@ app.get("/sabr_playback", (req, res) => {
     if(req.query.offset && !isNaN(parseInt(req.query.offset))) {
         offset = parseInt(req.query.offset)
     }
+    let initTime = 0;
+    if(config.dev_sabr_report_html5_slow_responses) {
+        initTime = Date.now()
+    }
     yt2009sabr.handlePlayer(req.query.pid, offset, req, (result) => {
+        if(config.dev_sabr_report_html5_slow_responses) {
+            let sendTime = Date.now()
+            if(sendTime - initTime >= 12000) {
+                let respTime = sendTime - initTime
+                console.log("slow response time for", req.query.pid, respTime)
+                res.set("x-yt2009-slow-response", true)
+            }
+        }
         if(!result) {
             // smth went wrong
             res.sendStatus(500)
@@ -6964,6 +7111,11 @@ app.get("/sabr_playback", (req, res) => {
 				}
                 case "itag": {
                     res.set("x-yt2009-used-itag", result[part])
+                    break;
+                }
+                case "hasRedirect": {
+                    // present only if TRUE
+                    res.set("x-yt2009-got-internal-redirect", true)
                     break;
                 }
                 default: {
@@ -7163,6 +7315,35 @@ app.get("/minipicty", (req, res) => {
         }
         catch(error) {
             console.log(error)
+        }
+    }}, "", true)
+})
+app.get("/minibanner", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.status(401).send("")
+        return;
+    }
+    if(!req.query.channel
+    || req.query.channel.length !== 24
+    || !req.query.channel.startsWith("UC")) {
+        res.status(400).send("")
+        return;
+    }
+
+    yt2009_channels.main({
+        "path": "/channel/" + req.query.channel,
+        "headers": req.headers,
+        "query": {}
+    },
+    {"send": function(data) {
+        let bannerUrl = "/assets/" + (data.newBanner || data.banner)
+        let channelUrl = "/channel/" + req.query.channel
+        if(bannerUrl) {
+            res.send(yt2009_templates.watchBanner(
+                channelUrl, bannerUrl
+            ))
+        } else {
+            res.send("")
         }
     }}, "", true)
 })

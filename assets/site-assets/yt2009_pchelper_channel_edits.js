@@ -10,6 +10,30 @@ function channel_edit_tab(param) {
         document.getElementById("tab_contents_" + param).style.display = "block"
         document.getElementById("channel_tab_" + param).className = "channel_settings_tab channel_settings_tab_active"
     }
+
+    if(param == "close"
+    && document.getElementById("pchelper-customization-preview")) {
+        var previewStyling = document.getElementById(
+            "pchelper-customization-preview"
+        )
+        document.body.removeChild(previewStyling)
+        document.getElementById("channel_title").innerHTML = originalChannelTitle
+
+        var previewBoxes = [
+            "user_friends", "user_comments", "user_subscriptions",
+            "user_recent_activity", "user_subscribers"
+        ]
+        for(var p in previewBoxes) {
+            if(previewBoxes[p]
+            && document.getElementById(previewBoxes[p])
+            && document.getElementById(previewBoxes[p]).className
+            && document.getElementById(previewBoxes[p]).className
+                       .indexOf("yt2009-preview") !== -1) {
+                var e = document.getElementById(previewBoxes[p])
+                e.parentNode.removeChild(e)
+            }
+        }
+    }
 }
 function open_theme_editor() {
     document.getElementById("theme_edit_link").style.display = "none"
@@ -125,14 +149,14 @@ var premadeProperties = {
         "body_text_color": "#444444"
     },
     "clean": {
-        "background_color": "#FFF",
+        "background_color": "#FFFFFF",
         "wrapper_color": "#D6D6D6",
-        "wrapper_text_color": "#666",
-        "wrapper_link_color": "#03C",
-        "box_background_color": "#FFF",
-        "title_text_color": "#666",
-        "link_color": "#03C",
-        "body_text_color": "#000"
+        "wrapper_text_color": "#666666",
+        "wrapper_link_color": "#0033CC",
+        "box_background_color": "#FFFFFF",
+        "title_text_color": "#666666",
+        "link_color": "#0033CC",
+        "body_text_color": "#000000"
     }
 }
 var customThemeData = {}
@@ -142,6 +166,7 @@ function select_popup_color(c) {
     var i = colorGridPopupTarget.id
     document.getElementById(i + "-preview").style.backgroundColor = c.toLowerCase()
     edit_main_theme()
+    applyPreviewStyle(serializeCurrent())
 }
 function applyColorPreview(id) {
     var c = document.getElementById(id).value
@@ -151,7 +176,7 @@ function blur_color_picker(e) {
     document.getElementById("popup_color_grid").style.display = "none"
     edit_main_theme()
 }
-function applyPremade(el) {
+function applyPremade(el, source) {
     var e = premadeProperties[el]
     var fontPickr = document.getElementById("font")
     var o = fontPickr.getElementsByTagName("option")
@@ -174,6 +199,10 @@ function applyPremade(el) {
             }
             catch(error) {}
         }
+    }
+
+    if(source && source !== "create_new") {
+        applyPreviewStyle(e)
     }
 }
 function set_theme_obj(el) {
@@ -207,11 +236,12 @@ function set_theme_obj(el) {
     ]
 
     if(premade.indexOf(el) !== -1) {
-        applyPremade(el)
+        applyPremade(el, "click")
     }
 
     if(el == "custom") {
         serializedToPickers(customThemeData)
+        applyPreviewStyle(customThemeData)
     }
 
     currentTheme = el;
@@ -295,7 +325,7 @@ function create_new_theme() {
     var c = document.getElementById("clean").cloneNode(true)
     c.id = "custom"
     c.getElementsByTagName("span")[3].innerHTML = "Custom"
-    applyPremade("clean")
+    applyPremade("clean", "create_new")
     document.getElementById("theme_container").appendChild(c)
     document.getElementById("theme_new_link").style.display = "none"
     set_theme_obj("custom")
@@ -306,6 +336,7 @@ function edit_main_theme() {
         create_new_theme()
         serializedToPickers(a)
     }
+    applyPreviewStyle(serializeCurrent())
 }
 function _showdiv(id) {
     document.getElementById(id).className = document.getElementById(id).className.replace(" hid", "")
@@ -350,3 +381,212 @@ function removeBgChoice() {
     var notice = document.getElementById("uploaded-notice")
     notice.parentNode.removeChild(notice)
 }
+var originalChannelTitle = document.getElementById("channel_title").innerHTML
+function length_check(event, input, target) {
+    if(input.id && input.id == "channel_title_input") {
+        var name = input.value || originalChannelTitle
+        name = name.split("<").join("&lt;").split(">").join("&gt;");
+        document.getElementById("channel_title").innerHTML = name;
+    }
+}
+var allowPreviewApply = false;
+setTimeout(function() {
+    allowPreviewApply = true;
+}, 500)
+function applyPreviewStyle(styling) {
+    if(!allowPreviewApply) return;
+    if(!document.getElementById("pchelper-customization-preview")) {
+        var style = document.createElement("style")
+        style.id = "pchelper-customization-preview"
+        document.body.appendChild(style)
+    }
+    var checkboxes = {}
+    if(styling.checkboxes && styling.fields) {
+        checkboxes = styling.checkboxes;
+        styling = styling.fields;
+    }
+    var style = document.getElementById("pchelper-customization-preview")
+    var wrapperOpacity = parseInt((styling.wrapper_opacity || 255))
+    wrapperOpacity = wrapperOpacity.toString("16")
+    if(wrapperOpacity == "0") {
+        wrapperOpacity = "00"
+    }
+    var innerboxOpacity = parseInt((styling.box_opacity || 255))
+    innerboxOpacity = innerboxOpacity.toString("16")
+    if(innerboxOpacity == "0") {
+        innerboxOpacity = "00"
+    }
+    var fontDisplayTable = {
+        "Arial": "\"Arial\", sans-serif",
+        "Times New Roman": "\"Times New Roman\", serif",
+        "Verdana": "\"Verdana\", system-ui",
+        "Georgia": "\"Georgia\", serif",
+        "Courier New": "\"Courier New\", monospace"
+    }
+    var fontsTable = [
+        "\"Times New Roman\", serif",
+        "\"Arial\", sans-serif",
+        "\"Verdana\", system-ui",
+        "\"Georgia\", serif",
+        "\"Courier New\", monospace"
+    ]
+    var font = fontDisplayTable[styling.font]
+    if(typeof(styling.font) == "number") {
+        font = fontsTable[styling.font]
+    }
+
+    var uploadsCheckbox = document.getElementById("display_uploads")
+    var favsCheckbox = document.getElementById("display_favorites")
+    var playlistsCheckbox = document.getElementById("display_playlists")
+    var allCheckbox = document.getElementById("display_all")
+    
+    var commentsCheckbox = document.getElementById("box_status_user_comments")
+    var friendsCheckbox = document.getElementById("box_status_user_hubber_links")
+    var postsCheckbox = document.getElementById("box_status_user_recent_activity")
+    var subsToCheckbox = document.getElementById("box_status_user_subscribers")
+    var subsFromCheckbox = document.getElementById("box_status_user_subscriptions")
+
+    var code = TEMPLATE_STYLING
+               .split("yt2009_main_bg")
+               .join(styling.background_color + wrapperOpacity)
+               .split("yt2009_darker_bg")
+               .join(styling.wrapper_color + innerboxOpacity)
+               .split("yt2009_innerbox_main_bg")
+               .join(styling.box_background_color + innerboxOpacity)
+               .split("yt2009_text_color")
+               .join(styling.body_text_color)
+               .split("yt2009_wrapper_title_text_color")
+               .join(styling.wrapper_text_color)
+               .split("yt2009_link_color")
+               .join(styling.link_color)
+               .split("yt2009_title_text_color")
+               .join(styling.title_text_color)
+               .split("yt2009_font")
+               .join(font)
+               .split("yt2009_repeat_bg")
+               .join(checkboxes.background_repeat_check ? "repeat" : "no-repeat")
+    if(checkboxes.hide_def_banner_check) {
+        code += TEMPLATE_HIDEBANNER
+    }
+    if(styling.background_image) {
+        code += TEMPLATE_BG.replace(
+            "BG_ID", styling.background_image
+        )
+    }
+
+    // create friends box
+    if(document.getElementById("user_friends")
+    && document.getElementById("user_friends").className.indexOf("hid") !== -1) {
+        var f = document.getElementById("user_friends")
+        document.getElementById("main-channel-right").removeChild(f)
+    }
+    if(friendsCheckbox.checked
+    && !document.getElementById("user_friends")) {
+        console.log("adding friends")
+        var friends = document.createElement("div")
+        friends.id = "user_friends"
+        friends.className = "inner-box yt2009-preview"
+        friends.innerHTML = TEMPLATE_FRIENDS;
+        document.getElementById("main-channel-right").appendChild(friends)
+    } else if(!friendsCheckbox.checked
+    && document.getElementById("user_friends")) {
+        console.log("hiding friends")
+        code += "#user_friends {display: none !important;}"
+    }
+    // create subscribers box
+    if(subsToCheckbox.checked
+    && !document.getElementById("user_subscribers")) {
+        var subs = document.createElement("div")
+        subs.id = "user_subscribers"
+        subs.className = "inner-box yt2009-preview"
+        subs.innerHTML = TEMPLATE_SUBSCRIBERS;
+        document.getElementById("main-channel-right").appendChild(subs)
+    } else if(!subsToCheckbox.checked
+    && document.getElementById("user_subscribers")) {
+        code += "#user_subscribers {display: none !important;}"
+    }
+    // create comments box
+    if(commentsCheckbox.checked
+    && !document.getElementById("user_comments")) {
+        var comments = document.createElement("div")
+        comments.id = "user_comments"
+        comments.className = "inner-box yt2009-preview"
+        comments.innerHTML = TEMPLATE_COMMENTS;
+        document.getElementById("main-channel-right").appendChild(comments)
+    } else if(!commentsCheckbox.checked
+    && document.getElementById("user_comments")) {
+        code += "#user_comments {display: none !important;}"
+    }
+    // create subscriptions box
+    if(document.getElementById("user_subscriptions")
+    && document.getElementById("user_subscriptions").className.indexOf("hid") !== -1) {
+        var f = document.getElementById("user_subscriptions")
+        document.getElementById("main-channel-left").removeChild(f)
+    }
+    if(subsFromCheckbox.checked
+    && !document.getElementById("user_subscriptions")) {
+        var subs = document.createElement("div")
+        subs.id = "user_subscriptions"
+        subs.className = "inner-box yt2009-preview"
+        subs.innerHTML = TEMPLATE_SUBSCRIPTIONS;
+        document.getElementById("main-channel-left").appendChild(subs)
+    } else if(!subsFromCheckbox.checked
+    && document.getElementById("user_subscriptions")) {
+        code += "#user_subscriptions {display: none !important;}"
+    }
+    // create recent activity box
+    if(postsCheckbox.checked
+    && !document.getElementById("user_recent_activity")) {
+        var posts = document.createElement("div")
+        posts.id = "user_recent_activity"
+        posts.className = "inner-box yt2009-preview"
+        posts.innerHTML = TEMPLATE_ACTIVITY;
+        document.getElementById("main-channel-left").appendChild(posts)
+    } else if(!postsCheckbox.checked
+    && document.getElementById("user_recent_activity")) {
+        code += "#user_recent_activity {display: none !important;}"
+    }
+
+    // hide scrollbox buttons as needed
+    if(!allCheckbox.checked) {
+        code += "#playnav-navbar-tab-all {display: none;}"
+    }
+    if(!playlistsCheckbox.checked) {
+        code += "#playnav-navbar-tab-playlists {display: none;}"
+    }
+    if(!uploadsCheckbox.checked) {
+        code += "#playnav-navbar-tab-uploads {display: none;}"
+    }
+    if(!favsCheckbox.checked) {
+        code += "#playnav-navbar-tab-favorites {display: none;}"
+    }
+
+    style.innerHTML = code;
+
+    var view = document.getElementById("default_view").selectedIndex
+    switch(view) {
+        case 0: {
+            playnav_view("play")
+            break;
+        }
+        case 1: {
+            playnav_view("grid")
+            break;
+        }
+    }
+}
+function backgroundUploadedCallback() {
+    applyPreviewStyle(serializeCurrent())
+}
+
+
+var TEMPLATE_STYLING = "#channel-body, .channel-bg-color {background-color: #c8c8c8;}#channel-body {background-repeat: no-repeat;}.outer-box, .outer-box-bg-color, .playnav-item .selector, .playnav-video.selected {background-color: #878787;}.outer-box-bg-as-border, .panel-tab-indicator-arrow, .inner-box-bg-as-border-color, .inner-box-bg-color-as-border-color {border-color: #878787;}#playnav-chevron {border-left-color: #878787;}.outer-box, .outer-box-color, .inner-box, .inner-box-color, .inner-box-colors, .inner-box-colors .playnav-show .show-facets .show-mini-description {color: black;}.panel-tab-selected a, .outer-box a, .outer-box-bg-color a, .outer-box-link-color, .outer-box .inner-box a, .outer-box .inner-box-colors a, .outer-box .inner-box-bg-color a, .outer-box .inner-box-link-color, a.inner-box-color-as-link {color: black;}.outer-box-link-as-border-color, .link-as-border-color, .box-outline-color {border-color: black;}#channel-body {font-family: arial;}.title-text-color, .title-text {color: black !important;}a.title-text-color,.title-text-color a {color: black !important;}.wrapper-title-text {color: black !important;}.view-button .a {background-color: black;}.inner-box, .inner-box-colors, .inner-box-bg-color {background-color: #c8c8c8;}.panel-tab-selected .panel-tab-indicator-arrow {border-bottom-color: #c8c8c8 !important;}.view-button .tri {border-left-color: #c8c8c8;}.poll-option .option-fill,.quiz-option .option-fill,.playnav_comments {border: 1px black solid;}\
+\
+#channel-body, .channel-bg-color {background-color: yt2009_main_bg;}#channel-body {background-repeat: yt2009_repeat_bg;}.outer-box, .outer-box-bg-color, .playnav-item .selector, .playnav-video.selected {background-color: yt2009_darker_bg;}.outer-box-bg-as-border, .panel-tab-indicator-arrow, .inner-box-bg-as-border-color, .inner-box-bg-color-as-border-color {border-color: yt2009_darker_bg;}#playnav-chevron {border-left-color: yt2009_darker_bg;}.outer-box, .outer-box-color, .inner-box, .inner-box-color, .inner-box-colors, .inner-box-colors .playnav-show .show-facets .show-mini-description {color: yt2009_text_color;}.panel-tab-selected a, .outer-box a, .outer-box-bg-color a, .outer-box-link-color, .outer-box .inner-box a, .outer-box .inner-box-colors a, .outer-box .inner-box-bg-color a, .outer-box .inner-box-link-color, a.inner-box-color-as-link {color: yt2009_link_color;}.outer-box-link-as-border-color, .link-as-border-color, .box-outline-color {border-color: yt2009_text_color;}#channel-body {font-family: yt2009_font;}.title-text-color, .title-text {color: yt2009_title_text_color !important;}a.title-text-color,.title-text-color a {color: yt2009_link_color !important;}.wrapper-title-text {color: yt2009_wrapper_title_text_color !important;}.view-button .a {background-color: yt2009_link_color;}.inner-box, .inner-box-colors, .inner-box-bg-color {background-color: yt2009_innerbox_main_bg;}.panel-tab-selected .panel-tab-indicator-arrow {border-bottom-color: yt2009_main_bg !important;}.view-button .tri {border-left-color: yt2009_main_bg;}.poll-option .option-fill,.quiz-option .option-fill,.playnav_comments {border: 1px yt2009_text_color solid;}"
+var TEMPLATE_BG = "#channel-body {background-image: url(\"/cbg_proxie?id=BG_ID\")}"
+var TEMPLATE_HIDEBANNER = "#user_banner {display: none;}"
+var TEMPLATE_SUBSCRIPTIONS = '<div style="zoom:1"><div class="box-title title-text-color">Subscriptions</div><div style="float:right;zoom:1;_display:inline;white-space:nowrap"><div style="float:right"></div></div><div class="cb"></div></div><div id="user_subscriptions-body"><span>Your subscriptions will show up here</span></div><div class="clear"></div>'
+var TEMPLATE_SUBSCRIBERS = '<div style="zoom:1"><div class="box-title title-text-color">Subscribers</div><div class="cb"></div></div><div id="user_subscribers-body"><span>Your subscribers will show up here</span></div><div class="clear"></div>'
+var TEMPLATE_ACTIVITY = '<div style="zoom:1"><div class="box-title title-text-color">Recent Activity &nbsp;</div><div class="cb"></div></div><div id="user_recent_activity-body"><span>Your posts will show up here</span></div><div class="clear"></div>'
+var TEMPLATE_FRIENDS = '<div style="zoom:1"><div class="box-title title-text-color">Friends</div><div class="cb"></div></div></div><div id="user_friends-body"><span>Your friends will show up here</span></div><div class="clear"></div>'
+var TEMPLATE_COMMENTS = '<div id="user_comments-body"><div style="zoom:1"><div class="box-title title-text-color">Channel Comments</div><div class="cb"></div></div><div id="user_comments-body"><div class="commentsTableFull text-field outer-box-bg-as-border" style="_width:610px"><div class="alignC">Your comments will show up here</div></div></div><div class="clear"></div></div>'

@@ -218,6 +218,10 @@ module.exports = {
                 pullAllYouTubeAccounts(userdata[device], (data) => {
                     if(req.headers.mode == "pchelper") {
                         let t = templates.pchelper_accounts(data)
+                        if(userdata[device].savedFlags) {
+                            res.set("x-yt2009-has-saved-flags", true)
+                        }
+                        dataSent = true;
                         res.send(t)
                         return;
                     }
@@ -312,6 +316,28 @@ module.exports = {
                 return;
             }
             res.sendStatus(401);
+        })
+
+        app.post("/save_pchelper_flags", (req, res) => {
+            let flags = req.body.toString()
+            flags = flags.substring(0,(4096*5))
+            let device = pullDeviceId(req)
+            if(!userdata[device]) {
+                res.sendStatus(401);
+                return;
+            }
+            userdata[device].savedFlags = flags;
+            fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+            res.sendStatus(200)
+        })
+
+        app.get("/get_pchelper_flags", (req, res) => {
+            let device = pullDeviceId(req)
+            if(!userdata[device]) {
+                res.sendStatus(401);
+                return;
+            }
+            res.send(userdata[device].savedFlags || "")
         })
     },
 
@@ -532,12 +558,19 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                 })
             }).then(r => {r.json().then(r => {
                 //fs.writeFileSync("./test.json", JSON.stringify(r))
-                r = r.contents.singleColumnBrowseResultsRenderer
-                     .tabs[0].tabRenderer.content.sectionListRenderer
-                     .contents[0];
-                if(r.itemSectionRenderer && r.itemSectionRenderer.contents) {
+                try {
+					r = r.contents.singleColumnBrowseResultsRenderer
+						 .tabs[0].tabRenderer.content.sectionListRenderer
+						 .contents[0];
+				}
+				catch(error) {
+					r = false
+				}
+                if(r
+                && r.itemSectionRenderer
+                && r.itemSectionRenderer.contents) {
                     r = r.itemSectionRenderer.contents
-                } else if(r.shelfRenderer) {
+                } else if(r && r.shelfRenderer) {
                     r = r.shelfRenderer.content.verticalListRenderer.items
                 }
                 if(!r) {
@@ -671,61 +704,6 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
     },
 
     "personalizedRelated": function(req, res) {
-        function addJsonVideo(s) {
-            let l = s.lockupMetadata.lockupMetadataViewModel
-            let title = l.title.content;
-            let metadataParts = l.metadata.contentMetadataViewModel.metadataRows
-            metadataParts = metadataParts.filter(s => {
-                return s
-                    && s.metadataParts
-                    && s.metadataParts[0]
-                    && s.metadataParts[0].text
-            })
-            if(!metadataParts[0]) return;
-            metadataParts = metadataParts[0].metadataParts[0].text.content;
-            if(!metadataParts) return;
-            let id = s.dragAndDropUrl.split("v=")[1].split("&")[0]
-            let relative = utils.relativeToAbsoluteApprox(
-                metadataParts.split(" · ")[2]
-            )
-            let length = utils.time_to_seconds(s.thumbnail.timestampText)
-            let views = utils.approxSubcount(
-                metadataParts.split(" · ")[1].split(" ")[0]
-            )
-            if(isNaN(parseInt(views))) {
-                views = 0
-            }
-            let authorFull = metadataParts.split(" · ")[0]
-            let author = s.avatar.endpoint.innertubeCommand.browseEndpoint
-            let authorHandle = ""
-            let authorId = ""
-            if(author.canonicalBaseUrl
-            && author.canonicalBaseUrl.includes("/@")) {
-                authorHandle = author.canonicalBaseUrl.split("/@")[1]
-            }
-            try {
-                if(s.avatar.endpoint.innertubeCommand
-                    .browseEndpoint.browseId) {
-                        authorId = s.avatar.endpoint.innertubeCommand
-                                .browseEndpoint.browseId
-                    }
-            }
-            catch(error){}
-
-            if(!authorId || !authorId) return;
-
-            return {
-                "id": id,
-                "title": title,
-                "authorId": authorId,
-                "authorHandle": authorHandle,
-                "views": views,
-                "length": length,
-                "upload": relative,
-                "authorFull": authorFull
-            }
-        }
-
         let device = pullDeviceId(req)
         let videoId = req.originalUrl.split("videos/")[1].split("/related")[0]
         res.set("content-type", "application/xml")
@@ -763,7 +741,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                         s = s.elementRenderer.newElement.type.componentType
                              .model.videoWithContextModel.videoWithContextData
                              .videoData
-                        videos.push(addJsonVideo(s))
+                        videos.push(parseViewmodelVideo(s))
                     }
                     catch(error){}
                 })
@@ -1163,38 +1141,48 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         
         let videos = []
         let continuationsPulled = 0;
-
+    
         // add to response
         function createGdata() {
             let fullRes = templates.gdata_feedStart
             fullRes += `<yt:playlistId>${playlistId}</yt:playlistId>`
-
+    
             videos.forEach(v => {
                 try {
-                    if(!v.shortBylineText
-                    || !v.lengthSeconds
-                    || !v.isPlayable) return;
-                    let author = v.shortBylineText.runs[0].navigationEndpoint
-                                  .browseEndpoint;
-                    if(author.canonicalBaseUrl
-                    && author.canonicalBaseUrl.includes("/@")) {
-                        author = author.canonicalBaseUrl.split("/@")[1]
+                    if(v.type && v.type == "viewmodel_parsed") {
+                        if(!v.length) return;
+                        fullRes += templates.gdata_feedVideo(
+                            v.id, v.title, "",
+                            "", v.length, "-", "", "-", "-",
+                            mobileflags.get_flags(req).watch
+                        )
                     } else {
-                        author = author.browseId
+                        if(!v.shortBylineText
+                        || !v.lengthSeconds
+                        || !v.isPlayable) return;
+                        let author = v.shortBylineText.runs[0]
+                                    .navigationEndpoint.browseEndpoint;
+                        if(author.canonicalBaseUrl
+                        && author.canonicalBaseUrl.includes("/@")) {
+                            author = author.canonicalBaseUrl.split("/@")[1]
+                        } else {
+                            author = author.browseId
+                        }
+                        fullRes += templates.gdata_feedVideo(
+                            v.videoId + "/fav", v.title.runs[0].text, author,
+                            "", parseInt(v.lengthSeconds), "-", "", "-",
+                            "-", mobileflags.get_flags(req).watch
+                        )
                     }
-                    fullRes += templates.gdata_feedVideo(
-                        v.videoId + "/fav", v.title.runs[0].text, author,
-                        "", parseInt(v.lengthSeconds), "-", "", "-",
-                        "-", mobileflags.get_flags(req).watch
-                    )
+                    
                 }
                 catch(error){}
             })
-
+    
             fullRes += templates.gdata_feedEnd
             res.send(fullRes)
         }
-
+    
         function getContinuation(token) {
             setTimeout(() => {
                 setupYouTube(deviceId, (h) => {
@@ -1223,7 +1211,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                 })
             }, 200)
         }
-
+    
         // pull first request + 2 continuations
         setupYouTube(deviceId, (h) => {
             fetch("https://www.youtube.com/youtubei/v1/browse", {
@@ -1239,14 +1227,35 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                          .tabRenderer.content.sectionListRenderer.contents
                          .filter(s => {
                              return s.playlistVideoListRenderer
-                         })[0]
+                                 || s.itemSectionRenderer
+                         })
                     if(r.playlistVideoListRenderer) {
                         r = r.playlistVideoListRenderer
+                    } else if(r.itemSectionRenderer) {
+                        r = r.itemSectionRenderer
                     }
                 }
                 catch(error) {
                     createGdata()
                     return;
+                }
+                if(r.filter(s => {return s.playlistVideoListRenderer})[0]) {
+                    r = r.filter(s => {return s.playlistVideoListRenderer})[0]
+                         .playlistVideoListRenderer
+                } else {
+                    r = r.filter(s => {return s.itemSectionRenderer})
+                    if(r.length >= 2) {
+                        let z = {"contents": []}
+                        r.forEach(s => {
+                            if(s.itemSectionRenderer
+                            && s.itemSectionRenderer.contents) {
+                                s.itemSectionRenderer.contents.forEach(i => {
+                                    z.contents.push(i)
+                                })
+                            }
+                        })
+                        r = z;
+                    }
                 }
                 if(!r || !r.contents) {
                     createGdata()
@@ -1255,6 +1264,15 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                 r.contents.forEach(v => {
                     if(v.playlistVideoRenderer) {
                         videos.push(v.playlistVideoRenderer)
+                    } else if(v.elementRenderer) {
+                        // viewmodel playlist video
+                        try {
+                            v = v.elementRenderer.newElement.type.componentType
+                                .model.videoWithContextModel.videoWithContextData
+                                .videoData
+                            videos.push(parseViewmodelVideo(v, "JOIN"))
+                        }
+                        catch(error){}
                     }
                 })
                 if(r.continuations && continuationsPulled <= 2) {
@@ -1494,14 +1512,14 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
         let videos = []
         setupYouTube(device, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse", {
-                "headers": h,
-                "method": "POST",
-                "body": JSON.stringify({
-                    "context": androidContext,
-                    "browseId": "FEmy_videos"
-                })
-            }).then(r => {r.json().then(r => {
+            let oirMirror = this.openInsightRequest
+            function parseResponse(r) {
+                if(!r
+                || !r.frameworkUpdates
+                || !r.frameworkUpdates.entityBatchUpdate
+                || !r.frameworkUpdates.entityBatchUpdate.mutations) {
+                    return false;
+                }
                 r.frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
                     if(m.payload && m.payload.creatorVideoData) {try {
                         let v = m.payload.creatorVideoData
@@ -1535,7 +1553,35 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                     }catch(error){}}
                 })
                 callback(videos)
-            })})
+                return true;
+            }
+            function androidDefaultRequest() {
+                fetch("https://www.youtube.com/youtubei/v1/browse", {
+                    "headers": h,
+                    "method": "POST",
+                    "body": JSON.stringify({
+                        "context": androidContext,
+                        "browseId": "FEmy_videos"
+                    })
+                }).then(r => {r.json().then(r => {
+                    let isOk = parseResponse(r)
+                    if(!isOk) {
+                        androidCreatorRequest()
+                    }
+                })})
+            }
+            function androidCreatorRequest() {
+                oirMirror(req, "browse", {
+                    "browseId": "FEcreator_content"
+                }, (r) => {
+                    let isOk = parseResponse(r)
+                    if(!isOk) {
+                        // both methods failed, don't hang
+                        callback([])
+                    }
+                }, true)
+            }
+            androidDefaultRequest()
         })
     },
 
@@ -1620,6 +1666,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
 		let pot = null;
 		let waitForPot = false;
+        let potBytes = null;
+        let potKey = null;
 		if(req.usePot) {
 			waitForPot = true;
 			this.openDatasyncId(req, (datasync) => {
@@ -1633,6 +1681,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 					potContent.setEncryptdata(pot.encryptData)
 					potContent.setTokendata(pot.backup)
 					potContainer.addContent(potContent)
+                    potBytes = pot.encryptData;
+                    potKey = pot.backup;
 					pot = utils.base64toUrl(Buffer.from(
 						potContainer.serializeBinary()
 					).toString("base64"))
@@ -1652,7 +1702,11 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 					}),
 					"agent": yt2009utils.createFetchAgent()
 				}).then(r => {r.json().then(r => {
-					callback(r)
+                    if(req.callbackPot) {
+                        callback([r, potBytes, potKey])
+                    } else {
+                        callback(r)
+                    }
 				})})
 			})
 		}
@@ -2726,7 +2780,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 textData.push(`${delimiter} ${p}: ${data[p]}`)
             }
         }
-        textData = textData.join("\n")
+        textData = textData.join("\n").split("+").join(" ")
 
         completeDescription = completeDescription.replace(
             "//properties-insert", textData
@@ -3717,8 +3771,9 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         if(alt !== "json") {
             domain = "youtubei.googleapis.com"
         }
+        let endpoint = req.query.endpoint || "browse"
         setupYouTube(device, (h) => {
-            fetch("https://"+ domain +"/youtubei/v1/browse?fields=contents&alt=" + alt, {
+            fetch("https://"+ domain +"/youtubei/v1/" + endpoint + "?fields=contents&alt=" + alt, {
                 "method": "POST",
                 "headers": h,
                 "body": JSON.stringify({
@@ -3952,12 +4007,20 @@ function pullAllYouTubeAccounts(loginData, callback) {
                     }
                     catch(error) {console.log(error)}
                     if(!a.isRedirectToStudio) {
+                        let datasync = null
+                        try {
+                            datasync = a.serviceEndpoint.signInEndpoint
+                                        .directSigninIdentity.datasyncIdToken
+                                        .datasyncIdToken
+                        }
+                        catch(error) {}
                         accounts.push({
                             "name": name.name,
                             "handle": name.handle,
                             "pageId": a.serviceEndpoint.signInEndpoint
                                        .directSigninIdentity
                                        .effectiveObfuscatedGaiaId,
+                            "datasyncId": datasync,
                             "selected": a.isSelected,
                             "avatar": avatarUrl
                         })
@@ -4058,6 +4121,7 @@ function pullUserIdFromDevice(device, callback) {
 
 const crypto = require("crypto")
 const yt2009utils = require("./yt2009utils")
+const { readCache } = require("./cache_dir/ryd_cache_manager")
 const tranferIkRef = "../www-core-feather.css"
 const i = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
 let ik = false;
@@ -4133,4 +4197,78 @@ if(userdata && !userdata.ikmc) {
     }
     ik = bt.toString().padStart(16, "0");
     fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+}
+
+function parseViewmodelVideo(s, partsStrategy) {
+    let l = s.lockupMetadata.lockupMetadataViewModel
+    let title = l.title.content;
+    let metadataParts = l.metadata.contentMetadataViewModel.metadataRows
+    if(partsStrategy && partsStrategy == "JOIN") {
+        metadataParts = metadataParts.filter(s => {
+            return s
+                && s.metadataParts
+                && s.metadataParts[0]
+                && s.metadataParts[0].text
+        }).map(s => {
+            return s.metadataParts[0].text.content
+        }).join(" · ")
+    } else {
+        metadataParts = metadataParts.filter(s => {
+            return s
+                && s.metadataParts
+                && s.metadataParts[0]
+                && s.metadataParts[0].text
+        })
+        if(!metadataParts[0]) return;
+        metadataParts = metadataParts[0].metadataParts[0].text.content;
+    }
+    if(!metadataParts) return;
+    let id = s.dragAndDropUrl.split("v=")[1].split("&")[0]
+    let relative = ""
+    try {
+        relative = utils.relativeToAbsoluteApprox(
+            metadataParts.split(" · ")[2]
+        )
+    }
+    catch(error) {}
+    let length = utils.time_to_seconds(s.thumbnail.timestampText)
+    let views = utils.approxSubcount(
+        metadataParts.split(" · ")[1].split(" ")[0]
+    )
+    if(isNaN(parseInt(views))) {
+        views = 0
+    }
+    let authorFull = metadataParts.split(" · ")[0]
+    let author = {}
+    try {
+        author = s.avatar.endpoint.innertubeCommand.browseEndpoint
+    }
+    catch(error) {}
+    let authorHandle = ""
+    let authorId = ""
+    if(author
+    && author.canonicalBaseUrl
+    && author.canonicalBaseUrl.includes("/@")) {
+        authorHandle = author.canonicalBaseUrl.split("/@")[1]
+    }
+    try {
+        if(s.avatar.endpoint.innertubeCommand
+            .browseEndpoint.browseId) {
+                authorId = s.avatar.endpoint.innertubeCommand
+                        .browseEndpoint.browseId
+            }
+    }
+    catch(error){}
+    if(!authorId && !partsStrategy) return;
+    return {
+        "id": id,
+        "title": title,
+        "authorId": authorId,
+        "authorHandle": authorHandle,
+        "views": views,
+        "length": length,
+        "upload": relative,
+        "authorFull": authorFull,
+        "type": "viewmodel_parsed"
+    }
 }

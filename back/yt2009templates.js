@@ -44,7 +44,7 @@ module.exports = {
                     let total = minutes + seconds
                     content = content.replace(
                         timestamp,
-                        `<a href="#" onclick="skipAhead(${total});return false;">${timestamp}</a>`
+                        `<a href="" onclick="skipAhead(${total});return false;">${timestamp}</a>`
                     )
                 }
             } else if(c.startsWith("@")) {
@@ -57,6 +57,9 @@ module.exports = {
             }
         })
         content = content.split("$").join("&#36;")
+        if(flags.includes("int_cmts_filter_profanity")) {
+            content = utils.profanityFilter(content)
+        }
         let replyCode = ""
         let replyHolderCode = ""
         if(replyData && replyData.length == 2) {
@@ -68,7 +71,7 @@ module.exports = {
             } else if(useLanguage) {
                 replyString = "lang_watch_replies_plural_prefix" + count + "lang_watch_replies_plural_suffix"
             }
-            replyCode = `<a href="javascript:void(0)" onclick="loadReplies('${continuation}', this, '${id}');return false;" class="watch-replies-show-link">» ${replyString}</a>`
+            replyCode = `<a href="javascript:void(0)" onclick="loadReplies('${continuation}', this, '${id}', 'lang_watch_replies_collapse');return false;" class="watch-replies-show-link">» ${replyString}</a>`
             replyHolderCode = `<div id="yt2009-reply-holder-${id}"></div>`
         }
         let dislikeCode = `onclick="sendCmtRating('${id}', 'dislike');return false;"`

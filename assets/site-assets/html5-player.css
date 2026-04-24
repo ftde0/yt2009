@@ -739,6 +739,7 @@
     margin-top: 1px !important;
     position: relative;
     left: 5px;
+    white-space: nowrap;
 }
 
 .captions_popup_container li:hover .circle, .quality_selector li:hover .circle {

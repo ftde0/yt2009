@@ -77,7 +77,15 @@
         </a> from this yt2009 instance<br><br>
         <a class="yt-button yt-button-primary" href="#" onclick="exposehelper()">
             <span>export pchelper cookie</span>
-        </a> for moving devices
+        </a> for moving devices<br><br>
+        <a class="yt-button yt-button-primary" href="#" onclick="exportflags()">
+            <span>export flags</span>
+        </a> for this pchelper signin for quick device moving<br><br>
+        <div id="flagimport-option" class="hid">
+            <a class="yt-button yt-button-primary" href="#" onclick="importflags()">
+                <span>import flags</span>
+            </a> previously exported using the above option
+        </div>
     </div>
 </div>
 <script>
@@ -98,6 +106,9 @@
     r.send(null)
     r.onreadystatechange = function(e) {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.getResponseHeader("x-yt2009-has-saved-flags")) {
+                document.getElementById("flagimport-option").className = ""
+            }
             if(r.status !== 200) {
                 document.getElementById("panel1").innerHTML += "<br>no valid login?\
                 <br><a href=\"/mh_pc_intro\">sign in to pchelper</a>"
@@ -352,6 +363,79 @@ should we do so?");
         var r = confirm(message.join(" "))
         if(r) {
             alert("pchelper_user cookie: " + device)
+        }
+    }
+
+    function exportflags() {
+        var flags = ""
+		var cookies = document.cookie.split("; ")
+		for(var c in cookies) {
+			if(!cookies[c]) return;
+			c = cookies[c]
+			if(c.indexOf("watch_flags") == 0
+			|| c.indexOf("results_flags") == 0
+			|| c.indexOf("channel_flags") == 0
+			|| c.indexOf("mainpage_flags") == 0
+			|| c.indexOf("global_flags") == 0) {
+				flags += c += "; "
+			}
+		}
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        function addR() {
+            return "?r=" + Math.random().toString()
+        }
+        r.open("POST", "/save_pchelper_flags" + addR())
+        r.send(flags)
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                document.getElementById("flagimport-option").className = ""
+                alert("settings saved! use the \"import flags\" option on a new device to import.")
+            }
+        }
+    }
+
+    function importflags() {
+        var message = [
+            "importing flags will overwrite your current settings.",
+            "continue?"
+        ]
+        var c = confirm(message.join(" "))
+        if(c) {
+            var cookieEnd = "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+            var r;
+            if (window.XMLHttpRequest) {
+                r = new XMLHttpRequest()
+            } else {
+                r = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            function addR() {
+                return "?r=" + Math.random().toString()
+            }
+            r.open("GET", "/get_pchelper_flags" + addR())
+            r.send(flags)
+            r.onreadystatechange = function(e) {
+                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                    var f = r.responseText
+                    var fs = f.split("; ")
+                    var flagCount = 0;
+                    for(var c in fs) {
+                        c = fs[c]
+                        if(c.indexOf("=") !== -1) {
+                            var cName = c.split("=")[0]
+                            var cValue = c.split("=")[1]
+                            document.cookie = cName + "=" + cValue + cookieEnd
+                            flagCount++
+                        }
+                    }
+
+                    alert(flagCount + " cookies imported.")
+                }
+            }
         }
     }
 </script>

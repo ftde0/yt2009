@@ -93,13 +93,18 @@ $("#watch-video-details-toggle-more").addEventListener("click", function() {
 }, false)
 
 // more comments
-function onWatchCommentsShowMore() {
+function onWatchCommentsShowMore(extras) {
     $("#watch-comments-show-more-td").style.display = "none"
     var nextPage = parseInt($(".comments-container").getAttribute("data-page")) + 1
     var continuationToken = $(".comments-container").getAttribute("data-continuation-token")
     // request
     var r = new XMLHttpRequest();
-    r.open("GET", "/get_more_comments")
+    var url = ["/get_more_comments"]
+    if(extras && extras.source == "reload") {
+        url.push("?mode=reload")
+    }
+    url = url.join("")
+    r.open("GET", url)
     if(continuationToken
     && continuationToken !== "yt2009_comments_continuation_token") {
         r.setRequestHeader(
@@ -135,11 +140,18 @@ function onWatchCommentsShowMore() {
                          + r.responseText.split("watch-comment-entry").length - 1
         $("#watch-comment-count").innerHTML = commentCount
         $(".comments-container").setAttribute("data-page", nextPage)
+        // extend likecount if necessary
+        if(r.getResponseHeader("x-yt2009-extend-likecount")
+        && (!document.body.className
+        || document.body.className.indexOf("extended-comment-likecount") == -1)) {
+            document.body.className += " extended-comment-likecount"
+        }
     }, false)
 }
 
 // comment replies
-function loadReplies(continuation, button, commentId) {
+function loadReplies(continuation, button, commentId, collapseButtonText) {
+    var originalText = button.innerHTML
     button.innerHTML = "&raquo; ..."
     var r = new XMLHttpRequest();
     r.open("GET", "/comment_get_replies")
@@ -156,7 +168,24 @@ function loadReplies(continuation, button, commentId) {
     r.addEventListener("load", function(e) {
         var z = document.getElementById("yt2009-reply-holder-" + commentId)
         setTimeout(function() {
-            button.parentNode.removeChild(button)
+            if(!collapseButtonText) {
+                button.parentNode.removeChild(button)
+            } else {
+                var hideText = "« " + (collapseButtonText || "Hide")
+                button.setAttribute("onclick", "")
+                button.innerHTML = hideText
+                button.onclick = function() {
+                    if(!z.style.display || z.style.display !== "none") {
+                        z.style.display = "none"
+                        button.innerHTML = originalText;
+                    } else {
+                        z.style.display = "block"
+                        button.innerHTML = hideText
+                    }
+                    
+                }
+            }
+            
             z.innerHTML += r.responseText
         }, 50)
     }, false)
@@ -186,11 +215,17 @@ function toggleExpander(element) {
 function toggleCommentsExpander(element) {
     var expander = element.parentNode.querySelector(".yt-uix-expander-body")
     if(element.className.indexOf("yt-uix-expander-collapsed") !== -1) {
-        element.className = "yt-uix-expander-head"
-        expander.className = "yt-uix-expander-body"
+        setTimeout(function() {
+            if(window.commentDeexpandCanceled) return;
+            element.className = "yt-uix-expander-head"
+            expander.className = "yt-uix-expander-body"
+        }, 10)
     } else {
-        element.className = "yt-uix-expander-head yt-uix-expander-collapsed"
-        expander.className = "yt-uix-expander-body hid"
+        setTimeout(function() {
+            if(window.commentDeexpandCanceled) return;
+            element.className = "yt-uix-expander-head yt-uix-expander-collapsed"
+            expander.className = "yt-uix-expander-body hid"
+        }, 10)
     }
 }
 
@@ -498,6 +533,26 @@ playlist
 ======
 */
 
+function scrollToPlaylistVideo() {
+    var dbox = document.getElementById("watch-playlist-discoverbox")
+    var plBox = dbox.getBoundingClientRect().top
+    var videoTop = document.querySelector(
+        ".watch-ppv-vid"
+    )
+    if(videoTop && videoTop.getBoundingClientRect) {
+        videoTop = videoTop.getBoundingClientRect().top
+    } else {
+        videoTop = 0;
+    }
+    var scroll = videoTop - plBox - 180
+    try {
+        dbox.scrollTo(0,scroll)
+    }
+    catch(error){
+        dbox.scrollTop = scroll;
+    }
+}
+
 if(document.querySelector("#watch-playlist-videos-panel")) {
     // next video
     function nextVideo() {
@@ -555,27 +610,10 @@ if(document.querySelector("#watch-playlist-videos-panel")) {
         vr.addEventListener("load", function(e) {
             // add html from server
             $("#watch-playlist-discoverbox").innerHTML += vr.responseText
-            function scrollToVideo() {
-                var dbox = document.getElementById("watch-playlist-discoverbox")
-                var plBox = dbox.getBoundingClientRect().top
-                var videoTop = document.querySelector(
-                    ".watch-ppv-vid"
-                )
-                if(videoTop && videoTop.getBoundingClientRect) {
-                    videoTop = videoTop.getBoundingClientRect().top
-                } else {
-                    videoTop = 0;
-                }
-                var scroll = videoTop - plBox - 180
-                try {
-                    dbox.scrollTo(0,scroll)
-                }
-                catch(error){
-                    dbox.scrollTop = scroll;
-                }
-            }
-            setTimeout(function() {scrollToVideo()}, 100)
+            setTimeout(function() {scrollToPlaylistVideo()}, 100)
         }, false)
+    } else {
+        setTimeout(function() {scrollToPlaylistVideo()}, 100)
     }
 }
 
@@ -1886,4 +1924,69 @@ function liveUiInit(id) {
         }, false)
     }
     pullWatching()
+}
+
+/*
+======
+comment options
+======
+*/
+var commentDeexpandCanceled = false;
+function toggleCommentOptions(source) {
+    if(source == "EXP") {
+        commentDeexpandCanceled = true;
+        document.getElementById("watch-comments-options").className = ""
+        setTimeout(function() {
+            commentDeexpandCanceled = false;
+        }, 100)
+    } else if(source == "CL") {
+        document.getElementById("watch-comments-options").className = "hid"
+    }
+}
+
+function watch_comments_pref_save() {
+    function removeGraytext(checkbox) {
+        checkbox.parentNode.className = checkbox.parentNode.className.replace(
+            "grayText", ""
+        )
+    }
+    var cookieEnd = "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+    var profanityCheckbox = document.getElementById("option-hide-profanity")
+    var hideAllCheckbox = document.getElementById("option-hide-all")
+    var profanity = profanityCheckbox.checked
+                  ? "1" : "0"
+    document.cookie = "comment_options_hprofanity=" + profanity + cookieEnd
+    if(profanity == "1") {
+        profanityCheckbox.parentNode.className += " grayText"
+    } else {
+        removeGraytext(profanityCheckbox)
+    }
+    var hideAll = hideAllCheckbox.checked
+                  ? "1" : "0"
+    document.cookie = "comment_options_hall=" + hideAll + cookieEnd
+    var expander = document.getElementById("watch-comment-panel")
+                           .getElementsByTagName("h4")[0]
+    if(hideAll == "1") {
+        hideAllCheckbox.parentNode.className += " grayText"
+        if(expander.className
+        && expander.className.indexOf("yt-uix-expander-collapsed") == -1) {
+            toggleCommentsExpander(expander)
+        }
+    } else {
+        removeGraytext(hideAllCheckbox)
+        if(expander.className
+        && expander.className.indexOf("yt-uix-expander-collapsed") !== -1) {
+            toggleCommentsExpander(expander)
+        }
+    }
+    var sort = document.getElementById("watch-comments-options")
+                       .getElementsByTagName("form")[0]
+                       .getElementsByTagName("select")[0]
+                       .selectedIndex; //0 -- top, 1 -- new
+    document.cookie = "comment_options_sort=" + sort + cookieEnd
+    $("#watch-comment-count").innerHTML = "0"
+    var comments = document.getElementById("recent_comments")
+                           .getElementsByTagName("div")[0]
+    comments.innerHTML = ""
+    onWatchCommentsShowMore({"source": "reload"})
 }

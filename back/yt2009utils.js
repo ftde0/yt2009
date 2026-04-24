@@ -2579,7 +2579,7 @@ module.exports = {
                         
                         posts.push(parsedPost)
                     }
-                    catch(error) {console.log(error)}
+                    catch(error) {/*console.log(error)*/}
                 }
             })
         }
@@ -2822,6 +2822,15 @@ module.exports = {
                 }
             }
             catch(error) {}
+        }
+
+        if(resp.stats
+        && resp.stats.playback && resp.stats.playback.url
+        && resp.stats.watchtime && resp.stats.watchtime.url) {
+            bp.playbackTracking = {
+                "videostatsPlaybackUrl": {"baseUrl": resp.stats.playback.url},
+                "videostatsWatchtimeUrl": {"baseUrl": resp.stats.watchtime.url}
+            }
         }
 
         return bp;
@@ -3171,6 +3180,85 @@ module.exports = {
         return s.split("+").join("-")
                 .split("/").join("_")
                 .split("=").join("")
+    },
+
+    "profanityFilter": function(i) {
+        // words censored in 2009 youtube
+        const wholeWords = [
+            "hell", "sex"
+        ]
+        const words = [
+            "fuck", "nigger", "nigga",
+            "crap", "shit", "bitch",
+            "pussy", "piss", "dick",
+            "cock", "cunt"
+        ]
+        function undelim(w) {
+            return w.split("!")[0].split("?")[0]
+                    .split(",")[0].split(".")[0]
+                    .toLowerCase()
+        }
+        function onlyDelim(w) {
+            let z = undelim(w)
+            return w.replace(z, "")
+        }
+        i = i.split(" ").map(w => {
+            if(wholeWords.includes(undelim(w))) {
+                return "*".repeat(undelim(w).length) + onlyDelim(w)
+            }
+            let z = words.filter((s) => {
+                return w.startsWith(s)
+            })[0]
+            if(z) {
+                return "*".repeat(undelim(w).length) + onlyDelim(w)
+            }
+            return w;
+        }).join(" ")
+        return i;
+    },
+
+    "validateConfig": function() {
+        return [(
+            config.env == "prod"
+         && (!config.tokens
+         || (config.tokens && config.tokens.includes("*")))
+        ), [
+            "14/8/12/16/12/18/14/6/4/0/14/18/14/8/6/4/6/0/6/0/6/18/4/0/12",
+            "18/12/28/14/6/14/8/12/2/12/28/12/6/12/10/4/0/12/18/14/6/4/0",
+            "14/4/14/10/12/28/12/28/12/18/12/28/12/14/4/0/12/2/12/28/4/0",
+            "6/24/12/4/6/28/14/10/12/28/14/6/14/10/14/0/14/0/12/30/14/4",
+            "14/8/12/10/12/8/6/24/4/30/12/4/6/28/4/0/12/6/12/30/12/28/12",
+            "12/12/18/12/14/4/28/4/0/14/12/12/18/12/8/12/10/12/30/4/0/14",
+            "0/12/24/12/2/14/18/12/4/12/2/12/6/12/22/4/0/12/26/12/2/14/18",
+            "4/0/12/4/12/10/4/0/12/2/12/12/12/12/12/10/12/6/14/8/12/10/12",
+            "8/4/28/4/0/14/0/14/4/12/30/12/6/12/10/12/10/12/8/4/0/14/14",
+            "12/18/14/8/12/16/4/0/12/6/12/2/14/10/14/8/12/18/12/30/12/28",
+            "4/28"
+        ].join("/")] // invalidation key
+    },
+
+    "getFilterData": function(req) {
+        let videoFilters = []
+        let videoChannelFilters = []
+        if(req.headers
+        && req.headers.cookie
+        && req.headers.cookie.includes("video_filter")) {
+            videoFilters = decodeURIComponent(
+                req.headers.cookie.split("video_filter")[1]
+                   .split(":")[0].split(";")[0]
+            ).split("|")
+        }
+        if(req.headers
+        && req.headers.cookie
+        && req.headers.cookie.includes("videochannel_filter")) {
+            videoChannelFilters = decodeURIComponent(
+                req.headers.cookie.split("videochannel_filter")[1]
+                   .split(":")[0].split(";")[0]
+            ).split("|")
+        }
+        return {
+            "videos": videoFilters, "channels": videoChannelFilters
+        }
     }
 }
 

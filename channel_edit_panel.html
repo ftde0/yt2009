@@ -34,7 +34,7 @@
 								<div style="float:right"><a href="#">yt2009_own_url</a></div>
 								<div>URL:</div>
 								<div class="settings_separator">&nbsp;</div>
-								<div style="float:right"><input name="title" id="channel_title_input" value="yt2009_current_name" style="width:200px" onkeypress="return length_check(event, this, 30)"></div>
+								<div style="float:right"><input name="title" id="channel_title_input" value="yt2009_current_name" style="width:200px" onkeypress="return length_check(event, this, 30)" oninput="return length_check(event, this, 30)"></div>
 								<div>Title:</div>
 								<div class="settings_separator">&nbsp;</div>
 								<div style="float:right"> <span>
@@ -415,31 +415,31 @@
 			<form name="channel_layout" id="channel_layout" onsubmit="return false">
 				<div style="font-size:110%;padding: 5px;float:left;width:300px">
 					<label>
-						<input name="box_status" id="box_status_user_comments" value="user_comments" type="checkbox" checked="">
+						<input name="box_status" id="box_status_user_comments" value="user_comments" type="checkbox" checked="" onchange="applyPreviewStyle(serializeCurrent())">
 						Comments &nbsp;&nbsp;
 					</label>
 				</div>
 				<div style="font-size:110%;padding: 5px;float:left;width:300px">
 					<label>
-						<input name="box_status" id="box_status_user_hubber_links" value="user_hubber_links" type="checkbox" checked="">
+						<input name="box_status" id="box_status_user_hubber_links" value="user_hubber_links" type="checkbox" checked="" onchange="applyPreviewStyle(serializeCurrent())">
 						Other Channels &nbsp;&nbsp;
 					</label>
 				</div>
 				<div style="font-size:110%;padding: 5px;float:left;width:300px">
 					<label>
-						<input name="box_status" id="box_status_user_recent_activity" value="user_recent_activity" type="checkbox" checked="">
+						<input name="box_status" id="box_status_user_recent_activity" value="user_recent_activity" type="checkbox" checked="" onchange="applyPreviewStyle(serializeCurrent())">
 						Recent Activity &nbsp;&nbsp;
 					</label>
 				</div>
 				<div style="font-size:110%;padding: 5px;float:left;width:300px">
 					<label>
-						<input name="box_status" id="box_status_user_subscribers" value="user_subscribers" type="checkbox">
+						<input name="box_status" id="box_status_user_subscribers" value="user_subscribers" type="checkbox" onchange="applyPreviewStyle(serializeCurrent())">
 						Subscribers &nbsp;&nbsp;
 					</label>
 				</div>
 				<div style="font-size:110%;padding: 5px;float:left;width:300px">
 					<label>
-						<input name="box_status" id="box_status_user_subscriptions" value="user_subscriptions" type="checkbox">
+						<input name="box_status" id="box_status_user_subscriptions" value="user_subscriptions" type="checkbox" onchange="applyPreviewStyle(serializeCurrent())">
 						Subscriptions &nbsp;&nbsp;
 					</label>
 				</div>
@@ -482,7 +482,7 @@
 					<div id="featured_content">
 						<div>
 							Featured layout<br>
-							<select name="default_view" class="playnav-edit-field" id="default_view">
+							<select name="default_view" class="playnav-edit-field" id="default_view" onchange="applyPreviewStyle(serializeCurrent())">
 								<option value="play" id="view_play" selected="">Player View</option>
 								<option value="grid" id="view_grid">Grid View</option>
 							</select>

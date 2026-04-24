@@ -540,14 +540,38 @@
 				<div id="watch-comment-post-comment" class="yt2009-signin-hide">
 					<a href="#" class="hLink smallText" id="post_text_comment_link" rel="nofollow">Sign in to post a Comment</a>
 				</div>
-				<h4 class="yt-uix-expander-head" onclick="toggleCommentsExpander(this)">
-					<button title="" class="yt-uix-expander-arrow master-sprite"></button> lang_comments<a href="#" class="smallText hLink">lang_comment_options</a>
+				<h4 class="yt-uix-expander-head yt2009-marker-comments-collapsed-header" onclick="toggleCommentsExpander(this)">
+					<button title="" class="yt-uix-expander-arrow master-sprite"></button> lang_comments<a href="javascript:toggleCommentOptions('EXP')" class="smallText hLink">lang_comment_options</a>
 				</h4>
 				<div class="clear"></div>
 				<div id="watch-comments-options" class="hid">
-					<div id="watch-comments-options-inner">Loading...</div>
+					<div id="watch-comments-options-inner">
+						<span class="bold">lang_watch_comment_options_header</span>
+						<div class="watch-comment-option yt2009-marker-hprofanity-checked">
+							<input type="checkbox" id="option-hide-profanity"/>
+							<label for="option-hide-profanity">lang_watch_comment_options_hprofanity</label>
+						</div>
+						<div class="watch-comment-option yt2009-marker-hall-checked">
+							<input type="checkbox" id="option-hide-all"/>
+							<label for="option-hide-all">lang_watch_comment_options_hall</label>
+						</div>
+						<div class="watch-comment-option">
+							<form action="" name="comments_filter">
+								<span class="smallText"><b>lang_watch_comment_options_dropdown_header</b></span>
+								<select class="xsmallText" name="commentthreshold">
+									<option value="top" data-yt2009-marker-top-checked="">lang_watch_comment_options_dropdown_top</option>
+									<option value="new" data-yt2009-marker-new-checked="">lang_watch_comment_options_dropdown_new</option>
+								</select>
+							</form>
+						</div>
+						<div id="watch-comment-options-save">
+							<a class="yt-button yt-button-primary" id="" onclick="watch_comments_pref_save();" style="display: inline-block;"><span>lang_watch_comment_options_save</span></a>
+							lang_watch_comment_options_or
+							<a href="javascript:toggleCommentOptions('CL')">lang_watch_comment_options_cancel</a>
+						</div>
+					</div>
 				</div>
-				<div class="yt-uix-expander-body">
+				<div class="yt-uix-expander-body yt2009-marker-comments-collapsed-body">
 					<div id="div_main_comment2"></div>
 					<div id="recent_comments" class="comments">
 						<div class="comments-container" data-continuation-token="yt2009_comments_continuation_token" data-page="1">
@@ -713,6 +737,7 @@
 				//yt2009-unsupport
 				//yt2009-html5-modifiers
 				//yt2009-cmt-lik
+				//yt2009-stats
 			</script>
 		<!--yt2009_hook_autoplay_flag-->
 		<!--yt2009_wayback_protocol-->

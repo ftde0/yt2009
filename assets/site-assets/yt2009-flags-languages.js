@@ -70,7 +70,9 @@ var languageData_EN = {
         "global-annotation-redirect": "redirects all youtube.com links within annotations to yt2009",
         "global-shows-tab": "shows a Shows tab (only for demo, doesn't actually work)",
         "global-thumbnail-proxy": "routes thumbnails through yt2009 to fix them on networks that might block youtube.",
-        "global-unasciify-login": "disables removing non-ascii characters from login names. will still be asciified in sync."
+        "global-unasciify-login": "disables removing non-ascii characters from login names. will still be asciified in sync.",
+        "global-video-filter": "don't show videos matching specific criteria",
+        "global-videochannel-filter": "don't show videos from specific channels"
     },
 
     "elements": {
@@ -144,7 +146,17 @@ var languageData_EN = {
         "#wayback-preset-description": "oldvids + wayback machine data where possible",
 
         "#toggle-f-ref": "(click here for flash player settings)",
-        "#pchelper-ref": "(or click here for pchelper-related settings)"
+        "#pchelper-ref": "(or click here for pchelper-related settings)",
+
+        "#global-video-filter-expander": "(value format)",
+        "#global-videochannel-filter-expander": "(value format)",
+
+        "#global-video-filter-expander-content": "you can type video IDs (11 characters) or phrases in titles to be filtered out. to put multiple values, separate them with <code>|</code>.<br>\
+        e.g. <code>xat1GVnl8-k|official video</code> - will show the video with the ID <code>xat1GVnl8-k</code> and all others with the words <code>official video</code> in their title.<br>\
+        title terms are case-insensitive. matching videos <b>won't</b> be blocked entirely from access - they just won't show in places like the related videos feed.",
+        "#global-videochannel-filter-expander-content": "you can paste channel IDs (24-characters, starting with \"UC\") or channels' names. to put multiple values, separate them with <code>|</code>.<br>\
+        e.g. <code>UC5g1Solgg1Cnow3PwteNuJA|channel</code> - will hide videos from the channel <code>UC5g1Solgg1Cnow3PwteNuJA</code> and the ones with the word <code>channel</code> in the creators' name.<br>\
+        name terms are case-insensitive. matching channels and videos <b>won't</b> be blocked entirely from access."
     },
 
     "placeholders": {

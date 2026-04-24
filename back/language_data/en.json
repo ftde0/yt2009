@@ -329,6 +329,7 @@
     "watch_replies_plural_prefix": "View ",
     "watch_replies_plural_suffix": " replies",
     "watch_replies_more": "More replies",
+    "watch_replies_collapse": "Hide replies",
     "watch_comments_disabled_notice": "Adding comments has been disabled for this video.",
     "watch_comment_pinned": "■ Pinned",
     "watch_comment_hearted_prefix": "♥ from ",
@@ -389,5 +390,14 @@
     "insight_title_genderrange": "Genders for all age groups",
     "insight_videocard_published": "Added: ",
     "insight_videocard_viewcount": "Total Views: ",
-    "insight_signin_prompt": "<a href=\"/mh_pc_intro\">sign in through pchelper to access this page.</a>"
+    "insight_signin_prompt": "<a href=\"/mh_pc_intro\">sign in through pchelper to access this page.</a>",
+    "watch_comment_options_header": "Text Comment Options",
+    "watch_comment_options_hprofanity": "Hide profanity in comments",
+    "watch_comment_options_hall": "Hide all comments",
+    "watch_comment_options_dropdown_header": "Show:",
+    "watch_comment_options_dropdown_top": "top comments",
+    "watch_comment_options_dropdown_new": "newest comments",
+    "watch_comment_options_save": "Save changes",
+    "watch_comment_options_or": "or",
+    "watch_comment_options_cancel": "Cancel"
 }

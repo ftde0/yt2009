@@ -118,6 +118,11 @@ if(rawAMResponse.toLowerCase() == "y") {
 console.log(`
 writing configuration to back/config.json.
 you can always rerun this setup in the future to make changes.
+
+additionally, if there are other things you'd like to set up
+(hardening an instance, data api key, properly set uploading, ...)
+have a look at config_params.md.
+
 `)
 fs.writeFileSync(`${__dirname}/back/config.json`, JSON.stringify(cfg))
 console.log(`

@@ -341,10 +341,7 @@ module.exports = {
             "description": r.metadata.channelMetadataRenderer.description
                             .split("\n").join("<br>") || ""
         }
-        // recently, an A/B test was launched that doesn't use
-        // c4TabbedHeaderRenderer which was used for a long time before that.
-        // the following code mitigation could have been simpler
-        // but i want to keep it readable.
+        // post-early-2024 viewmodel channel
         let useViewmodelParse = false;
         if(r.header.pageHeaderRenderer) {
             useViewmodelParse = true

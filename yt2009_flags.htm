@@ -327,7 +327,21 @@
 			<input type="checkbox" id="global-thumbnail-proxy" title="miniaturki będą przechodzić przez yt2009, naprawiając je w sieciach które blokują youtube.">
 			<label for="global-thumbnail-proxy">thumbnail_proxy</label><br>
 			<input type="checkbox" id="global-unasciify-login" title="wyłącza przekształcanie zalogowanych nazw. do funkcjonalności sync te nazwy będą dalej upraszczane.">
-			<label for="global-unasciify-login">unasciify_login</label>
+			<label for="global-unasciify-login">unasciify_login</label><br>
+			<input type="checkbox" id="global-video-filter" title="nie pokazuj specyficznych filmów">
+			<label for="global-video-filter">video_filter</label>
+			<input type="text" id="global-video-filter-input" autocomplete="off" spellcheck="false" placeholder="wartości">
+			<a id="global-video-filter-expander" href="javascript:toggleExpander('global-video-filter-expander-content')">(format wartości)</a><br>
+			<p id="global-video-filter-expander-content" class="hid">możesz tu wpisać ID filmu (11-znakowe) lub frazy występujące w tytułach. wiele wartości oddzielaj znakiem <code>|</code>.<br>
+			np. <code>xat1GVnl8-k|official video</code> - będzie ukrywać filmik <code>xat1GVnl8-k</code> i wszystkie inne ze słowami <code>official video</code>.<br>
+			w przypadku słów wielkość liter nie ma znaczenia. filmiki te <b>nie</b> będą blokowane - nie będą tylko się pokazywać np. w polecanych lub podobnych.</p>
+			<input type="checkbox" id="global-videochannel-filter" title="nie pokazuj filmów od specyficznych kanałów">
+			<label for="global-videochannel-filter">videochannel_filter</label>
+			<input type="text" id="global-videochannel-filter-input" autocomplete="off" spellcheck="false" placeholder="wartości">
+			<a id="global-videochannel-filter-expander" href="javascript:toggleExpander('global-videochannel-filter-expander-content')">(format wartości)</a><br>
+			<p id="global-videochannel-filter-expander-content" class="hid">możesz tu wpisać ID kanału (24-znakowe zaczynające się na "UC") lub nazwy. wiele wartości oddzielaj znakiem <code>|</code>.<br>
+			np. <code>UC5g1Solgg1Cnow3PwteNuJA|channel</code> - będzie ukrywać filmiki z kanału <code>UC5g1Solgg1Cnow3PwteNuJA</code> i te z słowem<code>channel</code> w nazwie.<br>
+			w przypadku słów wielkość liter nie ma znaczenia. wartości tu wpisane <b>nie</b> zablokują dostępu do tych kanałów.</p>
 		</div>
 		<a class="yt-button yt-button-primary" href="#" onclick="update_cookies();"><span id="i_save">zapisz</span></a><br>
 
@@ -415,7 +429,11 @@
 			cookieValue.split(":").forEach(function(flag) {
 				try {
 					// custom handling for flags with textboxes
-					if(!document.querySelector("#" + flag_category + "-" + decodeURIComponent(flag.split("_").join("-")))) {
+					var flagElementName = "#" + flag_category + "-"
+										+ decodeURIComponent(
+						flag.split("_").join("-")
+					).split("|").join("")
+					if(!document.querySelector(flagElementName)) {
 						// probably a flag with an input textbox
 						var flagPartialName = flag.split("_")
 						flagPartialName.pop();

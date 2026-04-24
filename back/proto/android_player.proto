@@ -76,14 +76,14 @@ message root {
         message statUrl {
             string url = 1;
         }
-        repeated statUrl playback = 1;
-        repeated statUrl delayplay = 2;
-        repeated statUrl watchtime = 3;
-        repeated statUrl ptracking = 4;
-        repeated statUrl qoe = 5;
-        repeated statUrl apiStats = 13;
+        statUrl playback = 1;
+        statUrl delayplay = 2;
+        statUrl watchtime = 3;
+        statUrl ptracking = 4;
+        statUrl qoe = 5;
+        statUrl apiStats = 13;
     }
-    repeated statUrls stats = 9;
+    statUrls stats = 9;
     message captionTracks {
         message contents {
             message captionTrack {

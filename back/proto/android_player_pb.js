@@ -330,7 +330,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.android_player.root.statUrls = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.android_player.root.statUrls.repeatedFields_, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
 goog.inherits(proto.android_player.root.statUrls, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -1681,7 +1681,7 @@ proto.android_player.numberRange.prototype.setEnd = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.android_player.root.repeatedFields_ = [1,2,4,9,10,11,16,21,15];
+proto.android_player.root.repeatedFields_ = [1,2,4,10,11,16,21,15];
 
 
 
@@ -1720,8 +1720,7 @@ proto.android_player.root.toObject = function(includeInstance, msg) {
     proto.android_player.root.playabilityStatus.toObject, includeInstance),
     formatsList: jspb.Message.toObjectList(msg.getFormatsList(),
     proto.android_player.root.playerFormats.toObject, includeInstance),
-    statsList: jspb.Message.toObjectList(msg.getStatsList(),
-    proto.android_player.root.statUrls.toObject, includeInstance),
+    stats: (f = msg.getStats()) && proto.android_player.root.statUrls.toObject(includeInstance, f),
     captionsList: jspb.Message.toObjectList(msg.getCaptionsList(),
     proto.android_player.root.captionTracks.toObject, includeInstance),
     videometadataList: jspb.Message.toObjectList(msg.getVideometadataList(),
@@ -1788,7 +1787,7 @@ proto.android_player.root.deserializeBinaryFromReader = function(msg, reader) {
     case 9:
       var value = new proto.android_player.root.statUrls;
       reader.readMessage(value,proto.android_player.root.statUrls.deserializeBinaryFromReader);
-      msg.addStats(value);
+      msg.setStats(value);
       break;
     case 10:
       var value = new proto.android_player.root.captionTracks;
@@ -1877,9 +1876,9 @@ proto.android_player.root.serializeBinaryToWriter = function(message, writer) {
       proto.android_player.root.playerFormats.serializeBinaryToWriter
     );
   }
-  f = message.getStatsList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getStats();
+  if (f != null) {
+    writer.writeMessage(
       9,
       f,
       proto.android_player.root.statUrls.serializeBinaryToWriter
@@ -3777,13 +3776,6 @@ proto.android_player.root.playerFormats.prototype.setServerabrstreamingurl = fun
 
 
 
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.android_player.root.statUrls.repeatedFields_ = [1,2,3,4,5,13];
-
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -3815,18 +3807,12 @@ proto.android_player.root.statUrls.prototype.toObject = function(opt_includeInst
  */
 proto.android_player.root.statUrls.toObject = function(includeInstance, msg) {
   var f, obj = {
-    playbackList: jspb.Message.toObjectList(msg.getPlaybackList(),
-    proto.android_player.root.statUrls.statUrl.toObject, includeInstance),
-    delayplayList: jspb.Message.toObjectList(msg.getDelayplayList(),
-    proto.android_player.root.statUrls.statUrl.toObject, includeInstance),
-    watchtimeList: jspb.Message.toObjectList(msg.getWatchtimeList(),
-    proto.android_player.root.statUrls.statUrl.toObject, includeInstance),
-    ptrackingList: jspb.Message.toObjectList(msg.getPtrackingList(),
-    proto.android_player.root.statUrls.statUrl.toObject, includeInstance),
-    qoeList: jspb.Message.toObjectList(msg.getQoeList(),
-    proto.android_player.root.statUrls.statUrl.toObject, includeInstance),
-    apistatsList: jspb.Message.toObjectList(msg.getApistatsList(),
-    proto.android_player.root.statUrls.statUrl.toObject, includeInstance)
+    playback: (f = msg.getPlayback()) && proto.android_player.root.statUrls.statUrl.toObject(includeInstance, f),
+    delayplay: (f = msg.getDelayplay()) && proto.android_player.root.statUrls.statUrl.toObject(includeInstance, f),
+    watchtime: (f = msg.getWatchtime()) && proto.android_player.root.statUrls.statUrl.toObject(includeInstance, f),
+    ptracking: (f = msg.getPtracking()) && proto.android_player.root.statUrls.statUrl.toObject(includeInstance, f),
+    qoe: (f = msg.getQoe()) && proto.android_player.root.statUrls.statUrl.toObject(includeInstance, f),
+    apistats: (f = msg.getApistats()) && proto.android_player.root.statUrls.statUrl.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -3866,32 +3852,32 @@ proto.android_player.root.statUrls.deserializeBinaryFromReader = function(msg, r
     case 1:
       var value = new proto.android_player.root.statUrls.statUrl;
       reader.readMessage(value,proto.android_player.root.statUrls.statUrl.deserializeBinaryFromReader);
-      msg.addPlayback(value);
+      msg.setPlayback(value);
       break;
     case 2:
       var value = new proto.android_player.root.statUrls.statUrl;
       reader.readMessage(value,proto.android_player.root.statUrls.statUrl.deserializeBinaryFromReader);
-      msg.addDelayplay(value);
+      msg.setDelayplay(value);
       break;
     case 3:
       var value = new proto.android_player.root.statUrls.statUrl;
       reader.readMessage(value,proto.android_player.root.statUrls.statUrl.deserializeBinaryFromReader);
-      msg.addWatchtime(value);
+      msg.setWatchtime(value);
       break;
     case 4:
       var value = new proto.android_player.root.statUrls.statUrl;
       reader.readMessage(value,proto.android_player.root.statUrls.statUrl.deserializeBinaryFromReader);
-      msg.addPtracking(value);
+      msg.setPtracking(value);
       break;
     case 5:
       var value = new proto.android_player.root.statUrls.statUrl;
       reader.readMessage(value,proto.android_player.root.statUrls.statUrl.deserializeBinaryFromReader);
-      msg.addQoe(value);
+      msg.setQoe(value);
       break;
     case 13:
       var value = new proto.android_player.root.statUrls.statUrl;
       reader.readMessage(value,proto.android_player.root.statUrls.statUrl.deserializeBinaryFromReader);
-      msg.addApistats(value);
+      msg.setApistats(value);
       break;
     default:
       reader.skipField();
@@ -3922,49 +3908,49 @@ proto.android_player.root.statUrls.prototype.serializeBinary = function() {
  */
 proto.android_player.root.statUrls.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPlaybackList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getPlayback();
+  if (f != null) {
+    writer.writeMessage(
       1,
       f,
       proto.android_player.root.statUrls.statUrl.serializeBinaryToWriter
     );
   }
-  f = message.getDelayplayList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getDelayplay();
+  if (f != null) {
+    writer.writeMessage(
       2,
       f,
       proto.android_player.root.statUrls.statUrl.serializeBinaryToWriter
     );
   }
-  f = message.getWatchtimeList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getWatchtime();
+  if (f != null) {
+    writer.writeMessage(
       3,
       f,
       proto.android_player.root.statUrls.statUrl.serializeBinaryToWriter
     );
   }
-  f = message.getPtrackingList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getPtracking();
+  if (f != null) {
+    writer.writeMessage(
       4,
       f,
       proto.android_player.root.statUrls.statUrl.serializeBinaryToWriter
     );
   }
-  f = message.getQoeList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getQoe();
+  if (f != null) {
+    writer.writeMessage(
       5,
       f,
       proto.android_player.root.statUrls.statUrl.serializeBinaryToWriter
     );
   }
-  f = message.getApistatsList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getApistats();
+  if (f != null) {
+    writer.writeMessage(
       13,
       f,
       proto.android_player.root.statUrls.statUrl.serializeBinaryToWriter
@@ -4104,230 +4090,224 @@ proto.android_player.root.statUrls.statUrl.prototype.setUrl = function(value) {
 
 
 /**
- * repeated statUrl playback = 1;
- * @return {!Array<!proto.android_player.root.statUrls.statUrl>}
+ * optional statUrl playback = 1;
+ * @return {?proto.android_player.root.statUrls.statUrl}
  */
-proto.android_player.root.statUrls.prototype.getPlaybackList = function() {
-  return /** @type{!Array<!proto.android_player.root.statUrls.statUrl>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_player.root.statUrls.statUrl, 1));
+proto.android_player.root.statUrls.prototype.getPlayback = function() {
+  return /** @type{?proto.android_player.root.statUrls.statUrl} */ (
+    jspb.Message.getWrapperField(this, proto.android_player.root.statUrls.statUrl, 1));
 };
 
 
 /**
- * @param {!Array<!proto.android_player.root.statUrls.statUrl>} value
+ * @param {?proto.android_player.root.statUrls.statUrl|undefined} value
  * @return {!proto.android_player.root.statUrls} returns this
 */
-proto.android_player.root.statUrls.prototype.setPlaybackList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+proto.android_player.root.statUrls.prototype.setPlayback = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
- * @param {!proto.android_player.root.statUrls.statUrl=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_player.root.statUrls.statUrl}
- */
-proto.android_player.root.statUrls.prototype.addPlayback = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.android_player.root.statUrls.statUrl, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_player.root.statUrls} returns this
  */
-proto.android_player.root.statUrls.prototype.clearPlaybackList = function() {
-  return this.setPlaybackList([]);
+proto.android_player.root.statUrls.prototype.clearPlayback = function() {
+  return this.setPlayback(undefined);
 };
 
 
 /**
- * repeated statUrl delayplay = 2;
- * @return {!Array<!proto.android_player.root.statUrls.statUrl>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_player.root.statUrls.prototype.getDelayplayList = function() {
-  return /** @type{!Array<!proto.android_player.root.statUrls.statUrl>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_player.root.statUrls.statUrl, 2));
+proto.android_player.root.statUrls.prototype.hasPlayback = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_player.root.statUrls.statUrl>} value
- * @return {!proto.android_player.root.statUrls} returns this
-*/
-proto.android_player.root.statUrls.prototype.setDelayplayList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 2, value);
-};
-
-
-/**
- * @param {!proto.android_player.root.statUrls.statUrl=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_player.root.statUrls.statUrl}
+ * optional statUrl delayplay = 2;
+ * @return {?proto.android_player.root.statUrls.statUrl}
  */
-proto.android_player.root.statUrls.prototype.addDelayplay = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.android_player.root.statUrls.statUrl, opt_index);
+proto.android_player.root.statUrls.prototype.getDelayplay = function() {
+  return /** @type{?proto.android_player.root.statUrls.statUrl} */ (
+    jspb.Message.getWrapperField(this, proto.android_player.root.statUrls.statUrl, 2));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_player.root.statUrls} returns this
- */
-proto.android_player.root.statUrls.prototype.clearDelayplayList = function() {
-  return this.setDelayplayList([]);
-};
-
-
-/**
- * repeated statUrl watchtime = 3;
- * @return {!Array<!proto.android_player.root.statUrls.statUrl>}
- */
-proto.android_player.root.statUrls.prototype.getWatchtimeList = function() {
-  return /** @type{!Array<!proto.android_player.root.statUrls.statUrl>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_player.root.statUrls.statUrl, 3));
-};
-
-
-/**
- * @param {!Array<!proto.android_player.root.statUrls.statUrl>} value
+ * @param {?proto.android_player.root.statUrls.statUrl|undefined} value
  * @return {!proto.android_player.root.statUrls} returns this
 */
-proto.android_player.root.statUrls.prototype.setWatchtimeList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 3, value);
+proto.android_player.root.statUrls.prototype.setDelayplay = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 /**
- * @param {!proto.android_player.root.statUrls.statUrl=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_player.root.statUrls.statUrl}
- */
-proto.android_player.root.statUrls.prototype.addWatchtime = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.android_player.root.statUrls.statUrl, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_player.root.statUrls} returns this
  */
-proto.android_player.root.statUrls.prototype.clearWatchtimeList = function() {
-  return this.setWatchtimeList([]);
+proto.android_player.root.statUrls.prototype.clearDelayplay = function() {
+  return this.setDelayplay(undefined);
 };
 
 
 /**
- * repeated statUrl ptracking = 4;
- * @return {!Array<!proto.android_player.root.statUrls.statUrl>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_player.root.statUrls.prototype.getPtrackingList = function() {
-  return /** @type{!Array<!proto.android_player.root.statUrls.statUrl>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_player.root.statUrls.statUrl, 4));
+proto.android_player.root.statUrls.prototype.hasDelayplay = function() {
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_player.root.statUrls.statUrl>} value
- * @return {!proto.android_player.root.statUrls} returns this
-*/
-proto.android_player.root.statUrls.prototype.setPtrackingList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 4, value);
-};
-
-
-/**
- * @param {!proto.android_player.root.statUrls.statUrl=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_player.root.statUrls.statUrl}
+ * optional statUrl watchtime = 3;
+ * @return {?proto.android_player.root.statUrls.statUrl}
  */
-proto.android_player.root.statUrls.prototype.addPtracking = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.android_player.root.statUrls.statUrl, opt_index);
+proto.android_player.root.statUrls.prototype.getWatchtime = function() {
+  return /** @type{?proto.android_player.root.statUrls.statUrl} */ (
+    jspb.Message.getWrapperField(this, proto.android_player.root.statUrls.statUrl, 3));
 };
 
 
 /**
- * Clears the list making it empty but non-null.
- * @return {!proto.android_player.root.statUrls} returns this
- */
-proto.android_player.root.statUrls.prototype.clearPtrackingList = function() {
-  return this.setPtrackingList([]);
-};
-
-
-/**
- * repeated statUrl qoe = 5;
- * @return {!Array<!proto.android_player.root.statUrls.statUrl>}
- */
-proto.android_player.root.statUrls.prototype.getQoeList = function() {
-  return /** @type{!Array<!proto.android_player.root.statUrls.statUrl>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_player.root.statUrls.statUrl, 5));
-};
-
-
-/**
- * @param {!Array<!proto.android_player.root.statUrls.statUrl>} value
+ * @param {?proto.android_player.root.statUrls.statUrl|undefined} value
  * @return {!proto.android_player.root.statUrls} returns this
 */
-proto.android_player.root.statUrls.prototype.setQoeList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
+proto.android_player.root.statUrls.prototype.setWatchtime = function(value) {
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
 /**
- * @param {!proto.android_player.root.statUrls.statUrl=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_player.root.statUrls.statUrl}
- */
-proto.android_player.root.statUrls.prototype.addQoe = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.android_player.root.statUrls.statUrl, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_player.root.statUrls} returns this
  */
-proto.android_player.root.statUrls.prototype.clearQoeList = function() {
-  return this.setQoeList([]);
+proto.android_player.root.statUrls.prototype.clearWatchtime = function() {
+  return this.setWatchtime(undefined);
 };
 
 
 /**
- * repeated statUrl apiStats = 13;
- * @return {!Array<!proto.android_player.root.statUrls.statUrl>}
+ * Returns whether this field is set.
+ * @return {boolean}
  */
-proto.android_player.root.statUrls.prototype.getApistatsList = function() {
-  return /** @type{!Array<!proto.android_player.root.statUrls.statUrl>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_player.root.statUrls.statUrl, 13));
+proto.android_player.root.statUrls.prototype.hasWatchtime = function() {
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * @param {!Array<!proto.android_player.root.statUrls.statUrl>} value
+ * optional statUrl ptracking = 4;
+ * @return {?proto.android_player.root.statUrls.statUrl}
+ */
+proto.android_player.root.statUrls.prototype.getPtracking = function() {
+  return /** @type{?proto.android_player.root.statUrls.statUrl} */ (
+    jspb.Message.getWrapperField(this, proto.android_player.root.statUrls.statUrl, 4));
+};
+
+
+/**
+ * @param {?proto.android_player.root.statUrls.statUrl|undefined} value
  * @return {!proto.android_player.root.statUrls} returns this
 */
-proto.android_player.root.statUrls.prototype.setApistatsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 13, value);
+proto.android_player.root.statUrls.prototype.setPtracking = function(value) {
+  return jspb.Message.setWrapperField(this, 4, value);
 };
 
 
 /**
- * @param {!proto.android_player.root.statUrls.statUrl=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_player.root.statUrls.statUrl}
- */
-proto.android_player.root.statUrls.prototype.addApistats = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.android_player.root.statUrls.statUrl, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_player.root.statUrls} returns this
  */
-proto.android_player.root.statUrls.prototype.clearApistatsList = function() {
-  return this.setApistatsList([]);
+proto.android_player.root.statUrls.prototype.clearPtracking = function() {
+  return this.setPtracking(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_player.root.statUrls.prototype.hasPtracking = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional statUrl qoe = 5;
+ * @return {?proto.android_player.root.statUrls.statUrl}
+ */
+proto.android_player.root.statUrls.prototype.getQoe = function() {
+  return /** @type{?proto.android_player.root.statUrls.statUrl} */ (
+    jspb.Message.getWrapperField(this, proto.android_player.root.statUrls.statUrl, 5));
+};
+
+
+/**
+ * @param {?proto.android_player.root.statUrls.statUrl|undefined} value
+ * @return {!proto.android_player.root.statUrls} returns this
+*/
+proto.android_player.root.statUrls.prototype.setQoe = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_player.root.statUrls} returns this
+ */
+proto.android_player.root.statUrls.prototype.clearQoe = function() {
+  return this.setQoe(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_player.root.statUrls.prototype.hasQoe = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional statUrl apiStats = 13;
+ * @return {?proto.android_player.root.statUrls.statUrl}
+ */
+proto.android_player.root.statUrls.prototype.getApistats = function() {
+  return /** @type{?proto.android_player.root.statUrls.statUrl} */ (
+    jspb.Message.getWrapperField(this, proto.android_player.root.statUrls.statUrl, 13));
+};
+
+
+/**
+ * @param {?proto.android_player.root.statUrls.statUrl|undefined} value
+ * @return {!proto.android_player.root.statUrls} returns this
+*/
+proto.android_player.root.statUrls.prototype.setApistats = function(value) {
+  return jspb.Message.setWrapperField(this, 13, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.android_player.root.statUrls} returns this
+ */
+proto.android_player.root.statUrls.prototype.clearApistats = function() {
+  return this.setApistats(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_player.root.statUrls.prototype.hasApistats = function() {
+  return jspb.Message.getField(this, 13) != null;
 };
 
 
@@ -8133,40 +8113,39 @@ proto.android_player.root.prototype.clearFormatsList = function() {
 
 
 /**
- * repeated statUrls stats = 9;
- * @return {!Array<!proto.android_player.root.statUrls>}
+ * optional statUrls stats = 9;
+ * @return {?proto.android_player.root.statUrls}
  */
-proto.android_player.root.prototype.getStatsList = function() {
-  return /** @type{!Array<!proto.android_player.root.statUrls>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.android_player.root.statUrls, 9));
+proto.android_player.root.prototype.getStats = function() {
+  return /** @type{?proto.android_player.root.statUrls} */ (
+    jspb.Message.getWrapperField(this, proto.android_player.root.statUrls, 9));
 };
 
 
 /**
- * @param {!Array<!proto.android_player.root.statUrls>} value
+ * @param {?proto.android_player.root.statUrls|undefined} value
  * @return {!proto.android_player.root} returns this
 */
-proto.android_player.root.prototype.setStatsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 9, value);
+proto.android_player.root.prototype.setStats = function(value) {
+  return jspb.Message.setWrapperField(this, 9, value);
 };
 
 
 /**
- * @param {!proto.android_player.root.statUrls=} opt_value
- * @param {number=} opt_index
- * @return {!proto.android_player.root.statUrls}
- */
-proto.android_player.root.prototype.addStats = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.android_player.root.statUrls, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
+ * Clears the message field making it undefined.
  * @return {!proto.android_player.root} returns this
  */
-proto.android_player.root.prototype.clearStatsList = function() {
-  return this.setStatsList([]);
+proto.android_player.root.prototype.clearStats = function() {
+  return this.setStats(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_player.root.prototype.hasStats = function() {
+  return jspb.Message.getField(this, 9) != null;
 };
 
 

@@ -14,6 +14,29 @@ const dataApiPageToken = require("./proto/data_api_page_token_pb")
 
 let cache = require("./cache_dir/search_cache_manager")
 
+function shouldFilter(videoFilters, id, title, creatorName, creatorUrl) {
+    if(!videoFilters) return false;
+    return (videoFilters.videos.includes(id)
+    || videoFilters.videos.filter(s => {
+        return title.toLowerCase().includes(
+            s.toLowerCase()
+        )
+    })[0]
+    || videoFilters.channels.filter(s => {
+        return creatorName.toLowerCase().includes(
+            s.toLowerCase()
+        )
+    })[0]
+    || (creatorUrl
+    && creatorUrl.includes("channel/")
+    && videoFilters.channels.includes(
+        creatorUrl.split("channel/")[1]
+    ))
+    || (creatorUrl
+    && creatorUrl.startsWith("UC")
+    && videoFilters.channels.includes(creatorUrl)))
+}
+
 module.exports = {
     "get_search": function(query, flags, params, callback, token, resetCache) {
         // request search and flag handling
@@ -302,6 +325,7 @@ module.exports = {
         let url_without_sort = url;
         let url_without_upload = url;
         let url_without_type = url;
+        let videoFilters = yt2009utils.getFilterData(req)
         params.forEach(param => {
             if(!param.includes("=")) return;
             switch(param.split("=")[1]) {
@@ -591,6 +615,17 @@ module.exports = {
                     if(result.type == "live-video") {
                         liveVideoFlag += ":live_video"
                     }
+
+                    // video filter
+                    if(shouldFilter(
+                        videoFilters, video.id, title,
+                        uploaderName, video.author_url
+                    )) {
+                        if(config.env == "dev") {
+                            console.log(`filtering ${video.id} ${title}`)
+                        }
+                        cancelled = true;
+                    }
     
                     // apply html
                     if(!cancelled) {
@@ -770,7 +805,8 @@ module.exports = {
     },
 
     "related_from_keywords": function(
-        keyword, sourceId, watch_flags, callback, protocol, disableOld, customOld
+        keyword, sourceId, watch_flags, callback,
+        protocol, disableOld, customOld, videoFilters
     ) {
         let oldFlag = customOld ? "only_old" + customOld : "only_old"
         this.get_search(keyword, disableOld ? "" : oldFlag, "", (data) => {
@@ -781,7 +817,12 @@ module.exports = {
             let related_html = ``
             let rawData = []
             JSON.parse(JSON.stringify(data)).forEach(result => {
-                if(result.type == "video" && result.id !== sourceId) {
+                if(result.type == "video"
+                && result.id !== sourceId
+                && !shouldFilter(
+                    videoFilters, result.id, result.title,
+                    result.author_name, result.author_url
+                )) {
                     // handle flag
                     // author name flags
                     let authorName = result.author_name;

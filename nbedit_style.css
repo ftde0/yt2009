@@ -290,3 +290,7 @@ a[href="/my_videos_upload"] span {
 #video-owned-video-panel-buttons {
     margin-top: 8px;
 }
+
+.watch-comment-option, #watch-comment-options-save {
+    margin-top: 6px;
+}
