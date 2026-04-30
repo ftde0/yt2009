@@ -2935,7 +2935,7 @@ module.exports = {
                                         )
                                         if(!isNaN(t)
                                         && typeof(t) == "number") {
-                                            time = t;
+                                            time = b[1];
                                         }
                                     }
                                     catch(error) {}
