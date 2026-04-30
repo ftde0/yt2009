@@ -2608,6 +2608,17 @@ function close_embed() {
 show more from if no related
 ======
 */
+var usingTurbocharge = ((
+    window.location
+ && location.href
+ && location.href.indexOf("exp_turbocharge=1") !== -1
+ && location.href.indexOf("/watch") !== -1
+) || (
+    document.cookie
+ && document.cookie.indexOf("exp_turbocharge") !== -1
+ && window.location
+ && location.href.indexOf("/watch") !== -1
+))
 try {
     var related = getElementsByClassName(
         document.getElementById("watch-related-discoverbox"),
@@ -2618,7 +2629,7 @@ try {
 	 && location.href
 	 && location.href.indexOf("with_pchelper=1") !== -1
 	)
-    if(related.length <= 0 && !usingPchelper) {
+    if(related.length <= 0 && !usingPchelper && !usingTurbocharge) {
         var channelVids = document.getElementById("watch-channel-videos-panel")
                         .getElementsByTagName("h2")[0]
         toggleExpander(channelVids)
@@ -2851,4 +2862,39 @@ function watch_comments_pref_save() {
                            .getElementsByTagName("div")[0]
     comments.innerHTML = ""
     onWatchCommentsShowMore("reload")
+}
+
+/*
+======
+turbocharge fillers
+======
+*/
+if(usingTurbocharge) {
+    onWatchCommentsShowMore("reload")
+    var id = window.location.href.split("v=")[1].split("&")[0]
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    var response = ""
+    function getResponseField(name) {
+        return response.split("=======-yt2009-field-" + name + "=======\n")[1]
+                       .split("=======-yt2009-field")[0]
+    }
+    r.open("GET", "/etc_oex_videodata?video_id=" + id + "&rt=" + Math.random())
+    r.setRequestHeader("format", "ser")
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            response = r.responseText
+            document.querySelector(".yt2009-default-related").innerHTML = getResponseField("relatedVideosHTML");
+            document.querySelector(".watch-video-added").innerHTML = getResponseField("uploadDate")
+            document.getElementById("watch-video-category").innerHTML = getResponseField("category")
+            document.getElementById("watch-video-category").setAttribute(
+                "href", "/videos?c=" + getResponseField("categoryNumber")
+            )
+        }
+    }
 }

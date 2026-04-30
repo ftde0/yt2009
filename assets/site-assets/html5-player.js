@@ -4558,9 +4558,12 @@ function initStoryboard() {
             id = location.href.split("embed/")[1].split("?")[0].split("#")[0]
         }
     }
-    image.style.background = 'url("/storyboard_fetch?video_id=' + id + '")'
+    function addR() {
+        return "&r=" + Math.random()
+    }
+    image.style.background = 'url("/storyboard_fetch?video_id=' + id + addR() + '")'
     setTimeout(function() {
-        image.style.background = 'url("/storyboard_fetch?video_id=' + id + '")'
+        image.style.background = 'url("/storyboard_fetch?video_id=' + id + addR() + '")'
     }, 4000)
     image.className = "storyboard_sheet"
     container.appendChild(image)

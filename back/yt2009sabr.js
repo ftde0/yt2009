@@ -307,16 +307,18 @@ module.exports = {
             console.log(`[sabr/${playbackSession}] force replayer called!`)
         }
         function extractPlayerData(data) {
-            data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
-            data.ustreamer = data.playerConfig.mediaCommonConfig
-                                 .mediaUstreamerRequestConfig
-                                 .videoPlaybackUstreamerConfig;
-            if(data.sabrUrl && data.sabrUrl.includes("expire=")) {
-                data.expiry = parseInt(
-                    data.sabrUrl.split("expire=")[1].split("&")[0]
-                ) * 1000
-            } else {
-                data.expiry = Date.now() + (7200 * 1000) // 2 hrs
+            if(data.streamingData) {
+                data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
+                data.ustreamer = data.playerConfig.mediaCommonConfig
+                                    .mediaUstreamerRequestConfig
+                                    .videoPlaybackUstreamerConfig;
+                if(data.sabrUrl && data.sabrUrl.includes("expire=")) {
+                    data.expiry = parseInt(
+                        data.sabrUrl.split("expire=")[1].split("&")[0]
+                    ) * 1000
+                } else {
+                    data.expiry = Date.now() + (7200 * 1000) // 2 hrs
+                }
             }
             players[p.id] = data;
         }

@@ -1121,3 +1121,13 @@
     display: block;
     cursor: pointer;
 }
+
+.endscreen-video, .gr {
+    color: #4d4b46 !important;
+}
+
+.endscreen-video {
+    background-image: url(/player-imgs/endscreen-bg-opt.png);
+    overflow: hidden;
+    background-repeat: repeat-x;
+}

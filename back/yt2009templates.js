@@ -117,7 +117,7 @@ module.exports = {
                     <div class="v90WideEntry">
                         <div class="v90WrapperOuter">
                             <div class="v90WrapperInner">
-                                <a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" class="video-thumb-link" rel="nofollow"><img title="${title.split('"').join("&quot;")}" thumb="${thumbUrl}" src="${thumbUrl}" class="vimg90" qlicon="${id}" alt="${title.split('"').join("&quot;")}}" ${flags.includes("/wayback") ? `onload="checkExists(this)"` : ""}></a>
+                                <a href="/watch?v=${id}${playlistId ? "&list=" + playlistId : ""}" class="video-thumb-link" rel="nofollow"><img title="${title.split('"').join("&quot;")}" thumb="${thumbUrl}" src="${thumbUrl}" class="vimg90" qlicon="${id}" alt="${title.split('"').join("&quot;")}}" ${flags.includes("/wayback") ? `onload="checkExists(this)"` : ""} loading="lazy"></a>
         
                                 <div class="addtoQL90"><a href="#" ql="${id}" title="lang_add_to_ql"><button title="" class="master-sprite QLIconImg" onclick="addToQuicklist('${id}', '${encodeURIComponent(title).split("'").join("\\'")}', '${encodeURIComponent(creatorName)}')"></button></a>
                                     <div class="hid quicklist-inlist"><a href="#">lang_ql_added</a></div>
@@ -1587,6 +1587,10 @@ module.exports = {
         pagingPart.forEach(urlPart => {
             basePagingUrl = basePagingUrl.replace(urlPart, "")
         })
+
+        if(basePagingUrl.includes("&") && !basePagingUrl.includes("?")) {
+            basePagingUrl = basePagingUrl.replace("&", "?")
+        }
 
         let c = "&"
         if(!basePagingUrl.includes("?")) {
@@ -3781,6 +3785,9 @@ term='channel'/>
                               .getElementsByTagName("button")[0];
             btn.className = "yt2009-stars master-sprite ratingL ratingL-" + rating;
             btn.setAttribute("title", rating)
+            if(window.videoRating) {
+                videoRating = rating;
+            }
         }
     }
     `,

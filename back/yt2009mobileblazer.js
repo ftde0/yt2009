@@ -56,6 +56,10 @@ module.exports = {
     // get video data
     // called on video click within blazer
     "video": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.status(401).send({"error": "unauthorized"})
+            return;
+        }
         let id = req.query.v
         if(!id) {
             res.sendStatus(400)
@@ -214,6 +218,10 @@ module.exports = {
     // view comments
     // called when the Comments tab is clicked on watchpage
     "get_comments": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.status(401).send({"error": "unauthorized"})
+            return;
+        }
         let id = req.query.v
         if(!id) {
             res.sendStatus(400)
@@ -270,6 +278,10 @@ module.exports = {
 
     // video search!!
     "search": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.status(401).send({"error": "unauthorized"})
+            return;
+        }
         let q = req.query.q
         if(!q) {
             res.sendStatus(400)
@@ -411,6 +423,10 @@ module.exports = {
 
     // browse menu (/videos equivalent)
     "browse": function(req, res) {
+        if(!utils.isAuthorized(req)) {
+            res.status(401).send({"error": "unauthorized"})
+            return;
+        }
         let response = {
             "result": "ok",
             "content": {

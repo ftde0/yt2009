@@ -1781,7 +1781,15 @@ var usingPchelper = (
  && location.href
  && location.href.indexOf("with_pchelper=1") !== -1
 )
-if(related.length <= 0 && !usingPchelper) {
+var usingTurbocharge = ((
+    window.location
+ && location.href
+ && location.href.indexOf("exp_turbocharge=1") !== -1
+) || (
+    document.cookie
+ && document.cookie.indexOf("exp_turbocharge") !== -1
+))
+if(related.length <= 0 && !usingPchelper && !usingTurbocharge) {
     var channelVids = document.getElementById("watch-channel-videos-panel")
                       .getElementsByTagName("h2")[0]
     toggleExpander(channelVids)
@@ -1989,4 +1997,31 @@ function watch_comments_pref_save() {
                            .getElementsByTagName("div")[0]
     comments.innerHTML = ""
     onWatchCommentsShowMore({"source": "reload"})
+}
+
+/*
+======
+turbocharge fillers
+======
+*/
+if(usingTurbocharge) {
+    onWatchCommentsShowMore({"source": "reload"})
+    var id = window.location.href.split("v=")[1].split("&")[0]
+    var r = new XMLHttpRequest();
+    r.open("GET", "/etc_oex_videodata?video_id=" + id)
+    r.send(null)
+    r.addEventListener("load", function(e) {
+        var res = JSON.parse(r.responseText)
+        document.querySelector(".yt2009-default-related").innerHTML = res.relatedVideosHTML;
+        if(document.querySelector(".endscreen")) {
+            setTimeout(function() {
+                document.querySelector(".endscreen").innerHTML += res.endscreenHTML
+            }, 3000)
+        }
+        document.querySelector(".watch-video-added").innerHTML = res.uploadDate
+        document.getElementById("watch-video-category").innerHTML = res.category
+        document.getElementById("watch-video-category").setAttribute(
+            "href", "/videos?c=" + res.categoryNumber
+        )
+    }, false)
 }

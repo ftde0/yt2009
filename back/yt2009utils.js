@@ -1636,9 +1636,26 @@ module.exports = {
         }
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
         rHeaders["user-agent"] = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+        if(yt2009exports.read().visitor) {
+            rHeaders["X-Goog-Visitor-Id"] = yt2009exports.read().visitor
+        }
         if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
             let d = yt2009signin.getData().yAuth
             rHeaders.Authorization = `Bearer ${d}`
+        }
+        let potBase64 = null;
+        if(yt2009exports.read().potBytes && yt2009exports.read().potKey) {
+            let pb = require("./proto/android_pot_pb")
+            let potMsg = new pb.potResult()
+            potMsg.setData(yt2009exports.read().potBytes)
+            potMsg.setToken(yt2009exports.read().potKey)
+            let potWrap = new pb.wrapper()
+            potWrap.setData(potMsg)
+            potBase64 = Buffer.from(potWrap.serializeBinary())
+                              .toString("base64")
+                              .split("+").join("-")
+                              .split("/").join("_")
+                              .split("=").join("");
         }
         fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
             "headers": rHeaders,
@@ -1646,18 +1663,24 @@ module.exports = {
             "referrerPolicy": "origin-when-cross-origin",
             "body": JSON.stringify({
                 "context": {
-                "client": {
-                    "hl": "en",
-                    "clientName": "ANDROID",
-                    "clientVersion": "20.51",
-                    "mainAppWebInfo": {
-                        "graftUrl": "/watch?v=" + id
+                    "client": {
+                        "hl": "en",
+                        "clientName": "ANDROID",
+                        "clientVersion": "20.51",
+                        "deviceMake": "Google",
+                        "deviceModel": "Android SDK built for x86",
+                        "deviceCodename": "ranchu;",
+                        "osName": "Android",
+                        "osVersion": "14"
                     }
-                }
                 },
                 "videoId": id,
                 "racyCheckOk": true,
-                "contentCheckOk": true
+                "contentCheckOk": true,
+                "params": "YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D",
+                "serviceIntegrityDimensions": {
+                    "poToken": potBase64
+                }
             }),
             "method": "POST",
             "mode": "cors",

@@ -2903,10 +2903,97 @@ module.exports = {
             chip.forEach(video => {
                 if(video.richItemRenderer || video.gridVideoRenderer) {
                     video = (video.richItemRenderer || video.gridVideoRenderer)
-                            .content.videoRenderer
-
-                     let badges = []
-                     if(video.badges) {
+                            .content
+                            
+                    if(video && video.videoRenderer) {
+                        video = video.videoRenderer
+                    } else if(video && video.lockupViewModel) {
+                        video = video.lockupViewModel
+                        let id = video.contentId
+                        let time = "00:00"
+                        let badges = []
+                        try {
+                            let ovs = video.contentImage.thumbnailViewModel
+                                           .overlays;
+                            ovs.forEach(o => {
+                                if(o.thumbnailBottomOverlayViewModel) {
+                                    o = o.thumbnailBottomOverlayViewModel
+                                         .badges
+                                    o.forEach(badge => {
+                                        badge = badge.thumbnailBadgeViewModel
+                                        badges.push([
+                                            badge.badgeStyle, badge.text
+                                        ])
+                                    })
+                                }
+                            })
+                            badges.forEach(b => {
+                                if(b[1].includes(":")) {
+                                    try {
+                                        let t = yt2009utils.time_to_seconds(
+                                            b[1]
+                                        )
+                                        if(!isNaN(t)
+                                        && typeof(t) == "number") {
+                                            time = t;
+                                        }
+                                    }
+                                    catch(error) {}
+                                }
+                            })
+                        }
+                        catch(error) {console.log(error)}
+                        try {
+                            video = video.metadata.lockupMetadataViewModel
+                            let title = video.title.content
+                            let views = "0 views"
+                            let upload = "?"
+                            let md = []
+                            let mt = []
+                            try {
+                                md = video.metadata.contentMetadataViewModel
+                                          .metadataRows
+                                md.forEach(r => {
+                                    try {
+                                        r.metadataParts.forEach(p => {
+                                            if(p.text) {
+                                                mt.push(p.text.content)
+                                            }
+                                        })
+                                    }
+                                    catch(error) {console.log(error)}
+                                })
+                            }
+                            catch(error) {console.log(error)}
+                            mt.forEach(text => {
+                                if(text && text.includes("views")) {
+                                    views = yt2009utils.countBreakup(
+                                        yt2009utils.approxSubcount(
+                                            text.split(" ")[0]
+                                        )
+                                    ) + " views"
+                                } else if(text && text.includes(" ago")) {
+                                    upload = text;
+                                }
+                            })
+                            videos.push({
+                                "id": id,
+                                "badges": badges,
+                                "length": time,
+                                "thumbnail": "http://i.ytimg.com/vi/"
+                                           + id + "/hqdefault.jpg",
+                                "upload": upload,
+                                "views": views,
+                                "title": title
+                            })
+                        }
+                        catch(error) {console.log(error)}
+                        return;
+                    } else {
+                        return;
+                    }
+                    let badges = []
+                    if(video.badges) {
                         try {
                             video.badges.forEach(badge => {
                                 if(badge.metadataBadgeRenderer) {
@@ -2945,7 +3032,29 @@ module.exports = {
                 }
             })
             
-            callback(videos)
+            let videoIds = videos.map(s => {
+                return s.id
+            }).filter(s => {return s})
+            if(config.data_api_key) {
+                yt2009utils.dataApiBulk(videoIds, ["title", "viewCount"],
+                (data) => {
+                    videos = videos.map(s => {
+                        if(s && s.id
+                        && data[s.id]
+                        && data[s.id].viewCount
+                        && data[s.id].title) {
+                            s.views = yt2009utils.countBreakup(
+                                parseInt(data[s.id].viewCount)
+                            ) + " views"
+                            s.title = data[s.id].title
+                        }
+                        return s;
+                    })
+                    callback(videos)
+                })
+            } else {
+                callback(videos)
+            }
         }
 
         let chip = ""

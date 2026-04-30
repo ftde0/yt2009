@@ -12,6 +12,7 @@ var languageData_EN = {
         "watch-exp-related": "shows only old related videos based on the tags of the currently watched video",
         "watch-exp-sabr": "uses SABR technology for playback. faster starts but requires better hardware.",
         "watch-exp-sabr-audiotracks": "enables switching of audio tracks while watching the video using SABR.",
+        "watch-exp-turbocharge": "exp_turbocharge load times :) . best used with no \"old\" experience flags",
         "watch-fake-upload-date": "fake 2009 upload year",
         "watch-hd-1080": "HD button in player will load 1080p instead of 720p",
         "watch-homepage-contribute": "videos watched by you will be visible on /videos and a 'Videos being watched now' section on the homepage.",
@@ -152,7 +153,7 @@ var languageData_EN = {
         "#global-videochannel-filter-expander": "(value format)",
 
         "#global-video-filter-expander-content": "you can type video IDs (11 characters) or phrases in titles to be filtered out. to put multiple values, separate them with <code>|</code>.<br>\
-        e.g. <code>xat1GVnl8-k|official video</code> - will show the video with the ID <code>xat1GVnl8-k</code> and all others with the words <code>official video</code> in their title.<br>\
+        e.g. <code>xat1GVnl8-k|official video</code> - will hide the video with the ID <code>xat1GVnl8-k</code> and all others with the words <code>official video</code> in their title.<br>\
         title terms are case-insensitive. matching videos <b>won't</b> be blocked entirely from access - they just won't show in places like the related videos feed.",
         "#global-videochannel-filter-expander-content": "you can paste channel IDs (24-characters, starting with \"UC\") or channels' names. to put multiple values, separate them with <code>|</code>.<br>\
         e.g. <code>UC5g1Solgg1Cnow3PwteNuJA|channel</code> - will hide videos from the channel <code>UC5g1Solgg1Cnow3PwteNuJA</code> and the ones with the word <code>channel</code> in the creators' name.<br>\

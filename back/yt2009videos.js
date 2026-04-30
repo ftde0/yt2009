@@ -380,18 +380,15 @@ module.exports = {
         <!--yt2009-videos-->
     </channel>
 </rss>`
-/*<title>yt2009 videos</title>
-  <link>http://${config.ip}:${config.port}/videos</link>
-  <description>yt2009 /videos</description>
-  <description></description>
-  <atom:id>http://${config.ip}:${config.port}${req.originalUrl}</atom:id>
-  <managingEditor>yt2009</managingEditor>
-  <!--yt2009-videos-->*/
         let rssVideos = ``
         function addVideo(video) {
+            let t = video.title
+                    .split("&").join("&amp;")
+                    .split("\"").join("&quot;")
+            t = utils.xss(t)
             rssVideos += `
         <item>
-            <title>${video.title}</title>
+            <title>${t}</title>
             <link>http://${config.ip}:${config.port}/watch?v=${video.id}</link>
             <description> </description>
             <author> </author>
@@ -481,6 +478,7 @@ module.exports = {
             addVideo(video)
         })
         rssCode = rssCode.replace("<!--yt2009-videos-->", rssVideos)
+        res.set("content-type", "application/rss+xml")
         res.send(rssCode)
     },
 

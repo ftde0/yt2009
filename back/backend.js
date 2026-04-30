@@ -544,8 +544,49 @@ app.get("/watch", (req, res) => {
 
     // start ryd early
     ryd.fetch(id, (d) => {})
+    
+    // exp_turbocharge (start render from /player)
+    if(req.query.exp_turbocharge == 1
+    || (req.headers.cookie
+    && req.headers.cookie.includes("exp_turbocharge"))) {
+        if(devTimings) {
+            console.log(t, "turbocharge START")
+        }
+        yt2009_utils.pullBarePlayer(id, (data) => {
+            yt2009_exports.extendWrite("players", id, data)
+            data.emptyUploadString = ""
+            data = yt2009.miniParse(data)
+            if(!data || !data.title || data.restricted) {
+				res.redirect("/?ytsession=1")
+				return;
+			}
+            if(devTimings) {
+                console.log(t, "turbocharge /PLAYER")
+            }
+            // comments sort default to top
+            if(!(req.headers.cookie
+            && req.headers.cookie.includes("comment_options_sort"))) {
+                let cookieParams = [
+                    `comment_options_sort=0; `,
+                    `Path=/; `,
+                    `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+                ]
+                res.set("set-cookie", cookieParams.join(""))
+            }
+            yt2009.applyWatchpageHtml(data, req, (code) => {
+                if(devTimings) {
+                    console.log(t, "turbocharge created watch html")
+                    clearInterval(x)
+                }
+				code = yt2009_languages.apply_lang_to_code(code, req)
+				code = yt2009_doodles.applyDoodle(code, req)
+				res.send(code)
+			})
+        })
+        return;
+    }
 
-    // withpchelper support (render only from /player)
+    // withpchelper support (start render from /player)
 	if(req.query.with_pchelper
 	&& mobileHelper.hasLogin(req)) {
 		req.usePot = true;
@@ -604,6 +645,10 @@ app.get("/watch", (req, res) => {
         disableDownloads,
         true
     )
+})
+
+app.get("/etc_oex_videodata", (req, res) => {
+    yt2009.turbochargeFillin(req, res)
 })
 
 /*
@@ -1855,6 +1900,16 @@ app.get("/get_more_comments", (req, res) => {
     if(req.headers.cookie
     && req.headers.cookie.includes("comment_options_hprofanity=1")) {
         flags += ":int_cmts_filter_profanity"
+    }
+
+    // don't respond on turbocharged with comments_remove_future
+    // comments have already been filled out
+    if(req.headers.cookie
+    && req.headers.cookie.includes("exp_turbocharge")
+    && req.headers.cookie.includes("comments_remove_future")
+    && req.query.mode == "reload") {
+        res.send("")
+        return;
     }
 
     let theoreticalIndex = (pageNumber - 1) * 20
@@ -3277,6 +3332,10 @@ blazerEndpoints.forEach(e => {
     })
 })
 app.get("/mobile/blzr/home", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.status(401).send({"error": "unauthorized"})
+        return;
+    }
     res.send(yt2009_blazer.homepage())
 })
 app.get("/mobile/blzr/my_account", (req, res) => {
@@ -3292,6 +3351,10 @@ app.get("/mobile/blzr/results", (req, res) => {
     yt2009_blazer.search(req, res)
 })
 app.get("/mobile/blzr/profile", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.status(401).send({"error": "unauthorized"})
+        return;
+    }
     // same endpoint is used for things on the channel (videos etc)
     // so check before passing
     switch(req.query.view) {
@@ -3525,6 +3588,11 @@ app.get("/yt2009_recommended", (req, res) => {
     if(req.headers.cookie
     && req.headers.cookie.includes("new_recommended")) {
         disableOld = true;
+    }
+    let fakeDates = false;
+    if(req.headers.cookie
+    && req.headers.cookie.includes("fake_dates")) {
+        fakeDates = true;
     }
     let targetVideos = 8;
     let isRecommendedPage = false;
@@ -3771,6 +3839,7 @@ app.get("/yt2009_recommended", (req, res) => {
         // create and send html of filteredSuggestions
         let response = ""
         filteredSuggestions.forEach(video => {
+            video.o = !fakeDates
             if(isRecommendedPage) {
                 response += yt2009_templates.videoCell(
                     video.id,

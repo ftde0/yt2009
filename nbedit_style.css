@@ -240,6 +240,8 @@ a[href="/my_videos_upload"] span {
 .live-chat-message .author-username {
     width: 100px;
     max-width: 100px;
+    word-wrap: break-word;
+    vertical-align: top;
 }
 
 
