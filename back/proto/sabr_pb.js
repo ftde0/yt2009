@@ -1757,6 +1757,7 @@ proto.sabr_request.root.timingData.toObject = function(includeInstance, msg) {
     starttime: jspb.Message.getFieldWithDefault(msg, 28, 0),
     reqinittime: jspb.Message.getFieldWithDefault(msg, 29, 0),
     fiveint2: jspb.Message.getFieldWithDefault(msg, 34, 0),
+    playbackspeed: jspb.Message.getFieldWithDefault(msg, 35, 0),
     relinittime: jspb.Message.getFieldWithDefault(msg, 36, 0)
   };
 
@@ -1825,6 +1826,10 @@ proto.sabr_request.root.timingData.deserializeBinaryFromReader = function(msg, r
     case 34:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setFiveint2(value);
+      break;
+    case 35:
+      var value = /** @type {number} */ (reader.readFixed32());
+      msg.setPlaybackspeed(value);
       break;
     case 36:
       var value = /** @type {number} */ (reader.readInt32());
@@ -1912,6 +1917,13 @@ proto.sabr_request.root.timingData.serializeBinaryToWriter = function(message, w
   if (f !== 0) {
     writer.writeInt32(
       34,
+      f
+    );
+  }
+  f = message.getPlaybackspeed();
+  if (f !== 0) {
+    writer.writeFixed32(
+      35,
       f
     );
   }
@@ -2102,6 +2114,24 @@ proto.sabr_request.root.timingData.prototype.getFiveint2 = function() {
  */
 proto.sabr_request.root.timingData.prototype.setFiveint2 = function(value) {
   return jspb.Message.setProto3IntField(this, 34, value);
+};
+
+
+/**
+ * optional fixed32 playbackSpeed = 35;
+ * @return {number}
+ */
+proto.sabr_request.root.timingData.prototype.getPlaybackspeed = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 35, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.sabr_request.root.timingData} returns this
+ */
+proto.sabr_request.root.timingData.prototype.setPlaybackspeed = function(value) {
+  return jspb.Message.setProto3IntField(this, 35, value);
 };
 
 

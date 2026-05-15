@@ -2,12 +2,58 @@ const fs = require("fs")
 const videos = require("./yt2009constants.json");
 const yt2009html = require("./yt2009html")
 const yt2009utils = require("./yt2009utils")
+const yt2009hype = require("./yt2009hype")
 const wayback_watchpage = require("./cache_dir/wayback_watchpage")
 const doodles = require("./yt2009doodles")
 const languages = require("./language_data/language_engine")
 const templates = require("./yt2009templates")
 
 const homepage_code = fs.readFileSync("../index.htm").toString()
+
+const hypeCategoriesData = {
+    "Gaming": {
+        "siteName": "lang_hp_modern_cat_gaming",
+        "number": 33
+    },
+    "Sports": {
+        "siteName": "lang_hp_modern_cat_sports",
+        "number": 30
+    },
+    "Music": {
+        "siteName": "lang_hp_modern_cat_music",
+        "number": 31
+    },
+    "Food": {
+        "siteName": "lang_hp_modern_cat_food",
+        "number": 0
+    },
+    "DIY": {
+        "siteName": "lang_hp_modern_cat_diy",
+        "number": 0
+    },
+    "Style": {
+        "siteName": "lang_hp_modern_cat_style",
+        "number": 26
+    },
+    "Books": {
+        "siteName": "lang_hp_modern_cat_books",
+        "number": 0
+    },
+    "Podcast": {
+        "siteName": "lang_hp_modern_cat_podcast",
+        "number": 0
+    }
+}
+const hypeFeaturedEmptySpot = {
+    "views": "",
+    "uploaderName": "",
+    "id": "",
+    "time": "",
+    "uploaderUrl": "#",
+    "rating": "5",
+    "title": "",
+    "isHolder": true
+}
 
 const sections = {
     "top_favorited": videos.homepageCache_top_favorited,
@@ -52,6 +98,10 @@ function section_fill(code, section_name, section_content, flags, req) {
     views = "lang_views_prefix" + views.replace(" views", "lang_views_suffix")
 
     let thumbUrl = yt2009utils.getThumbUrl(section_content.id, req)
+    if(flags.includes("use_hype_for_homepage") && section_content.isHolder) {
+        views = ""
+        thumbUrl = "/assets/site-assets/pixel-vfl73.gif"
+    }
 
     let temp_code = code;
     temp_code = temp_code.split(`/yt2009_${section_name}_watch`)
@@ -172,15 +222,22 @@ module.exports = function(req, res) {
                 // featured
                 moduleHTML += templates.homepage_featured
                 let featured_videos = []
-                while(featured_videos.length !== 4) {
-                    let video = videos.homepageCache_featured[
-                        Math.floor(Math.random() * videos.homepageCache_featured.length)
-                    ]
-                    if(!featured_videos.includes(video)) {
-                        featured_videos.push(video)
+                if(flags.includes("use_hype_for_homepage")) {
+                    while(featured_videos.length !== 4) {
+                        featured_videos.push(hypeFeaturedEmptySpot)
+                    }
+                } else {
+                    let vidsCount = videos.homepageCache_featured.length
+                    while(featured_videos.length !== 4) {
+                        let video = videos.homepageCache_featured[
+                            Math.floor(Math.random() * vidsCount)
+                        ]
+                        if(!featured_videos.includes(video)) {
+                            featured_videos.push(video)
+                        }
                     }
                 }
-
+                
                 let featuredIndex = 0;
                 featured_videos.forEach(video => {
                     moduleHTML = section_fill(
@@ -196,15 +253,27 @@ module.exports = function(req, res) {
             }
             case "pop": {
                 // most popular by category
-                moduleHTML += templates.homepage_mostpopular
-                for(let section in sections) {
-                    let vid = sections[section][
-                        Math.floor(Math.random() * sections[section].length)
-                    ]
-                    moduleHTML = section_fill(
-                        moduleHTML, section, vid, flags, req
+                if(flags.includes("use_hype_for_homepage")) {
+                    let categories = yt2009hype.getHypeCategories(req)
+                    let categoriesHpFriendly = {}
+                    for(let c in categories) {
+                        categoriesHpFriendly[c] = hypeCategoriesData[c]
+                    }
+                    moduleHTML += templates.homepage_mostpopular_hype_holder(
+                        categoriesHpFriendly
                     )
+                } else {
+                    moduleHTML += templates.homepage_mostpopular
+                    for(let section in sections) {
+                        let vid = sections[section][
+                            Math.floor(Math.random() * sections[section].length)
+                        ]
+                        moduleHTML = section_fill(
+                            moduleHTML, section, vid, flags, req
+                        )
+                    }
                 }
+                
                 break;
             }
             case "inbox": {
@@ -256,6 +325,11 @@ module.exports = function(req, res) {
             }
         }
     })
+
+    if(flags.includes("use_hype_for_homepage")) {
+        moduleHTML += `
+        <script src="/assets/site-assets/homepage-hype.js"></script>`
+    }
 
     code = code.replace(
         `<!--yt2009_modules-->`,

@@ -225,7 +225,7 @@ if(window.localStorage) {
                 </div>\
             </div>\
             <div style="float: left; width: 120px;">\
-                <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + fullThumbUrl + '"/></a>\
+                <a href="/watch?v=' + video.id + '" class="video-thumb"><img src="' + fullThumbUrl + '" loading="lazy"/></a>\
                 <a href="/watch?v=' + video.id + '" class="title" style="display: block; color: #03c;">' + video.title + '</a>\
                 <div class="video-stats">\
                     ' + (video.views ? '<div class="video-stat' + (path == "/watch_queue" ? " hid" : "") + '"><span class="stat-views">' + viewPrefix + video.views + '</span></div>' : '') + '\
@@ -484,7 +484,7 @@ function show_playlist_localstorage(playlist) {
                 </td>\
                 <td id="heading-title" class="heading">\
                     <button title="" class="master-sprite"></button>\
-                    <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="' + fullThumbUrl + '"></a>\
+                    <a href="/watch?v=' + video.id + '" style="height: 40px;overflow: hidden;" rel="nofollow"><img src="' + fullThumbUrl + '" loading="lazy"></a>\
                     <a href="/watch?v=' + video.id + '" class="video-title">' + video.title + '</a>\
                 </td>\
                 <td id="heading-time" class="heading">\

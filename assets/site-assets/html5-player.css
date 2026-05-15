@@ -1131,3 +1131,59 @@
     overflow: hidden;
     background-repeat: repeat-x;
 }
+
+
+.video-playback-speed-panel {
+	position: absolute;
+	bottom: 24px;
+	left: 50%;
+	transform: translateX(-50%);
+    background-image: url("/player-imgs/captions-popup-base.png");
+	background-size: contain;
+	border: 1px #a9aaa9 solid;
+    user-select: none;
+    z-index: 5;
+	width: 204px;
+	height: 50px;
+	text-align: center;
+}
+
+.video-playback-speed-panel .heading {
+	font-size: 11px;
+}
+
+.video-playback-speed-panel .speed {
+	background: none;
+    border: none;
+    border-bottom: 1px black solid;
+    width: 50px;
+    display: block;
+    margin: auto;
+    outline: none;
+	text-align: center;
+}
+
+.video-playback-speed-panel .button-adj-left,
+.video-playback-speed-panel .button-adj-right {
+	width: 18px;
+	height: 15px;
+	background-image: url("/player-imgs/playback-speed-sprites.png");
+	overflow: hidden;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.video-playback-speed-panel .button-adj-left {
+	background-position: -6px -4px;
+	margin-right: 11px;
+}
+.video-playback-speed-panel .button-adj-right {
+	background-position: -34px -4px;
+	margin-left: 11px;
+}
+
+.video-playback-speed-panel .close-btn {
+	position: absolute;
+    left: 1px;
+	cursor: pointer;
+}

@@ -11,6 +11,23 @@ const mobileauths = require("./yt2009mobileauths")
 
 let cache = require("./cache_dir/playlist_cache_manager")
 
+function splitEvery25(videoIds) {
+     // slice every 25 for data api requests
+    let twentyFives = []
+    let totalVidsAdded = 0;
+    let mult = 0;
+    while(totalVidsAdded <= videoIds.length) {
+        let temp = videoIds.slice(25 * mult, (25 * mult) + 25)
+        twentyFives.push(temp)
+        totalVidsAdded += 25
+        mult++
+    }
+    twentyFives = twentyFives.filter(s => {
+        return s.length >= 1
+    })
+    return twentyFives
+}
+
 module.exports = {
     "innertube_get_data": function(id, callback) {
         fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
@@ -102,7 +119,9 @@ module.exports = {
         return code;
     },
 
-    "parsePlaylist": function(playlistId, callback, sourceVideo, resetCache) {
+    "parsePlaylist": function(
+        playlistId, callback, sourceVideo, resetCache, skipDataApi
+    ) {
         if((playlistId.startsWith("RD") && sourceVideo)
         || (sourceVideo && playlistId.includes("-YT2009_FORCENEXT"))) {
             playlistId = playlistId.replace("-YT2009_FORCENEXT", "")
@@ -206,6 +225,13 @@ module.exports = {
                     video = video.playlistVideoRenderer
                     if((video.videoInfo && !video.videoInfo.runs)
                     || (!video.videoInfo)) return; //skip members-only?
+                    
+                    if(!video.shortBylineText) {
+                        video.shortBylineText = {
+                            "runs": [{"text": ""}]
+                        }
+                    }
+
                     videoList.videos.push({
                         "id": video.videoId,
                         "title": video.title.runs[0].text,
@@ -235,8 +261,47 @@ module.exports = {
                     })
                 })
 
-                cache.write(playlistId, JSON.parse(JSON.stringify(videoList)))
-                callback(cache.read()[playlistId])
+                function sendVideos() {
+                    cache.write(
+                        playlistId, JSON.parse(JSON.stringify(videoList))
+                    )
+                    callback(videoList)
+                }
+
+                if(config.data_api_key && !skipDataApi) {
+                    let videoIds = videoList.videos.map(s => {
+                        return s.id
+                    })
+
+                    // slice every 25 for data api requests
+                    let twentyFives = splitEvery25(videoIds)
+                    let setsCompleted = 0;
+                    twentyFives.forEach(videoSet => {
+                        utils.dataApiBulk(videoSet, [
+                            "title", "viewCount"
+                        ], (d) => {
+                            if(d) {
+                                for(let id in d) {
+                                    if(d[id]
+                                    && d[id].viewCount
+                                    && d[id].title) {
+                                        let i = videoIds.indexOf(id)
+                                        videoList.videos[i].views = parseInt(
+                                            d[id].viewCount
+                                        )
+                                        videoList.videos[i].title = d[id].title
+                                    }
+                                }
+                            }
+                            setsCompleted++
+                            if(setsCompleted >= twentyFives.length) {
+                                sendVideos()
+                            }
+                        })
+                    })
+                } else {
+                    sendVideos()
+                }
             })
         }
     },
@@ -345,6 +410,11 @@ module.exports = {
             "method": "POST",
             "mode": "cors"
         }).then(r => {r.json().then(r => {
+            let additionalFetchesRequired = 0;
+            let additionalFetchesCompleted = 0;
+            if(config.data_api_key) {
+                additionalFetchesRequired++
+            }
             let itemHTML = ``
             let items = []
             try {
@@ -396,6 +466,9 @@ module.exports = {
                     }
                 }
             }
+            let videoIds = []
+            let videos = []
+            let continuation = null;
             items.forEach(i => {
                 if(i.playlistVideoRenderer) {
                     try {
@@ -417,7 +490,11 @@ module.exports = {
                             "uploaderUrl": "/channel/" + authorId,
                             "title": i.title.runs[0].text
                         }
-                        renderVideo(parsedItem)
+                        videoIds.push(i.videoId)
+                        videos.push(parsedItem)
+                        if(additionalFetchesRequired == 0) {
+                            renderVideo(parsedItem)
+                        }
                     }
                     catch(error){}
                 } else if(i.continuationItemRenderer) {
@@ -426,13 +503,54 @@ module.exports = {
                                      .continuationEndpoint
                                      .continuationCommand
                                      .token;
-                        renderContinuation(token)
+                        if(additionalFetchesRequired == 0) {
+                            renderContinuation(token)
+                        } else {
+                            continuation = token;
+                        }
                     }
                     catch(error){}
                 }
             })
 
-            res.send(language.apply_lang_to_code(itemHTML, req))
+            function renderFromParsedVLIST() {
+                videoIndex = 1;
+                videos.forEach(v => {
+                    renderVideo(v)
+                })
+                if(continuation) {
+                    renderContinuation(continuation)
+                }
+                res.send(language.apply_lang_to_code(itemHTML, req))
+            }
+
+            if(config.data_api_key) {
+                let twentyFives = splitEvery25(videoIds)
+                let setsCompleted = 0;
+                twentyFives.forEach(videoSet => {
+                    utils.dataApiBulk(videoSet, ["title"], (d) => {
+                        if(d) {
+                            for(let id in d) {
+                                if(d[id]
+                                && d[id].title) {
+                                    let i = videoIds.indexOf(id)
+                                    videos[i].title = d[id].title
+                                }
+                            }
+                        }
+                        setsCompleted++
+                        if(setsCompleted >= twentyFives.length) {
+                            additionalFetchesCompleted++
+                            if(additionalFetchesCompleted >= additionalFetchesRequired) {
+                                renderFromParsedVLIST()
+                            }
+                        }
+                    })
+                })
+            }
+            if(additionalFetchesRequired == 0) {
+                res.send(language.apply_lang_to_code(itemHTML, req))
+            }
         })})
     },
 
@@ -485,7 +603,32 @@ module.exports = {
                         catch(error) {console.log(error)}
                     }
                 })
-                callback({"videos": vids})
+                if(config.data_api_key) {
+                    let videoIds = vids.map(s => {
+                        return s.id
+                    })
+                    let twentyFives = splitEvery25(videoIds)
+                    let setsCompleted = 0;
+                    twentyFives.forEach(videoSet => {
+                        utils.dataApiBulk(videoSet, ["title"], (d) => {
+                            if(d) {
+                                for(let id in d) {
+                                    if(d[id]
+                                    && d[id].title) {
+                                        let i = videoIds.indexOf(id)
+                                        vids[i].title = d[id].title
+                                    }
+                                }
+                            }
+                            setsCompleted++
+                            if(setsCompleted >= twentyFives.length) {
+                                callback({"videos": vids})
+                            }
+                        })
+                    })
+                } else {
+                    callback({"videos": vids})
+                }
             } else {
                 callback(false)
             }

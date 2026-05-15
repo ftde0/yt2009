@@ -304,7 +304,11 @@ module.exports = {
         }
         let callbacksMade = 0;
         let combinedResponse = {}
-        fetch(`https://www.youtube.com/youtubei/v1/next?prettyPrint=false&fields=contents`, {
+        let nextUrl = [
+			"https://www.youtube.com/youtubei/v1/next?prettyPrint=false",
+			"&fields=contents,frameworkUpdates"
+		].join("")
+        fetch(nextUrl, {
             "headers": signedInNext ? rHeaders : constants.headers,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -404,6 +408,8 @@ module.exports = {
                     }
                 }}, "", true)
             }
+            r.frameworkUpdates = null; //ensure /next frameworkUpdates
+			delete r.frameworkUpdates;
             for(let i in r) {
                 combinedResponse[i] = r[i]
             }
@@ -1116,6 +1122,16 @@ module.exports = {
                     data.commentsDisabled = true;
                 }
                 
+				// heatmap (most replayed)
+				if(data.length
+				&& !isNaN(parseInt(data.length))
+				&& videoData.frameworkUpdates) {
+					data.heatmap = this.parseHeatmap(
+						videoData.frameworkUpdates,
+						parseInt(data.length) * 1000
+					)
+				}
+                
                 // save mp4/ogv
 
                 if((!fs.existsSync(`../assets/${id}.mp4`) && !disableDownload)) {
@@ -1355,7 +1371,7 @@ module.exports = {
                 ``)
         }
 
-        code = require("./yt2009loginsimulate")(flags, code, true)
+        code = require("./yt2009loginsimulate")(req, code, true)
 
         // chapter time marks
         let chapters = []
@@ -3458,7 +3474,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 // 480p
                 code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
             }
-        } else if(data.length >= 3600) {
+        } else if(data.length >= 3600 && !useFlash) {
             // no hd but check hour counter
             code = code.replace(
                 `//yt2009-exp-hq-btn`,
@@ -4509,6 +4525,111 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 sendoff()
             }
         }, "", token, false, false, true, false, existingPlayer)
+    },
+        
+    "parseHeatmap": function(frameworkUpdates, videoLengthMs) {
+        if(!frameworkUpdates
+        || !frameworkUpdates.entityBatchUpdate
+        || !frameworkUpdates.entityBatchUpdate.mutations) return false;
+        
+        let markers = []
+        let markerDecorations = false
+        
+        frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
+            try {
+                let a = m.payload.macroMarkersListEntity.markersList.markers
+                if(a.filter(s => {
+                    return s.intensityScoreNormalized
+                })[0]) {
+                    markers = m.payload.macroMarkersListEntity
+                               .markersList.markers
+                    markerDecorations = m.payload.macroMarkersListEntity
+                                         .markersList.markersDecoration
+                }
+                
+            }
+            catch(error){}
+        })
+        
+        if(markers.length == 0) return false;
+        
+        let chartUrl = [
+            "/chart?cht=lc:nda&chs=593x110&chco=647b5c",
+            "&chxus=1&chd=t:"
+        ]
+        
+        let chartParts = []
+        markers.forEach(m => {
+            chartParts.push((m.intensityScoreNormalized * 100).toFixed(1))
+        })
+        chartUrl.push(chartParts.join(","))
+        
+        let chm = [
+            "B,b6cfadaa,0,0,0"
+        ]
+        if(markerDecorations
+        && markerDecorations.timedMarkerDecorations
+        && markerDecorations.timedMarkerDecorations.forEach) {
+            // use innertube data for top points
+            try {
+                let chxl = []
+                let chxp = []
+                let m = markerDecorations.timedMarkerDecorations
+                m.forEach(d => {
+                    let start = d.visibleTimeRangeStartMillis
+                    let end = d.visibleTimeRangeEndMillis
+                    start = Math.floor((start / videoLengthMs) * 100)
+                    end = Math.floor((end / videoLengthMs) * 100)
+                    let chxpPosition = (Math.floor(
+                        (d.decorationTimeMillis / videoLengthMs) * 100
+                    ))
+                    if(chxpPosition <= 5) {
+                        chxpPosition += 4
+                    }
+                    /*if(end - start <= 3) {
+                        chxpPosition = Math.round((end - start) / 2)
+                    }*/
+                    chm.push("1,647b5c,0," + start + ":" + end)
+                    /*chxp.push((Math.floor(
+                        (d.decorationTimeMillis / videoLengthMs) * 100
+                    )))*/
+                    chxp.push(chxpPosition)
+                    chxl.push(yt2009utils.seconds_to_time(
+                        Math.floor(d.decorationTimeMillis / 1000)
+                    ))
+                })
+                chartUrl.push("&chxl=" + chxl.join("|"))
+                chartUrl.push("&chxp=" + chxp.join(","))
+            }
+            catch(error){
+                console.log(error)
+            }
+        } else {
+            // fallback to one manually pulled top point
+            try {
+                let mStarts = markers.map(s => {
+                    return s.startMillis
+                })
+                let topMarker = markers.sort((a,b) => {
+                    return b.intensityScoreNormalized
+                         - a.intensityScoreNormalized
+                })[0]
+                let topInMstarts = mStarts.filter(s => {
+                    return s == topMarker.startMillis
+                })[0]
+                let tmIndex = mStarts.indexOf(topInMstarts)
+                let tmPercentage = Math.floor((tmIndex / markers.length) * 100)
+                chartUrl.push("&chxp=" + tmPercentage)
+                chartUrl.push("&chxl=1:|" + yt2009utils.seconds_to_time(
+                    Math.floor(topMarker.startMillis / 1000)
+                ))
+            }
+            catch(error){}
+        }
+        
+        chartUrl.push("&chm=" + chm.join("|"))
+        
+        return chartUrl.join("");
     }
 }
 

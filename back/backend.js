@@ -45,6 +45,7 @@ const yt2009basefeeds = require("./yt2009basefeeds")
 const yt2009m = require("./yt2009m")
 const yt2009trusted = require("./yt2009trustedcontext")
 const mobileHelper = require("./yt2009mobilehelper")
+const playerResponsePb = require("./proto/android_player_pb")
 const devTimings = false;
 const p = require("../package.json")
 const version = p.version;
@@ -548,11 +549,41 @@ app.get("/watch", (req, res) => {
     // exp_turbocharge (start render from /player)
     if(req.query.exp_turbocharge == 1
     || (req.headers.cookie
-    && req.headers.cookie.includes("exp_turbocharge"))) {
+    && req.headers.cookie.includes("exp_turbocharge"))
+    && !(req.query.with_pchelper
+	&& mobileHelper.hasLogin(req))) {
         if(devTimings) {
             console.log(t, "turbocharge START")
         }
         yt2009_utils.pullBarePlayer(id, (data) => {
+            try {
+                let checkedFmts = data.streamingData.adaptiveFormats.map(s => {
+                    if(s.itag == 140 || s.itag == 139) {
+                        if(s.audioTrack) {
+                            s.audioTrack.vss_id = s.audioTrack.id;
+                            s.audioTrack.label = s.audioTrack.displayName;
+                        }
+                        if(s.xtags && s.audioTrack) {
+                            let decode = playerResponsePb.xtags
+                                         .deserializeBinary(s.xtags)
+                                         .toObject()
+                            let isOg = decode.partList.filter(z => {
+                                return z.value == "original"
+                            })[0]
+                            if(isOg) {
+                                s.isOriginal = true;
+                            }
+                        }
+                        return s;
+                    } else {
+                        return s;
+                    }
+                })
+                data.streamingData.adaptiveFormats = checkedFmts
+            }
+            catch(error) {
+                console.log(error)
+            }
             yt2009_exports.extendWrite("players", id, data)
             data.emptyUploadString = ""
             data = yt2009.miniParse(data)
@@ -1481,6 +1512,7 @@ channels
 let channel_endpoints = [
     "/channel/*",
     "/user/*",
+    "/user",
     "/c/*",
     "/@*"
 ] 
@@ -1500,6 +1532,21 @@ channel_endpoints.forEach(channel_endpoint => {
             return;
         }
         if(yt2009_utils.isRatelimited(req, res)) return;
+
+        // pchelper-based self
+        if(channel_endpoint == "/user"
+        || (channel_endpoint == "/user/*"
+        && !req.originalUrl.split("/user/")[1].split("?")[0]
+        && mobileHelper.hasLogin(req))) {
+            mobileHelper.openBrowseId(req, (id) => {
+                if(id) {
+                    res.redirect("/channel/" + id)
+                } else {
+                    res.sendStatus(404)
+                }
+            })
+            return;
+        }
 
         // flags
         let flags = decodeURIComponent(req.query.flags) || ""
@@ -6684,7 +6731,6 @@ let videoStream_players = {}
 app.get("/stream_get_fragment", (req, res) => {
     const fetch = require("node-fetch")
     const yt2009signin = require("./yt2009androidsignin")
-    const playerResponsePb = require("./proto/android_player_pb")
     const androidHeaders = {
         "accept": "*/*",
         "accept-language": "en-US,en;q=0.9,pl;q=0.8",
@@ -7626,6 +7672,56 @@ register storyboard
 if(fs.existsSync("./yt2009storyboard.js")) {
     require("./yt2009storyboard").set(app)
 }
+
+/*
+======
+register hype endpoints (hp use_hype_for_homepage)
+======
+*/
+require("./yt2009hype").set(app)
+
+/*
+======
+heatmap (most replayed)
+======
+*/
+app.get("/heatmap_chart", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    let v = req.query.video_id
+    if(!v) {
+        res.sendStatus(400)
+        return;
+    }
+    v = v.substring(0,11)
+    function parseData(data) {
+        if(data.heatmap) {
+            res.send(yt2009_languages.apply_lang_to_code(
+                `<div class="stats-header">
+                    <b>lang_heatmap_header</b>
+                </div><img src="${data.heatmap}"/>`,
+                req
+            ))
+        } else {
+            res.send(``)
+        }
+    }
+    yt2009.fetch_video_data(v, (data) => {
+        if(data.heatmap !== undefined && data.heatmap !== null) {
+            parseData(data)
+        } else {
+            // repull for fresh data
+            yt2009.fetch_video_data(v, (data) => {
+                parseData(data)
+            }, "", yt2009_utils.get_used_token(req),
+            false, true, true, false)
+        }
+    }, "", yt2009_utils.get_used_token(req),
+    false, false, true, false)
+})
+
 
 /*
 pizdec

@@ -165,9 +165,12 @@ module.exports = {
                 return s.formatid == usedItag
             })
             let xtagList = []
+            let addedXtagLangs = []
             at.forEach(z => {
-                if(z.xtags && z.audioTrack && z.audioTrack.label) {
+                if(z.xtags && z.audioTrack && z.audioTrack.label
+                && !addedXtagLangs.includes(z.audioTrack.label)) {
                     xtagList.push([z.audioTrack.label, z.xtags].join())
+                    addedXtagLangs.push(z.audioTrack.label)
                 }
             })
 

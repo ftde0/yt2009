@@ -467,6 +467,12 @@ function video_show_play_btn() {
 
 function video_play() {
     //console.log("play")
+    if(forceStopVideo) {
+		forceStopVideo = false;
+	}
+    if(vpi) {
+		clearVpi()
+	}
     if(window.sabrData && window.sabrData.fEnd) {
         video.currentTime = 0;
     }
@@ -493,6 +499,9 @@ video.addEventListener("click", function() {
     if(mainElement.querySelector(".player-context-menu")) {
         return false;
     }
+    if(forceStopVideo) {
+		forceStopVideo = false;
+	}
     if(!video.paused) {
         video_pause();
         flash_middle_btn("pause")
@@ -558,7 +567,8 @@ function timeUpdate() {
         $(".html5-loading").className += " hid"
         stopLoadingRototo()
     }
-    if(window.pickrLastState && window.pickrLastState.ongoing) {
+    if((window.pickrLastState && window.pickrLastState.ongoing)
+	|| forceStopVideo) {
         video.pause()
         return;
     }
@@ -1188,6 +1198,9 @@ function videoNav(id) {
 
 function videoReplay() {
     //console.log("replay")
+    if(forceStopVideo) {
+		forceStopVideo = false;
+	}
     videoEnded = false;
     video.className = video.className.split(" showing-endscreen").join("")
     $(".endscreen").className = "endscreen hid"
@@ -3271,11 +3284,11 @@ function initAsSabr() {
             )
         }
         
-        if(!useTeneighty) {
+        /*if(!useTeneighty) {
             sabrResTemp = sabrResTemp.filter(function(res) {
                 return res[2] <= 720
             })
-        }
+        }*/
 
         window.sabrExactRes = sabrResTemp.sort(function(a,b) {
             return b[2] - a[2]
@@ -3590,8 +3603,8 @@ function initAsSabr() {
         && !sabrData.audioBuffer.updating) {
             // don't keep much backwards buffer to not overfill
             try {
-                sabrData.videoBuffer.remove(0, video.currentTime - 90)
-                sabrData.audioBuffer.remove(0, video.currentTime - 90)
+                sabrData.videoBuffer.remove(0, video.currentTime - 120)
+                sabrData.audioBuffer.remove(0, video.currentTime - 120)
             }
             catch(error){console.log(error)}
         }
@@ -4704,6 +4717,107 @@ function attachContextmenuListener(element) {
             removeCtxmenu()
         }]
     ]
+    if(typeof(video.playbackRate) == "number") {
+		ctxMenuElements.push([
+			"Adjust playback speed", function() {
+				removeCtxmenu()
+				if(!(mainElement
+				&& mainElement.querySelector
+				&& mainElement.querySelector(".video-playback-speed-panel"))) {
+					function handleInput(i) {
+						var speed = parseFloat(i.value.replace(",", "."))
+						if(isNaN(speed)) {
+							i.value = video.playbackRate.toFixed(2) + "x"
+							return;
+						}
+						if(speed >= 4) {
+							speed = 4;
+						}
+						if(speed <= 0) {
+							speed = 0.1
+						}
+						video.playbackRate = speed;
+						i.value = video.playbackRate.toFixed(2) + "x"
+					}
+					var speed = video.playbackRate.toFixed(2) + "x"
+					var psp = document.createElement("div")
+					psp.className = "video-playback-speed-panel"
+					var pspElements = [
+						["span", "close-btn", "[x]", function() {
+							psp.style.display = "none"
+						}],
+						["span", "heading", "Current playback speed"],
+						["input", "speed", "", function() {
+							var p = document.querySelector(
+								".video-playback-speed-panel"
+							)
+							var s = p.querySelector(".speed")
+							s.value = ""
+							if(!p.getAttribute("data-attached")) {
+								p.setAttribute("data-attached", "1")
+								s.addEventListener("keydown", function(e) {
+									if(e.keyCode == 13) {
+										// ENTER
+										handleInput(s)
+									}
+								}, false)
+								s.addEventListener("blur", function() {
+									handleInput(s)
+								}, false)
+							}
+						}, [["type", "text"], ["value", speed]]],
+						["span", "button-adj-left", "", function() {
+							var p = document.querySelector(
+								".video-playback-speed-panel .speed"
+							)
+							var speed = video.playbackRate - 0.25
+							if(speed < 0.25) {
+								speed = 0.25
+							}
+							video.playbackRate = speed;
+							p.value = speed.toFixed(2) + "x"
+						}],
+						["span", "button-adj-right", "", function() {
+							var p = document.querySelector(
+								".video-playback-speed-panel .speed"
+							)
+							var speed = video.playbackRate + 0.25
+							if(speed > 4) {
+								speed = 4
+							}
+							video.playbackRate = speed;
+							p.value = speed.toFixed(2) + "x"
+						}]
+					]
+					pspElements.forEach(function(a) {
+						var el = document.createElement(a[0])
+						el.className = a[1]
+						if(a[2]) {
+							el.innerHTML = a[2]
+						}
+						if(a[3]) {
+							el.addEventListener("click", a[3], false)
+						}
+						if(a[4]) {
+							a[4].forEach(function(att) {
+								el.setAttribute(att[0], att[1])
+							})
+						}
+						psp.appendChild(el)
+					})
+					mainElement.appendChild(psp)
+				}
+				if(mainElement
+				&& mainElement.querySelector
+				&& mainElement.querySelector(".video-playback-speed-panel")) {
+					var p = mainElement.querySelector(
+						".video-playback-speed-panel"
+					);
+					p.style.display = "block"
+				}
+			}
+		])
+	}
     if(video.requestPictureInPicture) {
         ctxMenuElements.push([
             "Enter picture-in-picture", function() {
@@ -4854,3 +4968,81 @@ function attachContextmenuListener(element) {
     }, false)
 }
 attachContextmenuListener(video)
+
+
+// custom media keys with watch_modern_features (<, >, j, k, l)
+// vpi -- video pause interval
+var forceStopVideo = false;
+var vpi = false;
+var vpiData = {
+	"initialVolume": 1
+}
+function initVpi() {
+	if(vpi) return;
+	vpiData.initialVolume = video.volume;
+	vpi = setInterval(function() {
+		video.muted = true
+		video.volume = 0;
+		video.paused = true;
+		video.pause()
+	}, 1)
+}
+function clearVpi() {
+	clearInterval(vpi)
+	vpi = false;
+	video.muted = false;
+	video.volume = vpiData.initialVolume;
+}
+if(document.cookie
+&& document.cookie.indexOf("watch_modern_features") !== -1) {
+	function isFocusedOnVideo(e) {
+		return ((e.target
+        && e.target.nodeName.toLowerCase() !== "textarea"
+        && e.target.nodeName.toLowerCase() !== "input")
+		|| !e.target)
+	}
+	mainElement.addEventListener("keydown", function(e) {
+        switch(e.keyCode) {
+            // <
+            case 188: {
+				if(!isFocusedOnVideo(e)) return;
+                forceStopVideo = true;
+				initVpi()
+				video.currentTime -= 0.03
+                break;
+            }
+            // >
+            case 190: {
+                if(!isFocusedOnVideo(e)) return;
+                forceStopVideo = true;
+				initVpi()
+				video.currentTime += 0.03
+				break;
+            }
+			// j
+			case 74: {
+				if(!isFocusedOnVideo(e)) return;
+                video.currentTime -= 10
+				break;
+			}
+			// k
+			case 75: {
+				if(!isFocusedOnVideo(e)) return;
+                if(!video.paused) {
+					video_pause();
+					flash_middle_btn("pause")
+				} else {
+					video_play();
+					flash_middle_btn("play")
+				}
+				break;
+			}
+			// l
+			case 76: {
+				if(!isFocusedOnVideo(e)) return;
+                video.currentTime += 10
+				break;
+			}
+        }
+    }, false)
+}

@@ -55,6 +55,7 @@ var languageData_EN = {
         "mainpage-realistic-view-count": "more realistic for 2009 view counts",
         "mainpage-remove-username-space": "removes spaces from usernames",
         "mainpage-username-asciify": "remove special characters from usernames",
+        "mainpage-use-hype-for-homepage": "uses current HYPED videos for homepage. location of videos to show can then be changed on the site footer.",
 
         "global-adaptive-old": "automatically sets only_old to the current day and month in the past. requires only_old enabled.",
         "global-always-annotations": "automatically enables annotations for videos",
@@ -185,7 +186,7 @@ function setEnglish() {
     // set element text
     var elements = languageData_EN.elements;
     for(var element in elements) {
-        document.getElementById(element.replace("#", "")).innerHTML = elements[element]
+        try{document.getElementById(element.replace("#", "")).innerHTML = elements[element]}catch(error){}
     }
 
     // set placeholder texts

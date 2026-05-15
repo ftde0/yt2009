@@ -47,6 +47,7 @@ message root {
         optional int32 startTime = 28; /*where fetched data should start*/
         optional int32 reqInitTime = 29; /*since first sabr request?*/
         int32 fiveInt2 = 34;
+        fixed32 playbackSpeed = 35;
         int32 relInitTime = 36; /*since player init*/
 
         /*more to be reversed*/

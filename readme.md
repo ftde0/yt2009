@@ -63,13 +63,12 @@ git pull --no-commit
 
 to get you up with updates you may have missed.
 
-if you modified the code yourself and you're getting a merge conflict, use
-
+if you modified the code yourself and you're getting a merge conflict, restore the orignal using
 ```
-git checkout -- <file>
+git restore <file>
 ```
 
-to restore the original file. you can make a copy of your modified file and reapply the mod after the pull is done.
+you can make a copy of your modified file and reapply the mod after the pull is done.
 
 ---
 

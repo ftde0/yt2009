@@ -399,5 +399,14 @@
     "watch_comment_options_dropdown_new": "newest comments",
     "watch_comment_options_save": "Save changes",
     "watch_comment_options_or": "or",
-    "watch_comment_options_cancel": "Cancel"
+    "watch_comment_options_cancel": "Cancel",
+    "hp_modern_cat_gaming": "Gaming",
+    "hp_modern_cat_sports": "Sports",
+    "hp_modern_cat_music": "Music",
+    "hp_modern_cat_food": "Food",
+    "hp_modern_cat_diy": "DIY",
+    "hp_modern_cat_style": "Howto & Style",
+    "hp_modern_cat_books": "Books",
+    "hp_modern_cat_podcast": "Podcasts",
+    "heatmap_header": "Most Replayed"
 }

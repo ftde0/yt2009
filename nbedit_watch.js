@@ -1294,6 +1294,18 @@ statsExpander.addEventListener("click", statsDataExpand, false)
 // fetch our stats
 function loadStats() {
     var id = window.location.href.split("v=")[1].split("&")[0]
+    if(document.cookie
+	&& document.cookie.indexOf("watch_modern_features") !== -1) {
+		var hmap = document.getElementById(
+			"watch-tab-stats-body-optional-heatmap"
+		)
+		var hr = new XMLHttpRequest();
+		hr.open("GET", "/heatmap_chart?video_id=" + id + "&r=" + Math.random())
+		hr.send(null)
+		hr.addEventListener("load", function(e) {
+			hmap.innerHTML = hr.responseText
+		}, false)
+	}
     var v = document.getElementById("watch-view-count").innerHTML
     var s = document.getElementById("ratingStars")
             .getElementsByTagName("button")[0]
@@ -1305,7 +1317,7 @@ function loadStats() {
     r.send(null)
     r.addEventListener("load", function(e) {
         statsLoaded = true;
-        $("#watch-tab-stats-body").innerHTML = r.responseText
+        $("#watch-tab-stats-body-content").innerHTML = r.responseText
     }, false)
     
 }

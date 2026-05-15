@@ -83,8 +83,9 @@ module.exports = function(req, res) {
     let watchflags = "";
     let code = embed_code;
     let live = req.query.live || false
-    let sabr = (req.headers && req.headers.cookie
+    let sabr = ((req.headers && req.headers.cookie
                 && req.headers.cookie.includes("exp_sabr"))
+                || req.query.sabr == "1")
 	let usePchelper = (req && req.query && req.query.with_pchelper == "1");
 	if(usePchelper) {
 		sabr = false;

@@ -56,7 +56,7 @@ function pullNewHype() {
     // HYPE tab (mobile exclusive)
     // basically modern trending
     let rHeaders = JSON.parse(JSON.stringify(constants.headers))
-    rHeaders["user-agent"] = "com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip"
+    rHeaders["user-agent"] = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
     fetch("https://www.youtube.com/youtubei/v1/browse?prettyPrint=false", {
         "method": "POST",
         "body": JSON.stringify({
@@ -65,7 +65,7 @@ function pullNewHype() {
                     "hl": "en",
                     "gl": "US",
                     "clientName": "ANDROID",
-                    "clientVersion": "20.10.38"
+                    "clientVersion": "20.51.39"
                 }
             },
             "browseId": "FEhype_leaderboard",
@@ -140,55 +140,7 @@ function pullNewTrending() {
     })
 
     // TRENDING TAB (V11<=)
-
-    fetch("https://www.youtube.com/youtubei/v1/browse", {
-        "method": "POST",
-        "body": JSON.stringify({
-            "context": constants.cached_innertube_context,
-            "browseId": "FEtrending",
-        }),
-        "headers": constants.headers
-    }).then(r => {r.json().then(r => {
-        if(!r || !r.contents || !r.contents.twoColumnBrowseResultsRenderer) {
-            // failed FETRENDING response, use mobile HYPE
-            pullNewHype()
-            return;
-        }
-        //fs.writeFileSync("./test.json", JSON.stringify(r))
-        let c = r.contents.twoColumnBrowseResultsRenderer.tabs
-                 .filter(s => s.tabRenderer && s.tabRenderer.selected)[0]
-                 .tabRenderer.content.sectionListRenderer.contents
-        let bareVids = []
-        c.forEach(f => {
-            try {
-                let a = f.itemSectionRenderer.contents[0].shelfRenderer.content
-                         .expandedShelfContentsRenderer.items
-                a.forEach(v => {bareVids.push(v)})
-            }
-            catch(error) {}
-        })
-        bareVids = bareVids.slice(0, 20)
-        w2w_tab_trending = []
-        bareVids.forEach(v => {
-            if(!v.videoRenderer) return;
-            v = v.videoRenderer;
-            if(!v.shortBylineText || !v.shortBylineText.runs) return;
-            let byUsername = v.shortBylineText.runs[0].text;
-            if(!v.shortBylineText.runs[0].navigationEndpoint.browseEndpoint) return;
-            let byId = v.shortBylineText.runs[0].navigationEndpoint
-                        .browseEndpoint.browseId;
-            let video = {
-                "id": v.videoId,
-                "title": v.title.runs[0].text,
-                "uploaderName": byUsername,
-                "uploaderId": byId,
-                "time": v.lengthText.simpleText,
-                "views": v.viewCountText.simpleText,
-                "uploaded": v.publishedTimeText.simpleText
-            }
-            w2w_tab_trending.push(video)
-        })
-    })})
+    pullNewHype()
 }
 pullNewTrending()
 // pull trending daily

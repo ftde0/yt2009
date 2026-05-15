@@ -55,7 +55,7 @@ const genericDefault = fs.readFileSync(
 ).toString().split("{url}").join(`${config.ip}:${config.port}`)
 const uida = "1234567890abcde".split("")
 let genericDg = fs.readFileSync("../mobile/mobilehelper/generic_dg.txt").toString()
-let userdata = {"ikmc": 1}
+let userdata = {"ikmc": 1,"ikmc2":1}
 let initedSessions = []
 if(fs.existsSync(userdata_fname)) {
     try {
@@ -154,6 +154,8 @@ module.exports = {
                     return;
                 }
 
+                device = gmcu(device)
+
                 userdata[device] = {
                     "email": encryptWithIk(email)
                 }
@@ -181,7 +183,6 @@ module.exports = {
                         for(let entry in data) {
                             userdata[device][entry] = data[entry]
                         }
-                        userdata[device].refDevice = device;
                         userdata[device].isFirst = true;
                         fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
                         res.sendStatus(200)
@@ -207,7 +208,7 @@ module.exports = {
                 return;
             }
 
-            let device = req.headers.device
+            let device = gmcu(req.headers.device)
             if(!userdata[device]) {
                 res.sendStatus(400);
                 return;
@@ -271,7 +272,7 @@ module.exports = {
                 return;
             }
     
-            let device = req.headers.device
+            let device = gmcu(req.headers.device)
             if(!userdata[device]) {
                 res.sendStatus(400);
                 return;
@@ -1489,12 +1490,17 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
     },
 
     "unlink": function(req, res) {
-        if(!req.query.device || !userdata[req.query.device]) {
+        if(!req.query.device) {
             res.sendStatus(400);
             return;
         }
-        userdata[req.query.device] = false;
-        delete userdata[req.query.device];
+        let device = gmcu(req.query.device)
+        if(!device) {
+            res.sendStatus(400)
+            return;
+        }
+        userdata[device] = false;
+        delete userdata[device];
         res.status(200);
         fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
         let msg = `unlink successful! you can now close this window.
@@ -4087,7 +4093,7 @@ function pullDeviceId(req) {
     && req.headers.cookie.includes("pchelper_user=")) {
         deviceId = req.headers.cookie.split("pchelper_user=")[1].split(";")[0]
     }
-    return deviceId
+    return gmcu(deviceId)
 }
 
 function pullUserIdFromDevice(device, callback) {
@@ -4121,7 +4127,6 @@ function pullUserIdFromDevice(device, callback) {
 
 const crypto = require("crypto")
 const yt2009utils = require("./yt2009utils")
-const { readCache } = require("./cache_dir/ryd_cache_manager")
 const tranferIkRef = "../www-core-feather.css"
 const i = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
 let ik = false;
@@ -4134,6 +4139,7 @@ function decryptWthIk(input) {
 }
 
 function encryptWithIk(input, whileIkmc) {
+    if(!input) return ""
     let d;
     if(whileIkmc) {
         let ref = tranferIkRef
@@ -4197,6 +4203,29 @@ if(userdata && !userdata.ikmc) {
     }
     ik = bt.toString().padStart(16, "0");
     fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+}
+
+// make device ids also use ik
+if(userdata && !userdata.ikmc2) {
+    for(let u in userdata) {
+        if(u !== "ikmc" && u !== "ikmc2") {
+            let eu = "u2-" + encryptWithIk(u)
+            let p = JSON.parse(JSON.stringify(userdata[u])) //copy
+            if(p.refDevice) {
+                p.refDevice = false;
+                delete p.refDevice
+            }
+            userdata[u] == null;
+            delete userdata[u]
+            userdata[eu] = p
+        }
+    }
+    userdata.ikmc2 = 1;
+    fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+}
+
+function gmcu(device) {
+    return "u2-" + encryptWithIk(device)
 }
 
 function parseViewmodelVideo(s, partsStrategy) {

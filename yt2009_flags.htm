@@ -292,6 +292,8 @@
 			<label for="mainpage-remove-username-space">remove_username_space</label><br>
 			<input type="checkbox" id="mainpage-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
 			<label for="mainpage-username-asciify">username_asciify</label><br>
+			<input type="checkbox" id="mainpage-use-hype-for-homepage" title="używa podbijanych filmów na stronie głównej. kraj może być zmieniany wtedy zmieniając swoją lokalizację na dole strony.">
+			<label for="mainpage-use-hype-for-homepage">use_hype_for_homepage</label><br>
 		</div>
 
 		<div class="group5">
@@ -774,7 +776,10 @@
 					].join(":")
 					autohd = true;
 					channelFlags = "disable_old_banners"
-					homepageFlags = "new_recommended"
+					homepageFlags = [
+						"new_recommended",
+						"use_hype_for_homepage"
+					].join(":")
 					globalFlags = [
 						"new_suggestions",
 						"no_controls_fade"
@@ -795,7 +800,10 @@
 						"disable_old_banners",
 						"show_times"
 					].join(":")
-					homepageFlags = "new_recommended"
+					homepageFlags = [
+						"new_recommended",
+						"use_hype_for_homepage"
+					].join(":")
 					globalFlags = [
 						"always_captions",
 						"disable_autocc",

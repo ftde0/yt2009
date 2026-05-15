@@ -2138,7 +2138,7 @@ module.exports = {
                 <div class="feedmodule-body grid-view">
                     <div class="clearL">
 
-                        <div class="video-cell" style="width:24.5%">
+                        <div class="video-cell" style="width:24.5%" id="yt2009-featured-1">
                             <div class="video-entry yt-uix-hovercard">
                                 <div class="v120WideEntry">
                                     <div class="v120WrapperOuter">
@@ -2166,7 +2166,7 @@ module.exports = {
                             </div>
                         </div>
 
-                        <div class="video-cell" style="width:24.5%">
+                        <div class="video-cell" style="width:24.5%" id="yt2009-featured-2">
                             <div class="video-entry yt-uix-hovercard">
                                 <div class="v120WideEntry">
                                     <div class="v120WrapperOuter">
@@ -2194,7 +2194,7 @@ module.exports = {
                             </div>
                         </div>
 
-                        <div class="video-cell" style="width:24.5%">
+                        <div class="video-cell" style="width:24.5%" id="yt2009-featured-3">
                             <div class="video-entry yt-uix-hovercard">
                                 <div class="v120WideEntry">
                                     <div class="v120WrapperOuter">
@@ -2222,7 +2222,7 @@ module.exports = {
                             </div>
                         </div>
 
-                        <div class="video-cell" style="width:24.5%">
+                        <div class="video-cell" style="width:24.5%" id="yt2009-featured-4">
                             <div class="video-entry yt-uix-hovercard">
                                 <div class="v120WideEntry">
                                     <div class="v120WrapperOuter">
@@ -4193,5 +4193,107 @@ ${topContentHTML}
 
     "miniPlHeader": function(name) {
         return `<a style="text-decoration:none;margin-bottom:4px;display:block;margin-top:-10px" class="title title-text-color"><span id="playnav-playlist-playlists-all-title" class="title">${utils.xss(name)}</span></a>`
+    },
+
+    "homepage_mostpopular_hype_holder": function(hypeTabs) {
+        let contents = ``
+        for(let t in hypeTabs) {
+            let internalName = t;
+            t = hypeTabs[t]
+            if(t && t.siteName) {
+                contents += `
+                <div class="feeditem-compressed">
+                    <div class="feeditem-compressed-category-title">
+                        <div>
+                            <a class="hLink" href="/videos?c=${t.number}">${t.siteName}</a>
+                        </div>
+                    </div>
+                    <div class="TOP-data compressed-form-content yt-uix-hovercard" id="yt2009-hype-category-video-${internalName}">
+                        <div class="clear">
+                            <div class="feedmodule-thumbnail">
+                                <div class="v120WideEntry">
+                                    <div class="v120WrapperOuter">
+                                        <div class="v120WrapperInner"><a class="video-thumb-link" href="#" rel="nofollow"><img  src="/assets/site-assets/pixel-vfl73.gif" class="vimg120 yt-uix-hovercard-target"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="feedmodule-singleform-info">
+                                <div class="video-title"><a href="#" class="yt-uix-hovercard-target"></a></div>
+                                <div> </div>
+                                <div><nobr><a href="#"> </a></nobr></div>
+                                <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                            </div>
+                            <div class="spacer">&nbsp;</div>
+                        </div>
+                    </div>
+
+                    <div class="spacer">&nbsp;</div>
+                </div>`
+            }
+        }
+        return `
+        <div id="feedmodule-TOP" class="feedmodule-anchor">
+            <div class="feedmodule-modheader" id="TOP-titlebar">
+
+                <div id="feed_top_videos">
+                    <div class="fm2-title-border-box-gray yt-rounded">
+                        <div class="fm2-title">
+                            <img class="img_feed_top_videos master-sprite fm2-icon" src="/assets/site-assets/pixel-vfl73.gif" />
+                            <span class="fm2-titleText" id="feed_top_videos-titleText">lang_hp_pop</span>
+                        </div>
+
+                        <div class="feedmodule-preamble">
+                            <a href="/videos?s=pop">lang_hp_viewall</a>
+                        </div>
+                        <div class="feedmodule-updown">
+                            <span id="mup-TOP" class="up-button" onclick="moveUp('pop')">
+                            <img class="master-sprite img-php-up-arrow" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                            <span id="mdown-TOP" class="down-button" onclick="moveDown('pop')">
+                            <img class="master-sprite img-php-down-arrow" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                            <span id="mclose-TOP" onclick="removeModule('pop')">
+                            <img class="master-sprite img-php-close-button" src="/assets/site-assets/pixel-vfl73.gif" /></span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="clear feedmodule-border-gray yt-rounded" id="feed_top_videos-content">
+                <div id="TOP-data" class="feedmodule-data">
+
+                    <div class="feedmodule-body compressed-view">
+                        ${contents}
+                        <div class="spacer">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>`
+    },
+
+    "hype_result_homepage_catvid": function(v, req) {
+        let thumb = utils.getThumbUrl(v.id, req)
+        return `<div class="clear">
+                <div class="feedmodule-thumbnail">
+                    <div class="v120WideEntry">
+                        <div class="v120WrapperOuter">
+                            <div class="v120WrapperInner"><a class="video-thumb-link" href="/watch?v=${v.id}" rel="nofollow"><img src="${thumb}" title="${utils.xss(v.title).split("\"").join("&quot;")}" class="vimg120 yt-uix-hovercard-target"></a>
+                                <div class="video-time"><a href="/watch?v=${v.id}" rel="nofollow">${v.time}</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feedmodule-singleform-info">
+                    <div class="video-title"><a href="/watch?v=${v.id}" class="yt-uix-hovercard-target" title="${utils.xss(v.title).split("\"").join("&quot;")}">${utils.xss(v.title)}</a></div>
+                    <div>lang_views_prefix${utils.countBreakup(v.views)}lang_views_suffix</div>
+                    <div><nobr><a href="${v.uploaderUrl}">${utils.xss(v.uploaderName)}</a></nobr></div>
+                    <div class="feedmodule-singleform-info-ratings"><span><button class="master-sprite ratingVS ratingVS-5.0" title="5.0"></button></span></div>
+                </div>
+                <div class="spacer">&nbsp;</div>
+            </div>
+        </div>
+
+        <div class="spacer">&nbsp;</div>`
     }
 }

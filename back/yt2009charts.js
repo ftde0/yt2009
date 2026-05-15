@@ -94,16 +94,28 @@ module.exports = {
         }
         if(req.query.chxl) {
             let chxl = req.query.chxl
-            if(chxl.includes("0:")) {
+            if(chxl.includes("0:") && !req.query.chxus) {
                 yText = chxl.split("0:")[1].split("1:")[0].split("|")
                 yText = yText.filter(s => s !== "")
             }
-            if(chxl.includes("|1:") || chxl.startsWith("1:")) {
-                let m = chxl.startsWith("1:")
-                let texts = chxl.split("1:")[1].split("|").filter(s => s !== "")
-                if(!m) {
-                    texts = chxl.split("|1:")[1].split("|").filter(s => s !== "")
-                }
+            if(chxl.includes("|1:")
+			|| chxl.startsWith("1:")
+			|| req.query.chxus) {
+				let texts = []
+                if(!req.query.chxus) {
+					let m = chxl.startsWith("1:")
+					texts = chxl.split("1:")[1]
+									.split("|")
+									.filter(s => s !== "")
+					if(!m) {
+						texts = chxl.split("|1:")[1]
+									.split("|")
+									.filter(s => s !== "")
+					}
+				} else {
+					texts = chxl.split("|")
+				}
+				texts = texts.map(e => {return this.s(e)})
                 let positions = []
                 if(req.query.chxp) {
                     positions = req.query.chxp
@@ -364,7 +376,11 @@ module.exports = {
                         return;
                     }
                     let polylineX = tp.split(",")[0]
-                    let polylineY = parseFloat(tp.split(",")[1]) + 1.5
+                    let polylineAdd = 1.5
+					if(req.query.chxus == 1) {
+						polylineAdd = 0.5
+					}
+                    let polylineY = parseFloat(tp.split(",")[1]) + polylineAdd
                     fbPolyline.push(polylineX + "," + polylineY)
                     i++
                 }
@@ -617,13 +633,17 @@ module.exports = {
         }
 
         let bars = []
-        if(req.query.chxl) {
+        if(req.query.chxl && !req.query.chxus) {
             bars = req.query.chxl
                    .replace("1:|", "")
                    .replace("1:", "")
                    .split("|")
                    .map(s => {return this.s(s)});
-        }
+        } else if(req.query.chxl && req.query.chxus) {
+			bars = req.query.chxl
+                   .split("|")
+                   .map(s => {return this.s(s)});
+		}
 
         let barsValues = {}
         if(req.query.chd) {

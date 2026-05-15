@@ -3,7 +3,7 @@ const base_code_logged_in = `
 <div id="masthead-utility">
     <span class="utility-item" id="masthead-utility-menulink-long">
         <span class="yt-menulink yt-menulink-primary" id="" style="" onmouseenter="this.className += ' yt-menulink-primary-hover';" onmouseleave="this.className = this.className.replace(' yt-menulink-primary-hover', '');">
-            <a class="yt-menulink-btn yt-button yt-button-primary">yt2009_username</a>
+            <a class="yt-menulink-btn yt-button yt-button-primary" href="/mh_pc_intro">yt2009_username</a>
             <a class="yt-menulink-arr"></a>
             <span class="yt-menulink-menu">
                 <span><a href="/account">Account</a></span>
@@ -66,6 +66,19 @@ module.exports = function(req, code, returnNoLang) {
     catch(error){unasciifyLogin = false;}
 
     if(loggedInUsername) {
+        let loginCode = base_code_logged_in
+        let usesPchelper = false;
+        try {
+            usesPchelper = req.headers.cookie.includes("pchelper_user=")
+        }
+        catch(error){}
+        if(usesPchelper) {
+            loginCode = loginCode.replace(
+                ` href="/mh_pc_intro"`,
+                ` href="/user"`
+            )
+        }
+
         if(unasciifyLogin) {
             loggedInUsername = require("./yt2009utils").xss(
                 decodeURIComponent(loggedInUsername)
@@ -80,7 +93,7 @@ module.exports = function(req, code, returnNoLang) {
         }
         code = code.replace(
             "<!--yt2009_login_insert-->",
-            base_code_logged_in.split("yt2009_username").join(
+            loginCode.split("yt2009_username").join(
                 loggedInUsername
             )
         )

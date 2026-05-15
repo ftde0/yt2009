@@ -305,8 +305,9 @@ module.exports = {
             res.sendStatus(400)
             return;
         }
+        let heading = req.body.slice(0,2048).toString()
         let state = 2;
-        if(!req.body.toString().substring(0,30).includes("state=step1")) {
+        if(!heading.includes("state=step1")) {
             state = 3;
         }
 
@@ -358,14 +359,15 @@ module.exports = {
                 sep = req.headers["content-type"].split("boundary=")[1]
                          .split(";")[0].substring(0,30)
             }
-            let ct = req.body.toString().split(`name="video"`)[1]
-                        .split(`Content-Type: `)[1].split("\n")[0];
-            let flowToken = req.body.toString()
-                               .split(`name="flow-token"`)[1]
-                               .substring(0,100).split("\r\n").join("\n")
-                               .split(sep)[0]
-                               .split("--").join("")
-                               .split("\n")
+            let ct = heading.split(`name="video"`)[1]
+                            .split(`Content-Type: `)[1]
+                            .split("\n")[0];
+            let flowToken = heading
+                            .split(`name="flow-token"`)[1]
+                            .substring(0,100).split("\r\n").join("\n")
+                            .split(sep)[0]
+                            .split("--").join("")
+                            .split("\n")
             flowToken = flowToken.filter(s => {return s && s.length > 10})[0]
 
             if(!uploadFlowTokens[flowToken]) {
@@ -380,9 +382,10 @@ module.exports = {
                 return;
             }
 
-            let index = req.body.toString().split(`name="video"`)[1]
-                           .split(`Content-Type: `)[1].split("\n")[0];
-            index = req.body.toString().indexOf(index) + index.length
+            let index = heading.split(`name="video"`)[1]
+                               .split(`Content-Type: `)[1]
+                               .split("\n")[0];
+            index = heading.indexOf(index) + index.length
             let file = req.body.slice(index)
             while(file[0] == 10 || file[0] == 13) {
                 file = file.slice(1)

@@ -2961,10 +2961,10 @@ module.exports = {
                                             }
                                         })
                                     }
-                                    catch(error) {console.log(error)}
+                                    catch(error) {}
                                 })
                             }
-                            catch(error) {console.log(error)}
+                            catch(error) {}
                             mt.forEach(text => {
                                 if(text && text.includes("views")) {
                                     views = yt2009utils.countBreakup(
