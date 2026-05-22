@@ -938,7 +938,7 @@ module.exports = {
                     <input type="checkbox" class="checkbox" value="${video.id}" data-videoid="${video.id}" />
                 </div>
             </div>
-            <div style="float: left; width: 120px;">
+            <div style="float: left; width: 124px;">
                 <a href="/watch?v=${video.id}" class="video-thumb"><img src="${video.thumbnail}"/></a>
                 <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c; word-break: break-word;">${video.title}</a>
                 <div class="video-stats">
@@ -1865,7 +1865,7 @@ module.exports = {
                             <input type="checkbox" class="checkbox" value="${video.id}" />
                         </div>
                     </div>
-                    <div style="float: left; width: 120px;">
+                    <div style="float: left; width: 124px;">
                         <a href="/watch?v=${video.id}" class="video-thumb"><img src="${thumbUrl}"/></a>
                         <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
                         <div class="video-stats">

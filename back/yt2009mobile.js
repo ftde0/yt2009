@@ -1190,7 +1190,8 @@ module.exports = {
             let videosSource = (data.videos || [])
             videosSource = videosSource.filter(s => {return !(
                 s.badges
-                && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+                && (s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+                || s.badges.includes("BADGE_MEMBERS_ONLY"))
             )})
 
             function buildFeed() {

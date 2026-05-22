@@ -1484,7 +1484,8 @@ module.exports = {
         function videosRender() {
             videosSource = videosSource.filter(s => {return !(
                 s.badges
-                && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+                && (s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+                || s.badges.includes("BADGE_MEMBERS_ONLY"))
             )})
 
             // fake_dates shenanigans
@@ -2962,18 +2963,30 @@ module.exports = {
                                         })
                                     }
                                     catch(error) {}
+                                    if(r.badges) {
+                                        try {
+                                            r.badges.forEach(b => {
+                                                if(b.badgeViewModel) {
+                                                    b = b.badgeViewModel;
+                                                    badges.push(b.badgeStyle)
+                                                }
+                                            })
+                                        }
+                                        catch(error) {console.log(error)}
+                                    }
                                 })
                             }
                             catch(error) {}
                             mt.forEach(text => {
-                                if(text && text.includes("views")) {
+                                if(text && text.includes(" ago")) {
+                                    upload = yt2009utils.backportDate(text);
+                                } else if((text && text.includes("views"))
+                                || text) {
                                     views = yt2009utils.countBreakup(
                                         yt2009utils.approxSubcount(
                                             text.split(" ")[0]
                                         )
                                     ) + " views"
-                                } else if(text && text.includes(" ago")) {
-                                    upload = text;
                                 }
                             })
                             videos.push({

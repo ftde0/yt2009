@@ -496,7 +496,8 @@ function video_pause() {
 
 // play/pause
 video.addEventListener("click", function() {
-    if(mainElement.querySelector(".player-context-menu")) {
+    if(mainElement.querySelector(".player-context-menu")
+    || window.html5_disable_click_video) {
         return false;
     }
     if(forceStopVideo) {
@@ -795,6 +796,18 @@ function adjustSeekbarWidth() {
         )
     }
     endscreenResize()
+    if(window.playerResizeCallback) {
+        var bkTransform = ""
+        if(video.style.transform) {
+            bkTransform = video.style.transform;
+            video.style.transform = ""
+        }
+        window.playerResizeCallback(
+            video.getBoundingClientRect().width,
+            video.getBoundingClientRect().height
+        )
+        video.style.transform = bkTransform
+    }
 }
 
 window.addEventListener("resize", adjustSeekbarWidth, false);
@@ -3092,6 +3105,9 @@ function requestSabr(offset, source, force) {
 			function readyStart() {
 				sabrData.videoMime = r.getResponseHeader("x-yt2009-video-mime")
 				vStream = ms.addSourceBuffer(sabrData.videoMime)
+                if(sabrData.reinitVideoSourceCallback) {
+                    sabrData.reinitVideoSourceCallback(sabrData.videoMime)
+                }
 				aStream = ms.addSourceBuffer(sabrData.audioMime)
 				sabrData.videoBuffer = vStream
 				sabrData.audioBuffer = aStream
@@ -3112,15 +3128,18 @@ function requestSabr(offset, source, force) {
         var cursor = 14 // SABER-START
 
         if(partsInResponse == 0
-        && !r.getResponseHeader("x-yt2009-got-internal-redirect")) {
+        && r.getResponseHeader("x-yt2009-got-internal-redirect")
+        && sabrData.concurrentRedirectCount <= 2) {
             // something might have gone terribly wrong
             retryRequest(true)
             return;
         } else if(partsInResponse == 0) {
+            sabrData.concurrentRedirectCount++
             retryRequest()
             return;
         }
 
+        sabrData.concurrentRedirectCount = 0;
         sabrData.lastRequestFailCount = 0;
 
 		function sabrProcessParts() {
@@ -3191,7 +3210,8 @@ function initAsSabr() {
         "timedSabrFetchAborted": false,
         "lastRequestFailCount": 0,
         "readAhead": 45,
-        "defaultLongReadaheadSet": false
+        "defaultLongReadaheadSet": false,
+        "concurrentRedirectCount": 0
     }
 	
 	
@@ -3549,6 +3569,9 @@ function initAsSabr() {
     // buffer queue
     var vbq = setInterval(function() {
         if(sabrData.appendQueue[0]) {
+            if(sabrData.appendCallback) {
+                sabrData.appendCallback(sabrData.appendQueue[0])
+            }
             if(sabrData.appendQueue[0].type == "audio"
             && sabrData.audioBuffer && !sabrData.audioBuffer.updating) {
                 try {

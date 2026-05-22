@@ -2983,6 +2983,7 @@ proto.android_player.root.playerFormats.format.toObject = function(includeInstan
     xtags: jspb.Message.getFieldWithDefault(msg, 23, ""),
     twentyfive: jspb.Message.getFieldWithDefault(msg, 25, 0),
     qualitylabel: jspb.Message.getFieldWithDefault(msg, 26, ""),
+    projectiontype: jspb.Message.getFieldWithDefault(msg, 27, 0),
     audiotrackList: jspb.Message.toObjectList(msg.getAudiotrackList(),
     proto.android_player.audioTrackData.toObject, includeInstance),
     audiobitrate: jspb.Message.getFieldWithDefault(msg, 44, 0),
@@ -3078,6 +3079,10 @@ proto.android_player.root.playerFormats.format.deserializeBinaryFromReader = fun
     case 26:
       var value = /** @type {string} */ (reader.readString());
       msg.setQualitylabel(value);
+      break;
+    case 27:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setProjectiontype(value);
       break;
     case 28:
       var value = new proto.android_player.audioTrackData;
@@ -3219,6 +3224,13 @@ proto.android_player.root.playerFormats.format.serializeBinaryToWriter = functio
   if (f.length > 0) {
     writer.writeString(
       26,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 27));
+  if (f != null) {
+    writer.writeInt32(
+      27,
       f
     );
   }
@@ -3532,6 +3544,42 @@ proto.android_player.root.playerFormats.format.prototype.getQualitylabel = funct
  */
 proto.android_player.root.playerFormats.format.prototype.setQualitylabel = function(value) {
   return jspb.Message.setProto3StringField(this, 26, value);
+};
+
+
+/**
+ * optional int32 projectionType = 27;
+ * @return {number}
+ */
+proto.android_player.root.playerFormats.format.prototype.getProjectiontype = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 27, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.android_player.root.playerFormats.format} returns this
+ */
+proto.android_player.root.playerFormats.format.prototype.setProjectiontype = function(value) {
+  return jspb.Message.setField(this, 27, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.android_player.root.playerFormats.format} returns this
+ */
+proto.android_player.root.playerFormats.format.prototype.clearProjectiontype = function() {
+  return jspb.Message.setField(this, 27, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.android_player.root.playerFormats.format.prototype.hasProjectiontype = function() {
+  return jspb.Message.getField(this, 27) != null;
 };
 
 

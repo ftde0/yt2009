@@ -297,7 +297,109 @@ module.exports = {
                 
                 videos.forEach(video => {
                     if(video.richItemRenderer) {
-                        video = video.richItemRenderer.content.videoRenderer
+                        video = video.richItemRenderer.content
+                        if(video && video.lockupViewModel) {
+                            video = video.lockupViewModel
+                            let id = video.contentId
+                            let time = "00:00"
+                            let badges = []
+                            try {
+                                let ovs = video.contentImage.thumbnailViewModel
+                                               .overlays;
+                                ovs.forEach(o => {
+                                    if(o.thumbnailBottomOverlayViewModel) {
+                                        o = o.thumbnailBottomOverlayViewModel
+                                             .badges
+                                        o.forEach(badge => {
+                                            badge = badge.thumbnailBadgeViewModel
+                                            badges.push([
+                                                badge.badgeStyle, badge.text
+                                            ])
+                                        })
+                                    }
+                                })
+                                badges.forEach(b => {
+                                    if(b[1].includes(":")) {
+                                        try {
+                                            let t = yt2009utils.time_to_seconds(
+                                                b[1]
+                                            )
+                                            if(!isNaN(t)
+                                            && typeof(t) == "number") {
+                                                time = b[1];
+                                            }
+                                        }
+                                        catch(error) {}
+                                    }
+                                })
+                            }
+                            catch(error) {console.log(error)}
+                            try {
+                                video = video.metadata.lockupMetadataViewModel
+                                let title = video.title.content
+                                let views = "0 views"
+                                let upload = "?"
+                                let md = []
+                                let mt = []
+                                let badges = []
+                                try {
+                                    md = video.metadata.contentMetadataViewModel
+                                              .metadataRows
+                                    md.forEach(r => {
+                                        try {
+                                            r.metadataParts.forEach(p => {
+                                                if(p.text) {
+                                                    mt.push(p.text.content)
+                                                }
+                                            })
+                                        }
+                                        catch(error) {}
+                                        if(r.badges) {
+                                            try {
+                                                r.badges.forEach(b => {
+                                                    if(b.badgeViewModel) {
+                                                        b = b.badgeViewModel;
+                                                        badges.push([
+                                                            b.badgeStyle,
+                                                            b.badgeText
+                                                        ])
+                                                    }
+                                                })
+                                            }
+                                            catch(error) {}
+                                        }
+                                    })
+                                }
+                                catch(error) {}
+                                mt.forEach(text => {
+                                    if(text && text.includes(" ago")) {
+                                        upload = utils.backportDate(text);
+                                    } else if((text && text.includes("views"))
+                                    || text) {
+                                        views = utils.countBreakup(
+                                            utils.approxSubcount(
+                                                text.split(" ")[0]
+                                            )
+                                        ) + " views"
+                                    }
+                                })
+                                data.videos.push({
+                                    "id": id,
+                                    "badges": badges,
+                                    "time": time,
+                                    "thumbnail": "//i.ytimg.com/vi/"
+                                               + id + "/hqdefault.jpg",
+                                    "upload": upload,
+                                    "views": views,
+                                    "title": title
+                                })
+                            }
+                            catch(error) {console.log(error)}
+                            return;
+                        }
+                        if(video && video.videoRenderer) {
+                            video = video.videoRenderer
+                        }
                         if(!video.viewCountText) {
                             video.viewCountText = {
                                 "simpleText": ""
@@ -353,7 +455,8 @@ module.exports = {
         let videosSource = data.videos;
         videosSource = videosSource.filter(s => {return !(
             s.badges
-            && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+            && (s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+            || s.badges.includes("BADGE_MEMBERS_ONLY"))
         )})
 
         videosSource.forEach(video => {

@@ -61,6 +61,11 @@ message root {
             string xtags = 23;
             int32 twentyFive = 25;
             string qualityLabel = 26;
+            optional int32 projectionType = 27;
+            /*^^^ 360deg:
+            
+            2 == EQUIRECTANGULAR (e.g. ZZyBG6UsvoQ)
+            4 == MESH (e.g. HCpnhMH1vXs)*/
             repeated audioTrackData audioTrack = 28;
             int32 audioBitrate = 44;
             int32 audioSample = 45;

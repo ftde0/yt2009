@@ -2374,6 +2374,25 @@ statsExpander.onclick = function() {
 // fetch stats
 function loadStats() {
     var id = window.location.href.split("v=")[1].split("&")[0]
+    if(document.cookie
+	&& document.cookie.indexOf("watch_modern_features") !== -1) {
+		var hmap = document.getElementById(
+			"watch-tab-stats-body-optional-heatmap"
+		)
+		var hr;
+		if (window.XMLHttpRequest) {
+			hr = new XMLHttpRequest()
+		} else {
+			hr = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		hr.open("GET", "/heatmap_chart?video_id=" + id + "&r=" + Math.random())
+		hr.send(null)
+		hr.onreadystatechange = function(e) {
+            if(hr.readyState == 4 || this.readyState == 4) {
+                hmap.innerHTML = hr.responseText
+            }
+        }
+	}
     var v = document.getElementById("watch-view-count").innerHTML
     var s = document.getElementById("ratingStars")
             .getElementsByTagName("button")[0]
@@ -2392,7 +2411,7 @@ function loadStats() {
         r.onreadystatechange = function(e) {
             if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
                 statsLoaded = true;
-                $("#watch-tab-stats-body").innerHTML = r.responseText
+                $("#watch-tab-stats-body-content").innerHTML = r.responseText
             }
         }
     }

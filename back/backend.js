@@ -4755,7 +4755,8 @@ app.get("/channel_sort", (req, res) => {
         let i = 1;
         results = results.filter(s => {return !(
             s.badges
-            && s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+            && (s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+            || s.badges.includes("BADGE_MEMBERS_ONLY"))
         )})
         results.forEach(result => {
             if(result.continuation) {
@@ -7148,19 +7149,27 @@ yt2009upgrade: updates that can't be applied through git through various reasons
 ======
 */
 
+let tempConstant = JSON.parse(JSON.stringify(yt2009_constant))
 // remove obama video (removed from youtube)
-let obamaVideoObject = yt2009_constant.homepageCache_news.filter(s => s.id == "Z9eId_9n1NM")
+let obamaVideoObject = tempConstant.homepageCache_news.filter(s => s.id == "Z9eId_9n1NM")
 if(obamaVideoObject) {
-    let newNewsCache = yt2009_constant.homepageCache_news.filter(s => s.id !== "Z9eId_9n1NM")
-    yt2009_constant.homepageCache_news = newNewsCache;
-    fs.writeFileSync("./yt2009constants.json", JSON.stringify(yt2009_constant))
+    let newNewsCache = tempConstant.homepageCache_news.filter(s => s.id !== "Z9eId_9n1NM")
+    tempConstant.homepageCache_news = newNewsCache;
+    fs.writeFileSync("./yt2009constants.json", JSON.stringify(tempConstant))
 }
 // remove zombies video (privated)
-let zombiesVideoObject = yt2009_constant.homepageCache_featured.filter(s => s.id == "czWoP7qVNSI")
+let zombiesVideoObject = tempConstant.homepageCache_featured.filter(s => s.id == "czWoP7qVNSI")
 if(zombiesVideoObject) {
-    let newFeaturedCache = yt2009_constant.homepageCache_featured.filter(s => s.id !== "czWoP7qVNSI")
-    yt2009_constant.homepageCache_featured = newFeaturedCache
-    fs.writeFileSync("./yt2009constants.json", JSON.stringify(yt2009_constant))
+    let newFeaturedCache = tempConstant.homepageCache_featured.filter(s => s.id !== "czWoP7qVNSI")
+    tempConstant.homepageCache_featured = newFeaturedCache
+    fs.writeFileSync("./yt2009constants.json", JSON.stringify(tempConstant))
+}
+// remove remember me video (public but unplayable)
+let rmbrVideoObject = tempConstant.homepageCache_film_animation.filter(s => s.id == "4F3voQTg5gQ")
+if(rmbrVideoObject) {
+    let newAnimCache = tempConstant.homepageCache_film_animation.filter(s => s.id !== "4F3voQTg5gQ")
+    tempConstant.homepageCache_film_animation = newAnimCache
+    fs.writeFileSync("./yt2009constants.json", JSON.stringify(tempConstant))
 }
 
 /*

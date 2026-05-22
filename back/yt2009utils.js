@@ -417,7 +417,9 @@ module.exports = {
                 result = result.videoRenderer
                 let uploadDate = ""
                 try {
-                    uploadDate = result.publishedTimeText.simpleText
+                    uploadDate = this.backportDate(
+						result.publishedTimeText.simpleText
+					)
                 }
                 catch(error) {}
                 let description = ""
@@ -494,6 +496,7 @@ module.exports = {
                     if(resultType == "live-video") {
                         time = "LIVE"
                         viewCount = result.viewCountText.runs[0].text + " views"
+                        uploadDate = ""
                     }
 
                     // add video
@@ -1811,6 +1814,8 @@ module.exports = {
                                 .raw_language_data("en").relativeTimeRules
         }
 
+        baseString = this.backportDate(baseString)
+
         let timeValue = parseInt(baseString.split(" ")[0])
         
         let timeType = baseString.split(" ")[1].toLowerCase();
@@ -1847,6 +1852,54 @@ module.exports = {
         return resultText;
     },
 
+    "backportDate": function(relativeTime) {
+        if(!relativeTime) return "";
+		if(relativeTime.includes("minute")
+		|| relativeTime.includes("second")
+		|| relativeTime.includes("hour")
+		|| relativeTime.includes("day")
+		|| relativeTime.includes("week")
+		|| relativeTime.includes("month")
+		|| relativeTime.includes("year")) return relativeTime;
+		
+		// backport new youtube relative dates (e.g. 3d ago)
+		// to old format (3 days ago) -- may 2026
+		let w1 = relativeTime.split(" ")[0]
+		let timeValue = parseInt(w1)
+		if(timeValue.toString() !== w1) {
+			timeType = w1.replace(/[0-9]/g, "")
+			switch(timeType) {
+				case "m": {
+					timeType = "minutes"
+					break;
+				}
+				case "h": {
+					timeType = "hours"
+					break;
+				}
+				case "d": {
+					timeType = "days"
+					break;
+				}
+				case "w": {
+					timeType = "weeks"
+					break;
+				}
+				case "mo": {
+					timeType = "months"
+					break;
+				}
+				case "y": {
+					timeType = "years"
+					break;
+				}
+			}
+			return timeValue + " " + timeType + " ago"
+		}
+		return relativeTime;
+		
+	},
+
     "playnavViewCount": function(views, language) {
         let lang = require("./language_data/language_engine")
                        .raw_language_data(language);
@@ -1864,6 +1917,8 @@ module.exports = {
         let month = current.getMonth()
         let day = current.getDate()
         let exact = false;
+
+        relativeTime = this.backportDate(relativeTime)
 
         if(relativeTime.includes("year")) {
             year -= parseInt(relativeTime.split(" ")[0])
@@ -1908,13 +1963,13 @@ module.exports = {
 
     "approxSubcount": function(count) {
         let c = parseInt(count);
-        if(count.includes("K")) {
+        if(count.toLowerCase().includes("k")) {
             c = c * 1000;
         }
-        if(count.includes("M")) {
+        if(count.toLowerCase().includes("m")) {
             c = c * 1000000;
         }
-        if(count.includes("B")) {
+        if(count.toLowerCase().includes("b")) {
             c = c * 1000000000;
         }
         return c;
