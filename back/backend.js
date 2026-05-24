@@ -150,6 +150,16 @@ if(config.ip == "127.0.0.1" || config.ip == "localhost") {
 
 `)
 }
+if(config.ip && config.ip.includes(":")) {
+    console.log(`
+        
+        
+    config.ip likely has a port in it!
+    remove the port from config.ip!
+    
+
+`)
+}
 if(!config.data_api_key) {
     console.log(`
         
@@ -544,7 +554,7 @@ app.get("/watch", (req, res) => {
     }
 
     // start ryd early
-    ryd.fetch(id, (d) => {})
+    ryd.fetch(id, (d) => {}, true)
     
     // exp_turbocharge (start render from /player)
     if(req.query.exp_turbocharge == 1
@@ -555,38 +565,25 @@ app.get("/watch", (req, res) => {
         if(devTimings) {
             console.log(t, "turbocharge START")
         }
+        let extraSettings = {}
+        if(req.headers.cookie
+        && req.headers.cookie.includes("exp_turbocharge_sabr_hfr")) {
+            extraSettings.highEndDevice = true;
+        }
         yt2009_utils.pullBarePlayer(id, (data) => {
-            try {
-                let checkedFmts = data.streamingData.adaptiveFormats.map(s => {
-                    if(s.itag == 140 || s.itag == 139) {
-                        if(s.audioTrack) {
-                            s.audioTrack.vss_id = s.audioTrack.id;
-                            s.audioTrack.label = s.audioTrack.displayName;
-                        }
-                        if(s.xtags && s.audioTrack) {
-                            let decode = playerResponsePb.xtags
-                                         .deserializeBinary(s.xtags)
-                                         .toObject()
-                            let isOg = decode.partList.filter(z => {
-                                return z.value == "original"
-                            })[0]
-                            if(isOg) {
-                                s.isOriginal = true;
-                            }
-                        }
-                        return s;
-                    } else {
-                        return s;
-                    }
-                })
-                data.streamingData.adaptiveFormats = checkedFmts
+            if(extraSettings.highEndDevice) {
+                yt2009_exports.extendWrite("players", id + "/hfr", data)
+                setTimeout(() => {
+                    yt2009_exports.extendWrite("players", id + "/hfr", null)
+                }, 1000 * 60 * 60 * 4)
+            } else {
+                yt2009_exports.extendWrite("players", id, data)
             }
-            catch(error) {
-                console.log(error)
-            }
-            yt2009_exports.extendWrite("players", id, data)
             data.emptyUploadString = ""
             data = yt2009.miniParse(data)
+            if(extraSettings.highEndDevice) {
+                data.isHfrResponse = true;
+            }
             if(!data || !data.title || data.restricted) {
 				res.redirect("/?ytsession=1")
 				return;
@@ -613,7 +610,7 @@ app.get("/watch", (req, res) => {
 				code = yt2009_doodles.applyDoodle(code, req)
 				res.send(code)
 			})
-        })
+        }, extraSettings)
         return;
     }
 
@@ -963,12 +960,14 @@ app.get("/ryd_request", (req, res) => {
 
     let id = req.headers.source.split("v=")[1].split("&")[0]
     ryd.readWait(id, (data) => {
-        let toSend = data.toString();
+        let rateCount = yt2009_utils.countBreakup(data.l + data.d)
+        res.set("x-yt2009-rate-count", rateCount)
+        let toSend = data.r.toString();
         if(!toSend.includes(".5")) {
             toSend += ".0"
         } 
         try {res.send(toSend)}catch(error) {}
-    })
+    }, true)
 })
 
 /*
@@ -6739,7 +6738,7 @@ app.get("/stream_get_fragment", (req, res) => {
         "cookie": "",
         "x-goog-authuser": "0",
         "x-origin": "https://www.youtube.com/",
-        "user-agent": "com.google.android.youtube/20.06.39 (Linux; U; Android 14) gzip"
+        "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
     }
 
     if(!yt2009_utils.isAuthorized(req)) {
@@ -6886,7 +6885,7 @@ app.get("/stream_get_fragment", (req, res) => {
             return;
         }
         let rHeaders = JSON.parse(JSON.stringify(yt2009_constant.headers))
-        rHeaders["user-agent"] = "com.google.android.youtube/20.06.36 (Linux; U; Android 14) gzip"
+        rHeaders["user-agent"] = "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
         if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
             let d = yt2009signin.getData().yAuth
             rHeaders.Authorization = `Bearer ${d}`
@@ -7729,6 +7728,37 @@ app.get("/heatmap_chart", (req, res) => {
         }
     }, "", yt2009_utils.get_used_token(req),
     false, false, true, false)
+})
+
+/*
+======
+pchelper save approach 2 (more compatible)
+======
+*/
+app.get("/pchelper_save_cookie", (req, res) => {
+    if(!mobileHelper.hasLogin(req)
+    || !yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.query.p) {
+        res.sendStatus(400)
+        return;
+    }
+    let p = decodeURIComponent(req.query.p).replace(/[^a-z0-9+\_+:]/g, "")
+    let cookieParams = [
+        `pchelper_flags=${p}; `,
+        `Path=/; `,
+        `Expires=Fri, 31 Dec 2066 23:59:59 GMT`
+    ]
+    res.set("set-cookie", cookieParams.join(""))
+    res.send(`
+        <a href="/mh_pc_manage?r=${Math.random().toString()};">back to pchelper</a>
+        <script>
+            alert("ok");
+            location.href="/mh_pc_manage?r=${Math.random().toString()}";
+        </script>
+    `)
 })
 
 

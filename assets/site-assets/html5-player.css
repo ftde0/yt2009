@@ -1025,6 +1025,9 @@
 .quality_selector.more_space {
     width: 75px;
 }
+.quality_selector.max_space {
+    width: 90px;
+}
 
 .quality_selector .sr_indicator,
 .quality_selector .hbr_indicator {

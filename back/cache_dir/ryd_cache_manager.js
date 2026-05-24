@@ -13,10 +13,14 @@ let ongoingFetches = []
 let ongoingCallbacks = {}
 
 module.exports = {
-    "fetch": function(id, callback) {
+    "fetch": function(id, callback, useExtendedSystem) {
         id = id.substring(0, 11);
         
-        if(cache[id]) {
+        if(useExtendedSystem && cache[id + "/e"]) {
+            callback(cache[id + "/e"])
+            return;
+        }
+        if(cache[id] && !useExtendedSystem) {
             callback(cache[id])
         } else {
             ongoingFetches.push(id)
@@ -25,15 +29,35 @@ module.exports = {
                     "user-agent": "yt2009 / twt@ybnn670"
                 }
             }).then(r => {
-                r.json().catch(error => {callback(5)}).then(response => {
+                r.json().catch(error => {
+                    if(useExtendedSystem) {
+                        callback({"l": 0, "d": 0, "r": 5})
+                    } else {
+                        callback(5)
+                    }
+                }).then(response => {
                     if(!response
                     || !response.rating) {
-                        callback(5)
+                        if(useExtendedSystem) {
+                            callback({"l": 0, "d": 0, "r": 5})
+                        } else {
+                            callback(5)
+                        }
                         cache[id] = 5
                         return;
                     }
-                    callback(utils.custom_rating_round(response.rating))
-                    cache[id] = utils.custom_rating_round(response.rating)
+                    let rating = utils.custom_rating_round(response.rating)
+                    cache[id + "/e"] = {
+                        "l": response.likes,
+                        "d": response.dislikes,
+                        "r": rating
+                    }
+                    cache[id] = rating
+                    if(useExtendedSystem) {
+                        callback(cache[id + "/e"])
+                    } else {
+                        callback(rating)
+                    }
                     ongoingFetches = ongoingFetches.filter(s => {
                         return s !== id
                     })
@@ -44,7 +68,11 @@ module.exports = {
                 })
             }).catch(error => {
                 console.log("[e] return youtube dislike api failed to load!", error)
-                callback(5)
+                if(useExtendedSystem) {
+                    callback({"l": 0, "d": 0, "r": 5})
+                } else {
+                    callback(5)
+                }
                 ongoingFetches = ongoingFetches.filter(s => {
                     return s !== id
                 })
@@ -61,9 +89,12 @@ module.exports = {
         return cache[id];
     },
 
-    "readWait": function(id, callback) {
-        if(cache[id]) {
+    "readWait": function(id, callback, useExtendedSystem) {
+        if(!useExtendedSystem && cache[id]) {
             callback(cache[id])
+            return;
+        } else if(useExtendedSystem && cache[id + "/e"]) {
+            callback(cache[id + "/e"])
             return;
         }
 
@@ -73,18 +104,22 @@ module.exports = {
                 ongoingCallbacks[id] = []
             }
             ongoingCallbacks[id].push(function() {
-                if(cache[id]) {
+                if(cache[id + "/e"] && useExtendedSystem) {
+                    callback(cache[id + "/e"])
+                } else if(cache[id] && !useExtendedSystem) {
                     //console.log("ryd received")
                     callback(cache[id])
-                } else {
+                } else if(!useExtendedSystem) {
                     callback(5)
+                } else {
+                    callback({"l": 0, "d": 0, "r": 5})
                 }
             })
             return;
         }
 
         // fallback: pull clean
-        this.fetch(id, callback)
+        this.fetch(id, callback, useExtendedSystem)
     }
 }
 

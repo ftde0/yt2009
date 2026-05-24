@@ -169,7 +169,7 @@ module.exports = {
         let context = new metadataUpdate.root.contextType()
         let client = new metadataUpdate.root.contextType.clientType()
         client.setClientnumber(3)
-        client.setClientversion("20.51.39")
+        client.setClientversion("21.16")
         client.setOsname("Android")
         client.setOsversion("14")
         context.addClient(client)

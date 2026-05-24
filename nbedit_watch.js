@@ -762,6 +762,10 @@ function switchWatchTab(tabName) {
             loadFlagMenu()
             break;
         }
+        case "transcript": {
+            html5TranscriptFocused = true;
+            break;
+        }
     }
 }
 
@@ -2036,4 +2040,175 @@ if(usingTurbocharge) {
             "href", "/videos?c=" + res.categoryNumber
         )
     }, false)
+}
+
+/*
+======
+transcript functionality
+======
+*/
+var html5TranscriptCallback = null;
+var html5TranscriptScrollWithVideo = false;
+var html5TranscriptFocused = false;
+if(document.cookie
+&& document.cookie.indexOf("html5_transcript") !== -1) {
+    var transcriptsChecked = 0;
+    var transcriptReceived = false;
+    html5TranscriptCallback = function(ccJson) {
+        transcriptReceived = true;
+        transcriptsChecked++
+        var content = document.querySelector("#transcript-content")
+        document.querySelector("#watch-tab-transcript").setAttribute("style", "")
+        var timedtext = []
+        for(var timestamp in ccJson) {
+            timedtext.push([timestamp, ccJson[timestamp]])
+        }
+        timedtext = timedtext.sort(function(a,b) {
+            return a[0] - b[0]
+        })
+        function renderLines(transcriptLines) {
+            content.innerHTML = ""
+            var lineIndex = 0;
+            transcriptLines.forEach(function(line) {
+                var le = document.createElement("div")
+                le.className = "transcript-line"
+                if(lineIndex % 2 == 1) {
+                    le.className += " darker"
+                }
+                le.setAttribute("data-time", line[1].start)
+                var timestamp = document.createElement("span")
+                timestamp.className = "transcript-line-timestamp"
+                timestamp.innerHTML = line[1].startFriendly
+                le.appendChild(timestamp)
+                var text = document.createElement("span")
+                text.className = "transcript-line-text"
+                text.innerHTML = line[1].text
+                                        .split("<br>").join("\x00")
+                                        .split("<br/>").join("\x00")
+                                        .split("<br />").join("\x00")
+                                        .replace(/\<.*?\>/gi, "")
+                                        .split("\x00").join("<br>")
+                le.appendChild(text)
+                content.appendChild(le)
+                lineIndex++
+                le.onclick = function() {
+                    video.currentTime = parseInt(le.getAttribute("data-time"))
+                }
+            })
+        }
+        renderLines(timedtext)
+        if(window.browserModernFeatures) {
+            var scroll = document.getElementById("transcript-sync-video")
+            scroll.className = ""
+            var scrollL = document.getElementById("transcript-sync-video-label")
+            scrollL.className = ""
+            var tSearch = document.getElementById("transcript-search")
+            tSearch.className = ""
+            function onTextboxUpdate() {
+                if(tSearch.value.length == 0) {
+                    renderLines(timedtext)
+                    return;
+                }
+                var v = tSearch.value.toLowerCase()
+                var results = timedtext.filter(function(s) {
+                    var line = s[1].text.toLowerCase()
+                    return (line.indexOf(v) !== -1)
+                })
+                renderLines(results)
+            }
+            tSearch.addEventListener("input", onTextboxUpdate, false)
+
+            var tSearchClear = document.getElementById("transcript-search-clear")
+            tSearchClear.className = ""
+            tSearchClear.onclick = function() {
+                tSearch.value = ""
+                onTextboxUpdate()
+            }
+        }
+        if(transcriptsChecked == 1) {
+            // only run once for video scroll & checkbox save
+            var debounce = false;
+            video.addEventListener("timeupdate", function() {
+                if(html5TranscriptScrollWithVideo
+                && !debounce
+                && html5TranscriptFocused) {
+                    debounce = true;
+                    setTimeout(function() {
+                        debounce = false;
+                    }, 200)
+                    content.scrollTo(0,0)
+                    var offset = content.getBoundingClientRect().top;
+                    var i = timedtext.filter(function(s) {
+                        return video.currentTime >= parseFloat(s[0])
+                    })
+                    i = i[i.length - 1]
+                    var currentLine = Math.max(timedtext.indexOf(i), 0)
+                    currentLine = timedtext[currentLine]
+                    var lineElement = content.querySelector(
+                        "[data-time=\"" + currentLine[0] + "\"]"
+                    )
+                    if(lineElement) {
+                        var y = lineElement.getBoundingClientRect().top - offset;
+                        content.scrollTo(0,y)
+                    }
+                }
+            }, false)
+
+            if(localStorage.transcriptScroll
+            && Boolean(localStorage.transcriptScroll)) {
+                html5TranscriptScrollWithVideo = true;
+                document.getElementById("transcript-sync-video").checked = true;
+            }
+        }
+    }
+    // pull on our own if not there
+    setTimeout(function() {
+        if(!transcriptReceived) {
+            // fetch captions list
+            var id = window.location.href.split("v=")[1].split("&")[0]
+            var r = new XMLHttpRequest();
+            r.open(
+                "GET",
+                "/timedtext?v=" + id + "&type=list&json=1&source=transcript"
+            )
+            r.send(null)
+            r.addEventListener("load", function(e) {
+                var trackToPull = false;
+                var langs = JSON.parse(r.responseText)
+                if(langs["en"]) {
+                    trackToPull = "en"
+                } else {
+                    var i = 0;
+                    var firstLang = ""
+                    for(var h in langs) {
+                        if(i == 0) {
+                            firstLang = h;
+                        }
+                        i++;
+                    }
+                    trackToPull = firstLang
+                }
+
+                if(trackToPull) {
+                    r = new XMLHttpRequest();
+                    var url = [
+                        "/timedtext?v=" + id,
+                        "&type=track&lang=" + trackToPull,
+                        "&json=1&source=transcript"
+                    ].join("")
+                    r.open("GET", url)
+                    r.send(null)
+                    r.addEventListener("load", function(e) {
+                        html5TranscriptCallback(JSON.parse(r.responseText))
+                    }, false)
+                }
+            }, false)
+        }
+    }, 1000)
+}
+
+function transcriptVideoSyncChanged() {
+    var c = document.getElementById("transcript-sync-video")
+    html5TranscriptScrollWithVideo = c.checked
+    localStorage.transcriptScroll = true;
 }

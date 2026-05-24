@@ -39,12 +39,10 @@ module.exports = {
                 && !isNaN(parseInt(cAfter))) {
                     // timestamp!!
                     let timestamp = c.replace(/[^0-9+:]/g, "")
-                    let minutes = parseInt(timestamp.split(":")[0]) * 60
-                    let seconds = parseInt(timestamp.split(":")[1])
-                    let total = minutes + seconds
+                    let timestampSeconds = utils.time_to_seconds(timestamp)
                     content = content.replace(
                         timestamp,
-                        `<a href="" onclick="skipAhead(${total});return false;">${timestamp}</a>`
+                        `<a href="" onclick="skipAhead(${timestampSeconds});return false;">${timestamp}</a>`
                     )
                 }
             } else if(c.startsWith("@")) {
@@ -3779,15 +3777,18 @@ term='channel'/>
     cdr.send(null)
     cdr.onreadystatechange = function(e) {
         if(cdr.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
-            document.getElementById("ratingMessage").className = ""
+            var message = document.getElementById("ratingMessage")
+            message.innerHTML = message.innerHTML.replace(
+                "0", cdr.getResponseHeader("x-yt2009-rate-count")
+            )
+            window.ratingText = message.innerHTML
+            message.className = ""
             var rating = cdr.responseText;
             var btn = document.getElementById("ratingStars")
                               .getElementsByTagName("button")[0];
             btn.className = "yt2009-stars master-sprite ratingL ratingL-" + rating;
             btn.setAttribute("title", rating)
-            if(window.videoRating) {
-                videoRating = rating;
-            }
+            window.videoRating = rating;
         }
     }
     `,
@@ -4295,5 +4296,12 @@ ${topContentHTML}
         </div>
 
         <div class="spacer">&nbsp;</div>`
-    }
+    },
+
+    "watch_tab_transcript_btn": `<div id="watch-tab-transcript" class="watch-tab" style="display: none;">
+    <a id="watch-action-transcript-link" class="watch-action-link" href="javascript:switchWatchTab('transcript')"><button id="watch-action-transcript" class="custom-tabs-sprite-button" title="lang_watch_tab_transcript"></button>
+
+    <span class="watch-action-text">lang_watch_tab_transcript</span></a>
+    <button class="master-sprite watch-tab-arrow"></button>
+    </div>`
 }

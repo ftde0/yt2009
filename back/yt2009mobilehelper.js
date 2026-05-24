@@ -24,7 +24,7 @@ const androidHeaders = {
     "Content-Type": "application/json",
     "x-goog-authuser": "0",
     "x-origin": "https://www.youtube.com/",
-    "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+    "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
 }
 const upUA = [
     "com.google.android.youtube/1552803264",
@@ -42,7 +42,7 @@ const androidContext = {
     "client": {
         "hl": "en",
         "clientName": "ANDROID",
-        "clientVersion": "20.51",
+        "clientVersion": "21.16",
         "deviceMake": "Google",
         "deviceModel": "Android SDK built for x86",
         "deviceCodename": "ranchu;",
@@ -1606,7 +1606,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             let context = new protobufNextReq.root.contextType()
             let client = new protobufNextReq.root.contextType.clientType()
             client.setClientnumber(3)
-            client.setClientversion("20.51.39")
+            client.setClientversion("21.16")
             client.setOsname("Android")
             client.setOsversion("14")
             client.setAndroidsdkversion(34)
@@ -2031,7 +2031,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             let context = new metadataUpdate.root.contextType()
             let client = new metadataUpdate.root.contextType.clientType()
             client.setClientnumber(3)
-            client.setClientversion("20.51.39")
+            client.setClientversion("21.16")
             client.setOsname("Android")
             client.setOsversion("14")
             client.setAndroidsdkversion(34)
@@ -2230,7 +2230,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             let context = new userMetadata.root.contextType()
             let client = new userMetadata.root.contextType.clientType()
             client.setClientnumber(3)
-            client.setClientversion("20.51.39")
+            client.setClientversion("21.16")
             client.setOsname("Android")
             client.setOsversion("14")
             client.setAndroidsdkversion(34)
@@ -2518,7 +2518,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         let context = new userMetadata.root.contextType()
         let client = new userMetadata.root.contextType.clientType()
         client.setClientnumber(3)
-        client.setClientversion("20.51.39")
+        client.setClientversion("21.16.256")
         client.setOsname("Android")
         client.setOsversion("14")
         client.setAndroidsdkversion(34)
@@ -3543,7 +3543,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             let context = new customizableRequest.root.contextType()
             let client = new customizableRequest.root.contextType.clientType()
             client.setClientnumber(3)
-            client.setClientversion("20.51.39")
+            client.setClientversion("21.16")
             client.setD(1)
             context.addClient(client)
             root.addContext(context)

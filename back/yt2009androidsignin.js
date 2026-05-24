@@ -13,13 +13,13 @@ const androidHeaders = {
     "Content-Type": "application/json",
     "x-goog-authuser": "0",
     "x-origin": "https://www.youtube.com/",
-    "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+    "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
 }
 const androidContext = {
     "client": {
         "hl": "en",
         "clientName": "ANDROID",
-        "clientVersion": "20.51.39",
+        "clientVersion": "21.16",
         "deviceMake": "Google",
         "deviceModel": "Android SDK built for x86",
         "deviceCodename": "ranchu;",

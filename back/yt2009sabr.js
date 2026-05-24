@@ -101,15 +101,19 @@ module.exports = {
             let vItags = [134, 133]
             //let vq = "lq"
             if(req.query.hd
-            && (p.qualities.includes("720p")
-            || p.qualities.includes("1080p"))) {
+            && ((p.qualities.includes("720p")
+            || p.qualities.includes("1080p"))
+            || (p.useHfr
+            && (p.qualities.filter(s => {
+                return (s && s.includes("720p"))
+            })[0])))) {
                 // hd
                 if(req.headers
                 && req.headers.cookie
                 && req.headers.cookie.includes("hd_1080")) {
-                    vItags = [304, 137, 136, 135, 134, 133]
+                    vItags = [304, 299, 298, 137, 136, 135, 134, 133]
                 } else {
-                    vItags = [299, 136, 135, 134, 133]
+                    vItags = [299, 298, 136, 135, 134, 133]
                 }
             } else if(req.query.hd
             && (p.qualities.includes("480p"))) {
@@ -242,7 +246,7 @@ module.exports = {
                 fetch(r.sabrUrl, {
                     "method": "POST",
                     "headers": {
-                        "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+                        "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
                     },
                     "body": protoReq
                 }).catch(e => {
@@ -309,7 +313,7 @@ module.exports = {
         if(req.query.force_replayer) {
             console.log(`[sabr/${playbackSession}] force replayer called!`)
         }
-        function extractPlayerData(data) {
+        function extractPlayerData(data, cId) {
             if(data.streamingData) {
                 data.sabrUrl = data.streamingData.serverAbrStreamingUrl;
                 data.ustreamer = data.playerConfig.mediaCommonConfig
@@ -323,7 +327,33 @@ module.exports = {
                     data.expiry = Date.now() + (7200 * 1000) // 2 hrs
                 }
             }
-            players[p.id] = data;
+            players[cId || p.id] = data;
+        }
+        if(p.useHfr) {
+            let id = p.id + "/hfr"
+            if(players[id] && players[id].expiry - 60000 >= Date.now()) {
+                processPlayer(players[id])
+            } else if(!players[id] && yt2009exports.read().players[id]) {
+                if(config.env == "dev") {
+                    console.log(`using cached exports player for ${id}`)
+                }
+                players[id] = yt2009exports.read().players[id]
+                extractPlayerData(players[id], id)
+                processPlayer(players[id])
+            } else if((!players[id] && !yt2009exports.read().players[id])
+            || (players[id] && players[id].expiry - 60000 >= Date.now())
+            || req.query.force_replayer == 1) {
+                if(config.env == "dev") {
+                    console.log(`using clean player for ${id}`)
+                }
+                yt2009utils.pullBarePlayer(p.id, (data) => {
+                    yt2009exports.extendWrite("players", id, data)
+                    players[id] = data;
+                    extractPlayerData(players[id], id)
+                    processPlayer(players[id])
+                }, {"highEndDevice": true})
+            }
+            return;
         }
         if(!players[p.id] && yt2009exports.read().players[p.id]) {
             if(config.env == "dev") {
@@ -364,7 +394,7 @@ module.exports = {
                 return;
             }
             let rHeaders = JSON.parse(JSON.stringify(yt2009constants.headers))
-            rHeaders["user-agent"] = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+            rHeaders["user-agent"] = "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
             if(yt2009signin.needed() && yt2009signin.getData().yAuth) {
                 let d = yt2009signin.getData().yAuth
                 rHeaders.Authorization = `Bearer ${d}`
@@ -406,17 +436,14 @@ module.exports = {
         let abrReq = new requestProto.root()
         let abrNineteen = new requestProto.root.sourcePlayer()
         let context = new requestProto.clientMsg()
-        context.setDevicemake("Google")
-        context.setDevicemodel("Android SDK built for x86")
         context.setClientnumber(3) // ANDROID
-        context.setClientversion("20.06.36")
+        context.setClientversion("21.16")
         context.setOsname("Android")
         context.setOsversion("10")
         context.setHl("en")
         context.setGl("US")
         context.setUtcoffsetminutes(60)
         context.setTimezone("Europe/Warsaw")
-        context.setDevicecodename("ranchu;")
         abrNineteen.addClient(context)
         let potBytes = Buffer.from([1])
         let potKey = Buffer.from([1])

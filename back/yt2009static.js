@@ -39,6 +39,37 @@ module.exports = {
 
         // per-site code
         switch(path_to_content) {
+            case "mh_pc_manage.html": {
+                if(req.headers
+                && req.headers.cookie
+                && req.headers.cookie.includes("pchelper_flags=")) {
+                    let pchelperFlags = req.headers.cookie
+                                        .split("pchelper_flags=")[1]
+                                        .split(";")[0];
+                    pchelperFlags.split(":").forEach(flag => {
+                        let id = "pchelper-" + flag.split("_").join("-")
+                        if(site.includes(`id="${id}"`)) {
+                            site = site.replace(
+                                `id="${id}"`,
+                                `id="${id}" checked`
+                            )
+                        }
+                    })
+                }
+                let pchelperUser = ""
+                if(req.headers.cookie
+                && req.headers.cookie.includes("pchelper_user=")) {
+                    pchelperUser = req.headers.cookie
+                                   .split("pchelper_user=")[1]
+                                   .split(";")[0];
+                }
+                site = site.replace("--PCHELPER_USER_COOKIE--", pchelperUser)
+                site = site.replace(
+                    `//gcod-`,
+                    `//gcod-${Math.random()}`
+                )
+                break;
+            }
             case "insight.html": {
                 let formatDate = utils.dateFormat
                 let loadTimeId = 7;

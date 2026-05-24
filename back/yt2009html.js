@@ -28,7 +28,7 @@ const oneWeek = 1000 * 60 * 60 * 24 * 7
 const EXTRA_RISK_BLOCK = true; //EXPERIMENT: reduce number of /player requests
 // to hopefully reduce IP blocks that started happening recently
 // when hosting on datacenter IPs
-const ANDROID_REQ_UA = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+const ANDROID_REQ_UA = "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
 let frequentRestartEnvironmentDisablePotgen = false;
 if(process && process.argv && process.argv.includes
 && process.argv.includes("--frequent-restart-environment-disable-potgen")) {
@@ -43,7 +43,7 @@ if(EXTRA_RISK_BLOCK && !frequentRestartEnvironmentDisablePotgen) {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "20.51",
+                    "clientVersion": "21.16",
                     "deviceMake": "Google",
                     "deviceModel": "Android SDK built for x86",
                     "deviceCodename": "ranchu;",
@@ -340,7 +340,7 @@ module.exports = {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "20.51.39",
+                    "clientVersion": "21.16",
                     "deviceMake": "Google",
                     "deviceModel": "Android SDK built for x86",
                     "deviceCodename": "ranchu;",
@@ -1298,6 +1298,9 @@ module.exports = {
         && req.query.with_pchelper == 1) {
             sabrExtraProperties.pchelperBindingReq = req;
         }
+        if(data.isHfrResponse) {
+            sabrExtraProperties.useHfr = true;
+        }
         if(flags.includes("exp_sabr")
 		&& !(req.query&&req.query.unsabr=="1")
 		&& !(req.query&&req.query.only_itag_18=="1")) {
@@ -1493,20 +1496,26 @@ module.exports = {
         || (req.query.fmt
         && (req.query.fmt == "18" || req.query.fmt == "22"))) {
             let startQuality = false;
+            let has720 = (data.qualities.includes("720p"))
+            if(data.isHfrResponse) {
+                has720 = !!(data.qualities.filter(s => {
+                    return (s && s.includes("720p"))
+                })[0])
+            }
             if(data.qualities.includes("480p")) {
                 autoHQ = "/get_480?video_id=" + data.id
                 autoHQ += yt2009trusted.urlContext(
                     data.id, "PLAYBACK_HQ", (data.length >= 60 * 30)
                 )
-                if(!data.qualities.includes("720p")) {
+                if(!has720) {
                     code = code.replace(
                         `<!--yt2009_hq_btn-->`,
                         `<span class="hq enabled"></span>`
                     )
+                    startQuality = "480p"
                 }
-                startQuality = "480p"
             }
-            if(data.qualities.includes("720p")) {
+            if(has720) {
                 autoHQ = "/exp_hd?video_id=" + data.id
                 autoHQ += yt2009trusted.urlContext(
                     data.id, "PLAYBACK_HD", (data.length >= 60 * 30)
@@ -2132,19 +2141,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }
         }
 
-        let ratings_estimate_power = 15
-        let ratings = "";
-        if(parseInt(views.replace(/[^0-9]/g, "")) >= 100000) {
-            ratings_estimate_power = 150
-        }
-        ratings = yt2009utils.countBreakup(
-            Math.floor(
-                parseInt(views.replace(/[^0-9]/g, ""))
-                / ratings_estimate_power
-            )
-        )
+        let ratings = "0"
         
-
         // "more from" section
         let authorUrl = data.author_url
         if(authorUrl.startsWith("/")) {
@@ -2267,7 +2265,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.replace("channel_name", yt2009utils.xss(author_name))
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
-        code = code.replace("yt2009_ratings_count", ratings)
         if(!useFlash && !data.live && !useSabr) {
             let tcData = ""
             if(config.trusted_context) {
@@ -2956,6 +2953,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let rydCallbackSent = false;
         requiredCallbacks++;
         yt2009ryd.readWait(data.id, (rating) => {
+            let rateCount = rating.l + rating.d
+            code = code.replace(
+                "yt2009_ratings_count",
+                yt2009utils.countBreakup(rateCount)
+            )
+            rating = rating.r
             if(!rating.toString().includes(".5")) {
                 rating = rating.toString() + ".0"
             }
@@ -3015,7 +3018,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     callback(code)
                 }
             }
-        })
+        }, true)
 
         // allow_clientside_ryd -- time out serverside fetch of ryd
         // if it takes longer than 300ms
@@ -3029,6 +3032,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     let progress = `${callbacksMade}/${requiredCallbacks}`
                     console.log(`ryd (timeout) (${progress})`, time)
                 }
+                code = code.replace("yt2009_ratings_count", "0")
                 if(requiredCallbacks == callbacksMade) {
                     render_endscreen();
                     fillFlashIfNeeded();
@@ -3446,6 +3450,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         && useSabr)) {
             // hd buttons for sabr
             let use720p = qualityList.includes("720p")
+            if(flags.includes("exp_turbocharge_sabr_hfr")) {
+                // allow high framerate qualities as well
+                use720p = !!(qualityList.filter(s => {
+                    return (s && s.includes("720p"))
+                })[0])
+            }
             code = code.replace(
                 `<!--yt2009_style_hq_button-->`,
                 yt2009templates.playerCssHDBtn   
@@ -3533,6 +3543,14 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             code = code.replace(`<!--sup-->`, yt2009templates.watchSupIcon)
         } else {
             code = code.replace(`<!--sup-->`, "")
+        }
+
+        // transcript tab
+        if(flags.includes("html5_transcript")) {
+            code = code.replace(
+                `<!--yt2009-tab-transcript-->`,
+                yt2009templates.watch_tab_transcript_btn
+            )
         }
 
         // exp_related

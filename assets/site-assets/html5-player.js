@@ -2383,6 +2383,10 @@ function loadCaptions(id, language) {
                 }
             }
         }, 50)
+
+        if(window.html5TranscriptCallback) {
+            html5TranscriptCallback(cc)
+        }
     }, false)
 }
 
@@ -3054,10 +3058,12 @@ function requestSabr(offset, source, force) {
         if(r.getResponseHeader("x-yt2009-used-itag")
         && mainElement.querySelector(".qualities")) {
             var qs = mainElement.querySelectorAll(".qualities .circle.selected")
-            for(var s in qs) {
-                s = qs[s]
-                if(s.className) {
-                    s.className = "circle"
+            if(qs) {
+                for(var s in qs) {
+                    s = qs[s]
+                    if(s.className) {
+                        s.className = "circle"
+                    }
                 }
             }
 
@@ -3067,7 +3073,7 @@ function requestSabr(offset, source, force) {
             try {
                 mainElement.querySelector(selector).className = "circle selected"
             }
-            catch(error){}
+            catch(error){console.log(error)}
         }
 
         // video mime for custom res
@@ -3128,8 +3134,7 @@ function requestSabr(offset, source, force) {
         var cursor = 14 // SABER-START
 
         if(partsInResponse == 0
-        && r.getResponseHeader("x-yt2009-got-internal-redirect")
-        && sabrData.concurrentRedirectCount <= 2) {
+        && !r.getResponseHeader("x-yt2009-got-internal-redirect")) {
             // something might have gone terribly wrong
             retryRequest(true)
             return;
@@ -3198,6 +3203,13 @@ function initAsSabr() {
     var vStream;
     var aStream;
     video.src = URL.createObjectURL(ms);
+
+    if(sabrData.tempCt) {
+        var ct = sabrData.tempCt;
+        video.currentTime = ct;
+        sabrData.tempCt = null;
+        delete sabrData.tempCt;
+    }
 
     sabrData = {
         "offset": 0,
@@ -3320,7 +3332,9 @@ function initAsSabr() {
         sabrData.respondItag = 1;
 
         // add quality selector to hd button
-        if(mainElement.querySelector(".hq")) {
+        if(mainElement.querySelector(".hq")
+        && (!mainElement.querySelector
+        || !mainElement.querySelector(".quality_selector"))) {
             var qContainer = document.createElement("div")
             qContainer.className = "quality_selector hid"
             var qHeader = document.createElement("h2")
@@ -3330,6 +3344,7 @@ function initAsSabr() {
             qList.className = "qualities"
 
             var moreSpacedPicker = false;
+            var maxSpacePicker = false;
             var qualityPrefData = {
                 "tier1": [],
                 "tier2": []
@@ -3374,6 +3389,13 @@ function initAsSabr() {
                 if(isSr && !moreSpacedPicker) {
                     moreSpacedPicker = true;
                 }
+                if(isSr &&
+                (q[1].indexOf("p") !== -1
+                && q[1].split("p")[1]
+                && q[1].split("p")[1].length >= 1)
+                && !maxSpacePicker) {
+                    maxSpacePicker = true;
+                }
                 if(isSr) {
                     var enablesSr = (
                         document.cookie
@@ -3408,7 +3430,8 @@ function initAsSabr() {
                         if(q[0] == qualityPref[0]) {
                             // perfect match, tier1
                             qualityPrefData.tier1.push([q[0],q[2]])
-                        } else if(q[1] == qualityPref[1]) {
+                        } else if(q[1].indexOf(qualityPref[1]) !== -1
+                        || qualityPref[1].indexOf(q[1]) !== -1) {
                             // resolution match but itag not, tier2
                             qualityPrefData.tier2.push([q[0],q[2]])
                         }
@@ -3510,8 +3533,10 @@ function initAsSabr() {
                 qList.appendChild(qElement)
             })
 
-            if(moreSpacedPicker) {
+            if(moreSpacedPicker && !maxSpacePicker) {
                 qContainer.className += " more_space"
+            } else if(maxSpacePicker) {
+                qContainer.className += " max_space"
             }
 
             qContainer.appendChild(qList)
@@ -3580,11 +3605,13 @@ function initAsSabr() {
                     )
                 }
                 catch(error) {
-                    console.log("VID", error)
-                    console.log("^^reiniting")
+                    sabrData.tempCt = video.currentTime
                     // try reinit player
                     clearInterval(vbq)
                     initAsSabr()
+                    console.log("SABR playback crash!!! info below")
+                    console.log("VID", error)
+                    console.log("^^reiniting")
                     return;
                 }
                 sabrData.appendQueue.shift()
@@ -3596,11 +3623,13 @@ function initAsSabr() {
                     )
                 }
                 catch(error) {
-                    console.log("AUD", error)
-                    console.log("^^reiniting")
+                    sabrData.tempCt = video.currentTime
                     // try reinit player
                     clearInterval(vbq)
                     initAsSabr()
+                    console.log("SABR playback crash!!! info below")
+                    console.log("AUD", error)
+                    console.log("^^reiniting")
                     return;
                 }
                 sabrData.appendQueue.shift()
@@ -3611,7 +3640,8 @@ function initAsSabr() {
     // watch for new buffer fetches
     video.addEventListener("timeupdate", function() {
         if(!sabrData.defaultLongReadaheadSet
-        && video.duration >= (60 * 20)) {
+        && video.duration >= (60 * 20)
+        && video.videoHeight <= 720) {
             sabrData.defaultLongReadaheadSet = true;
             sabrData.readAhead = 240
         }

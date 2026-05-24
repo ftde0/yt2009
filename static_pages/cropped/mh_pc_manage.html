@@ -48,7 +48,6 @@
     }
 </style>
 <div class="panel" id="panel1">
-    <!--<h1 id="unfinished">UNFINISHED ZONE AHEAD</h1>-->
     <h1>Account Picker</h1>
 </div>
 <hr>
@@ -89,11 +88,8 @@
     </div>
 </div>
 <script>
-    var device = ""
-    if(document.cookie.indexOf("pchelper_user=") !== -1) {
-        device = document.cookie.split("pchelper_user=")[1].split(";")[0]
-    }
-
+    //gcod-
+    var device = "--PCHELPER_USER_COOKIE--"
 
     if (window.XMLHttpRequest) {
         r = new XMLHttpRequest()
@@ -182,15 +178,6 @@
 	}
 	updateDescriptions()
 
-    if(document.cookie && document.cookie.indexOf("pchelper_flags=") !== -1) {
-        var flags = document.cookie.split("pchelper_flags=")[1].split(";")[0]
-        flags = flags.split(":")
-        for(var flag in flags) {if(typeof(flags[flag]) == "string") {
-            flag = "pchelper-" + flags[flag].split("_").join("-")
-            document.getElementById(flag).checked = true;
-        }}
-    }
-
     var expiry = " expires=Fri, 31 Dec 2066 23:59:59 GMT"
 
     function login_sim_change(name) {
@@ -228,6 +215,17 @@
 			}
 		}
         s = s.join(":")
+        function saveCookie() {
+            location.href = "/pchelper_save_cookie?p=" + s + "&r=" + Math.random().toString()
+        }
+        function markSyncDone() {
+            syncsDone++
+            if(syncsDone >= syncsRequired) {
+                saveCookie()
+            }
+        }
+        var syncsRequired = 0;
+        var syncsDone = 0;
         if(s.indexOf("playlists_sync") !== -1
         || s.indexOf("subscriptions_sync") !== -1) {
             var r = confirm("using \"_sync\" flags, it is highly recommended\n\
@@ -277,6 +275,8 @@ should we do so?");
                 dataFormat = "localstorage"
             }
 
+            syncsRequired = 2;
+
             var r;
             if (window.XMLHttpRequest) {
                 r = new XMLHttpRequest()
@@ -305,6 +305,7 @@ should we do so?");
                             localStorage.subscriptions = JSON.stringify(existing);
                         }
                     }
+                    markSyncDone()
                 }
             }
 
@@ -332,14 +333,14 @@ should we do so?");
                             })
                             localStorage.playlistsIndex = JSON.stringify(existing);
                         }
+                        markSyncDone()
                     }
                 }
             }
-
         }
-        document.cookie = "pchelper_flags=" + s
-                        + "; Path=/;" + expiry;
-        alert("ok")
+        if(syncsRequired == 0) {
+            saveCookie()
+        }
     }
 
     function unlinkhelper() {

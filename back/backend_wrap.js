@@ -26,7 +26,7 @@ if(!fs.existsSync("./androiddata.json")) {
             "Content-Type": "application/json",
             "x-goog-authuser": "0",
             "x-origin": "https://www.youtube.com/",
-            "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip",
+            "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip",
             "cookie": require("./yt2009constants.json").headers.cookie
         },
         "agent": yt2009utils.createFetchAgent(),
@@ -36,7 +36,7 @@ if(!fs.existsSync("./androiddata.json")) {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "20.51",
+                    "clientVersion": "21.16",
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + rv
                     }

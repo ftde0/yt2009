@@ -408,5 +408,8 @@
     "hp_modern_cat_style": "Howto & Style",
     "hp_modern_cat_books": "Books",
     "hp_modern_cat_podcast": "Podcasts",
-    "heatmap_header": "Most Replayed"
+    "heatmap_header": "Most Replayed",
+    "watch_tab_transcript": "Transcript",
+    "watch_transcript_search": "Search in transcript",
+    "watch_transcript_sync_video": "Scroll with video"
 }

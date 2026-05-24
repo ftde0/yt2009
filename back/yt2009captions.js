@@ -3,6 +3,7 @@ const fetch = require("node-fetch")
 const parser = require("node-html-parser")
 const fs = require("fs")
 const templates = require("./yt2009templates")
+const utils = require("./yt2009utils")
 
 module.exports = {
     "main": function(req, res) {
@@ -47,11 +48,17 @@ module.exports = {
             }
             case "track": {
                 // get the caption file for sending/further parsing
+                let friendlyTimestamps = (
+                    req
+                 && req.headers
+                 && req.headers.cookie 
+                 && req.headers.cookie.includes("html5_transcript")
+                )
                 this.getCaptionFile(id, req.query.lang, (xml) => {
                     if(!useJson) {
                         res.send(xml)
                     } else {
-                        res.send(this.parseCaptionsJson(xml))
+                        res.send(this.parseCaptionsJson(xml, friendlyTimestamps))
                     }
                 })
                 break;
@@ -128,7 +135,7 @@ module.exports = {
         getFile(false)
     },
 
-    "parseCaptionsJson": function(xml) {
+    "parseCaptionsJson": function(xml, includeFriendlyTimestamps) {
         let json = {}
         xml = parser.parse(xml)
         xml.querySelectorAll("text").forEach(text => {
@@ -136,6 +143,9 @@ module.exports = {
             while(json[startTime]) {
                 startTime += 0.1
             }
+            let end = Math.floor(
+                (startTime + bFloat(text.getAttribute("dur"))) * 10
+            ) / 10
             json[startTime] = {
                 "text": text.innerHTML.split("&lt;").join("<")
                                       .split("&gt;").join(">")
@@ -145,7 +155,11 @@ module.exports = {
                                       .split("&#39;").join("'"),
                 "start": startTime,
                 "duration": bFloat(text.getAttribute("dur")),
-                "end": Math.floor((startTime + bFloat(text.getAttribute("dur"))) * 10) / 10
+                "end": end
+            }
+            if(includeFriendlyTimestamps) {
+                json[startTime].startFriendly = utils.seconds_to_time(startTime)
+                json[startTime].endFriendly = utils.seconds_to_time(end)
             }
         })
         return json;

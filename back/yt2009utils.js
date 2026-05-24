@@ -16,7 +16,7 @@ const androidHeaders = {"headers": {
     "content-type": "application/json",
     "cookie": "",
     "x-goog-authuser": "0",
-    "user-agent": "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+    "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
 }}
 const wlist = /discord.gg|tiktok|tik tok|pre-vevo|2023|lnk.to|official hd video|smarturl/gui
 let ip_uses_flash = []
@@ -1611,7 +1611,7 @@ module.exports = {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "20.51",
+                    "clientVersion": "21.16",
                     "mainAppWebInfo": {
                         "graftUrl": "/watch?v=" + id
                     }
@@ -1629,7 +1629,7 @@ module.exports = {
         })})
     },
 
-    "pullBarePlayer": function(id, callback) {
+    "pullBarePlayer": function(id, callback, extraSettings) {
         if(config.wyjeba_typu_onesie
         || yt2009exports.read().session_use_onesie) {
             this.wyjebaTypuOnesie(id, (data) => {
@@ -1638,7 +1638,7 @@ module.exports = {
             return;
         }
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
-        rHeaders["user-agent"] = "com.google.android.youtube/20.51.39 (Linux; U; Android 14) gzip"
+        rHeaders["user-agent"] = "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
         if(yt2009exports.read().visitor) {
             rHeaders["X-Goog-Visitor-Id"] = yt2009exports.read().visitor
         }
@@ -1660,22 +1660,28 @@ module.exports = {
                               .split("/").join("_")
                               .split("=").join("");
         }
+        let client = {
+            "hl": "en",
+            "clientName": "ANDROID",
+            "clientVersion": "21.16",
+            "deviceMake": "Google",
+            "deviceModel": "Android SDK built for x86",
+            "deviceCodename": "ranchu;",
+            "osName": "Android",
+            "osVersion": "14"
+        }
+        if(extraSettings && extraSettings.highEndDevice) {
+            client.deviceMake = "Google"
+            client.deviceModel = "Pixel 9"
+            client.deviceCodename = "tegu"
+        }
         fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
             "headers": rHeaders,
             "referrer": "https://www.youtube.com/watch?v=" + id,
             "referrerPolicy": "origin-when-cross-origin",
             "body": JSON.stringify({
                 "context": {
-                    "client": {
-                        "hl": "en",
-                        "clientName": "ANDROID",
-                        "clientVersion": "20.51",
-                        "deviceMake": "Google",
-                        "deviceModel": "Android SDK built for x86",
-                        "deviceCodename": "ranchu;",
-                        "osName": "Android",
-                        "osVersion": "14"
-                    }
+                    "client": client
                 },
                 "videoId": id,
                 "racyCheckOk": true,
@@ -1689,6 +1695,32 @@ module.exports = {
             "mode": "cors",
             "agent": this.createFetchAgent()
         }).then(r => {r.json().then(r => {
+            try {
+                let checkedFmts = data.streamingData.adaptiveFormats.map(s => {
+                    if(s.itag == 140 || s.itag == 139) {
+                        if(s.audioTrack) {
+                            s.audioTrack.vss_id = s.audioTrack.id;
+                            s.audioTrack.label = s.audioTrack.displayName;
+                        }
+                        if(s.xtags && s.audioTrack) {
+                            let decode = playerResponsePb.xtags
+                                         .deserializeBinary(s.xtags)
+                                         .toObject()
+                            let isOg = decode.partList.filter(z => {
+                                return z.value == "original"
+                            })[0]
+                            if(isOg) {
+                                s.isOriginal = true;
+                            }
+                        }
+                        return s;
+                    } else {
+                        return s;
+                    }
+                })
+                data.streamingData.adaptiveFormats = checkedFmts
+            }
+            catch(error) {}
             callback(r);
         })})
     },
@@ -2332,7 +2364,7 @@ module.exports = {
         client.setDevicemake("Google")
         client.setDevicemodel("Android SDK built for x86")
         client.setClientnumber(3) // ANDROID
-        client.setClientversion("20.51")
+        client.setClientversion("21.16")
         client.setOsname("Android")
         client.setOsversion("14")
         client.setHl("en")
@@ -2349,13 +2381,6 @@ module.exports = {
         configInfo.setColdhashdata(cfg.coldHashData || "")
         configInfo.setHothashdata(cfg.hotHashData || "")
         client.addConfiginfo(configInfo)
-        let adSignals = new p.adSignalsMsg()
-        adSignals.addSignal(1068);adSignals.addSignal(332)
-        adSignals.addSignal(506);adSignals.addSignal(1098)
-        adSignals.addSignal(1015);adSignals.addSignal(1703)
-        adSignals.addSignal(19);adSignals.addSignal(549)
-        adSignals.addSignal(902);adSignals.addSignal(1838)
-        client.addAdsignals(adSignals)
         context.addClient(client)
         root.addContext(context)
         let ovs = new p.root.otherVariousSets()
@@ -2383,7 +2408,7 @@ module.exports = {
         } else {
             let headers = JSON.parse(JSON.stringify(androidHeaders))
             headers["user-agent"] = [
-                "com.google.android.youtube/20.51.39",
+                "com.google.android.youtube/21.16.256",
                 "(Linux; U; Android 14; en_US; Android SDK built for x86 Build",
                 "/QSR1.190920.001) gzip"
             ].join("")
@@ -2399,7 +2424,7 @@ module.exports = {
                         "client": {
                             "hl": "en",
                             "clientName": "ANDROID",
-                            "clientVersion": "20.51",
+                            "clientVersion": "21.16",
                             "deviceMake": "Google",
                             "deviceModel": "Android SDK built for x86",
                             "deviceCodename": "ranchu;",
@@ -3133,7 +3158,7 @@ module.exports = {
                 "client": {
                     "hl": "en",
                     "clientName": "ANDROID",
-                    "clientVersion": "20.51",
+                    "clientVersion": "21.16",
                     "deviceMake": "Google",
                     "deviceModel": "Android SDK built for x86",
                     "deviceCodename": "ranchu;",

@@ -63,8 +63,12 @@ module.exports = {
                 cache[id] = languages;
                 //this.write(id, languages)
             }
-            if(yt2009exports.read().players[id]) {
-                parsePlayer(yt2009exports.read().players[id])
+            if(yt2009exports.read().players[id]
+            || yt2009exports.read().players[id + "/hfr"]) {
+                parsePlayer((
+                    yt2009exports.read().players[id]
+                 || yt2009exports.read().players[id + "/hfr"]
+                ))
             } else {
                 yt2009html.innertube_get_data(id, (player) => {
                     parsePlayer(player)

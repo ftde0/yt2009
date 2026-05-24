@@ -369,6 +369,7 @@
 							</a>
 							<button class="master-sprite watch-tab-arrow" title=""></button>
 						</div>
+						<!--yt2009-tab-transcript-->
 						<div class="clear"></div>
 					</div>
 					<div class="watch-tab-contents">
@@ -506,6 +507,17 @@
 							</div>
 						</div>
 						<div id="watch-tab-download-body" class="watch-tab-body">
+						</div>
+						<div id="watch-tab-transcript-body" class="watch-tab-body">
+							<div style="padding: 0px 8px 8px 5px;">
+								<div id="transcript-header">
+									<input type="text" autocomplete="off" spellcheck="false" id="transcript-search" class="hid" placeholder="lang_watch_transcript_search" />
+									<span id="transcript-search-clear" title="Clear search box" class="hid">x</span>
+									<input type="checkbox" class="hid" id="transcript-sync-video" onclick="transcriptVideoSyncChanged()"/>
+									<label for="transcript-sync-video" class="hid" id="transcript-sync-video-label" onclick="transcriptVideoSyncChanged()">lang_watch_transcript_sync_video</label>
+								</div>
+								<div id="transcript-content"></div>
+							</div>
 						</div>
 					</div>
 					<div class="clear"></div>

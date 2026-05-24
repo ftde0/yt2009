@@ -43,15 +43,13 @@ more info in [config_params.md](config_params.md) / [docker.md](docker.md). obta
 
 ## !! if hosting on windows 7 !!
 
-the last version of node.js supported on windows 7 doesn't support the latest version of express, so you might experience crashes on start.
-
-install an older one to host yt2009 on windows 7:
+the last version of node.js supported on windows 7 doesn't support latest versions of packages, so you need to install older ones to run on windows 7.
 
 ```
-npm install express@4.17.1
+npm install express@4.17.1 google-protobuf@3.21.2 maxmind-db-reader node-fetch@2.6.7 node-html-parser@5.3.3 readline-sync ws
 ```
 
-if still facing issues take a look at [#243](https://github.com/ftde0/yt2009/issues/243).
+([#243](https://github.com/ftde0/yt2009/issues/243)).
 
 ## updating
 

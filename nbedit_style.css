@@ -296,3 +296,74 @@ a[href="/my_videos_upload"] span {
 .watch-comment-option, #watch-comment-options-save {
     margin-top: 6px;
 }
+
+#watch-tab-transcript .watch-tab-arrow {
+    margin-left: 33px;
+}
+
+#watch-tab-transcript-body {
+    height: 165px;
+    max-height: 165px;
+    overflow: hidden;
+}
+
+.custom-tabs-sprite-button {
+    background-image: url("/assets/site-assets/custom-tabs-sprite.png");
+    width: 9px;
+    height: 9px;
+    vertical-align: text-top;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+#watch-tab-transcript a {
+    cursor: pointer;
+}
+
+#watch-tab-transcript:hover .custom-tabs-sprite-button#watch-action-transcript,
+#watch-tab-transcript.watch-tab-sel .custom-tabs-sprite-button#watch-action-transcript {
+    background-position: -9px 0px;
+}
+
+.transcript-line {
+    padding: 4px 5px;
+    background-color: rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+.transcript-line.darker {
+    background-color: rgba(0,0,0,0.2);
+}
+
+.transcript-line.darker:hover,  .transcript-line:hover {
+    background-color: rgba(0,0,0,0.3);
+}
+
+.transcript-line-timestamp {
+    margin-right: 5px;
+    font-weight: bold;
+}
+
+#transcript-search {
+    margin-bottom: 7px;
+    font-size: 10px;
+    width: 205px;
+}
+
+#transcript-search-clear {
+    margin: 0px 5px;
+    cursor: pointer;
+}
+
+#transcript-header.modern {
+    position: sticky;
+}
+
+#transcript-content {
+    height: 145px;
+    max-height: 145px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
