@@ -4,6 +4,16 @@ var current_video = "";
 if(location.href.indexOf("html5=1") !== -1) {
     use_html5 = true;
 }
+var use_sabr = false;
+if(window.MediaSource
+&& window.MediaSource.isTypeSupported
+&& window.MediaSource.isTypeSupported("video/mp4; codecs=\"avc1.4D4028\"")
+&& window.MediaSource.isTypeSupported("audio/mp4; codecs=\"mp4a.40.2\"")
+&& (!location.href || (location.href && location.href.indexOf("sabr=0") == -1))) {
+	// auto-enable sabr on supported setups
+	use_sabr = true;
+}
+
 
 var video_change_event;
 // patch in the html5 iframe
@@ -12,8 +22,12 @@ video_change_event = setInterval(function() {
     if(current_video !== old_id
     && use_html5) {
         setTimeout(function() {
+            var video_url = "/xl/embed?video_id=" + current_video
+			if(use_sabr) {
+				video_url += "&sabr=1"
+			}
             var html5_video = document.createElement("iframe")
-            html5_video.src = "/xl/embed?video_id=" + current_video;
+            html5_video.src = video_url;
             html5_video.allowFullscreen = true;
             html5_video.className = "yt2009-full"
             document.querySelector(".xl-view-player-video").innerHTML = ""

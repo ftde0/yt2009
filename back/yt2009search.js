@@ -604,10 +604,12 @@ module.exports = {
                     ) + "lang_views_suffix"
 
                     // live adjustments
-                    if(result.type == "live-video") {
+                    if(result.type == "live-video" && result.views) {
                         viewCount = yt2009utils.countBreakup(
                             parseInt(yt2009utils.bareCount(viewCount))
                         ) + " watching"
+                    } else if(!result.views) {
+                        viewCount = ""
                     }
 
                     // fake flag for autogen_thumbnails to ignore live

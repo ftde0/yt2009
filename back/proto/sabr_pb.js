@@ -13,7 +13,13 @@
 
 var jspb = require('google-protobuf');
 var goog = jspb;
-var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
 
 goog.exportSymbol('proto.sabr_request.clientMsg', null, global);
 goog.exportSymbol('proto.sabr_request.itagData', null, global);
@@ -1816,7 +1822,7 @@ proto.sabr_request.root.timingData.deserializeBinaryFromReader = function(msg, r
       msg.setFiveint(value);
       break;
     case 28:
-      var value = /** @type {number} */ (reader.readInt32());
+      var value = /** @type {number} */ (reader.readInt64());
       msg.setStarttime(value);
       break;
     case 29:
@@ -1901,7 +1907,7 @@ proto.sabr_request.root.timingData.serializeBinaryToWriter = function(message, w
   }
   f = /** @type {number} */ (jspb.Message.getField(message, 28));
   if (f != null) {
-    writer.writeInt32(
+    writer.writeInt64(
       28,
       f
     );
@@ -2028,7 +2034,7 @@ proto.sabr_request.root.timingData.prototype.setFiveint = function(value) {
 
 
 /**
- * optional int32 startTime = 28;
+ * optional int64 startTime = 28;
  * @return {number}
  */
 proto.sabr_request.root.timingData.prototype.getStarttime = function() {

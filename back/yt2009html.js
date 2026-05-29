@@ -1301,7 +1301,8 @@ module.exports = {
         if(data.isHfrResponse) {
             sabrExtraProperties.useHfr = true;
         }
-        if(flags.includes("exp_sabr")
+        if((flags.includes("exp_sabr")
+        || data.live)
 		&& !(req.query&&req.query.unsabr=="1")
 		&& !(req.query&&req.query.only_itag_18=="1")) {
             useSabr = true;
@@ -2287,27 +2288,30 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
                 )
             }
-        } else if(!useFlash && data.live) {
-            code = code.replace(
-                `//yt2009-pmp4`,
-                `initAsLive("${data.id}");
+        } else if(!useFlash && useSabr) {
+            let script = `
+                showLoadingSprite();
+                var sabrBase = "${sabrBaseUrl}";
+            `
+            if(data.live) {
+                code = code.replace(
+                    `<!--yt2009_livecard-->`,
+                    yt2009templates.livechatTemplate
+                )
+                script += `
                 initLiveChat("${data.id}");
-                document.getElementById("watch-other-vids").style.marginTop = "-25px"`
-            )
-            code = code.replace(
-                `<!--yt2009_livecard-->`,
-                yt2009templates.livechatTemplate
-            )
-        } else if(!useFlash && !data.live && useSabr) {
+                document.getElementById("watch-other-vids").style.marginTop = "-25px"
+                initAsLive();`
+            } else {
+                script += `initAsSabr();`
+                code = code.replace(
+                    `0:00 / 0:00`,
+                    `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
+                )
+            }
             code = code.replace(
                 "//yt2009-pmp4",
-                `showLoadingSprite();
-                var sabrBase = "${sabrBaseUrl}";
-                initAsSabr();`
-            )
-            code = code.replace(
-                `0:00 / 0:00`,
-                `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
+                script
             )
         }
         code = code.replace(
@@ -3409,32 +3413,6 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     trustedContextData, (data.length / 60)
                 )
                 + enableConnCheck
-            )
-
-            // 720p
-            if(use720p) {
-                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq hd"></span>`)
-            } else {
-                // 480p
-                code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
-            }
-        } else if(!useFlash
-        && (qualityList.includes("720p")
-        || qualityList.includes("480p"))
-        && data.live) {
-            // hd buttons for live
-            let use720p = qualityList.includes("720p")
-            code = code.replace(
-                `<!--yt2009_style_hq_button-->`,
-                yt2009templates.playerCssHDBtn   
-            )
-
-            // js logic
-            code = code.replace(
-                `//yt2009-exp-hq-btn`,
-                yt2009templates.playerHDLive(
-                    data.id, use720p, autoHQ
-                )
             )
 
             // 720p

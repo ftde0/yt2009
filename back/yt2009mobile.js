@@ -21,16 +21,24 @@ const ffmpeg_process_144 = [
     "-acodec aac",
     "-c:v libx264",
     "-s 256x144",
+    "-movflags +faststart",
     "\"$2\""
 ]
+
 const ffmpeg_process_3gp = [
     "ffmpeg",
     "-i \"$1\"",
-    "-c:a libopencore_amrnb",
+    "-vf \"yadif,scale=176:144:force_original_aspect_ratio=decrease,pad=176:144:(ow-iw)/2:(oh-ih)/2,format=yuv420p\"",
     "-c:v h263",
-    "-ac 1",
+    "-b:v 64k",
+    "-g 10",
+    "-r 10",
+    "-c:a libopencore_amrnb",
     "-ar 8000",
-    "-s 176x144",
+    "-ab 12.2k",
+    "-ac 1",
+    "-f 3gp",
+    "-movflags +faststart",
     "\"$2\""
 ]
 const ffmpeg_process_wmv = [
@@ -266,7 +274,7 @@ module.exports = {
             switch(method) {
                 case "http_3gp":
                 case "http_wmv":
-                case "mp4_144":
+                case "http_mp4_144":
                 case "http_xvid": {
                     playback = method;
                 }

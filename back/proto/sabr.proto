@@ -44,7 +44,7 @@ message root {
         int32 playerWidth = 18;
         int32 playerHeight = 19;
         int32 fiveInt = 27;
-        optional int32 startTime = 28; /*where fetched data should start*/
+        optional int64 startTime = 28; /*where fetched data should start*/
         optional int32 reqInitTime = 29; /*since first sabr request?*/
         int32 fiveInt2 = 34;
         fixed32 playbackSpeed = 35;

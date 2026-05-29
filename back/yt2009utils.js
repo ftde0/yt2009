@@ -485,7 +485,11 @@ module.exports = {
                     }
 
                     let time = ""
-                    let viewCount = result.viewCountText.simpleText
+                    let viewCount = ""
+                    if(result.viewCountText
+                    && result.viewCountText.simpleText) {
+                        viewCount = result.viewCountText.simpleText
+                    }
 
                     if(result.lengthText && result.lengthText.simpleText) {
                         time = result.lengthText.simpleText
@@ -495,7 +499,8 @@ module.exports = {
 
                     if(resultType == "live-video") {
                         time = "LIVE"
-                        viewCount = result.viewCountText.runs[0].text + " views"
+                        try {viewCount = result.viewCountText.runs[0].text + " views"}
+                        catch(error){}
                         uploadDate = ""
                     }
 

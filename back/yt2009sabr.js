@@ -425,13 +425,17 @@ module.exports = {
         const requestProto = require("./proto/sabr_pb")
         let videoItag = new requestProto.itagData()
         videoItag.setItag(videoItagN)
-        videoItag.setLastmodifiedtime(videoLmt)
+        if(videoLmt) {
+            videoItag.setLastmodifiedtime(videoLmt)
+        }
 		if(videoXtags) {
 			videoItag.setDrcstring(videoXtags)
 		}
         let audioItag = new requestProto.itagData()
         audioItag.setItag(audioItagN)
-        audioItag.setLastmodifiedtime(audioLmt)
+        if(audioLmt) {
+            audioItag.setLastmodifiedtime(audioLmt)
+        }
         audioItag.setDrcstring(audioXtags ? audioXtags : "")
         let abrReq = new requestProto.root()
         let abrNineteen = new requestProto.root.sourcePlayer()
@@ -767,6 +771,7 @@ module.exports = {
         let fragments = {}
         let fullRes = r;
         let contentLengths = {}
+        let liveHead = null;
 
         // concat fragments and write
         function finalize() {
@@ -796,6 +801,10 @@ module.exports = {
 
             if(parseOptions && parseOptions.returnPartLengths) {
                 finalFragments.contentLengths = contentLengths;
+            }
+
+            if(liveHead) {
+                finalFragments.liveHead = liveHead;
             }
 
             // output callback
@@ -881,6 +890,22 @@ module.exports = {
                 }
             })
 
+            // live headers on streams
+            var tLiveHeaders = allParts.filter(function(s) {
+                return s.friendlyType == "LIVE_HEADER"
+            })
+            tLiveHeaders.forEach(function(l) {
+                try {
+                    var d = sabrResponsePb.liveMetadata
+                            .deserializeBinary(l.data)
+                            .toObject()
+                    if(d && d.head) {
+                        liveHead = d.head;
+                    }
+                }
+                catch(error){}
+            })
+
             finalize()
         }
 
@@ -927,6 +952,10 @@ module.exports = {
                         friendlyType = "MEDIA_END"
                         break
                     }
+					case 31: {
+						friendlyType = "LIVE_HEADER"
+						break;
+					}
                     case 43: {
                         friendlyType = "REDIR"
                         break;

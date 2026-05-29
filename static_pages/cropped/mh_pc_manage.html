@@ -418,7 +418,7 @@ should we do so?");
                 return "?r=" + Math.random().toString()
             }
             r.open("GET", "/get_pchelper_flags" + addR())
-            r.send(flags)
+            r.send(null)
             r.onreadystatechange = function(e) {
                 if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
                     var f = r.responseText

@@ -2660,10 +2660,23 @@ setTimeout(function() {
 }, 5000)
 // or after 2s if sabr (more just feels unacceptable)
 setTimeout(function() {
-    if(!video.playing && !videoStartedPlaying && window.sabrBase) {
+    if(!video.playing && !videoStartedPlaying
+    && window.sabrBase && !playingAsLive) {
         requestSabr(0)
     }
 }, 2000)
+// actually force it in there if still not here (sabr)
+setTimeout(function() {
+    if(!video.playing && !videoStartedPlaying
+    && window.sabrBase && !playingAsLive) {
+        try {
+            sabrData.currentRequest.abort()
+            sabrData.waitingSabrFetch = false;
+        }
+        catch(error) {}
+        requestSabr(0, "FORCE", true)
+    }
+}, 4000)
 
 // video loading sprite on unloaded area
 video.addEventListener("seeking", function(e) {
@@ -2781,7 +2794,7 @@ function showUnrecoverableError(message) {
 
 // patch as LIVE player
 var playingAsLive = false;
-function initAsLive(id) {
+function initAsLive() {
     video.src = ""
     if(!window.MediaSource) {
         showUnrecoverableError(
@@ -2789,169 +2802,66 @@ function initAsLive(id) {
         )
         return;
     }
-    var streamSequence = 0;
-    var iTime = 0;
-    var firstPulled = false;
-    var ms = new MediaSource();
-    var partUrl = "/stream_get_fragment?video_id=" + id
-    var vStream;
-    var aStream;
-    var vFirstAdded = false;
-    var aFirstAdded = false;
-    var vf = false;
-    var af = false;
-    var dbg = false;
-
-    if(dbg) {
-        video.addEventListener("stalled", function() {
-            console.log("dbg/stream/stalled")
-        }, false)
-        video.addEventListener("waiting", function() {
-            console.log("dbg/stream/waiting")
-        }, false)
-        video.addEventListener("suspend", function() {
-            console.log("dbg/stream/suspend")
-        }, false)
-        
-    }
-
-    var lastTimestamp = 0;
-    var lastPaused = false;
-    var liveHeartbeat = setInterval(function() {
-        if(lastTimestamp && video.currentTime == lastTimestamp
-        && !video.paused && !lastPaused && vFirstAdded && aFirstAdded) {
-            // live stuck -- reset!!
-            initAsLive(id)
-            //console.log("dbg/stream/stuck!!")
-        } else {
-            lastTimestamp = video.currentTime;
-            lastPaused = video.paused;
-        }
-    }, 3000)
-
-    video.src = URL.createObjectURL(ms);
-    function rmFar() {
-        // remove too far off segments to avoid exhausted buffer
-        try {
-            if(video.buffered.end(0) && video.buffered.start(0)
-            && video.buffered.end(0) - 120 >= video.buffered.start(0)) {
-                var o = video.buffered.end(0) - 120
-                vStream.remove(0, o)
-                aStream.remove(0, o)
-            }
-        }
-        catch(error) {}
-    }
-    function pullBoth() {
-        // actually pull and add fragments
-        if(streamSequence) {
-            streamSequence++
-        }
-        vf = false;af = false;
-        pullPart(false);pullPart(true);
-    }
-    function pullPart(isAudio) {
-        var url = partUrl;
-        if(streamSequence) {
-            url += "&sq=" + streamSequence
-        }
-        if(isAudio) {
-            url += "&type=aud"
-        } else {
-            if(!liveHd) {
-                url += "&type=360"
-            } else {
-                url += "&type=hq"
-            }
-        }
-        var r = new XMLHttpRequest();
-        r.open("GET", url)
-        r.responseType = "arraybuffer"
-        r.send(null)
-    
-        // retry request on network error
-        r.addEventListener("abort", function() {
-            pullPart(isAudio)
-        }, false)
-        r.addEventListener("error", function() {
-            pullPart(isAudio)
-        }, false)
-
-        // append data
-        r.addEventListener("load", function(e) {
-            try {
-                if(!isAudio) {
-                    vStream.appendBuffer(r.response);
-                    if(!vFirstAdded) {
-                        vFirstAdded = true;
-                        if(aFirstAdded) {
-                            video.currentTime = Math.floor(iTime / 1000) + 1
-                            video.play();
-                        }
-                    }
-                    vf = true;
-                    if(vf && af) {
-                        setTimeout(function() {
-                            pullBoth()
-                            rmFar()
-                        }, 500)
-                    }
-                } else {
-                    aStream.appendBuffer(r.response)
-                    if(!aFirstAdded) {
-                        aFirstAdded = true;
-                        if(vFirstAdded) {
-                            video.currentTime = Math.floor(iTime / 1000) + 1
-                            video.play();
-                        }
-                    }
-                   af = true;
-                    if(vf && af) {
-                        setTimeout(function() {
-                            pullBoth()
-                            rmFar()
-                        }, 500)
-                    }
-                }
-            }
-            catch(e) {
-                //console.log(e)
-            }
-        }, false)
-    }
-    // start once ready
-    function readyStart() {
-        vStream = ms.addSourceBuffer("video/mp4; codecs=\"avc1.4D4028\"")
-        aStream = ms.addSourceBuffer("audio/mp4; codecs=\"mp4a.40.2\"")
-        pullBoth()
-    }
-
-    // init -- pull first seq and pull back a little to avoid lag
-    ms.addEventListener("sourceopen", function() {
-        var r = new XMLHttpRequest();
-        r.open("GET", "/stream_get_fragment?video_id=" + id + "&type=aud")
-        r.responseType = "arraybuffer"
-        r.send(null)
-        r.addEventListener("load", function(e) {
-            if(r.getResponseHeader("x-sequence-num")
-            && !firstPulled) {
-                firstPulled = true;
-                streamSequence = parseInt(r.getResponseHeader("x-sequence-num"))
-            }
-            if(r.getResponseHeader("x-head-time-millis")) {
-                iTime = parseInt(r.getResponseHeader("x-head-time-millis"))
-            }
-
-            streamSequence -= 5
-            iTime -= 25
-            readyStart()
-        }, false)
-        playingAsLive = true;
-    }, false)
-
-    // mark live in html5player
+	// mark live in html5player
+	window.liveHead = 1;
+	window.chunkReceivedCallback = function(partsInResponse) {
+		setTimeout(function() {
+			if(partsInResponse >= 1) {
+				window.liveHead += 1000
+			}
+			requestSabr(window.liveHead)
+		}, 1000)
+	}
+	window.liveInit = function() {
+		setTimeout(function() {
+			window.liveInit = null // only run on first response
+		}, 10)
+		requestSabr(window.liveHead)
+	}
+	var lastTs = 0;
+	function recoverStall() {
+		// stall recovery
+		video.currentTime = video.buffered.start(
+			video.buffered.length - 1
+		) + 0.1
+	}
+	window.sabrLiveHeartbeat = setInterval(function() {
+		if(!video.paused) {
+			var ranges = []
+			var t = 0;
+			var limit = 30;
+			while(t !== video.buffered.length
+			&& t !== limit) {
+				ranges.push([
+					video.buffered.start(t),
+					video.buffered.end(t)
+				])
+				t++
+			}
+			var rangeIndex = ranges.filter(s => {
+				return video.currentTime >= s[0]
+					&& video.currentTime <= s[1]
+			})[0]
+			if(rangeIndex) {
+				rangeIndex = ranges.indexOf(rangeIndex)
+				if(lastTs
+				&& video.currentTime == lastTs
+				&& rangeIndex !== (video.buffered.length - 1)) {
+					recoverStall();
+				}
+			}
+			lastTs = video.currentTime;
+		} else if((video.currentTime == 0
+		&& video.buffered.length >= 1)
+		|| (video.buffered.length == 1
+		&& video.currentTime < video.buffered.start(0))) {
+			recoverStall();
+		}
+	}, 2000)
+	playingAsLive = true;
     $(".video_controls .timer").innerHTML = "LIVE"
     $(".progress_container").className += " hid"
+	initAsSabr()
 }
 
 
@@ -3127,11 +3037,28 @@ function requestSabr(offset, source, force) {
 			}, false)
 		}
 
+        // initial head for sabr lives
+		if(r.getResponseHeader("x-yt2009-live-head")
+		&& window.liveInit) {
+			window.liveHead = parseInt(
+				r.getResponseHeader("x-yt2009-live-head")
+			) - 15000
+		}
+
         // parse x-yt2009-saber
         var partsExtracted = 0;
         var partsInResponse = parseInt(r.getResponseHeader("x-part-count"))
         var s = r.response;
         var cursor = 14 // SABER-START
+        
+		if(window.chunkReceivedCallback) {
+			window.chunkReceivedCallback(partsInResponse)
+		}
+        if(window.liveInit) {
+			window.liveInit()
+			return;
+		}
+
 
         if(partsInResponse == 0
         && !r.getResponseHeader("x-yt2009-got-internal-redirect")) {
@@ -3493,14 +3420,17 @@ function initAsSabr() {
                         sabrData.lastCustomItag = false;
                     }
                     sabrData.customVideoItag = q[0]
-                    if(sabrData.currentRequest) {
+                    if(sabrData.currentRequest
+					&& !playingAsLive) {
                         try {
                             sabrData.currentRequest.abort()
                             sabrData.waitingSabrFetch = false;
                         }
                         catch(error) {}
                     }
-                    requestSabr(Math.floor(video.currentTime * 1000), "FORCE")
+                    if(!playingAsLive) {
+						requestSabr(Math.floor(video.currentTime * 1000), "FORCE")
+					}
                     adjustHDBtn()
                 }
                 qElement.oncontextmenu = function(e) {
@@ -3583,7 +3513,11 @@ function initAsSabr() {
         aStream = ms.addSourceBuffer(sabrData.audioMime)
         sabrData.videoBuffer = vStream
         sabrData.audioBuffer = aStream
-        requestSabr(0, "TIMED")
+        if(!playingAsLive) {
+			requestSabr(0, "TIMED")
+		} else {
+			requestSabr(Number.MAX_SAFE_INTEGER, "TIMED")
+		}
     }
 
     // init
@@ -3677,7 +3611,8 @@ function initAsSabr() {
         if(currentRange && ((currentRange.end - c) < sabrData.readAhead
         && (currentRange.end - c) > 0.1
         && !(video.duration - currentRange.end <= 0.3))
-        && !sabrData.appendQueue[0]) {
+        && !sabrData.appendQueue[0]
+        && !playingAsLive) {
             //console.log("pull more sabr", Math.floor(currentRange.end * 1000))
             sabrData.sabrTimedCooldown = true;
             sabrData.waitingSabrFetch = true;
@@ -3789,7 +3724,9 @@ function sabrQualityChanged(source) {
         sabrData.customVideoItag = sabrData.lastCustomItag
         sabrData.lastCustomItag = false;
     }
-    requestSabr(Math.floor(c * 1000), "FORCE")
+    if(!playingAsLive) {
+		requestSabr(Math.floor(c * 1000), "FORCE")
+	}
 }
 
 var pickrLastState = {
@@ -4929,8 +4866,13 @@ function attachContextmenuListener(element) {
             var s = [
                 "video size: " + video.videoWidth + "x" + video.videoHeight,
                 "volume (0-1): " + video.volume,
-                "sabr: " + !!(window.sabrData)
+                "sabr: " + !!(window.sabrData),
+				"live: " + playingAsLive
             ]
+			if(playingAsLive) {
+				s.push("live currentTime: " + Math.floor(video.currentTime))
+				s.push("live head: " + window.liveHead)
+			}
             if(window.sabrData) {
                 var itag = sabrData.customVideoItag || "[auto]"
                 s.push("")

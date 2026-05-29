@@ -7,6 +7,7 @@ const html = require("./yt2009html")
 const channels = require("./yt2009channels")
 const playlists = require("./yt2009playlists")
 const videospage = require("./yt2009videos")
+const sabr = require("./yt2009sabr")
 const fs = require("fs")
 const child_process = require("child_process")
 
@@ -357,6 +358,18 @@ module.exports = {
     "xl_embed": function(req, res) {
         let waitForOgv = false;
         let id = req.query.video_id || ""
+
+		if(req.query.sabr == 1) {
+			let sabrBaseUrl = sabr.initPlaybackSession(
+                id,
+				["1080p", "720p", "480p", "360p", "240p", "144p"]
+            )
+			res.redirect(
+				"/xl/html5-embed?video_id=" + id
+				+ "&sabr_base=" + encodeURIComponent(sabrBaseUrl)
+			)
+			return;
+		}
 
         // if firefox <= 25 wait for ogg, otherwise callback mp4
         if(req.headers["user-agent"].includes("Firefox/")) {

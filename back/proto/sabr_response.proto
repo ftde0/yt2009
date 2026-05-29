@@ -9,6 +9,10 @@ message chunkMediaData {
     int32 timeScale = 3;
 }
 
+message liveMetadata {
+	int64 head = 4;
+}
+
 message root {
     optional int32 chunkNumber = 1; /*starts with 0 for each sabr response*/
     string videoId = 2;
