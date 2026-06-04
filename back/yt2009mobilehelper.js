@@ -2761,11 +2761,14 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
         if(completeDescription.includes(delimiter)) {
             // remove previous properties
-            let part = completeDescription.split("\n\n" + delimiter + " ")[1]
-                       .split("\n\n")[0]
-            completeDescription = completeDescription.replace(
-                "\n\n" + delimiter + " " + part, ""
-            )
+            try {
+                let part = completeDescription.split("\n\n" + delimiter + " ")[1]
+                           .split("\n\n")[0]
+                completeDescription = completeDescription.replace(
+                    "\n\n" + delimiter + " " + part, ""
+                )
+            }
+            catch(error){}
         }
 
         if(completeDescription.includes("-- x-yt2009-custom")) {
@@ -3644,8 +3647,16 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
         let postId = actionTokenDeserialized.id
         if(actionTokenDeserialized.pollselectionid !== null
-        && actionTokenDeserialized.pollselectionid !== undefined) {
+        && actionTokenDeserialized.pollselectionid !== undefined
+        && !actionTokenDeserialized.videoid) {
+            // channel poll
             let selectId = actionTokenDeserialized.pollselectionid
+            userdata[device].commentActions[postId] = selectId
+        } else if(actionTokenDeserialized.videoid !== null
+        && actionTokenDeserialized.videoid !== undefined
+        && postId) {
+            // comment like/dislike
+            let selectId = actionTokenDeserialized.action
             userdata[device].commentActions[postId] = selectId
         }
         fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
@@ -3789,6 +3800,100 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 })
             }).then(r => {r.buffer().then(r => {
                 callbac(r)
+            })})
+        }, req)
+    },
+
+    "commentRate": function(req, res) {
+        let commentId = req.headers.comment
+        let videoId = req.headers.source.split("v=")[1]
+                         .split("&")[0]
+                         .substring(0,11);
+        let initial = parseInt(req.headers.initial)
+        if(isNaN(initial) || videoId.length !== 11) {
+            res.sendStatus(400)
+            return;
+        }
+        let actionNumber = req.headers.rating == "dislike"
+                         ? 4 : 5 // default like (5)
+        let action = new commentActions.root()
+        action.setAction(actionNumber)
+        action.setId(commentId)
+        action.setVideoid(videoId)
+        action = utils.base64toUrl(
+            Buffer.from(action.serializeBinary()
+        ).toString("base64"))
+        req.body = action;
+        req.body.toString = function() {
+            return action;
+        }
+        this.performCommentAction(req, {
+            "sendStatus": function(status) {
+                res.sendStatus(status)
+            },
+            "status": function(s) {
+                res.status(s)
+                if(s >= 400) {
+                    // fail
+                    res.send("")
+                } else {
+                    // success
+                    if(actionNumber == 5) {
+                        // liked
+                        res.send("rating:" + (initial + 1))
+                    } else {
+                        // disliked
+                        res.send("rating:" + (initial - 1))
+                    }
+                }
+                return {"send": function(z) {}}
+            },
+            "send": (z) => {}
+        })
+    },
+
+    "getCommentActions": function(req) {
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            return false;
+        }
+        return userdata[device].commentActions
+    },
+
+    "commentReply": function(videoId, ogCommentId, content, req, callback) {
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            callback({"r": false})
+            return;
+        }
+        if(content && content.startsWith("{")) {
+            try {
+                content = JSON.parse(content).comment;
+            }
+            catch(error){}
+        }
+        let r = new commentActions.create_comment_reply()
+        r.setVideoid(videoId)
+        r.setCommentid(ogCommentId)
+        r = utils.base64toUrl(
+            Buffer.from(r.serializeBinary()
+        ).toString("base64"))
+        setupYouTube(device, (h) => {
+            fetch("https://youtubei.googleapis.com/youtubei/v1/comment/create_comment_reply", {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "createReplyParams": r,
+                    "commentText": content
+                })
+            }).then(r => {r.json().then(r => {
+                let commentId = ""
+                try {
+                    commentId = r.contents.commentRenderer.commentId
+                }
+                catch(error){}
+                callback({"r": true, "c": content, "i": commentId})
             })})
         }, req)
     }

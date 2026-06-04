@@ -5,10 +5,18 @@ message root {
     int32 action = 1;
     /*
     ^^
+    5 = comment like
+    4 = comment dislike
     9 = select (poll)
     10 = deselect (poll)
     */
     string id = 3;
+    string videoId = 5;
     string channelId = 11;
     optional int32 pollSelectionId = 12;
+}
+
+message create_comment_reply {
+    string videoId = 2;
+    string commentId = 4;
 }

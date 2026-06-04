@@ -133,6 +133,12 @@ function onWatchCommentsShowMore(extras) {
                 "data-continuation-token",
                 r.responseText.split(";yt_continuation=")[1]
             )
+            if(!r.responseText.split(";yt_continuation=")[1]) {
+                var showMore = document.getElementById("watch-comments-show-more-td")
+                if(showMore) {
+                    showMore.style.display = "none"
+                }
+            }
         }
         catch(error) {}
         // calc comment count + add page indicator
@@ -1643,10 +1649,15 @@ function showReplyForm(comment) {
     }
     comment = comment.parentNode.parentNode.parentNode
     var body = comment.querySelector(".watch-comment-body").parentNode
+    var commentId = null;
+    try {
+        commentId = comment.id.split("comment-")[1]
+    }catch(error){}
 
     var r = new XMLHttpRequest();
     r.open("GET", "/reply_template")
     r.setRequestHeader("source", location.href)
+    r.setRequestHeader("comment-id", commentId)
     r.send(null)
     r.addEventListener("load", function(e) {
         body.innerHTML += r.responseText
@@ -1679,6 +1690,7 @@ function submitReply(id) {
     var r = new XMLHttpRequest();
     r.open("POST", "/comment_post")
     r.setRequestHeader("source", location.href)
+    r.setRequestHeader("reply-comment-id", id)
     r.send(JSON.stringify({
         "comment": $("#comment_textarea_comment_form_id_" + id).value
     }))
@@ -1700,10 +1712,28 @@ function submitReply(id) {
             )
             return;
         }
-        btn.setAttribute("value", "Comment Posted!")
-        $(".comments-container").innerHTML += r.responseText;
-        if(document.cookie.indexOf("syncses") !== -1 && newUser) {
-            btn.setAttribute("value", "Comment Posted! (session created)")
+        try {
+            var pchelperU = document.cookie
+                            .split("pchelper_user=")[1]
+                            .split(";")[0];
+            // ^^ will fail if pchelper isn't used and fallback to old code
+            var form = document.getElementById("div_comment_form_id_" + id)
+            var holder = document.getElementById("yt2009-reply-holder-" + id)
+            if(!holder) {
+                // create holder if nonexistent
+                holder = document.createElement("div")
+                holder.id = "yt2009-reply-holder-" + id
+                document.getElementById("comment-" + id).appendChild(holder)
+            }
+            holder.innerHTML += r.responseText
+            form.parentNode.removeChild(form)
+        }
+        catch(error) {
+            btn.setAttribute("value", "Comment Posted!")
+            $(".comments-container").innerHTML += r.responseText;
+            if(document.cookie.indexOf("syncses") !== -1 && newUser) {
+                btn.setAttribute("value", "Comment Posted! (session created)")
+            }
         }
     }, false)
 }

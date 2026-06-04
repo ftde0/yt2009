@@ -23,6 +23,7 @@ let ip_uses_flash = []
 let ratelimitData = {}
 let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
+const yt2009pot = require("./yt2009pot")
 let fmodeCommunityPictureIds = {}
 let wyjebaData = {}
 let syncComments = {}
@@ -1607,31 +1608,9 @@ module.exports = {
             return;
         }
 
-        fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
-            "headers": rHeaders,
-            "referrer": "https://www.youtube.com/watch?v=" + id,
-            "referrerPolicy": "origin-when-cross-origin",
-            "body": JSON.stringify({
-                "context": {
-                "client": {
-                    "hl": "en",
-                    "clientName": "ANDROID",
-                    "clientVersion": "21.16",
-                    "mainAppWebInfo": {
-                        "graftUrl": "/watch?v=" + id
-                    }
-                }
-                },
-                "videoId": id,
-                "racyCheckOk": true,
-                "contentCheckOk": true
-            }),
-            "method": "POST",
-            "mode": "cors",
-            "agent": this.createFetchAgent()
-        }).then(r => {r.json().then(r => {
-            parseResponse(r);
-        })})
+        this.pullBarePlayer(id, (r) => {
+            parseResponse(r)
+        })
     },
 
     "pullBarePlayer": function(id, callback, extraSettings) {
@@ -1701,7 +1680,19 @@ module.exports = {
             "agent": this.createFetchAgent()
         }).then(r => {r.json().then(r => {
             try {
-                let checkedFmts = data.streamingData.adaptiveFormats.map(s => {
+                if(r.responseContext && r.responseContext.visitorData) {
+                    let visitor = r.responseContext.visitorData
+                    devlog("received upgraded ANDROID visitor: " + visitor)
+                    yt2009exports.writeData("visitor", visitor)
+                    if(!yt2009exports.read().potgenTemporarilyTakenover
+                    && !yt2009signin.needed()) {
+                        yt2009pot.generatePo(visitor, (data) => {
+                            yt2009exports.writeData("potBytes", data.encryptData)
+                            yt2009exports.writeData("potKey", data.backup)
+                        }, true)
+                    }
+                }
+                let checkedFmts = r.streamingData.adaptiveFormats.map(s => {
                     if(s.itag == 140 || s.itag == 139) {
                         if(s.audioTrack) {
                             s.audioTrack.vss_id = s.audioTrack.id;
@@ -1723,9 +1714,9 @@ module.exports = {
                         return s;
                     }
                 })
-                data.streamingData.adaptiveFormats = checkedFmts
+                r.streamingData.adaptiveFormats = checkedFmts
             }
-            catch(error) {}
+            catch(error) {console.log(error)}
             callback(r);
         })})
     },
@@ -2571,8 +2562,16 @@ module.exports = {
         
         if(!req || !req.headers || !req.headers["user-agent"]) return false;
 
+        const UA_FAKES = [
+            "Goanna"
+        ]
+
         let ua = req.headers["user-agent"]
         
+        if(UA_FAKES.filter(s => {
+            return ua.toLowerCase().includes(s.toLowerCase())
+        })[0]) return false;
+
         // ie11 works well enough
         if(ua.includes("rv:11.0")) return true;
 
@@ -2941,6 +2940,19 @@ module.exports = {
             }
         }
 
+        if(resp.context && resp.context.visitordata) {
+            let visitor = resp.context.visitordata
+            devlog("received upgraded ANDROID visitor: " + visitor)
+            yt2009exports.writeData("visitor", visitor)
+            if(!yt2009exports.read().potgenTemporarilyTakenover
+            && !yt2009signin.needed()) {
+                yt2009pot.generatePo(visitor, (data) => {
+                    yt2009exports.writeData("potBytes", data.encryptData)
+                    yt2009exports.writeData("potKey", data.backup)
+                }, true)
+            }
+        }
+
         return bp;
     },
 
@@ -3088,6 +3100,22 @@ module.exports = {
                                      .toObject();
                             let r = Buffer.from(p.body, "base64").toString()
                             if(r.includes("responseContext")) {
+                                try {
+                                    let a = JSON.parse(r)
+                                    if(a.responseContext && a.responseContext.visitorData) {
+                                        let visitor = a.responseContext.visitorData
+                                        devlog("received upgraded ANDROID visitor: " + visitor)
+                                        yt2009exports.writeData("visitor", visitor)
+                                        if(!yt2009exports.read().potgenTemporarilyTakenover
+                                        && !yt2009signin.needed()) {
+                                            yt2009pot.generatePo(visitor, (data) => {
+                                                yt2009exports.writeData("potBytes", data.encryptData)
+                                                yt2009exports.writeData("potKey", data.backup)
+                                            }, true)
+                                        }
+                                    }
+                                }
+                                catch(error){}
                                 callback(JSON.parse(r))
                             }
                         }

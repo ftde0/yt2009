@@ -568,6 +568,7 @@ function timeUpdate() {
         $(".html5-loading").className += " hid"
         stopLoadingRototo()
     }
+    videoStartedPlaying = true;
     if((window.pickrLastState && window.pickrLastState.ongoing)
 	|| forceStopVideo) {
         video.pause()
@@ -655,7 +656,6 @@ function timeUpdate() {
     }
 
     annotation43()
-    videoStartedPlaying = true;
 }
 video.addEventListener("timeupdate", timeUpdate, false)
 
@@ -2909,7 +2909,7 @@ function requestSabr(offset, source, force) {
     function retryRequest(force) {
         sabrData.lastRequestFailCount++
         if(sabrData.lastRequestFailCount > 3) {
-			if(!videoStartedPlaying) {
+			if(!videoStartedPlaying && !playingAsLive) {
 				var sabrlessUrl = "/watch" + location.href.split("/watch")[1]
 								+ "&unsabr=1";
 				var eMsg = [
@@ -2918,7 +2918,10 @@ function requestSabr(offset, source, force) {
 					'<a href="'+sabrlessUrl+'">load without sabr</a>'
 				].join("")
 				showUnrecoverableError(eMsg)
-			}
+			} else if(playingAsLive) {
+                eMsg = "this live event has stopped."
+				showUnrecoverableError(eMsg)
+            }
             console.warn("last sabr request failed too many times! no recovery")
             return;
         }
@@ -3280,7 +3283,7 @@ function initAsSabr() {
             window.sabrExactRes.forEach(function(q) {
                 function adjustHDBtn(cHeight) {
                     var h = cHeight || q[2]
-                    if(h >= 720 && !sabrHd
+                    if(h >= 600 && !sabrHd
                     && mainElement.querySelector(".hq.hd")
                     && mainElement.querySelector(".hd.hd")
                       .className.indexOf(" enabled") == -1) {
@@ -3293,7 +3296,7 @@ function initAsSabr() {
                       .className.indexOf(" enabled") == -1) {
                         sabrHd = true;
                         mainElement.querySelector(".hq").className = "hq enabled"
-                    } else if(h < 720
+                    } else if(h < 600
                     && mainElement.querySelector(".hq.hd")
                     && mainElement.querySelector(".hq.hd.enabled")) {
                         sabrHd = false;
@@ -3935,9 +3938,13 @@ those can be changed at any time:<br>\
                                 + "SameSite=Lax"
             }
             if(remove1080) {
-                var watchFlags = " " + document.cookie
-                                 .split(" watch_flags=")[1]
+                var watchFlags = "";
+                if(document.cookie
+                && document.cookie.indexOf("watch_flags=") !== -1) {
+                    watchFlags = " " + document.cookie
+                                 .split("watch_flags=")[1]
                                  .split(";")[0]
+                }   
                 watchFlags = watchFlags.replace(":hd_1080:", "")
                 watchFlags = watchFlags.replace("hd_1080:", "")
                 watchFlags = watchFlags.replace(":hd_1080", "")
@@ -3946,9 +3953,13 @@ those can be changed at any time:<br>\
                                 + "SameSite=Lax"
             }
             if(removeModern) {
-                var watchFlags = " " + document.cookie
-                                 .split(" watch_flags=")[1]
+                var watchFlags = "";
+                if(document.cookie
+                && document.cookie.indexOf("watch_flags=") !== -1) {
+                    watchFlags = " " + document.cookie
+                                 .split("watch_flags=")[1]
                                  .split(";")[0]
+                }
                 watchFlags = watchFlags.replace(":watch_modern_features:", "")
                 watchFlags = watchFlags.replace("watch_modern_features:", "")
                 watchFlags = watchFlags.replace(":watch_modern_features", "")
@@ -3962,12 +3973,12 @@ those can be changed at any time:<br>\
                                 + "SameSite=Lax"
             }
             if(add1080) {
-                var watchFlags = ""
+                var watchFlags = "";
                 if(document.cookie
                 && document.cookie.indexOf("watch_flags=") !== -1) {
-                    watchFlags = document.cookie
-                                    .split(" watch_flags=")[1]
-                                    .split(";")[0];
+                    watchFlags = " " + document.cookie
+                                 .split("watch_flags=")[1]
+                                 .split(";")[0]
                 }
                 watchFlags += "hd_1080:"
                 document.cookie = "watch_flags=" + watchFlags + "; " 
@@ -4996,11 +5007,20 @@ if(document.cookie
         && e.target.nodeName.toLowerCase() !== "input")
 		|| !e.target)
 	}
+    function skipToPercentage(v) {
+        var targetTime = Math.floor((video.duration / 100) * v)
+        video.currentTime = targetTime;
+    }
 	mainElement.addEventListener("keydown", function(e) {
+        if(!isFocusedOnVideo(e) || e.ctrlKey) return;
+        if(e.keyCode && e.keyCode >= 48 && e.keyCode <= 57 && !playingAsLive) {
+            // 0-9 keyboard numbers
+            var percentage = (e.keyCode - 48) * 10
+            skipToPercentage(percentage)
+        }
         switch(e.keyCode) {
             // <
             case 188: {
-				if(!isFocusedOnVideo(e)) return;
                 forceStopVideo = true;
 				initVpi()
 				video.currentTime -= 0.03
@@ -5008,7 +5028,6 @@ if(document.cookie
             }
             // >
             case 190: {
-                if(!isFocusedOnVideo(e)) return;
                 forceStopVideo = true;
 				initVpi()
 				video.currentTime += 0.03
@@ -5016,13 +5035,11 @@ if(document.cookie
             }
 			// j
 			case 74: {
-				if(!isFocusedOnVideo(e)) return;
                 video.currentTime -= 10
 				break;
 			}
 			// k
 			case 75: {
-				if(!isFocusedOnVideo(e)) return;
                 if(!video.paused) {
 					video_pause();
 					flash_middle_btn("pause")
@@ -5034,7 +5051,6 @@ if(document.cookie
 			}
 			// l
 			case 76: {
-				if(!isFocusedOnVideo(e)) return;
                 video.currentTime += 10
 				break;
 			}

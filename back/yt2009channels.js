@@ -1331,27 +1331,30 @@ module.exports = {
         let pchelperSetupDelimiter = "═"
         if(data.properties && data.properties.description
         && data.properties.description.includes(pchelperSetupDelimiter)) {
-            // has done pchelper user setup
+            // has done pchelper user setup, probably
             let tempd = data.properties.description.split("<br>").join("\n")
-            let part = tempd.split(
-                "\n\n" + pchelperSetupDelimiter
-            )[1].split("\n\n")[0]
-            part = pchelperSetupDelimiter + part
-            part.split("\n" + pchelperSetupDelimiter).forEach(c => {
-                let key = c.split(": ")[0]
-                           .replace(pchelperSetupDelimiter + " ", "")
-                           .split("\n").join("").trim()
-                let value = c.split(": ")
-                value.shift()
-                value = value.join(": ")
-                value = value.split("\n")
-                while(typeof(value[value.length - 1]) == "string"
-                && value[value.length - 1] == "") {
-                    value.pop()
-                }
-                value = value.join("\n").trim()
-                customPchelperProperties[key] = value;
-            })
+            try {
+                let part = tempd.split(
+                    "\n\n" + pchelperSetupDelimiter
+                )[1].split("\n\n")[0]
+                part = pchelperSetupDelimiter + part
+                part.split("\n" + pchelperSetupDelimiter).forEach(c => {
+                    let key = c.split(": ")[0]
+                            .replace(pchelperSetupDelimiter + " ", "")
+                            .split("\n").join("").trim()
+                    let value = c.split(": ")
+                    value.shift()
+                    value = value.join(": ")
+                    value = value.split("\n")
+                    while(typeof(value[value.length - 1]) == "string"
+                    && value[value.length - 1] == "") {
+                        value.pop()
+                    }
+                    value = value.join("\n").trim()
+                    customPchelperProperties[key] = value;
+                })
+            }
+            catch(error){}
         }
 
         // wayback_features init

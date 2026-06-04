@@ -41,7 +41,7 @@ message root {
     5 - Courier New
     */
 
-    /*all color values in hex, without the leading #*/
+    /*all color values in hex*/
     /*opacity values 0-255*/
     string backgroundColor = 6;
     string wrapperColor = 7;

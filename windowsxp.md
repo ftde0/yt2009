@@ -58,7 +58,6 @@ yt2009 will detect unsupported versions of node and apply appropriate patches.
 
 features affected simply cannot fully work on these old node versions with the way current-day youtube handles them.
 
-- **360p video only**
 - mobilehelper & pchelper severely disfunctional
 - sync server connection may not work properly
-- sabr streaming disabled
+- "near you" homepage module (should fall back to US)

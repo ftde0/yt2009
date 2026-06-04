@@ -334,24 +334,6 @@ module.exports = {
             markCallbackDone()
         })})
 
-        let playerContext = JSON.parse(JSON.stringify(innertube_context))
-        if(useAndroidPlayer) {
-            playerContext = {
-                "client": {
-                    "hl": "en",
-                    "clientName": "ANDROID",
-                    "clientVersion": "21.16",
-                    "deviceMake": "Google",
-                    "deviceModel": "Android SDK built for x86",
-                    "deviceCodename": "ranchu;",
-                    "osName": "Android",
-                    "osVersion": "10",
-                    "mainAppWebInfo": {
-                        "graftUrl": "/watch?v=" + id
-                    }
-                }
-            }
-        }
         rHeaders["user-agent"] = ANDROID_REQ_UA
         function onPlayerReceived(r) {
             if(devTimings) {
@@ -428,7 +410,8 @@ module.exports = {
             })
             return;
         }
-        if(EXTRA_RISK_BLOCK) {
+        if(EXTRA_RISK_BLOCK
+        && !yt2009utils.isUnsupportedNode()) {
             rHeaders = {
                 "user-agent": ANDROID_REQ_UA,
                 "x-goog-visitor-id": visitorId,
@@ -452,30 +435,15 @@ module.exports = {
                     "body": pbmsg,
                     "agent": yt2009utils.createFetchAgent()
                 }).then(r => {r.buffer().then(r => {
-                    //fs.writeFileSync("./test", r)
                     let player = yt2009utils.protoportPlayer(r)
                     onPlayerReceived(player)
                 })})
             })
             return;
         }
-        fetch(`https://www.youtube.com/youtubei/v1/player?prettyPrint=false`, {
-            "headers": rHeaders,
-            "referrer": `https://www.youtube.com/`,
-            "referrerPolicy": "strict-origin-when-cross-origin",
-            "body": JSON.stringify({
-                "context": playerContext,
-                "playbackContext": {"vis": 0, "lactMilliseconds": "1"},
-                "videoId": id,
-                "racyCheckOk": true,
-                "contentCheckOk": true
-            }),
-            "method": "POST",
-            "mode": "cors",
-            "agent": yt2009utils.createFetchAgent()
-        }).then(r => {r.json().then(r => {
-            onPlayerReceived(r)
-        })})
+        yt2009utils.pullBarePlayer(id, (data) => {
+            onPlayerReceived(data)
+        })
     },
 
     "fetch_video_data": function(
@@ -589,10 +557,6 @@ module.exports = {
                 if(data.live) {
                     data.freezeCache = true;
                 }
-                /*if(videoData.videoDetails.isLive) {
-                    callback(false)
-                    return;
-                }*/
 
                 // basic data
                 data.description = videoData.videoDetails.shortDescription
@@ -1031,14 +995,6 @@ module.exports = {
                 // qualities
                 data.qualities = []
 
-                if(yt2009utils.isUnsupportedNode()
-                && videoData.streamingData
-                && videoData.streamingData.adaptiveFormats) {
-                    // unsupported node can't load adaptiveFormats
-                    // so don't even try
-                    videoData.streamingData.adaptiveFormats = []
-                }
-
                 if(!videoData.streamingData) {
                     videoData.streamingData = {}
                 }
@@ -1312,12 +1268,12 @@ module.exports = {
         }
 
         // disable playback mode picker on unsupported node hosts
-        if(yt2009utils.isUnsupportedNode()) {
+        /*if(yt2009utils.isUnsupportedNode()) {
             code = code.replace(
                 `//yt2009-unsupport`,
                 `var sabrHostUnsupported = true;`
             )
-        }
+        }*/
 
         // put tags whereeever needed in html5 for custom params
         let html5PlayerTags = [
@@ -1470,6 +1426,25 @@ module.exports = {
             && videoFilters.channels.includes(creatorUrl)))
         }
 
+        // comment avatars
+        function handleCommentAvatar(link) {
+            if(flags.includes("enable_comment_avatars") && link) {
+                let flag = flags.split("enable_comment_avatars")[1]
+                                .split(";")[0].split(":")[0].substring(0,1);
+                switch(flag) {
+                    case "2": {
+                        return {"link": link, "placement": 2}
+                    }
+                    case "1":
+                    default: {
+                        return {"link": link, "placement": 1}
+                    }
+                }
+                return;
+            }
+            return null;
+        }
+
         // handling flag
         let author_name = data.author_name;
         if(flags.includes("remove_username_space")) {
@@ -1614,7 +1589,10 @@ module.exports = {
                 let commentHTML = yt2009templates.videoComment(
                     "#", comment.author, commentTime,
                     comment.text, flags, true, comment.rating,
-                    comment.id
+                    comment.id, null, null,
+                    handleCommentAvatar(
+                        "/assets/site-assets/default-centered.png"
+                    )
                 )
 
                 // get liked/disliked status by user
@@ -1896,7 +1874,12 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 flags,
                                 true,
                                 likes,
-                                id
+                                id,
+                                null,
+                                null,
+                                handleCommentAvatar(
+                                    "/assets/site-assets/default-centered.png"
+                                )
                             )
                             if(customRating == 1) {
                                 commentHTML = commentHTML.replace(
@@ -2472,6 +2455,27 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     }
                 }
 
+                // get pchelper liked/disliked state
+                if(yt2009mobilehelper.hasLogin(req)) {
+                    let actions = yt2009mobilehelper.getCommentActions(req)
+                    if(actions && actions[id]) {
+                        switch(actions[id]) {
+                            case 4: {
+                                //dislike
+                                customRating = -1
+                                presentedLikeCount -= 1
+                                break;
+                            }
+                            case 5: {
+                                //like
+                                presentedLikeCount += 1
+                                customRating = 1
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 if(!commentContent) return;
 
                 let additionalContentHeader = []
@@ -2503,7 +2507,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     id,
                     comment.r,
                     (flags.includes("watch_modern_features")
-                    && additionalContentHeader)
+                    && additionalContentHeader),
+                    handleCommentAvatar(comment.authorAvatar)
                 )
 
                 if(customRating == 1) {
@@ -2569,7 +2574,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         flags,
                         true,
                         likes,
-                        id
+                        id,
+                        null,
+                        null,
+                        handleCommentAvatar(comment.authorAvatar)
                     )
 
                     if(customRating == 1) {
@@ -2643,7 +2651,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         true,
                         likes,
                         id,
-                        comment.r
+                        comment.r,
+                        null,
+                        handleCommentAvatar(comment.authorAvatar)
                     )
                 
                     if(customRating == 1) {
@@ -3251,11 +3261,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     flash_url += "&cc_load_policy=2"
                 }
 
-                // always_annotations flash
                 if(flags.includes("always_annotations")) {
                     flash_url += "&iv_load_policy=1"
                 } else {
-                    flash_url += "&iv_load_policy=2"
+                    flash_url += "&iv_load_policy=3"
                 }
 
                 flash_url += "&enablejsapi=1"
@@ -3423,8 +3432,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 code = code.replace(`<!--yt2009_hq_btn-->`, `<span class="hq"></span>`)
             }
         } else if((!useFlash
-        && (qualityList.includes("720p")
+        && ((qualityList.includes("720p")
         || qualityList.includes("480p"))
+        || (flags.includes("exp_turbocharge_sabr_hfr")
+        && ((qualityList.filter(s => {
+            return (s && s.includes("480p"))
+        })[0])
+        || (qualityList.filter(s => {
+            return (s && s.includes("720p"))
+        })[0]))))
         && useSabr)) {
             // hd buttons for sabr
             let use720p = qualityList.includes("720p")
@@ -3524,7 +3540,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
 
         // transcript tab
-        if(flags.includes("html5_transcript")) {
+        if(flags.includes("html5_transcript") && !useFlash) {
             code = code.replace(
                 `<!--yt2009-tab-transcript-->`,
                 yt2009templates.watch_tab_transcript_btn
@@ -3867,6 +3883,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             return c.commentId;
                         }).filter(s => {return s}).join(",")
                         let commentLikeCounts = {}
+                        let commentPublishDates = {}
                         let url = [
                             "https://www.googleapis.com/youtube/v3/comments",
                             "?part=snippet",
@@ -3881,13 +3898,18 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                                 r.items.forEach(i => {
                                     let id = i.id;
                                     let likeCount = i.snippet.likeCount
+                                    let publishedDate = i.snippet.publishedAt;
                                     commentLikeCounts[id] = likeCount
+                                    commentPublishDates[id] = publishedDate
                                 })
                             }
 
                             comments = comments.map((c) => {
                                 if(commentLikeCounts[c.commentId]) {
                                     c.likes = commentLikeCounts[c.commentId]
+                                }
+                                if(commentPublishDates[c.commentId]) {
+                                    c.date = commentPublishDates[c.commentId]
                                 }
                                 return c;
                             })
@@ -3966,11 +3988,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 commentRequest.serializeBinary()
             ).toString("base64"))
             
-            this.request_continuation(token, id, (flags || ""),
-                (comment_data) => {
-                    callback(comment_data)
-                }
-            )
+            this.request_continuation(token, id, (flags || ""), (cmts) => {
+                callback(cmts)
+            }, (flags && flags.includes && flags.includes("continuation-y")))
         }
     },
 

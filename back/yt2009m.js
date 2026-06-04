@@ -1,3 +1,16 @@
+/*
+
+deprecated
+
+no further updates are planned for this part of yt2009,
+and it may be removed at any time.
+
+if using yt2009 as bases for other endpoints/apks,
+make sure to not use POST /youtubei/* endpoints
+for your safety.
+
+*/
+
 const yt2009html = require("./yt2009html")
 const yt2009channels = require("./yt2009channels")
 const yt2009playlists = require("./yt2009playlists")
@@ -147,38 +160,6 @@ pullNewTrending()
 let x = setInterval(pullNewTrending, (1000 * 60 * 60 * 24))
 
 module.exports = {
-    "avatarWait": function(req, res) {
-        if(!req.query.av
-        || !req.query.av.startsWith("/assets/")
-        || (!req.query.av.endsWith(".jpg")
-        && !req.query.av.endsWith(".png"))
-        || req.query.av.includes("..")) {
-            res.sendStatus(400);
-            return;
-        }
-
-        let f = decodeURIComponent(req.query.av)
-        let fPath = __dirname.split("back")
-        fPath.pop()
-        fPath = fPath.join("back")
-        let tries = 0;
-        function avTry() {
-            if(fs.existsSync(fPath + f)) {
-                res.redirect(f)
-                return;
-            }
-            tries++
-            if(tries >= 5) {
-                res.sendStatus(404)
-                return;
-            }
-            setTimeout(() => {
-                avTry()
-            }, 1000)
-        }
-        avTry()
-    },
-
     "staticRegister": function(req, res) {
         res.set("content-type", "application/json")
         deviceId = ""

@@ -411,5 +411,6 @@
     "heatmap_header": "Most Replayed",
     "watch_tab_transcript": "Transcript",
     "watch_transcript_search": "Search in transcript",
-    "watch_transcript_sync_video": "Scroll with video"
+    "watch_transcript_sync_video": "Scroll with video",
+    "watch_comment_hearted_generic": "♥ received a heart"
 }

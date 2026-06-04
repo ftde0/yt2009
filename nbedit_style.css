@@ -367,3 +367,17 @@ a[href="/my_videos_upload"] span {
     overflow-x: hidden;
     overflow-y: scroll;
 }
+
+.watch-comment-auth .author-image {
+    width: 15px;
+    height: 15px;
+    margin-right: 4px;
+    position: relative;
+    top: 3px;
+}
+
+.watch-comment-entry .author-image.mode2 {
+    float: right;
+    width: 24px;
+    height: 24px;
+}

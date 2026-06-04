@@ -156,6 +156,14 @@
 			(zostawienie pola pustego/inna wartość oznacza max)</p>
 			<input type="checkbox" id="watch-distill-tags" title="&quot;destyluje&quot; tagi filmów aby były bardziej celne">
 			<label for="watch-distill-tags">distill_tags</label><br>
+			<input type="checkbox" id="watch-enable-comment-avatars" title="pokaże awatary osób komentujących na oglądanych filmikach">
+			<label for="watch-enable-comment-avatars">enable_comment_avatars</label>
+			<input type="text" id="watch-enable-comment-avatars-input" autocomplete="off" spellcheck="false" placeholder="tryb">
+			<a id="watch-cmt-avatars-expander" href="javascript:toggleExpander('watch-cmt-avatars-content-expander')">(możliwe wartości)</a><br>
+			<p id="watch-cmt-avatars-content-expander" class="hid">tryby enable_comment_avatars:<br>
+			- 1 - awatar w rozmiarze 15x15 będzie obok nazwy użytkownika<br>
+			- 2 - awatar w rozmiarze 24x24 będzie na prawej stronie pod przyciskami oceny.<br>
+			wpisz <b>samą liczbę</b> aby zmienić tryb. domyślny: 1.</p>
 			<input type="checkbox" id="watch-enable-stats-countback" title="cofa liczniki dat w zakładce Statistics & Data dla starych filmów.">
 			<label for="watch-enable-stats-countback">enable_stats_countback</label><br>
 			<input type="checkbox" id="watch-exclude-cs" title="ukrywa twoje komentarze w /comment_search">

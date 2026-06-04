@@ -44,8 +44,7 @@ module.exports = {
     },
 
     "handlePlayer": function(playbackSession, offset, req, callback) {
-        if(!playbackSessions[playbackSession]
-        || yt2009utils.isUnsupportedNode()) {
+        if(!playbackSessions[playbackSession]) {
             callback(false)
             return;
         }
@@ -248,7 +247,8 @@ module.exports = {
                     "headers": {
                         "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
                     },
-                    "body": protoReq
+                    "body": (yt2009utils.isUnsupportedNode()
+                            ? Buffer.from(protoReq) : protoReq)
                 }).catch(e => {
                     // retry on network error
                     pull()
@@ -390,6 +390,13 @@ module.exports = {
                 yt2009utils.wyjebaTypuOnesie(p.id, (data) => {
                     extractPlayerData(data)
                     processPlayer(players[p.id])
+                })
+                return;
+            }
+            if(yt2009utils.isUnsupportedNode()) {
+                yt2009utils.pullBarePlayer(p.id, (data) => {
+                    extractPlayerData(data)
+                    processPlayer(data)
                 })
                 return;
             }
@@ -1187,6 +1194,7 @@ module.exports = {
                             "-f concat",
                             `-i "${__dirname}/${fileList}"`,
                             "-c copy",
+                            "+movflags faststart"
                             `"${__dirname}/..${target}"`
                         ].join(" ")
                         //console.log(`calling ${ffmpegCmd}`)
@@ -1238,6 +1246,7 @@ module.exports = {
                                 "-map 1:v",
                                 "-c:v copy",
                                 "-c:a copy",
+                                "+movflags faststart"
                                 `"${__dirname}/..${targetFname}"`
                             ].join(" ")
                             child_process.exec(ffmpegCmd, (e, so, se) => {

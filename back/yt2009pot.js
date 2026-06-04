@@ -8,9 +8,9 @@ const poUrl = [
 ].join("")
 const poReq = require("fs").readFileSync("./proto/getpo_precoded")
 const dgBoundKey = Buffer.from([
-    60,169,126,132,74,134,154,248,239,232,91,78,202,243,247,227
+    186,52,66,247,241,24,52,242,152,147,243,210,95,138,64,215
 ])
-const keyId = Buffer.from("0158cbec22", "hex")
+const keyId = Buffer.from("010e016edd", "hex")
 const iv = Buffer.from([1,1,1,1,1,1,1,1,1,1,1,1])
 const youtubeSig = Buffer.from(
     `3d7a1223019aa39d9ea0e3436ab7c0896bfb4fb679f4de5fe7c23f326c8f994a`, "hex"
@@ -39,7 +39,7 @@ module.exports = {
                 potBackup = Buffer.from(resp.backup, "base64")
             }
             let potEncryptdata = new pb.potDescriptor()
-            potEncryptdata.setTime(45)
+            potEncryptdata.setTime(26)
             potEncryptdata.setInput(visitor)
             potEncryptdata.setPkgname(youtubePkgname)
             potEncryptdata.setPkgsignature(youtubeSig)
@@ -68,7 +68,7 @@ module.exports = {
             "method": "POST",
             "headers": {
                 "content-type": "application/x-protobuf",
-                "user-agent": "GmsCore/250832016"
+                "user-agent": "com.google.android.gms/262031016 (Linux; U; Android 10; en_US; Android SDK built for x86; Build/QSR1.190920.001; Cronet/148.0.7778.120)"
             },
             "body": poReq
         }).then(r => {r.buffer().then(d => {

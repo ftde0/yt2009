@@ -45,7 +45,6 @@ const yt2009basefeeds = require("./yt2009basefeeds")
 const yt2009m = require("./yt2009m")
 const yt2009trusted = require("./yt2009trustedcontext")
 const mobileHelper = require("./yt2009mobilehelper")
-const playerResponsePb = require("./proto/android_player_pb")
 const devTimings = false;
 const p = require("../package.json")
 const version = p.version;
@@ -54,11 +53,33 @@ const https = require("https")
 const fs = require("fs")
 const app = express();
 
-// nodejs v5 patches
+// nodejs v5 polyfills
 try {
 	if(!Array.prototype.includes) {
 		Array.prototype.includes = function(i) {
 			return this.indexOf(i) !== -1;
+		}
+	}
+    if(!String.prototype.padStart) {
+		String.prototype.padStart = function(targetLength, filler) {
+			if(this.length >= targetLength) return this;
+			if(!filler) {filler = "0"}
+			var s = this;
+			while(s.length < targetLength) {
+				s = filler + s
+			}
+			return s;
+		}
+	}
+    if(!String.prototype.padEnd) {
+		String.prototype.padEnd = function(targetLength, filler) {
+			if(this.length >= targetLength) return this;
+			if(!filler) {filler = "0"}
+			var s = this;
+			while(s.length < targetLength) {
+				s = s + filler
+			}
+			return s;
 		}
 	}
 }
@@ -183,6 +204,26 @@ if(yt2009_utils.isUnsupportedNode()) {
 
 `)
 }
+fs.readdir("../", (err, files) => {
+    let hasMagick = files.filter(s => {
+        return s.includes("magick")
+    })[0]
+    let hasFfmpeg = files.filter(s => {
+        return s.includes("ffmpeg")
+    })[0]
+    let str = ((hasMagick && hasFfmpeg) ? "magick and ffmpeg"
+             : (hasMagick ? "magick" : ((hasFfmpeg) ? "ffmpeg" : "")))
+    if(hasMagick || hasFfmpeg) {
+        console.log(`
+        
+        
+    ${str} found literally (mistakenly?) put in yt2009's directory.
+    make sure they're added into your **system's PATH environemnt variable**.
+    if so, you may disregard this message.
+
+`)
+    }
+})
 
 if(fs.existsSync("../Dockerfile")) {
     let dockerfile = fs.readFileSync("../Dockerfile").toString().split("\r").join("")
@@ -206,17 +247,29 @@ if(fs.existsSync("./yt2009experimentals.js")) {
 if(config.redirmode
 && typeof(config.redirmode) == "string") {
     app.get("*", (req, res) => {
+        let code = 308;
+        if(req.headers
+        && req.headers["user-agent"]
+        && req.headers["user-agent"].includes("Android")) {
+            code = 302
+        }
         if(req.url.startsWith("/") && config.redirmode.endsWith("/")) {
             req.url = req.url.replace("/", "")
         }
-        res.redirect(308, config.redirmode + req.url)
+        res.redirect(code, config.redirmode + req.url)
         return;
     })
     app.post("*", (req, res) => {
+        let code = 308;
+        if(req.headers
+        && req.headers["user-agent"]
+        && req.headers["user-agent"].includes("Android")) {
+            code = 302
+        }
         if(req.url.startsWith("/") && config.redirmode.endsWith("/")) {
             req.url = req.url.replace("/", "")
         }
-        res.redirect(308, config.redirmode + req.url)
+        res.redirect(code, config.redirmode + req.url)
         return;
     })
 } else if(config.redirmode && typeof(config.redirmode) !== "string") {
@@ -571,6 +624,7 @@ app.get("/watch", (req, res) => {
             extraSettings.highEndDevice = true;
         }
         yt2009_utils.pullBarePlayer(id, (data) => {
+            //console.log(data.streamingData.adaptiveFormats)
             if(extraSettings.highEndDevice) {
                 yt2009_exports.extendWrite("players", id + "/hfr", data)
                 setTimeout(() => {
@@ -1585,6 +1639,9 @@ channel_endpoints.forEach(channel_endpoint => {
     })
 })
 
+// my_profile -> user
+app.get("/my_profile", (req, res) => {res.redirect("/user")})
+
 app.get("/get_userid", (req, res) => {
     if(!yt2009_utils.isAuthorized(req)) {
         res.sendStatus(401)
@@ -1936,6 +1993,12 @@ app.get("/get_more_comments", (req, res) => {
     let flags = ""
     try {
         if(req.headers.cookie
+        && req.headers.cookie.includes("watch_flags=")) {
+            flags += req.headers.cookie
+                     .split("watch_flags=")[1]
+                     .split(";")[0]
+        }
+        if(req.headers.cookie
         && req.headers.cookie.includes("global_flags=")) {
             flags += req.headers.cookie
                      .split("global_flags=")[1]
@@ -1964,7 +2027,7 @@ app.get("/get_more_comments", (req, res) => {
     let clientUseExtendedCount = false;
 
     function addComment(comment) {
-        if(comment.pinned) return;
+        if(comment.pinned && !req.query.mode) return;
         if(comment.continuation) {
             continuation = comment.continuation;
             return;
@@ -1987,6 +2050,65 @@ app.get("/get_more_comments", (req, res) => {
             clientUseExtendedCount = true;
         }
 
+        // get pchelper liked/disliked state
+        if(mobileHelper.hasLogin(req)) {
+            let actions = mobileHelper.getCommentActions(req)
+            if(actions && actions[commentId]) {
+                switch(actions[commentId]) {
+                    case 4: {
+                        //dislike
+                        likes -= -1
+                        customRating = -11
+                        break;
+                    }
+                    case 5: {
+                        //like
+                        likes += 1
+                        customRating = 1
+                        break;
+                    }
+                }
+            }
+        }
+
+        // hearted/pinned states
+        let additionalContentHeader = []
+        if(comment.pinned) {
+            additionalContentHeader.push(
+                "lang_watch_comment_pinned"
+            )
+        }
+        if(comment.hearted) {
+            additionalContentHeader.push(
+                "lang_watch_comment_hearted_generic"
+            )
+        }
+        if(additionalContentHeader.length == 0) {
+            additionalContentHeader = false;
+        } else {
+            additionalContentHeader = additionalContentHeader.join(" - ")
+            additionalContentHeader = " - " + additionalContentHeader
+        }
+
+        // avatars?
+        function handleCommentAvatar(link) {
+            if(flags.includes("enable_comment_avatars") && link) {
+                let flag = flags.split("enable_comment_avatars")[1]
+                                .split(";")[0].split(":")[0].substring(0,1);
+                switch(flag) {
+                    case "2": {
+                        return {"link": link, "placement": 2}
+                    }
+                    case "1":
+                    default: {
+                        return {"link": link, "placement": 1}
+                    }
+                }
+                return;
+            }
+            return null;
+        }
+
         let commentHTML = yt2009_templates.videoComment(
             comment.authorUrl,
             comment.authorName,
@@ -1998,7 +2120,10 @@ app.get("/get_more_comments", (req, res) => {
             true,
             likes,
             commentId,
-            comment.r
+            comment.r,
+            (flags.includes("watch_modern_features")
+            ? additionalContentHeader : ""),
+            handleCommentAvatar(comment.authorAvatar)
         )
 
         if(customRating == 1) {
@@ -2035,6 +2160,7 @@ app.get("/get_more_comments", (req, res) => {
     && req.headers.cookie.includes("comment_options_sort=0")
     && req.query.mode == "reload")) {
         // default (top) comments
+        flags += ":continuation-y"
         yt2009.get_video_comments(id, (data) => {
             data.forEach(comment => {
                 addComment(comment)
@@ -4274,6 +4400,33 @@ app.post("/comment_post", (req, res) => {
         }
     }
 
+    if(mobileHelper
+    && mobileHelper.hasLogin(req)
+    && req.headers["reply-comment-id"]) {
+        mobileHelper.commentReply(
+            req.headers.source.split("v=")[1].substring(0,11),
+            req.headers["reply-comment-id"],
+            req.body.toString(),
+            req,
+            (outputData) => {
+                if(outputData.c && outputData.r) {
+                    let user = yt2009_utils.xss(
+                        req.headers.cookie.split("login_simulate")[1]
+                           .split(":")[0].split(";")[0]
+                    )
+                    res.status(200).send(yt2009_templates.commentReply({
+                        "content": outputData.c,
+                        "authorName": user,
+                        "time": "1 second ago"
+                    }))
+                } else {
+                    res.sendStatus(500)
+                }
+            }
+        )
+        return;
+    }
+
     // parse request
     let body = {}
     if(!req.body.toString().startsWith("{")) {
@@ -4443,6 +4596,12 @@ app.post("/comment_rate", (req, res) => {
         return;
     }
 
+    // pchelper
+    if(mobileHelper.hasLogin(req)) {
+        mobileHelper.commentRate(req, res)
+        return;
+    }
+
     let displayRating = 0
     if(req.headers.initial
     && !isNaN(req.headers.initial)) {
@@ -4524,8 +4683,11 @@ app.get("/reply_template", (req, res) => {
         .split("\"").join("'")
     )
 
+    let commentId = req.headers["comment-id"]
+                  || Math.floor(Math.random() * 17112023)
+
     res.send(yt2009_templates.replyTemplate(
-        Math.floor(Math.random() * 17112023), video, loginName
+        commentId, video, loginName
     ))
 })
 
@@ -4947,7 +5109,8 @@ near you videos
 let ipDb = false;
 let regionParamTable = false;
 let maxmind;
-if(!fs.existsSync(__dirname + "/GeoLite2-City.mmdb")) {
+if(!fs.existsSync(__dirname + "/GeoLite2-City.mmdb")
+&& !yt2009_utils.isUnsupportedNode()) {
     // download ip database
     let l = `https://github.com/PaddeK/node-maxmind-db/raw/master/test/data/GeoLite2-City.mmdb`
     console.log("yt2009upgrade: downloading ip-country db for near you")
@@ -4974,7 +5137,7 @@ if(!fs.existsSync(__dirname + "/GeoLite2-City.mmdb")) {
             }, 150)
         })
     }
-} else {
+} else if(!yt2009_utils.isUnsupportedNode()) {
     maxmind = require("maxmind-db-reader")
     ipDb = maxmind.openSync("./GeoLite2-City.mmdb")
     regionParamTable = require("./location_params.json")
@@ -5987,7 +6150,35 @@ app.get("/avatar_wait", (req, res) => {
         res.sendStatus(401)
         return;
     }
-    yt2009m.avatarWait(req, res)
+    if(!req.query.av
+    || !req.query.av.startsWith("/assets/")
+    || (!req.query.av.endsWith(".jpg")
+    && !req.query.av.endsWith(".png"))
+    || req.query.av.includes("..")) {
+        res.sendStatus(400);
+        return;
+    }
+
+    let f = decodeURIComponent(req.query.av)
+    let fPath = __dirname.split("back")
+    fPath.pop()
+    fPath = fPath.join("back")
+    let tries = 0;
+    function avTry() {
+        if(fs.existsSync(fPath + f)) {
+            res.redirect(f)
+            return;
+        }
+        tries++
+        if(tries >= 5) {
+            res.sendStatus(404)
+            return;
+        }
+        setTimeout(() => {
+            avTry()
+        }, 1000)
+    }
+    avTry()
 })
 
 /*

@@ -6,6 +6,7 @@ var languageData_EN = {
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
         "watch-distill-tags": "&quot;distills&quot; the video's tags for more accuracy",
+        "watch-enable-comment-avatars": "shows avatars of people commenting on videos",
         "watch-enable-stats-countback": "dials back counters on the Statistics & Data tab for old videos.",
 		"watch-exp-sabr-enable-superresolution": "enables watching superresolutions on videos that have them.",
         "watch-exclude-cs": "hides comments you post from /comment_search",
@@ -160,7 +161,12 @@ var languageData_EN = {
         title terms are case-insensitive. matching videos <b>won't</b> be blocked entirely from access - they just won't show in places like the related videos feed.",
         "#global-videochannel-filter-expander-content": "you can paste channel IDs (24-characters, starting with \"UC\") or channels' names. to put multiple values, separate them with <code>|</code>.<br>\
         e.g. <code>UC5g1Solgg1Cnow3PwteNuJA|channel</code> - will hide videos from the channel <code>UC5g1Solgg1Cnow3PwteNuJA</code> and the ones with the word <code>channel</code> in the creators' name.<br>\
-        name terms are case-insensitive. matching channels and videos <b>won't</b> be blocked entirely from access."
+        name terms are case-insensitive. matching channels and videos <b>won't</b> be blocked entirely from access.",
+
+        "#watch-cmt-avatars-content-expander": "enable_comment_avatars modes:<br>\
+        - 1 - a 15x15 picture will be shown next to the author's username<br>\
+        - 2 - a 24x24 picture will be shown to the right of the comment, below the rating buttons.<br>\
+        type <b>only a number</b> into the field to change the mode. default: 1."
     },
 
     "placeholders": {

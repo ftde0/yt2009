@@ -11,7 +11,8 @@ module.exports = {
     "videoComment": function(
         authorUrl, authorName, commentTime,
         content, flags, useLanguage, likes,
-        id, replyData, additionalRenderHeader
+        id, replyData, additionalRenderHeader,
+        avatarData
     ) {
         if(!additionalRenderHeader) {
             additionalRenderHeader = ""
@@ -74,10 +75,26 @@ module.exports = {
         }
         let dislikeCode = `onclick="sendCmtRating('${id}', 'dislike');return false;"`
         let likeCode = `onclick="sendCmtRating('${id}', 'like');return false;"`
+
+        let avatarCode = ""
+        let ap = 0;
+        if(avatarData && avatarData.placement && avatarData.link) {
+            switch(avatarData.placement) {
+                case 1: {
+                    avatarCode = `<img src="/avatar_wait?av=${utils.saveAvatar(avatarData.link)}" loading="lazy" class="author-image"/>`
+                    break;
+                }
+                case 2: {
+                    avatarCode = `<img src="/avatar_wait?av=${utils.saveAvatar(avatarData.link)}" loading="lazy" class="author-image mode2"/>`
+                    break;
+                }
+            }
+            ap = avatarData.placement
+        }
         return `<div class="watch-comment-entry" ${id ? `id="comment-${id}"` : ""}>
             <div class="watch-comment-head">
                 <div class="watch-comment-info">
-                    <a class="watch-comment-auth" href="${authorUrl}" rel="nofollow">${authorName}</a>
+                    <a class="watch-comment-auth" href="${authorUrl}" rel="nofollow">${ap == 1 ? avatarCode : ""}${authorName}</a>
                     <span class="watch-comment-time"> (${commentTime}) ${utils.xss(additionalRenderHeader)}</span>
                 </div>
                 <div class="watch-comment-voting">
@@ -95,7 +112,7 @@ module.exports = {
                 </div>
                 <div class="clearL"></div>
             </div>
-    
+${ap == 2 ? avatarCode : ""}
             <div>
                 <div class="watch-comment-body">
                     <div>
@@ -3735,7 +3752,7 @@ term='channel'/>
 	<div class="watch-comment-entry-reply">
 		<div class="watch-comment-head">
 			<div class="watch-comment-info">
-				<a class="watch-comment-auth" href="/channel/${c.authorId}" rel="nofollow">${utils.xss(c.authorName)}</a>
+				<a class="watch-comment-auth" href="${c.authorId ? `/channel/${c.authorId}` : `/user`}" rel="nofollow">${utils.xss(c.authorName)}</a>
 				<span class="watch-comment-time"> (${c.time}) </span>
 				<a id="show_link_${c.commentId}" class="watch-comment-head-link" onclick="displayHideCommentLink('${c.commentId}')">Show</a>
 				<a id="hide_link_${c.commentId}" class="watch-comment-head-link" onclick="displayShowCommentLink('${c.commentId}')">Hide</a>

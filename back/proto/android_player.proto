@@ -24,7 +24,7 @@ message numberRange {
     int32 end = 4;
 }
 message root {
-    message contextType {
+    message responseContext {
         string visitorData = 2;
         message clientType {
             int32 service = 1;
@@ -37,7 +37,7 @@ message root {
         repeated clientType client = 6;
         int32 maxAgeSeconds = 7;
     }
-    repeated contextType context = 1;
+    responseContext context = 1;
     message playabilityStatus {
         optional int32 status = 1;
         string error = 2;
