@@ -1194,7 +1194,7 @@ module.exports = {
                             "-f concat",
                             `-i "${__dirname}/${fileList}"`,
                             "-c copy",
-                            "+movflags faststart"
+                            "-movflags +faststart",
                             `"${__dirname}/..${target}"`
                         ].join(" ")
                         //console.log(`calling ${ffmpegCmd}`)
@@ -1246,7 +1246,7 @@ module.exports = {
                                 "-map 1:v",
                                 "-c:v copy",
                                 "-c:a copy",
-                                "+movflags faststart"
+                                "-movflags +faststart",
                                 `"${__dirname}/..${targetFname}"`
                             ].join(" ")
                             child_process.exec(ffmpegCmd, (e, so, se) => {
