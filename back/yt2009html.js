@@ -70,11 +70,11 @@ if(EXTRA_RISK_BLOCK && !frequentRestartEnvironmentDisablePotgen) {
             }
             // if not signed in, bind to visitor id
             if(!yt2009androidsignin.needed()) {
-                createPot(visitorId)
+                createPot(visitorId, "visitor")
             } else {
                 // bind to datasyncid
                 yt2009androidsignin.getDatasyncId((id) => {
-                    createPot(id)
+                    createPot(id, "datasync")
                 })
             }
         }
@@ -82,7 +82,7 @@ if(EXTRA_RISK_BLOCK && !frequentRestartEnvironmentDisablePotgen) {
     })})
 }
 
-function createPot(visitorId) {
+function createPot(visitorId, type) {
     if(yt2009exports.read().potgenTemporarilyTakenover) return;
     yt2009pot.generatePo(visitorId, (data) => {
         yt2009exports.writeData("potBytes", data.encryptData)
@@ -98,7 +98,11 @@ function createPot(visitorId) {
         }
         // regenerate pot close to end of validity
         setTimeout(() => {
-            createPot((yt2009exports.read().visitor || visitorId))
+            if(type == "visitor") {
+                createPot((yt2009exports.read().visitor || visitorId))
+            } else {
+                createPot(visitorId)
+            }
         }, (data.valid - 1800) * 1000)
     })
 }
