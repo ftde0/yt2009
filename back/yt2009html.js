@@ -99,9 +99,9 @@ function createPot(visitorId, type) {
         // regenerate pot close to end of validity
         setTimeout(() => {
             if(type == "visitor") {
-                createPot((yt2009exports.read().visitor || visitorId))
+                createPot((yt2009exports.read().visitor || visitorId), type)
             } else {
-                createPot(visitorId)
+                createPot(visitorId, type)
             }
         }, (data.valid - 1800) * 1000)
     })
