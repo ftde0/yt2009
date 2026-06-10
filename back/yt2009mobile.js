@@ -59,6 +59,18 @@ const ffmpeg_process_xvid = [
     "-vf scale=640:480",
     "\"$2\""
 ]
+const ffmpeg_process_mpeg4 = [
+    "ffmpeg",
+    "-i \"$1\"",
+    "-c:v mpeg4",
+    "-vtag mp4v",
+    "-b:v 501k",
+    "-brand isom",
+    "-pix_fmt yuv420p",
+    "-c:a copy",
+    "-f mp4",
+    "\"$2\""
+]
 const ffmpeg_stream_mp4 = [
     "ffmpeg",
     "-re -i",
@@ -275,7 +287,8 @@ module.exports = {
                 case "http_3gp":
                 case "http_wmv":
                 case "http_mp4_144":
-                case "http_xvid": {
+                case "http_xvid":
+                case "http_mpeg4": {
                     playback = method;
                 }
             }
@@ -290,7 +303,8 @@ module.exports = {
             "http_mp4_144": [ffmpeg_process_144, "id-144.mp4"],
             "http_3gp": [ffmpeg_process_3gp, "id.3gp"],
             "http_wmv": [ffmpeg_process_wmv, "id.wmv"],
-            "http_xvid": [ffmpeg_process_xvid, "id.avi"]
+            "http_xvid": [ffmpeg_process_xvid, "id.avi"],
+            "http_mpeg4": [ffmpeg_process_mpeg4, "id-mpeg4.mp4"]
         }
 
         let tasks = taskLookup[playback]
@@ -482,6 +496,7 @@ module.exports = {
             "http_3gp": "/http_3gp?v=" + id,
             "http_wmv": "/http_wmv?v=" + id,
             "http_xvid": "/http_xvid?v=" + id,
+            "http_mpeg4": "/http_mpeg4?v=" + id,
             "http_flash_flv": "/mobile/watch?v=" + id,
             "http_flash_mp4": "/mobile/watch?v=" + id
         }
