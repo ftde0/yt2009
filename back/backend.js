@@ -3078,7 +3078,8 @@ let videoProcessEndpoints = [
     "/mp4_144",
     "/http_3gp",
     "/http_wmv",
-    "/http_xvid"
+    "/http_xvid",
+    "/http_mpeg4"
 ]
 videoProcessEndpoints.forEach(endpoint => {
     app.get(endpoint, (req, res) => {
