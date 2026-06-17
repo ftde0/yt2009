@@ -5044,7 +5044,7 @@ if(document.cookie
             38: 56,
             33: 57
         }
-        if(numpadBindings[key]) {
+        if(numpadBindings[key] && e.location) {
             key = numpadBindings[key]
         }
         if(key && key >= 48 && key <= 57 && !playingAsLive) {
