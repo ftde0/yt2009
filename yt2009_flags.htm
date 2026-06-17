@@ -130,8 +130,6 @@
 
 		<div class="group1">
 			<h2>/watch</h2>
-			<input type="checkbox" id="watch-allow-clientside-ryd" title="nie czeka jeśli api return youtube dislike zajmuje dłużej niż zazwyczaj żeby otrzymać ocenę w gwiazdkach.">
-			<label for="watch-allow-clientside-ryd">allow_clientside_ryd</label><br>
 			<input type="checkbox" id="watch-annotation-gradients" title="dodaje wcześniej widoczne gradienty na adnotacjach w html5.">
 			<label for="watch-annotation-gradients">annotation_gradients</label><br>
 			<i id="leg_annot_notice">annotation_gradients nie jest celnym odwzorowaniem adnotacji z flash.<br>zostało dodane ze względu na poprzednią implementację adnotacji w html5.</i><br>
@@ -800,7 +798,6 @@
 				}
 				case "daily": {
 					watchFlags = [
-						"allow_clientside_ryd",
 						"hd_1080",
 						"share_behavioronly_remove",
 						"turn_down_lights",

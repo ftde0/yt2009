@@ -183,6 +183,11 @@ if(process.env.YT2009_IPV6) {
     cfg.ipv6 = process.env.YT2009_IPV6
 }
 
+// set alt_hostname
+if(process.env.YT2009_ALTHOSTNAME) {
+    cfg.alt_hostname = true;
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

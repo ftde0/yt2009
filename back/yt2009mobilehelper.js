@@ -65,6 +65,9 @@ if(fs.existsSync(userdata_fname)) {
 } else {
     fs.writeFileSync(userdata_fname, "{\"ikmc\":1}")
 }
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 module.exports = {
     "set": function(app) {
@@ -370,7 +373,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         } else if(deviceId && userdata[deviceId]) {
             let rt = templates.gdata_feedStart;
             setupYouTube(deviceId, (h) => {
-                fetch("https://www.youtube.com/youtubei/v1/browse", {
+                fetch(hostname + "/youtubei/v1/browse", {
                     "method": "POST",
                     "headers": h,
                     "body": JSON.stringify({
@@ -550,7 +553,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         }
         let fullRes = templates.gdata_feedStart
         setupYouTube(deviceId, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse", {
+            fetch(hostname + "/youtubei/v1/browse", {
                 "method": "POST",
                 "headers": h,
                 "body": JSON.stringify({
@@ -644,7 +647,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         let fullRes = templates.gdata_feedStart
         let f = []
         setupYouTube(deviceId, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse", {
+            fetch(hostname + "/youtubei/v1/browse", {
                 "method": "POST",
                 "headers": h,
                 "body": JSON.stringify({
@@ -722,7 +725,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
                 watchNextMsg.serializeBinary()
             ).toString("base64"))
 
-            fetch("https://www.youtube.com/youtubei/v1/next", {
+            fetch(hostname + "/youtubei/v1/next", {
                 "method": "POST",
                 "headers": h,
                 "body": JSON.stringify({
@@ -811,7 +814,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         let playlist = req.originalUrl.split("/playlists/")[1].split("?")[0]
         let v = req.body.toString().split("<id>")[1].split("</id>")[0]
         setupYouTube(device, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse/edit_playlist", {
+            fetch(hostname + "/youtubei/v1/browse/edit_playlist", {
                 "headers": h,
                 "body": JSON.stringify({
                     "context": androidContext,
@@ -837,7 +840,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         let playlist = req.originalUrl.split("/playlists/")[1].split("?")[0]
         let v = req.body.toString().split("<id>")[1].split("</id>")[0]
         setupYouTube(device, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse/edit_playlist", {
+            fetch(hostname + "/youtubei/v1/browse/edit_playlist", {
                 "headers": h,
                 "body": JSON.stringify({
                     "context": androidContext,
@@ -879,7 +882,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
 
         function createPl() {
             setupYouTube(device, (h) => {
-                fetch("https://www.youtube.com/youtubei/v1/playlist/create", {
+                fetch(hostname + "/youtubei/v1/playlist/create", {
                     "headers": h,
                     "method": "POST",
                     "body": JSON.stringify({
@@ -929,7 +932,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
 
         function addToPl(playlistId) {
             setupYouTube(device, (h) => {
-                fetch("https://www.youtube.com/youtubei/v1/browse/edit_playlist", {
+                fetch(hostname + "/youtubei/v1/browse/edit_playlist", {
                     "headers": h,
                     "body": JSON.stringify({
                         "context": androidContext,
@@ -995,7 +998,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         res.set("content-type", "application/xml")
         let v = req.body.toString().split("<id>")[1].split("</id>")[0]
         setupYouTube(device, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse/edit_playlist", {
+            fetch(hostname + "/youtubei/v1/browse/edit_playlist", {
                 "headers": h,
                 "body": JSON.stringify({
                     "context": androidContext,
@@ -1051,7 +1054,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         // post comment
         setupYouTube(deviceId, (h) => {
             pullCachedName((name) => {
-                fetch("https://www.youtube.com/youtubei/v1/comment/create_comment", {
+                fetch(hostname + "/youtubei/v1/comment/create_comment", {
                     "method": "POST",
                     "headers": h,
                     "body": JSON.stringify({
@@ -1111,7 +1114,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         }
         let isPrivate = body.includes("<yt:private")
         setupYouTube(deviceId, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/playlist/create", {
+            fetch(hostname + "/youtubei/v1/playlist/create", {
                 "headers": h,
                 "method": "POST",
                 "body": JSON.stringify({
@@ -1187,7 +1190,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
         function getContinuation(token) {
             setTimeout(() => {
                 setupYouTube(deviceId, (h) => {
-                    fetch("https://www.youtube.com/youtubei/v1/browse", {
+                    fetch(hostname + "/youtubei/v1/browse", {
                         "headers": h,
                         "method": "POST",
                         "body": JSON.stringify({
@@ -1215,7 +1218,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
     
         // pull first request + 2 continuations
         setupYouTube(deviceId, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse", {
+            fetch(hostname + "/youtubei/v1/browse", {
                 "headers": h,
                 "method": "POST",
                 "body": JSON.stringify({
@@ -1294,7 +1297,7 @@ http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
             state = "dislike"
         }
         setupYouTube(deviceId, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/like/" + state, {
+            fetch(hostname + "/youtubei/v1/like/" + state, {
                 "method": "POST",
                 "headers": h,
                 "body": JSON.stringify({
@@ -1346,7 +1349,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         user = req.body.toString().split("<yt:username>")[1].split("</yt")[0]
         setupYouTube(device, (h) => {
             function onceIdPull(id) {
-                fetch("https://www.youtube.com/youtubei/v1/subscription/" + state, {
+                fetch(hostname + "/youtubei/v1/subscription/" + state, {
                     "headers": h,
                     "method": "POST",
                     "body": JSON.stringify({
@@ -1562,7 +1565,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 return true;
             }
             function androidDefaultRequest() {
-                fetch("https://www.youtube.com/youtubei/v1/browse", {
+                fetch(hostname + "/youtubei/v1/browse", {
                     "headers": h,
                     "method": "POST",
                     "body": JSON.stringify({
@@ -1698,7 +1701,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 		}
 		function doRequest() {
 			setupYouTube(device, (h) => {
-				fetch("https://www.youtube.com/youtubei/v1/player", {
+				fetch(hostname + "/youtubei/v1/player", {
 					"headers": h,
 					"method": "POST",
 					"body": JSON.stringify({
@@ -2290,7 +2293,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 
         if(videos.length == 1) {
             setupYouTube(device, (h) => {
-                fetch("https://www.youtube.com/youtubei/v1/video/delete", {
+                fetch(hostname + "/youtubei/v1/video/delete", {
                     "headers": h,
                     "method": "POST",
                     "body": JSON.stringify({
@@ -2304,7 +2307,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             })
         } else {
             setupYouTube(device, (h) => {
-                fetch("https://www.youtube.com/youtubei/v1/creator/enqueue_creator_bulk_delete", {
+                fetch(hostname + "/youtubei/v1/creator/enqueue_creator_bulk_delete", {
                     "headers": h,
                     "method": "POST",
                     "body": JSON.stringify({
@@ -2611,7 +2614,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             ).toString("base64")
 
             setupYouTube(device, (h) => {
-                fetch("https://www.youtube.com/youtubei/v1/browse", {
+                fetch(hostname + "/youtubei/v1/browse", {
                     "method": "POST",
                     "headers": h,
                     "body": JSON.stringify({
@@ -2812,7 +2815,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
 
         setupYouTube(device, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse", {
+            fetch(hostname + "/youtubei/v1/browse", {
                 "method": "POST",
                 "headers": h,
                 "body": JSON.stringify({
@@ -3170,7 +3173,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
 
         setupYouTube(device, (h) => {
-            fetch("https://www.youtube.com/youtubei/v1/browse", {
+            fetch(hostname + "/youtubei/v1/browse", {
                 "method": "POST",
                 "headers": h,
                 "body": JSON.stringify({
@@ -4013,7 +4016,7 @@ function pullYouTubeAuth(userdata, callback) {
 function pullYouTubeAccounts(loginData, callback) {
     let h = JSON.parse(JSON.stringify(androidHeaders))
     h.Authorization = `Bearer ${decryptWthIk(loginData.yAuth)}`
-    fetch("https://www.youtube.com/youtubei/v1/account/accounts_list", {
+    fetch(hostname + "/youtubei/v1/account/accounts_list", {
         "method": "POST",
         "headers": h,
         "body": JSON.stringify({
@@ -4065,7 +4068,7 @@ function pullAllYouTubeAccounts(loginData, callback) {
     if(loginData.pageId && !loginData.isFirst) {
         h["x-goog-pageid"] = loginData.pageId
     }
-    fetch("https://www.youtube.com/youtubei/v1/account/accounts_list", {
+    fetch(hostname + "/youtubei/v1/account/accounts_list", {
         "method": "POST",
         "headers": h,
         "body": JSON.stringify({
@@ -4125,6 +4128,8 @@ function pullAllYouTubeAccounts(loginData, callback) {
                                         .datasyncIdToken
                         }
                         catch(error) {}
+                        if(!a.serviceEndpoint
+                        || !a.serviceEndpoint.signInEndpoint) return;
                         accounts.push({
                             "name": name.name,
                             "handle": name.handle,
@@ -4203,7 +4208,7 @@ function pullDeviceId(req) {
 
 function pullUserIdFromDevice(device, callback) {
     setupYouTube(device, (h) => {
-        fetch("https://www.youtube.com/youtubei/v1/guide", {
+        fetch(hostname + "/youtubei/v1/guide", {
             "method": "POST",
             "headers": h,
             "body": JSON.stringify({

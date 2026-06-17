@@ -84,7 +84,7 @@ function pullNewHype() {
             "browseId": "FEhype_leaderboard",
         }),
         "headers": rHeaders
-    }).then(r => {r.json().then(r => {
+    }).catch(e => {}).then(r => {if(!r) return;r.json().then(r => {
         let vids = []
         if(r && r.contents && r.contents.singleColumnBrowseResultsRenderer
         && r.contents.singleColumnBrowseResultsRenderer.tabs) {
@@ -712,6 +712,19 @@ module.exports = {
             let t4 = new tS.contentEntry.contentData()
             let t5 = new tS.contentEntry.contentData.contentActualData()
 
+            function createDeprecat() {
+                let i6 = new p.itemSectionRenderer()
+                let i7 = new p.itemSectionRenderer.icsContents()
+                let i8 = new p.accountTabLink()
+                i8.addText(generateRun(
+                    "this app's support will be cut off soon.", p
+                ))
+                i7.addAccountlink(i8)
+                i6.addIcscontent(i7)
+                t5.addSection(i6)
+            }
+            createDeprecat()
+
             yt2009videos.internal_getVideos(
                 {"query": {"s": "mr", "max": 15}}, ""
             ).forEach(v => {
@@ -883,7 +896,7 @@ module.exports = {
                 "method": "POST",
                 "body": JSON.stringify(requestParams),
                 "headers": constants.headers
-            }).then(r => {r.json().then(r => {
+            }).catch(e => {}).then(r => {if(!r) return;r.json().then(r => {
                 let c = r.contents.twoColumnBrowseResultsRenderer.tabs
                         .filter(s => s.tabRenderer && s.tabRenderer.selected)[0]
                         .tabRenderer.content.sectionListRenderer.contents
@@ -1061,7 +1074,7 @@ module.exports = {
                 "method": "POST",
                 "body": JSON.stringify(requestParams),
                 "headers": constants.headers
-            }).then(r => {r.json().then(r => {
+            }).catch(e => {}).then(r => {if(!r) return;r.json().then(r => {
                 r = r.contents.twoColumnBrowseResultsRenderer.tabs[0]
                      .tabRenderer.content.richGridRenderer;
                 

@@ -18,6 +18,9 @@ const page = fs.readFileSync("../subscriptions.htm").toString()
 const config = require("./config.json")
 const doodles = require("./yt2009doodles")
 const languages = require("./language_data/language_engine")
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 let saved_subscription_data = {}
 
@@ -79,9 +82,7 @@ module.exports = {
         require("./cache_dir/userid_cache").read(url, (id) => {
             // read from cache
             // main channel clean fetch
-            fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                yt2009exports.read().api_key
-            }`, {
+            fetch(`${hostname}/youtubei/v1/browse?prettyPrint=false`, {
                 "headers": constants.headers,
                 "referrer": "https://www.youtube.com/",
                 "referrerPolicy": "strict-origin-when-cross-origin",
@@ -122,9 +123,7 @@ module.exports = {
 
                 // we have videos :D
                 function getVideosByParam(param, browseId) {
-                    fetch(`https://www.youtube.com/youtubei/v1/browse?key=${
-                        yt2009exports.read().api_key
-                    }`, {
+                    fetch(`${hostname}/youtubei/v1/browse?prettyPrint=false`, {
                         "headers": constants.headers,
                         "referrer": "https://www.youtube.com/",
                         "referrerPolicy": "strict-origin-when-cross-origin",

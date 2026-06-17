@@ -7,6 +7,9 @@ const config = require("./config.json")
 const readline = require("readline-sync");
 const yt2009exports = require("./yt2009exports")
 const uida = "1234567890abcde".split("")
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 const androidHeaders = {
     "Accept": "*/*",
     "Accept-Language": "pl,en-US;q=0.7,en;q=0.3",
@@ -139,7 +142,7 @@ if(!loginData.yExpire) {
     ac.client.mainAppWebInfo = {
         "graftUrl": "/watch?v=" + rv
     }
-    fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+    fetch(hostname + "/youtubei/v1/player?prettyPrint=false", {
         "credentials": "include",
         "headers": androidHeaders,
         "referrer": "https://www.youtube.com/watch?v=" + rv,
@@ -347,7 +350,7 @@ function testSignIn() {
     if(refreshing) return;
     let h = JSON.parse(JSON.stringify(androidHeaders))
     h.Authorization = `Bearer ${loginData.yAuth}`
-    fetch("https://www.youtube.com/youtubei/v1/account/accounts_list", {
+    fetch(hostname + "/youtubei/v1/account/accounts_list", {
         "method": "POST",
         "headers": h,
         "body": JSON.stringify({

@@ -11,6 +11,10 @@ const yt2009constants = require("./yt2009constants.json")
 const countries = require("./geo/country-codes.json")
 const fetch = require("node-fetch")
 const fs = require("fs")
+const config = require("./config.json")
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 function getReferalOnYt(v, callback) {
     // loop through youtube's search until we find the first video
@@ -97,7 +101,7 @@ function getUserCountry(id, callback) {
         continuation.serializeBinary()
     ).toString("base64"))
 
-    fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+    fetch(`${hostname}/youtubei/v1/browse`, {
         "headers": yt2009constants.headers,
         "referrer": "https://www.youtube.com/",
         "referrerPolicy": "strict-origin-when-cross-origin",

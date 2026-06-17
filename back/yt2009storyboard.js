@@ -94,6 +94,8 @@ module.exports = {
                 let downloadedFilesCount = 0;
                 let neededFiles = storyboard.urls.length
 
+				let ytWidth = storyboard.thumbWidth * storyboard.partsPerRow
+
                 storyboard.urls.forEach(u => {
                     let index = storyboard.urls.indexOf(u)
                     let filename = u.split("/")
@@ -103,6 +105,20 @@ module.exports = {
                     fetch(u, {
                         "headers": constants.headers
                     }).then(r => {r.buffer().then(r => {
+						if(downloadedFilesCount == 0) {
+							// is first file, get WEBP size
+							// to make sure youtube spec isn't off
+							let size = identifyWebpImgSize(r.slice(0,70))
+							let actWidth = size[0]
+							if(actWidth !== ytWidth
+							&& Math.abs(ytWidth - actWidth) <= 15) {
+								if(config.env == "dev") {
+									console.log("fix storyboard spec for "+ id)
+								}
+								let w = actWidth / storyboard.partsPerRow
+								storyboard.thumbWidth = w
+							}
+						}
                         fs.writeFileSync(`../assets/${filename}`, r)
                         downloadedFiles[index] = (
                             `${__dirname}/../assets/${filename}`
@@ -180,14 +196,6 @@ module.exports = {
 			let splitSb = false;
 			function splitLines(storyboard) {
 				let thumbsPerLine = 5;
-				/*console.log(storyboard.totalThumbs)
-				if(storyboard.totalThumbs % 4 == 0) {
-                    thumbsPerLine = 4;
-                } else if(storyboard.totalThumbs % 6 == 0) {
-                    thumbsPerLine = 6;
-                } else if(storyboard.totalThumbs % 3 == 0) {
-                    thumbsPerLine = 3;
-                }*/
 				let sWidth = thumbsPerLine * 64
 				//console.log("splitting")
 				let c = child_process.spawn("magick", [
@@ -219,12 +227,14 @@ module.exports = {
 			}
 
             let storyboardLinks = false;
-            if(yt2009exports.read().players[id]) {
+            if(yt2009exports.read().players[id]
+			|| yt2009exports.read().players[id + "/hfr"]) {
                 if(config.env == "dev") {
                     console.log(`using cached player for ${id} storyboard`)
                 }
                 storyboardLinks = getStoryboard(
-                    yt2009exports.read().players[id]
+                    (yt2009exports.read().players[id]
+				  || yt2009exports.read().players[id + "/hfr"])
                 )
                 getBestStoryboardLink()
             } else {
@@ -313,4 +323,66 @@ function parseStoryboardSpec(spec) {
 	})
 
     return levels
+}
+
+function identifyWebpImgSize(img) {
+	// based on https://www.rfc-editor.org/info/rfc9649/
+	function readInt(n, length) {
+		let sorted = [0]
+		switch(length) {
+			case 2: {
+				sorted = [n[1], n[0]]
+				break;
+			}
+			case 3: {
+				sorted = [n[2], n[1], n[0]]
+				break;
+			}
+			case 4: {
+				sorted = [n[3], n[2], n[1], n[0]]
+				break;
+			}
+		}
+		sorted = sorted.map(s => {
+			return s.toString(16).padStart(2, "0")
+		}).join("")
+		return parseInt(sorted, 16)
+	}
+
+	img = img.slice(0,70) // needed info within the first 70b, no need to use more
+	let cursor = 0;
+
+	let simpleHeader = Buffer.from("VP8 ")
+	let losslessHeader = Buffer.from("VP8L")
+	let extHeader = Buffer.from("VP8X")
+	// simple and lossless read the size the same
+	// youtube storyboards usually use simple, but we support all just in case
+
+	let simpleIndex = img.indexOf(simpleHeader)
+	let losslessIndex = img.indexOf(losslessHeader)
+	let extIndex = img.indexOf(extHeader)
+	if(simpleIndex !== -1 || losslessIndex !== -1) {
+		// simple/lossless header used
+		cursor = Math.max(simpleIndex, losslessIndex) + 14
+		// skip data size and other "start" headers - 14b
+
+		let width = img.slice(cursor, cursor + 2)
+		cursor += 2
+		let height = img.slice(cursor, cursor + 2)
+
+		width = readInt(width, 2)
+		height = readInt(height, 2)
+		
+		return [width, height]
+	} else if(extIndex !== -1) {
+		// extended header used
+		cursor = extIndex + 12 // skip size + other headers
+		let width = img.slice(cursor, cursor + 3)
+		cursor += 3
+		let height = img.slice(cursor, cursor + 3)
+		width = readInt(width, 3) + 1
+		height = readInt(height, 3) + 1
+
+		return [width, height]
+	}
 }

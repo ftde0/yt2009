@@ -45,6 +45,7 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_DLMAXRETRY` - the maximum number of retries of file fragment (default: 5)
 - `YT2009_MAX1080` - limits the quality to 1080p from the html5 quality picker (available with `watch_modern_features`) `true/false` (default: `false`)
 - `YT2009_IPV6` - a string containing an ipv6 subnet you want yt2009 to rotate through for playback. (e.g. `2a01:4f8:xxxx:xxxx`)
+- `YT2009_ALTHOSTNAME` - allows using a different hostname, enabling hostsfile redirect to youtube.com. ONLY TO BE USED AFTER INITIAL SETUP. `true/false`
 
 ## troubleshooting
 #### reading auth tokens from a running container

@@ -11,6 +11,9 @@ const fs = require("fs")
 const search_code = fs.readFileSync("../search-generic-page.htm").toString();
 const searchParams = require("./proto/search_request_params_pb")
 const dataApiPageToken = require("./proto/data_api_page_token_pb")
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 let cache = require("./cache_dir/search_cache_manager")
 
@@ -246,9 +249,7 @@ module.exports = {
             }
 
             // send request
-            fetch(`https://www.youtube.com/youtubei/v1/search?key=${
-                yt2009exports.read().api_key
-            }`, {
+            fetch(`${hostname}/youtubei/v1/search?prettyPrint=false`, {
                 "headers": yt2009contants.headers,
                 "referrer": "https://www.youtube.com/",
                 "referrerPolicy": "strict-origin-when-cross-origin",

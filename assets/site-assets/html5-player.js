@@ -568,7 +568,6 @@ function timeUpdate() {
         $(".html5-loading").className += " hid"
         stopLoadingRototo()
     }
-    videoStartedPlaying = true;
     if((window.pickrLastState && window.pickrLastState.ongoing)
 	|| forceStopVideo) {
         video.pause()
@@ -576,6 +575,9 @@ function timeUpdate() {
     }
     if(window.usingModifiers && !window.modifiersAdded) {
         loadModifierTags()
+    }
+    if(playingAsLive) {
+        videoStartedPlaying = true;
     }
     if(playingAsLive
     || (window.sabrData && window.sabrData.seekToLength)) return;
@@ -586,6 +588,7 @@ function timeUpdate() {
         showEndscreen();
     }
     if(video.buffered && !isNaN(video.duration)) {
+        videoStartedPlaying = true
         try {
             var rIndex = 0;
             if(window.sabrData) {
@@ -3204,7 +3207,7 @@ function initAsSabr() {
         } else {
             window.sabrOriginalExactRes = window.sabrExactRes
         }
-        // sort playable and most compatible configs (avc > vp9 > av1)
+        // sort best configs (vp8 > avc > vp9 > av1)
         window.sabrExactRes = JSON.parse(window.sabrExactRes).filter(
             function(res) {
                 return video.canPlayType(res[4])
@@ -3212,6 +3215,9 @@ function initAsSabr() {
         )
         var addedResolutions = []
         var sabrResTemp = []
+        var vp8Res = window.sabrExactRes.filter(function(res) {
+            return res[4].indexOf("vp8") !== -1
+        })
         var h264Res = window.sabrExactRes.filter(function(res) {
             return res[4].indexOf("avc1") !== -1
         })
@@ -3221,10 +3227,24 @@ function initAsSabr() {
         var av1Res = window.sabrExactRes.filter(function(res) {
             return res[4].indexOf("av01") !== -1
         })
-        h264Res.forEach(function(res) {
-            sabrResTemp.push(res)
-            addedResolutions.push(res[1])
-        })
+        if(vp8Res.length >= 1) {
+            vp8Res.forEach(function(res) {
+                sabrResTemp.push(res)
+                addedResolutions.push(res[1])
+            })
+            h264Res.forEach(function(res) {
+                if(addedResolutions.indexOf(res[1]) == -1) {
+                    sabrResTemp.push(res)
+                    addedResolutions.push(res[1])
+                }
+            })
+        } else {
+            h264Res.forEach(function(res) {
+                sabrResTemp.push(res)
+                addedResolutions.push(res[1])
+            })
+        }
+        
         vp9Res.forEach(function(res) {
             if(addedResolutions.indexOf(res[1]) == -1) {
                 sabrResTemp.push(res)
@@ -3283,7 +3303,7 @@ function initAsSabr() {
             window.sabrExactRes.forEach(function(q) {
                 function adjustHDBtn(cHeight) {
                     var h = cHeight || q[2]
-                    if(h >= 600 && !sabrHd
+                    if(h >= 500 && !sabrHd
                     && mainElement.querySelector(".hq.hd")
                     && mainElement.querySelector(".hd.hd")
                       .className.indexOf(" enabled") == -1) {
@@ -3296,7 +3316,7 @@ function initAsSabr() {
                       .className.indexOf(" enabled") == -1) {
                         sabrHd = true;
                         mainElement.querySelector(".hq").className = "hq enabled"
-                    } else if(h < 600
+                    } else if(h < 500
                     && mainElement.querySelector(".hq.hd")
                     && mainElement.querySelector(".hq.hd.enabled")) {
                         sabrHd = false;
@@ -4575,10 +4595,6 @@ function initStoryboard() {
     function addR() {
         return "&r=" + Math.random()
     }
-    image.style.background = 'url("/storyboard_fetch?video_id=' + id + addR() + '")'
-    setTimeout(function() {
-        image.style.background = 'url("/storyboard_fetch?video_id=' + id + addR() + '")'
-    }, 4000)
     image.className = "storyboard_sheet"
     container.appendChild(image)
     $(".seek_time").appendChild(container)
@@ -4653,6 +4669,8 @@ function initStoryboard() {
                 storyboardTotalImgs = storyboardTotalRows * storyboardImgsPerRow
             }
         })
+
+        image.style.background = 'url("/storyboard_fetch?video_id=' + id + addR() + '")'
     }, false)
 }
 try {
@@ -5013,12 +5031,28 @@ if(document.cookie
     }
 	mainElement.addEventListener("keydown", function(e) {
         if(!isFocusedOnVideo(e) || e.ctrlKey) return;
-        if(e.keyCode && e.keyCode >= 48 && e.keyCode <= 57 && !playingAsLive) {
+        var key = e.keyCode
+        var numpadBindings = {
+            45: 48,
+            35: 49,
+            40: 50,
+            34: 51,
+            37: 52,
+            12: 53,
+            39: 54,
+            36: 55,
+            38: 56,
+            33: 57
+        }
+        if(numpadBindings[key]) {
+            key = numpadBindings[key]
+        }
+        if(key && key >= 48 && key <= 57 && !playingAsLive) {
             // 0-9 keyboard numbers
-            var percentage = (e.keyCode - 48) * 10
+            var percentage = (key - 48) * 10
             skipToPercentage(percentage)
         }
-        switch(e.keyCode) {
+        switch(key) {
             // <
             case 188: {
                 forceStopVideo = true;

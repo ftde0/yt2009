@@ -1,6 +1,5 @@
 var languageData_EN = {
     "tooltips": {
-		"watch-allow-clientside-ryd": "doesn't wait for return youtube dislike API if it takes longer than usual to send a rating.",
         "watch-annotation-gradients": "shows previously seen gradients on annotations in html5.",
         "watch-comments-remove-future": "show old comments on a video",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",

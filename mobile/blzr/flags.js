@@ -52,3 +52,28 @@ function saveFlags() {
 
     alert("ok")
 }
+
+// restore flags
+var watchFlags = (document.cookie && document.cookie.indexOf("blzr_watch_flags=") !== -1)
+               ? document.cookie.split("blzr_watch_flags=")[1].split(";")[0] : ""
+var searchFlags = (document.cookie && document.cookie.indexOf("blzr_search_flags=") !== -1)
+                ? document.cookie.split("blzr_search_flags=")[1].split(";")[0] : ""
+var loginName = (document.cookie && document.cookie.indexOf("blazer_login=") !== -1)
+              ? document.cookie.split("blazer_login=")[1].split(";")[0] : ""
+
+watchFlags.split(":").forEach(function(f) {
+    f = "watch-" + f
+    if(document.getElementById(f)) {
+        document.getElementById(f).checked = true;
+    }
+})
+searchFlags.split(":").forEach(function(f) {
+    f = "search-" + f
+    if(document.getElementById(f)) {
+        document.getElementById(f).checked = true;
+    }
+})
+if(loginName) {
+    document.getElementById("ls-login-simulate").checked = true;
+    document.getElementById("ls-login-simulate-box").value = loginName;
+}

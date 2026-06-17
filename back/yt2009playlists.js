@@ -8,7 +8,9 @@ const doodles = require("./yt2009doodles")
 const language = require("./language_data/language_engine")
 const utils = require("./yt2009utils")
 const mobileauths = require("./yt2009mobileauths")
-
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 let cache = require("./cache_dir/playlist_cache_manager")
 
 function splitEvery25(videoIds) {
@@ -30,7 +32,7 @@ function splitEvery25(videoIds) {
 
 module.exports = {
     "innertube_get_data": function(id, callback) {
-        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
+        fetch(`${hostname}/youtubei/v1/browse?prettyPrint=false`, {
             "headers": constants.headers,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -153,8 +155,11 @@ module.exports = {
                 let playlistArray = r.contents.twoColumnBrowseResultsRenderer
                                      .tabs[0].tabRenderer.content
                                      .sectionListRenderer.contents[0]
-                                     .itemSectionRenderer.contents[0]
-                                     .playlistVideoListRenderer.contents
+                                     .itemSectionRenderer.contents
+                if(playlistArray[0]
+                && playlistArray[0].playlistVideoListRenderer) {
+                    playlistArray = playlistArray[0].playlistVideoListRenderer.contents
+                }
                 // metadata
                 let primarySidebar = r.sidebar.playlistSidebarRenderer.items[0]
                                       .playlistSidebarPrimaryInfoRenderer
@@ -219,6 +224,21 @@ module.exports = {
                             videoList.firstContinuation = t
                         }
                         catch(error){console.log(error)}
+                        return;
+                    }
+                    if(video.lockupViewModel) {
+                        videoList.videos.push(viewmodelParse(video))
+                        return;
+                    }
+                    if(video.continuationItemViewModel) {
+                        try {
+                            let vmc = video.continuationItemViewModel
+                                           .continuationCommand
+                                           .innertubeCommand
+                                           .continuationCommand.token
+                            videoList.firstContinuation = vmc
+                        }
+                        catch(error){}
                         return;
                     }
                     if(!video.playlistVideoRenderer) return;
@@ -399,7 +419,7 @@ module.exports = {
         let playlistId = ""
         let type = validDisplayTypes.includes(req.query.type)
                    ? req.query.type : validDisplayTypes[0];
-        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
+        fetch(`${hostname}/youtubei/v1/browse?prettyPrint=false`, {
             "headers": constants.headers,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -415,6 +435,7 @@ module.exports = {
             if(config.data_api_key) {
                 additionalFetchesRequired++
             }
+            fs.writeFileSync("../media/testpcont.json", JSON.stringify(r))
             let itemHTML = ``
             let items = []
             try {
@@ -510,6 +531,26 @@ module.exports = {
                         }
                     }
                     catch(error){}
+                } else if(i.lockupViewModel) {
+                    let v = viewmodelParse(i)
+                    videoIds.push(v.id)
+                    videos.push(v)
+                    if(additionalFetchesRequired == 0) {
+                        renderVideo(v)
+                    }
+                } else if(i.continuationItemViewModel) {
+                    try {
+                        let token = i.continuationItemViewModel
+                                     .continuationCommand
+                                     .innertubeCommand
+                                     .continuationCommand.token
+                        if(additionalFetchesRequired == 0) {
+                            renderContinuation(token)
+                        } else {
+                            continuation = token;
+                        }
+                    }
+                    catch(error){}
                 }
             })
 
@@ -555,7 +596,7 @@ module.exports = {
     },
 
     "nextAsPlaylist": function(playlistId, callback, sourceVideo) {
-        fetch(`https://www.youtube.com/youtubei/v1/next`, {
+        fetch(`${hostname}/youtubei/v1/next`, {
             "headers": constants.headers,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -633,5 +674,75 @@ module.exports = {
                 callback(false)
             }
         })})
+    }
+}
+
+function viewmodelParse(video) {
+    // viewmodel parsing (jun 26)
+    video = video.lockupViewModel
+    let id = video.contentId;
+    let m = video.metadata.lockupMetadataViewModel
+    let title = m.title.content
+    let thumbnail = "http://i.ytimg.com/vi/"
+                  + id + "/hqdefault.jpg"
+    let metadataRows = []
+    let uploaderId = ""
+    let uploaderName = ""
+    m.metadata.contentMetadataViewModel.metadataRows
+    .forEach(r => {
+        if(r.metadataParts && r.metadataParts.forEach) {
+            r.metadataParts.forEach(p => {
+                if(p.text && p.text.content) {
+                    metadataRows.push(p.text.content)
+                }
+                if(p.text && p.text.commandRuns) {
+                    uploaderName = p.text.content
+                    let r = p.text.commandRuns[0]
+                    if(r
+                    && r.onTap
+                    && r.onTap.innertubeCommand) {
+                        try {
+                            uploaderId = r.onTap
+                                        .innertubeCommand
+                                        .browseEndpoint
+                                        .browseId;
+                        }
+                        catch(error){}
+                    }
+                }
+            })
+        }
+    })
+    let viewCount = metadataRows.filter(s => {
+        return !(s.includes(" ago"))
+    })[0] || ""
+    let time = ""
+    try {
+        let os = video.contentImage.thumbnailViewModel
+                 .overlays
+        if(os && os.forEach) {
+            os.forEach(o => {
+                if(o
+                && o.thumbnailBottomOverlayViewModel) {
+                    o.thumbnailBottomOverlayViewModel
+                    .badges.forEach(b => {
+                        b = b.thumbnailBadgeViewModel
+                        time = b.text
+                    })
+                }
+            })
+        }
+    }
+    catch(error) {console.log(error)}
+    return {
+        "id": id,
+        "title": title,
+        "thumbnail": thumbnail,
+        "uploaderName": uploaderName,
+        "uploaderUrl": uploaderId
+                     ? "/channel/" + uploaderId : "",
+        "uploaderId": uploaderId,
+        "time": time,
+        "views": viewCount
     }
 }

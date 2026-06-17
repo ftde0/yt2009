@@ -1,6 +1,8 @@
 const fetch = require("node-fetch")
 const crypto = require("crypto")
 const pb = require("./proto/android_pot_pb")
+const net = require("net")
+const testBackupProvider = false;
 
 const poUrl = [
     "https://deviceintegritytokens-pa.googleapis.com/v1/getPoIntegrityToken",
@@ -17,6 +19,8 @@ const youtubeSig = Buffer.from(
 )
 const youtubePkgname = "com.google.android.youtube"
 let resp = null;
+let overridenKeyId = null;
+let overridenKey = null;
 
 module.exports = {
     "generatePo": function(visitor, callback, canUseExistingChallenge) {
@@ -46,13 +50,16 @@ module.exports = {
             potEncryptdata.setToken(potDescriptorToken)
             potEncryptdata = Buffer.from(potEncryptdata.serializeBinary())
 
-            let encrypt = crypto.createCipheriv("aes-128-gcm", dgBoundKey, iv)
+            let encrypt = crypto.createCipheriv(
+                "aes-128-gcm", (overridenKey || dgBoundKey), iv
+            )
             potEncryptdata = Buffer.concat([
                 encrypt.update(potEncryptdata),
                 encrypt.final()
             ])
             potEncryptdata = Buffer.concat([
-                keyId, iv, potEncryptdata, encrypt.getAuthTag()
+                (overridenKeyId || keyId), iv,
+                potEncryptdata, encrypt.getAuthTag()
             ])
             callback({
                 "encryptData": potEncryptdata,
@@ -73,6 +80,36 @@ module.exports = {
             "body": poReq
         }).then(r => {r.buffer().then(d => {
             resp = pb.potResponse.deserializeBinary(d).toObject()
+            if(!resp || !resp.time || d.length == 0 || testBackupProvider) {
+                // something went wrong with the response, try backup provider
+                console.log("using backup po provider")
+                let c = net.connect(7077, "46.62.131.50")
+                c.on("connect", (cs) => {
+                    c.write("pbr\x00")
+                })
+                c.on("data", (d) => {
+                    d = d.toString().split("pbrk--")[1]
+                    overridenKey = Buffer.from(d.substring(0,32), "hex")
+                    overridenKeyId = Buffer.from(d.substring(32,42), "hex")
+                    let valid = parseInt(
+                        Buffer.from(d.substring(d.length - 26), "hex").toString()
+                    )
+                    let isOk = parseInt(
+                        d.substring(d.length - 27, d.length - 26)
+                    )
+                    if(!isOk) {
+                        console.log("[!] backup po provider marked not ok")
+                    }
+                    resp = pb.potResponse.deserializeBinary(
+                        Buffer.from(d.substring(42,d.length - 27), "hex")
+                    ).toObject()
+                    resp.time = Math.floor((valid - Date.now()) / 1000)
+                    packagePot()
+                })
+                return;
+            }
+            overridenKey = null;
+            overridenKeyId = null;
             packagePot()
         })})
     }

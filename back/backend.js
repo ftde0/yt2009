@@ -48,6 +48,9 @@ const mobileHelper = require("./yt2009mobilehelper")
 const devTimings = false;
 const p = require("../package.json")
 const version = p.version;
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 const https = require("https")
 const fs = require("fs")
@@ -6931,7 +6934,7 @@ app.get("/stream_chat", (req, res) => {
 
     if(!req.query.continuation) {
         // if no continuation data, pull and redir
-        fetch(`https://www.youtube.com/youtubei/v1/next`, {
+        fetch(`${hostname}/youtubei/v1/next`, {
             "headers": yt2009_constant.headers,
             "referrer": `https://www.youtube.com/`,
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -6982,7 +6985,7 @@ app.get("/stream_chat", (req, res) => {
     } else {
         body.invalidationPayloadLastPublishAtUsec = req.query.last
     }
-    fetch(`https://www.youtube.com/youtubei/v1/live_chat/get_live_chat`, {
+    fetch(`${hostname}/youtubei/v1/live_chat/get_live_chat`, {
         "headers": yt2009_constant.headers,
         "referrer": `https://www.youtube.com/`,
         "referrerPolicy": "strict-origin-when-cross-origin",
@@ -7073,7 +7076,7 @@ app.get("/stream_current_vc", (req, res) => {
         body.continuation = req.query.continuation;
     }
 
-    fetch(`https://www.youtube.com/youtubei/v1/updated_metadata`, {
+    fetch(`${hostname}/youtubei/v1/updated_metadata`, {
         "headers": yt2009_constant.headers,
         "referrer": `https://www.youtube.com/`,
         "referrerPolicy": "strict-origin-when-cross-origin",

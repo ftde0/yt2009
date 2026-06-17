@@ -37,3 +37,5 @@ other params you can set:
 - `dl_max_retry` - maximum number of network retries for a download url. (default: 5)
 - `max_1080` - prevent from showing higher qualities than 1080p through html5. `true/false`
 - `ipv6` - a string containing your ipv6 subnet you can use. (e.g. "2a01:4f8:xxxx:xxxx")
+- `alt_hostname` - allows using an alt API hostname, enabling hostsfile redirect to www.youtube.com.
+ONLY TO BE USED AFTER INITIAL SETUP. `true/false`

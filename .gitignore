@@ -31,6 +31,8 @@ back/androiddata.json
 back/mobilehelper_userdata.json
 back/autoshare_userdata
 back/yt2009experimentals.js
+back/cache_dir/subtitles
+back/cache_dir/subtitles/*
 
 # yt assets
 master-vfl121679.png
@@ -96,3 +98,5 @@ assets/site-assets/youtube_logo_small_grey-vfl41206.png
 # other
 node_modules/
 node_modules/*
+back/GeoLite2-City.mmdb
+back/ikPlayground.js

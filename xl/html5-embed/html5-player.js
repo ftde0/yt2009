@@ -425,6 +425,7 @@ if(window.sabrBase) {
 	var ms = new MediaSource();
     var vStream;
     var aStream;
+    var videoStartedPlaying = false;
     video.src = URL.createObjectURL(ms);
 
     sabrData = {
@@ -497,6 +498,7 @@ if(window.sabrBase) {
 	
 	// watch for new buffer fetches
     video.addEventListener("timeupdate", function() {
+        videoStartedPlaying = true;
         if(video.currentTime > 120
         && !sabrData.videoBuffer.updating
         && !sabrData.audioBuffer.updating) {
@@ -576,4 +578,15 @@ if(window.sabrBase) {
             }
         }
     }, false)
+
+    setTimeout(function() {
+        if(!video.playing && !videoStartedPlaying) {
+            try {
+                sabrData.currentRequest.abort()
+                sabrData.waitingSabrFetch = false;
+            }
+            catch(error) {}
+            requestSabr(0, "FORCE", true)
+        }
+    }, 4000)
 }

@@ -24,6 +24,9 @@ const crypto = require("crypto")
 const signedInNext = false;
 const devTimings = false;
 const oneWeek = 1000 * 60 * 60 * 24 * 7
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 const EXTRA_RISK_BLOCK = true; //EXPERIMENT: reduce number of /player requests
 // to hopefully reduce IP blocks that started happening recently
@@ -309,7 +312,7 @@ module.exports = {
         let callbacksMade = 0;
         let combinedResponse = {}
         let nextUrl = [
-			"https://www.youtube.com/youtubei/v1/next?prettyPrint=false",
+			hostname + "/youtubei/v1/next?prettyPrint=false",
 			"&fields=contents,frameworkUpdates"
 		].join("")
         fetch(nextUrl, {
@@ -3067,19 +3070,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 )
             }
         }
-        if(flags.includes("allow_clientside_ryd")
-        && !flags.includes("exp_turbocharge")
-        && !rydCallbackSent && !useFlash) {
-            setTimeout(() => {
-                putClientsideRyd()
-            }, 300)
-        }
-
-        // force clientside ryd for turbocharge
-        if(flags.includes("exp_turbocharge")
-        && !rydCallbackSent && !useFlash) {
-            putClientsideRyd()
-        }
+        putClientsideRyd()
 
 		// private video indicator
 		if(data.isPrivate) {
@@ -3846,7 +3837,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         if(continuations_cache[token]) {
             callback(continuations_cache[token])
         } else {
-            fetch("https://www.youtube.com/youtubei/v1/next?prettyPrint=false", {
+            fetch(hostname + "/youtubei/v1/next?prettyPrint=false", {
                 "headers": {
                     "accept": "*/*",
                     "accept-language": "en-US,en;q=0.9",

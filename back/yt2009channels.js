@@ -20,6 +20,9 @@ const overrideBgs = require("./channel_backgrounds.json")
 const customChannel = require("./proto/yt2009_channel_pb")
 const yt2009homepage = require("./yt2009homepage");
 const devTimings = false;
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 const channel_code = fs.readFileSync("../channelpage.htm").toString();
 
@@ -113,7 +116,7 @@ module.exports = {
                 let fullData = {}
 
                 // clean fetch the channel
-                fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+                fetch(`${hostname}/youtubei/v1/browse`, {
                     "headers": yt2009constants.headers,
                     "referrer": "https://www.youtube.com/",
                     "referrerPolicy": "strict-origin-when-cross-origin",
@@ -211,7 +214,7 @@ module.exports = {
                 let communityTab = encodeURIComponent(Buffer.from(
                     communityCont.serializeBinary()
                 ).toString("base64").replace("+", "-"))
-                fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+                fetch(`${hostname}/youtubei/v1/browse`, {
                     "headers": yt2009constants.headers,
                     "referrer": "https://www.youtube.com/",
                     "referrerPolicy": "strict-origin-when-cross-origin",
@@ -2735,7 +2738,7 @@ module.exports = {
         // add video count to user caches without them
         userid_cache.read(url, (id) => {
             // clean fetch the channel
-            fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+            fetch(`${hostname}/youtubei/v1/browse`, {
                 "headers": yt2009constants.headers,
                 "referrer": "https://www.youtube.com/",
                 "referrerPolicy": "strict-origin-when-cross-origin",
@@ -2825,7 +2828,7 @@ module.exports = {
                 }
                 // clean fetch for handle
                 else {
-                    fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+                    fetch(`${hostname}/youtubei/v1/browse`, {
                         "headers": yt2009constants.headers,
                         "referrer": "https://www.youtube.com/",
                         "referrerPolicy": "strict-origin-when-cross-origin",
@@ -3088,7 +3091,7 @@ module.exports = {
             ).toString("base64"))
         }
         
-        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
+        fetch(`${hostname}/youtubei/v1/browse?prettyPrint=false`, {
             "headers": yt2009constants.headers,
             "referrer": "https://www.youtube.com/",
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -3253,7 +3256,7 @@ module.exports = {
     
     "aboutChannel": function(cId, callback) {
         let metadata = {}
-        fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+        fetch(`${hostname}/youtubei/v1/browse`, {
             "headers": yt2009constants.headers,
             "referrer": "https://www.youtube.com/",
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -3305,7 +3308,7 @@ module.exports = {
                        .properties.subscribers;
             callback(yt2009utils.approxSubcount(subc.split(" ")[0]))
         } else {
-            fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+            fetch(`${hostname}/youtubei/v1/browse`, {
                 "headers": yt2009constants.headers,
                 "referrer": "https://www.youtube.com/",
                 "referrerPolicy": "strict-origin-when-cross-origin",
@@ -3421,7 +3424,7 @@ module.exports = {
             res.sendStatus(400)
             return;
         }
-        fetch(`https://www.youtube.com/youtubei/v1/browse`, {
+        fetch(`${hostname}/youtubei/v1/browse`, {
             "headers": yt2009constants.headers,
             "referrer": "https://www.youtube.com/",
             "referrerPolicy": "strict-origin-when-cross-origin",

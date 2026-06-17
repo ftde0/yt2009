@@ -12,6 +12,7 @@ const templates = require("./yt2009templates")
 const videostab = require("./yt2009videos")
 const subfeed = require("./yt2009subscriptions")
 const trusted = require("./yt2009trustedcontext")
+const sabr = require("./yt2009sabr")
 
 module.exports = {
     // get homepage
@@ -88,6 +89,11 @@ module.exports = {
             }
         }
 
+        let addSabrField = (
+            req.headers.cookie
+         && req.headers.cookie.includes("inline-player")
+        )
+
         // static response stuff
 
         let videoUrl = "/get_video?video_id=" + id + "/mp4"
@@ -109,6 +115,12 @@ module.exports = {
                     "is_playable": true
                 }
             }
+        }
+
+        if(addSabrField) {
+            response.content.video.sabr_url = sabr.initPlaybackSession(
+                id, ["720p", "480p", "360p", "240p", "144p"]
+            )
         }
 
         // fill in the rest after we get true video data

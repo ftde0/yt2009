@@ -27,6 +27,9 @@ const yt2009pot = require("./yt2009pot")
 let fmodeCommunityPictureIds = {}
 let wyjebaData = {}
 let syncComments = {}
+const hostname = config.alt_hostname
+               ? `https://youtubei.googleapis.com`
+               : `https://www.youtube.com`
 
 let downloadRetryMax = 5;
 if(config.dl_max_retry && !isNaN(parseInt(config.dl_max_retry))) {
@@ -990,7 +993,7 @@ module.exports = {
     },
 
     "channelGetSectionByParam": function(browseId, param, callback) {
-        fetch(`https://www.youtube.com/youtubei/v1/browse?prettyPrint=false`, {
+        fetch(`${hostname}/youtubei/v1/browse?prettyPrint=false`, {
             "headers": constants.headers,
             "referrer": "https://www.youtube.com/",
             "referrerPolicy": "strict-origin-when-cross-origin",
@@ -1331,7 +1334,7 @@ module.exports = {
             && quality
             && quality !== "360p") {
                 if(config.env == "dev") {
-                    console.log(`[${id}] sabr experiment enforced! using that`)
+                    console.log(`[${id}] sabr enforced! using sabr downloader`)
                 }
                 yt2009exports.read().sabrMirror.download(id, quality, (c) => {
                     if(c) {
@@ -1339,6 +1342,10 @@ module.exports = {
                     } else {
                         callback(false)
                     }
+                    yt2009exports.extendWrite(
+                        "verboseDownloadProgress", fname, "DONE"
+                    )
+                    yt2009exports.updateFileDownload(fname, 2)
                 })
                 return;
             }
@@ -1659,7 +1666,7 @@ module.exports = {
             client.deviceModel = "Pixel 9"
             client.deviceCodename = "tegu"
         }
-        fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+        fetch(hostname + "/youtubei/v1/player?prettyPrint=false", {
             "headers": rHeaders,
             "referrer": "https://www.youtube.com/watch?v=" + id,
             "referrerPolicy": "origin-when-cross-origin",
@@ -2412,7 +2419,7 @@ module.exports = {
                 let auth = "Bearer " + yt2009signin.getData().yAuth
                 headers["Authorization"] = auth;
             }
-            fetch("https://www.youtube.com/youtubei/v1/config", {
+            fetch(hostname + "/youtubei/v1/config", {
                 "headers": headers,
                 "method": "POST",
                 "body": JSON.stringify({
