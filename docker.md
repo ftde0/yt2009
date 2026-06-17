@@ -28,11 +28,11 @@ the yt2009 container is configured by using the following environment variables:
 - `YT2009_FALLBACK` sets fallback mode, doesn't use the saved cache, shows a fallback notice on homepage, deprecated (default: false)
 - `YT2009_MASTERSERVER` sets a different master server for comments/video sync, leave empty to disable
 - `YT2009_DISABLEMASTER` sets whether any master server will be used (default: false)
-- `YT2009_LOCKED_TOKENS` sets access tokens that will be redirected to /t.htm, seperated by commas, leave empty to disable
+- `YT2009_LOCKED_TOKENS` sets access tokens that will be redirected to /t.htm, separated by commas, leave empty to disable
 - `YT2009_HOMEPAGETEXT` sets a custom text that will be shown on the homepage, leave empty to disable
 - `YT2009_REDIR` sets an absolute http path of a different yt2009 instance you wish to redirect to, leave empty to disable
-- `YT2009_LOGGED_TOKENS` sets tokens that have their usage logged in `/data/accessdata`, seperated by commas, leave empty to disable
-- `YT2009_TOKENS` allows you to specify custom auth tokens instead of generating them randomly, **requires prod env to work!**, seperated by commas, leave empty to disable, **this will override any existing access tokens when used!!!**
+- `YT2009_LOGGED_TOKENS` sets tokens that have their usage logged in `/data/accessdata`, separated by commas, leave empty to disable
+- `YT2009_TOKENS` allows you to specify custom auth tokens instead of generating them randomly, **requires prod env to work!**, separated by commas, leave empty to disable, **this will override any existing access tokens when used!!!**
 - `YT2009_RATELIMIT` sets a number of web fetch (watch, search etc) requests one ipv4 address/one ipv6 block can make in a minute
 - `YT2009_GDATA_AUTH` allows you to enable token-based authorization for the gdata api (e.g. mobile apps) (default: `false`)
 - `YT2009_REENCODE_DEVS` sets a list of user-agent parts to reencode mp4 videos to h264 baseline (more compatibility with older devices). comma-separaed. don't enter to disable.
