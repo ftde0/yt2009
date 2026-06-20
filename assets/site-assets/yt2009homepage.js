@@ -177,7 +177,7 @@ if(moduleSetup.indexOf("nearyou") !== -1) {
 try {
     geor.send(null)
     geor.onreadystatechange = function(e) {
-        if(geor.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(geor.readyState == 4 || this.readyState == 4) {
             document.getElementById("hometown-loading-sprite")
                     .style.display = "none"
             document.getElementById("yt2009-hometown-cells-container")
@@ -209,7 +209,7 @@ try {
     }
     subr.send(toSend)
     subr.onreadystatechange = function(e) {
-        if(subr.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(subr.readyState == 4 || this.readyState == 4) {
             document.getElementById("subscriptions-loading-sprite")
                     .style.display = "none"
             document.getElementById("yt2009-subscriptions-cells-container")
@@ -234,7 +234,7 @@ if(moduleSetup.indexOf("insmap") !== -1
     insr.open("GET", "/pchelper_insights?r=" + Math.random().toString())
     insr.send(null)
     insr.onreadystatechange = function(e) {
-        if(insr.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(insr.readyState == 4 || this.readyState == 4) {
             if(document.getElementById("feed_insight_map-body")) {
                 var appr = insr.responseText
                                .split("///WORLDCHART///")[1]

@@ -216,6 +216,10 @@ const category_numbers = {
     "Travel & Events": "19"
 }
 
+setTimeout(function() {
+    if(yt2009utils.validateConfig()[2].r < 2) {}
+}, 3000)
+
 module.exports = {
     "innertube_get_data": function(
         id, callback, pullChannelEarly, isRetry, allowedReusedPlayer
@@ -1529,22 +1533,32 @@ module.exports = {
             )
         }
 
+        // hide comment login
+        function hideCommentLogin() {
+            let nlStart = code.split(`<!--yt2009-nl-comment-form-start-->`)[1]
+            let nlPart = nlStart.split(`<!--yt2009-nl-comment-form-end-->`)[0]
+            code = code.replace(nlPart, "")
+        }
+
         // show notice on disabled comments
         if(data.commentsDisabled) {
             code = code.replace(
                 `<!--yt2009_relay_comment_form-->`,
                 yt2009templates.disabledCommentsNotice
             )
+            hideCommentLogin()
         }
 
         // login_simulate comments
-        if(req.headers.cookie.includes("login_simulate")
-        && !req.headers.cookie.includes("relay_key")) {
+        if(req.headers.cookie.includes("login_simulate")) {
             code = code.replace(
                 `<!--yt2009_relay_comment_form-->`,
                 yt2009templates.videoCommentPost(data.id)
             )
+            hideCommentLogin()
         }
+        code = code.replace(`<!--yt2009-nl-comment-form-start-->`, "")
+                   .replace(`<!--yt2009-nl-comment-form-end-->`, "")
 
         let totalCommentCount = 0;
         let vCustomComments = []
@@ -4457,6 +4471,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
         let response = {}
         this.fetch_video_data(id, (data) => {
+            if(data.commentsDisabled) {
+                response.commentBox = yt2009languages.apply_lang_to_code(
+                    yt2009templates.disabledCommentsNotice, req
+                )
+            }
             response.uploadDate = handleUploadDate(data, req)
             response.category = data.category
             response.categoryNumber = category_numbers[data.category]
@@ -4534,6 +4553,17 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 response.endscreenHTML = ""
                 response.relatedVideosHTML = ""
                 sendoff()
+            }
+            // uncache ryd if new video
+            if(data.confirmedTrueUpload
+            && Date.now() - new Date(data.upload).getTime() <= oneWeek) {
+                if(yt2009ryd.readCache(id + "/e")) {
+                    yt2009ryd.removeFromCache(id + "/e")
+                } else if(yt2009ryd.isOngoingFetch(id, true)) {
+                    yt2009ryd.readWait(id, (r) => {
+                        yt2009ryd.removeFromCache(id + "/e")
+                    }, true)
+                }
             }
         }, "", token, false, false, true, false, existingPlayer)
     },

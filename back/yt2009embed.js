@@ -272,7 +272,7 @@ module.exports = function(req, res) {
     let videoQualities = require("./yt2009html").get_cache_video(id).qualities || []
     if((videoQualities.includes("720p")
     || videoQualities.includes("480p"))
-    && (!live && !sabr)) {
+    && (!sabr)) {
         let use720p = videoQualities.includes("720p")
         code = code.replace(
             `<!--yt2009_style_hq_button-->`,
@@ -332,9 +332,14 @@ module.exports = function(req, res) {
 
     // skip video download if live
     if(live && utils.isAuthorized(req)) {
+        let sabrQualities = (videoQualities && videoQualities.length >= 1
+                            ? videoQualities : ["720p", "480p", "360p"])
+        let sabrUrl = sabrlib.initPlaybackSession(id, sabrQualities)
         code = code.replace(
             `//yt2009-live`,
-            `liveHd = true;initAsLive("${id}");`
+            `var sabrBase = "${sabrUrl}";
+            var sabrHd = true;
+            initAsLive();`
         )
         res.send(code)
         return;
@@ -346,7 +351,7 @@ module.exports = function(req, res) {
     // skip video download if sabr
     if(sabr) {
         let sabrQualities = (videoQualities && videoQualities.length >= 1
-                            ? videoQualities : ["480p", "360p"])
+                            ? videoQualities : ["720p", "480p", "360p"])
         let sabrUrl = sabrlib.initPlaybackSession(id, sabrQualities)
         code = code.replace(
             `//yt2009-live`,

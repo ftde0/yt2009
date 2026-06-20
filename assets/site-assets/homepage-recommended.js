@@ -83,7 +83,7 @@ function homepageRequest() {
     try {
         r.send(null)
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 // fill recommended with videos from server
                 if(isVideosPage) {
                     setTimeout(function() {

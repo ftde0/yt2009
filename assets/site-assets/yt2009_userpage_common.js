@@ -527,7 +527,8 @@ if(pchelperFavPage) {
     pchelper_global_playlist_id = document.getElementById("pchelper-fav-id").innerHTML
 }
 
-if(document.querySelector("#playlist-btn-play")) {
+if(document.querySelector("#playlist-btn-play")
+&& document.querySelector("#playlist-btn-play").addEventListener) {
     document.querySelector("#playlist-btn-play")
     .addEventListener("click", function() {
         // request data

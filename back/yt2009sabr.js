@@ -870,11 +870,11 @@ module.exports = {
                         let ts = header.chunkmediadata.timescale
                         // resulting values are in seconds
                         let start = header.chunkmediadata.starttime / ts;
-                        let length = header.chunkmediadata.length / ts;
                         let id = header.itag + "-" + header.totalchunknumber;
                         contentLengths[id] = {
                             "s": start,
-                            "l": length
+                            "ts": ts,
+                            "l": header.chunkmediadata.length
                         }
                     }
                     catch(error) {}
@@ -1031,37 +1031,8 @@ module.exports = {
                 break;
             }
         }
-        function remuxFragments(files, extension, callback) {
-            // i would never write this normally
-            // but has to be done here. RIP.
-            let newFileNames = []
-            files = JSON.parse(JSON.stringify(files))
-            function runFile() {
-                /*let chunkId = files[0].split(s + "-")[1]
-                console.log(chunkId, contentLengths[chunkId])
-                return;*/
-                let ffmpegCmd = [
-                    "ffmpeg",
-                    "-y",
-                    `-i "${__dirname}/${files[0]}"`,
-                    "-c copy",
-                    `"${__dirname}/${files[0]}-re.${extension}"`
-                ].join(" ")
-                child_process.exec(ffmpegCmd, (error, stdout, stderr) => {
-                    newFileNames.push(`${files[0]}-re.${extension}`)
-                    files.shift()
-                    if(files[0]) {
-                        runFile()
-                    } else {
-                        callback(newFileNames)
-                    }
-                })
-            }
-            if(files[0]) {
-                runFile()
-            }
-        }
         let s = this.initPlaybackSession(id, qList).split("pid=")[1]
+        let writeNewDuration = this.writeNewDuration;
         let thisRef = this;
         let writtenVideoFiles = []
         let writtenAudioFiles = []
@@ -1115,7 +1086,14 @@ module.exports = {
                                 receivedPartIndexes.push(o)
                             }
                             receivedParts[o].push(part)
-                            let fname = `../assets/${s}-${part}`
+                            let fname = `../assets/dsabr-${s}-${part}`
+                            if(data.contentLengths
+                            && data.contentLengths[part]) {
+                                let cl = data.contentLengths[part]
+                                data[part] = writeNewDuration(
+                                    data[part], cl.l, cl.ts
+                                )
+                            }
                             partCount++
                             if(!fs.existsSync(fname)) {
                                 //console.log(`received ${s}-${part}`)
@@ -1135,43 +1113,28 @@ module.exports = {
                 }
                 if(offsetSeconds >= videoLength) {
                     // end of video
-
-                    let remuxCallbacksDone = 0;
-                    let remuxCallbacksRequired = 2;
-                    let remuxedFiles = []
-                    // remux audio fragments
+                    
+                    // list audio fragments for ffmpeg
                     let audioAssetsFname = `../assets/assets-${s}-audio`
-                    remuxFragments(writtenAudioFiles, "m4a", (files) => {
-                        files.forEach(f => {
-                            remuxedFiles.push(f)
-                        })
-                        remuxCallbacksDone++
-                        files = files.map(s => {
-                            return `file '${__dirname}/${s}'`
-                        })
-                        fs.writeFileSync(
-                            audioAssetsFname,
-                            files.join("\n")
-                        )
+                    let audioAssetsFiles = []
+                    writtenAudioFiles.forEach(f => {
+                        audioAssetsFiles.push(`file '${__dirname}/${f}'`)
                     })
+                    fs.writeFileSync(
+                        audioAssetsFname,
+                        audioAssetsFiles.join("\n")
+                    )
 
-                    // remux video fragments
-
-                    // list all video fragments
+                    // list video fragments for ffmpeg
                     let videoAssetsFname = `../assets/assets-${s}-video`
-                    remuxFragments(writtenVideoFiles, "mp4", (files) => {
-                        files.forEach(f => {
-                            remuxedFiles.push(f)
-                        })
-                        remuxCallbacksDone++
-                        files = files.map(s => {
-                            return `file '${__dirname}/${s}'`
-                        })
-                        fs.writeFileSync(
-                            videoAssetsFname,
-                            files.join("\n")
-                        )
+                    let videoAssetsFiles = []
+                    writtenVideoFiles.forEach(f => {
+                        videoAssetsFiles.push(`file '${__dirname}/${f}'`)
                     })
+                    fs.writeFileSync(
+                        videoAssetsFname,
+                        videoAssetsFiles.join("\n")
+                    )
 
                     // create end fname
                     let targetFname = `/assets/${id}`
@@ -1184,7 +1147,7 @@ module.exports = {
                     // call ffmpeg to merge all together
                     // first audio-video parts to ones,
                     // then both of those to create a target mp4
-                    let callbacksRequired = 3;
+                    let callbacksRequired = 2;
                     let callbacksDone = 0;
                     function callFfmpeg(fileList, target, callback) {
                         let ffmpegCmd = [
@@ -1207,26 +1170,20 @@ module.exports = {
                         })
                     }
 
-                    let check = setInterval(() => {
-                        if(remuxCallbacksDone >= remuxCallbacksRequired) {
-                            markCallbackDone(true)
-                            clearInterval(check)
-                            callFfmpeg(
-                                audioAssetsFname,
-                                targetFname + "-a.m4a",
-                                (c) => {
-                                    markCallbackDone(c)
-                                }
-                            )
-                            callFfmpeg(
-                                videoAssetsFname,
-                                targetFname + "-v.mp4",
-                                (c) => {
-                                    markCallbackDone(c)
-                                }
-                            )
+                    callFfmpeg(
+                        audioAssetsFname,
+                        targetFname + "-a.m4a",
+                        (c) => {
+                            markCallbackDone(c)
                         }
-                    }, 200)
+                    )
+                    callFfmpeg(
+                        videoAssetsFname,
+                        targetFname + "-v.mp4",
+                        (c) => {
+                            markCallbackDone(c)
+                        }
+                    )
 
                     let completeStatuses = []
                     function markCallbackDone(c) {
@@ -1258,12 +1215,6 @@ module.exports = {
                                     freeupProgress()
                                 }
                                 setTimeout(() => {
-                                    remuxedFiles.forEach(f => {
-                                        try {
-                                            fs.unlink(f, (e) => {})
-                                        }
-                                        catch(error){}
-                                    })
                                     writtenAudioFiles.forEach(f => {
                                         try {
                                             fs.unlink(f, (e) => {})
@@ -1327,6 +1278,84 @@ module.exports = {
             })
         }
         downloadPart()
+    },
+
+    "writeNewDuration": function(f, newDurationScaled, newTimescale) {
+        let cursor = 0;
+        
+        // based on https://developer.apple.com/standards/qtff-2001.pdf
+        function readInt(part) {
+            let nums = []
+            for(let byte of part) {
+                nums.push(byte)
+            }
+            nums = nums.map(s => {
+                return s.toString(16).padStart(2, "0")
+            }).join("")
+            return parseInt(nums, 16)
+        }
+        function createInt(int, length) {
+            if(!length) length = 4
+            let i = int.toString(16).padStart(length * 2, "0")
+            let arrayForm = Buffer.from(i.match(/.{1,2}/g).map(s => {
+                return parseInt(s, 16)
+            }))
+            return arrayForm
+        }
+        function overwriteData(start, newData) {
+            let i = 0;
+            for(let byte of newData) {
+                f[start + i] = byte;
+                i++
+            }
+        }
+        
+        let newDuration = createInt(newDurationScaled)
+        newTimescale = createInt(newTimescale)
+        
+        // modify mvhd (movie header)
+        cursor = f.indexOf("mvhd") + 16
+        overwriteData(cursor, newTimescale)
+        cursor += 4
+        overwriteData(cursor, newDuration)
+        
+        // modify tkhd (track header)
+        cursor = f.indexOf("tkhd") + 24
+        overwriteData(cursor, newDuration)
+        
+        // modify edts (edit atom)
+        cursor = f.indexOf("edts") + 16
+        let edtsBoxCount = readInt(f.slice(cursor, cursor + 4))
+        if(edtsBoxCount >= 1) {
+            // first box in edts is duration in our timescale
+            cursor += 4
+            overwriteData(cursor, newDuration)
+        }
+        
+        // modify mdhd (media header)
+        cursor = f.indexOf("mdhd") + 16
+        overwriteData(cursor, newTimescale)
+        cursor += 4
+        overwriteData(cursor, newDuration)
+
+        // remove sidx if present
+        cursor = f.indexOf("sidx")
+        if(cursor !== -1) {
+            let sidxLength = readInt(f.slice(cursor - 4, cursor))
+            let beforeSidx = f.slice(0, cursor - 4)
+            let afterSidx = f.slice(cursor - 4 + sidxLength)
+            f = Buffer.concat([beforeSidx, afterSidx])
+        }
+
+        // blank out tfdt (start offset)
+        cursor = f.indexOf("tfdt")
+        if(cursor !== -1) {
+            let tfdtLength = readInt(f.slice(cursor - 4, cursor))
+            let blankTfdt = createInt(0, tfdtLength - 8) // size(4) + "tfdt"(4)
+            overwriteData(cursor + 4, blankTfdt)
+        }
+
+        return f;
     }
 }
 

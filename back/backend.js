@@ -1992,6 +1992,7 @@ app.get("/get_more_comments", (req, res) => {
         id = req.headers.source
                 .split("v=")[1].split("&")[0].split("#")[0]
     }
+    id = id.substring(0,11)
     let pageNumber = parseInt(req.headers.page || 1)
     let flags = ""
     try {
@@ -5929,6 +5930,18 @@ if(config.auto_maintain) {
         let totalFiles = 0;
         let fileSizes = []
         fs.readdir(__dirname + "/../assets/", (err, data) => {
+            data = data.filter(s => {
+                return (
+                    s.includes(".mp4")
+                 || s.includes(".ogg")
+                 || s.includes(".flv")
+                 || s.includes(".3gp") 
+                 || s.includes(".mp3")
+                 || s.includes(".m4a") 
+                 || s.includes(".wmv")
+                 || s.includes(".avi")
+                )
+            })
             data.forEach(f => {
                 totalFiles++
                 fs.stat(__dirname + "/../assets/" + f, (err, stats) => {
@@ -7216,6 +7229,10 @@ app.get("/sabr_playback", (req, res) => {
 					res.set("x-yt2009-live-head", result[part])
 					break;
 				}
+                case "contentLengths": {
+                    console.log(result[part])
+                    break;
+                }
                 default: {
                     let header = `//SPART-"${part}"-CL=${result[part].length}//`
                     resp = Buffer.concat([

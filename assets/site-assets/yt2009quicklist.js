@@ -1,7 +1,4 @@
-// yt2009 common quicklist functionality.
-// surprisingly, this frontend has been working
-// for longer than i thought it would.
-// just a random thought.
+// yt2009 common quicklist functionality
 function addToQuicklist(videoId, videoTitle, videoAuthor) {
     if(window.localStorage) {
         var quicklistVids = []
@@ -47,7 +44,7 @@ function updateQuicklistMasthead(vidCount) {
 }
 
 // show the video count on masthead
-if(localStorage && localStorage.quicklistVids) {
+if(window.localStorage && window.localStorage.quicklistVids) {
     var l = JSON.parse(localStorage.quicklistVids).length
     updateQuicklistMasthead(l)
 }

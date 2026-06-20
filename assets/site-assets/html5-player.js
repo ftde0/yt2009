@@ -2820,6 +2820,11 @@ function initAsLive() {
 			window.liveInit = null // only run on first response
 		}, 10)
 		requestSabr(window.liveHead)
+        setTimeout(function() {
+            if(mainElement && mainElement.nodeName == "#document") {
+                recoverStall()
+            }
+        }, 1000)
 	}
 	var lastTs = 0;
 	function recoverStall() {
@@ -2932,6 +2937,12 @@ function requestSabr(offset, source, force) {
     }
     r.open("GET", url.join(""))
     r.responseType = "arraybuffer"
+    if(offset == 0
+    && document.cookie
+    && document.cookie.indexOf
+    && document.cookie.indexOf("exp_turbocharge") !== -1) {
+        r.setRequestHeader("priority", "u=0")
+    }
     r.send(null)
     sabrData.currentRequest = r;
     r.addEventListener("timeout", function(e) {retryRequest()}, false)

@@ -101,7 +101,7 @@
     r.setRequestHeader("device", device)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             if(r.getResponseHeader("x-yt2009-has-saved-flags")) {
                 document.getElementById("flagimport-option").className = ""
             }
@@ -150,7 +150,7 @@
         }
         xr.send(null)
         xr.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 location.reload()
             }
         }
@@ -289,7 +289,7 @@ should we do so?");
             r.open("GET", "/pchelper_subs?format=" + dataFormat + addR())
             r.send(null)
             r.onreadystatechange = function(e) {
-                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r.readyState == 4 || this.readyState == 4) {
                     if(r.status == 200) {
                         if(dataFormat == "cookie") {
                             document.cookie = "sublist=" + r.responseText
@@ -318,7 +318,7 @@ should we do so?");
             r2.open("GET", "/pchelper_playlists?format=" + dataFormat + addR())
             r2.send(null)
             r2.onreadystatechange = function(e) {
-                if(r2.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r2.readyState == 4 || this.readyState == 4) {
                     if(r2.status == 200) {
                         if(dataFormat == "cookie") {
                             document.cookie = "playlist_index=" + r2.responseText
@@ -393,7 +393,7 @@ should we do so?");
         r.open("POST", "/save_pchelper_flags" + addR())
         r.send(flags)
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 document.getElementById("flagimport-option").className = ""
                 alert("settings saved! use the \"import flags\" option on a new device to import.")
             }
@@ -420,7 +420,7 @@ should we do so?");
             r.open("GET", "/get_pchelper_flags" + addR())
             r.send(null)
             r.onreadystatechange = function(e) {
-                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r.readyState == 4 || this.readyState == 4) {
                     var f = r.responseText
                     var fs = f.split("; ")
                     var flagCount = 0;

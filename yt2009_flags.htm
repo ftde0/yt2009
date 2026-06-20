@@ -57,7 +57,7 @@
 	<div id="baseDiv" class="date-20091111 video-info ">
 		<!-- begin top section -->
 		<div class="languages">
-			<input id="lang-pl" type="radio" onclick="location.reload();" name="langs-radio" checked>
+			<input id="lang-pl" type="radio" onclick="backPolish()" name="langs-radio" checked>
 			<label for="lang-pl">pl</label>
 			<input id="lang-en" type="radio" onclick="setEnglish();" name="langs-radio">
 			<label for="lang-en">en</label>
@@ -799,6 +799,8 @@
 				case "daily": {
 					watchFlags = [
 						"hd_1080",
+						"exp_turbocharge",
+						"exp_turbocharge_sabr_hfr",
 						"share_behavioronly_remove",
 						"turn_down_lights",
 						"use_storyboards",

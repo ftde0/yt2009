@@ -1,4 +1,11 @@
+function useSearchSuggestions(){
+
 var searchInput = document.getElementById("masthead-search-term")
+
+if(!searchInput.addEventListener
+|| !document.body.addEventListener
+|| !window.addEventListener
+|| !window.XMLHttpRequest) return;
 
 function searchSuggest() {
     if(searchInput.value.length < 2) {
@@ -153,3 +160,5 @@ document.body.addEventListener("keydown", function(e) {
         
     }
 }, false)
+
+};useSearchSuggestions();

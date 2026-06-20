@@ -119,6 +119,9 @@ function onWatchCommentsShowMore(extras) {
     }
     r.setRequestHeader("url_flags", location.href)
     r.setRequestHeader("source", location.href)
+    if(extras && extras.source == "reload") {
+        r.setRequestHeader("priority", "u=7")
+    }
     r.send(null)
     r.addEventListener("load", function(e) {
         $("#watch-comments-show-more-td").style.display = "block"
@@ -2051,11 +2054,12 @@ turbocharge fillers
 ======
 */
 if(usingTurbocharge) {
-    onWatchCommentsShowMore({"source": "reload"})
+    setTimeout(function() {onWatchCommentsShowMore({"source": "reload"})}, 20)
     var id = window.location.href.split("v=")[1].split("&")[0]
     var r = new XMLHttpRequest();
     r.open("GET", "/etc_oex_videodata?video_id=" + id)
-    r.send(null)
+    r.setRequestHeader("priority", "u=7")
+    setTimeout(function() {r.send(null)}, 30)
     r.addEventListener("load", function(e) {
         var res = JSON.parse(r.responseText)
         document.querySelector(".yt2009-default-related").innerHTML = res.relatedVideosHTML;
@@ -2069,6 +2073,20 @@ if(usingTurbocharge) {
         document.getElementById("watch-video-category").setAttribute(
             "href", "/videos?c=" + res.categoryNumber
         )
+        if(res.commentBox) {
+            if(document.getElementById("watch-comment-post")) {
+                document.getElementById("recent_comments").removeChild(
+                    document.getElementById("watch-comment-post")
+                )
+            }
+            if(document.getElementById("div_main_comment")) {
+                var box = document.getElementById("div_main_comment")
+                box.parentNode.parentNode.removeChild(box.parentNode)
+            }
+            var container = document.createElement("div")
+            container.innerHTML = res.commentBox;
+            document.getElementById("recent_comments").appendChild(container)
+        }
     }, false)
 }
 

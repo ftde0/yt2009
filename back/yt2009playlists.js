@@ -227,7 +227,10 @@ module.exports = {
                         return;
                     }
                     if(video.lockupViewModel) {
-                        videoList.videos.push(viewmodelParse(video))
+                        let v = viewmodelParse(video)
+                        if(!v.badges || !v.badges.includes("BADGE_MEMBERS_ONLY")) {
+                            videoList.videos.push(v)
+                        }
                         return;
                     }
                     if(video.continuationItemViewModel) {
@@ -319,6 +322,9 @@ module.exports = {
                             }
                         })
                     })
+                    if(twentyFives.length == 0) {
+                        sendVideos()
+                    }
                 } else {
                     sendVideos()
                 }
@@ -435,7 +441,6 @@ module.exports = {
             if(config.data_api_key) {
                 additionalFetchesRequired++
             }
-            fs.writeFileSync("../media/testpcont.json", JSON.stringify(r))
             let itemHTML = ``
             let items = []
             try {
@@ -533,10 +538,12 @@ module.exports = {
                     catch(error){}
                 } else if(i.lockupViewModel) {
                     let v = viewmodelParse(i)
-                    videoIds.push(v.id)
-                    videos.push(v)
-                    if(additionalFetchesRequired == 0) {
-                        renderVideo(v)
+                    if(!v.badges || !v.badges.includes("BADGE_MEMBERS_ONLY")) {
+                        videoIds.push(v.id)
+                        videos.push(v)
+                        if(additionalFetchesRequired == 0) {
+                            renderVideo(v)
+                        }
                     }
                 } else if(i.continuationItemViewModel) {
                     try {
@@ -588,6 +595,9 @@ module.exports = {
                         }
                     })
                 })
+                if(twentyFives.length == 0) {
+                    renderFromParsedVLIST()
+                }
             }
             if(additionalFetchesRequired == 0) {
                 res.send(language.apply_lang_to_code(itemHTML, req))
@@ -688,6 +698,7 @@ function viewmodelParse(video) {
     let metadataRows = []
     let uploaderId = ""
     let uploaderName = ""
+    let badges = []
     m.metadata.contentMetadataViewModel.metadataRows
     .forEach(r => {
         if(r.metadataParts && r.metadataParts.forEach) {
@@ -710,6 +721,12 @@ function viewmodelParse(video) {
                         catch(error){}
                     }
                 }
+            })
+        } else if(r.badges && r.badges.forEach) {
+            r.badges.forEach(b => {
+                badges.push((
+                    b && b.badgeViewModel && b.badgeViewModel.badgeStyle
+                ))
             })
         }
     })
@@ -743,6 +760,7 @@ function viewmodelParse(video) {
                      ? "/channel/" + uploaderId : "",
         "uploaderId": uploaderId,
         "time": time,
-        "views": viewCount
+        "views": viewCount,
+        "badges": badges
     }
 }

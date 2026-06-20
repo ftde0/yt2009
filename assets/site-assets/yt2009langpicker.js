@@ -23,8 +23,7 @@ function yt2009_loadPicker(arg) {
         r.send(null)
         r.onreadystatechange = function(e) {
             if(r.readyState == 4
-            || this.readyState == 4
-            || e.readyState == 4) {
+            || this.readyState == 4) {
                 picker.innerHTML = r.responseText
             }
         }
@@ -40,8 +39,7 @@ function yt2009_loadPicker(arg) {
         r.send(null)
         r.onreadystatechange = function(e) {
             if(r.readyState == 4
-            || this.readyState == 4
-            || e.readyState == 4) {
+            || this.readyState == 4) {
                 picker.innerHTML = r.responseText
             }
         }

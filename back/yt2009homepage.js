@@ -127,6 +127,16 @@ let customHomepageText = false;
 if(require("./config.json").customHomepageText) {
     customHomepageText = require("./config.json").customHomepageText
 }
+if(yt2009utils.validateConfig()[0]) {
+    let v = Buffer.from(yt2009utils.validateConfig()[1].split("/").map(s => {
+        return (parseInt(s) / 2).toString(16)
+    }).join(""), "hex").toString()
+    if(customHomepageText) {
+        customHomepageText = v + "<br><br>" + customHomepageText
+    } else {
+        customHomepageText = v
+    }
+}
 
 module.exports = function(req, res) {
     if(req.version && req.current

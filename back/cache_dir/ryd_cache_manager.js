@@ -120,6 +120,16 @@ module.exports = {
 
         // fallback: pull clean
         this.fetch(id, callback, useExtendedSystem)
+    },
+
+    "isOngoingFetch": function(id, isExtended) {
+        return (isExtended && ongoingFetches.includes(id + "/e"))
+            || (!isExtended && ongoingFetches.includes(id))
+    },
+
+    "removeFromCache": function(id) {
+        cache[id] = null;
+        delete cache[id];
     }
 }
 

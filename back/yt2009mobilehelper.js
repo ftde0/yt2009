@@ -348,6 +348,10 @@ module.exports = {
     "handle_recommendations": function(req, res) {
         let deviceId = pullDeviceId(req)
         if(deviceId && !userdata[deviceId]) {
+            let device = deviceId;
+            if(device.startsWith("u2-")) {
+                device = decryptWthIk(deviceId.split("u2-")[1])
+            }
             let r = templates.gdata_feedStart;
             
             r += templates.gdata_feedVideo(
@@ -362,7 +366,7 @@ you will need a PC with a modern browser for this.
 currently used instance: ${config.ip}
 
 complete sign in:
-http://${config.ip}:${config.port}/gsign?device=${deviceId}`,
+http://${config.ip}:${config.port}/gsign?device=${device}`,
                 "1900-01-01", "-", "-", "", ""
             )
 

@@ -13,8 +13,9 @@ var ntf_r = new XMLHttpRequest()
 ntf_r.open("GET", "/get_notifications?r=" + Math.random())
 ntf_r.send(null)
 ntf_r.onreadystatechange = function(e) {
-    if((ntf_r.readyState == 4 || this.readyState == 4 || e.readyState == 4)
-    && (ntf_r.status == 200 || ntf_r.status == 304)) {
+    if((ntf_r.readyState == 4 || this.readyState == 4)
+    && (ntf_r.status == 200 || ntf_r.status == 304)
+    && window.JSON) {
         // create notificationFilter storage for deleting notifications
         if(localStorage
         && !localStorage.filtered) {

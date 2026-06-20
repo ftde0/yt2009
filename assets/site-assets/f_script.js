@@ -244,7 +244,7 @@ if(location.href.indexOf("watch") !== -1) {
             ].join("&")
             r.send(params)
             r.onreadystatechange = function(e) {
-                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r.readyState == 4 || this.readyState == 4) {
                     if(r.status == 200) {
                         var id = r.responseText;
 
@@ -459,8 +459,7 @@ function favorite_video() {
         r.send("video_id=" + currentId)
         r.onreadystatechange = function(e) {
             if((r.readyState && r.readyState == 4)
-            || (this.readyState && this.readyState == 4) 
-            || (e.readyState && e.readyState == 4)) {
+            || (this.readyState && this.readyState == 4)) {
                 if(r.status >= 400) {
                     alert("This video is already in your favorites!")
                     return;
@@ -574,9 +573,12 @@ function onWatchCommentsShowMore(serializedNext) {
         )
     }
     r.setRequestHeader("source", location.href)
+    if(serializedNext == "reload") {    
+        r.setRequestHeader("priority", "u=7")
+    }
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             $("#watch-comments-show-more-td").style.display = "block"
             // add html sent from server
             $(".comments-container").innerHTML += r.responseText
@@ -633,7 +635,7 @@ function loadReplies(continuation, button, commentId, collapseButtonText) {
     r.setRequestHeader("source", location.href)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             var z = document.getElementById("yt2009-reply-holder-" + commentId)
             setTimeout(function() {
                 if(!collapseButtonText) {
@@ -949,7 +951,7 @@ function morefrom_load() {
     r.setRequestHeader("source", location.href)
     r.send(name)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             $("#watch-channel-discoverbox").innerHTML += r.responseText
 
             // remove indicator so it doesn't load all the time
@@ -1016,7 +1018,7 @@ function rateVid(rating) {
     r.setRequestHeader("source", location.href)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             ratingText.innerHTML = "Thanks for rating!"
         }
 
@@ -1075,7 +1077,7 @@ function commentSend() {
     btn.setAttribute("disabled", "")
     btn.setAttribute("value", "Adding comment...")
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             if(r.responseText == "empty") {
                 btn.setAttribute("value", "You must enter a comment!")
                 return;
@@ -1152,7 +1154,7 @@ function sendCmtRating(commentId, rating) {
     r.setRequestHeader("initial", commentScore.getAttribute("data-initial"))
     r.send(null)
     r.onreadystatechange = function(e) {
-        if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)
+        if((r.readyState == 4 || this.readyState == 4)
         && (r.responseText.indexOf("rating:") !== -1)) {
             var rating = parseInt(r.responseText.replace("rating:", ""))
             var color = "green"
@@ -1217,7 +1219,7 @@ function showReplyForm(comment) {
     r.setRequestHeader("comment-id", commentId)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+        if(r.readyState == 4 || this.readyState == 4) {
             body.innerHTML += r.responseText
 
             var replyTo = body.parentNode.getElementsByTagName("a")[0].innerHTML
@@ -1276,7 +1278,7 @@ function submitReply(id) {
     btn.setAttribute("disabled", "")
     btn.setAttribute("value", "Adding comment...")
     r.onreadystatechange = function(e) {
-        if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+        if(r.readyState == 4 || this.readyState == 4) {
             if(r.responseText == "empty") {
                 btn.setAttribute("value", "You must enter a comment!")
                 return;
@@ -1464,7 +1466,7 @@ function loadFlagMenu(channel) {
         }
         r.send(null)
         r.onreadystatechange = function(e) {
-            if((r.readyState == 4 || this.readyState == 4 || e.readyState == 4)) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 $("#inappropriateVidDiv").innerHTML = r.responseText
             }
         }
@@ -1650,6 +1652,36 @@ function switchVideo(video) {
     
     // share tab
     $("#playnav-panel-share-link").value = "http://youtu.be/" + id
+
+    // ryd
+    if(window.use_ryd) {
+        channelRequestRyd(id)
+    }
+}
+
+// ryd for channelpages
+function channelRequestRyd(id) {
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/ryd_request")
+    r.setRequestHeader("source", "?v=" + id)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if(r.readyState == 4 || this.readyState == 4) {
+            var rates = document.getElementById("ratingStars")
+                            .getElementsByTagName("button")[0]
+            rates.className = "master-sprite ratingL ratingL-" + r.responseText
+            rates.setAttribute("title", r.responseText)
+        }
+    }
+}
+
+function use_ryd_first_video() {
+    channelRequestRyd(window.currentVideo)
 }
 
 // other playnav tabs (all/uploads/playlists etc)
@@ -1702,7 +1734,7 @@ function openPlaylist(element, switchMode) {
         r.setRequestHeader("fmode-titles", "1")
         r.send(null)
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 var tab = document.createElement("div")
                 tab.className = "outer-scrollbox yt2009-scrollbox scrollbox-"
                                 + element.getAttribute("data-id")
@@ -1782,7 +1814,7 @@ function get_video_comments() {
     r.setRequestHeader("id", currentVideo)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             $("#playnav-panel-comments").innerHTML = r.responseText
         }
     }
@@ -1929,8 +1961,7 @@ function playnav_favorite_video() {
 
         r.onreadystatechange = function(e) {
             if((r.readyState && r.readyState == 4)
-            || (this.readyState && this.readyState == 4) 
-            || (e.readyState && e.readyState == 4)) {
+            || (this.readyState && this.readyState == 4) ) {
                 if(r.status >= 400) {
                     alert("This video is already in your favorites!")
                     return;
@@ -2097,7 +2128,7 @@ function playnav_searchChannel() {
     r.setRequestHeader("query", $("#upload_search_query-play").value)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             $("#playnav-play-loading").style.display = "none"
             $(".uploads").className = "uploads hid"
             $(".uploads-filtered").className = "uploads-filtered"
@@ -2124,7 +2155,7 @@ function playnav_sort(sortMode) {
     r.setRequestHeader("sort", sortMode)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             $("#playnav-play-loading").style.display = "none"
             $(".uploads").className = "uploads hid"
             $(".uploads-filtered").className = "uploads-filtered"
@@ -2171,7 +2202,7 @@ function playnav_more(continuation, otherContainer) {
     r.setRequestHeader("continuation", continuation)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             $("#playnav-play-loading").style.display = "none"
             if(!otherContainer) {
                 $(".uploads-filtered").innerHTML += r.responseText
@@ -2226,7 +2257,7 @@ function createPlaynavPlaylists() {
                 ].join("&")
                 r.send(params)
                 r.onreadystatechange = function(e) {
-                    if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                    if(r.readyState == 4 || this.readyState == 4) {
                         if(r.status == 200) {
                             var id = r.responseText;
 
@@ -2337,7 +2368,7 @@ if((location.href.indexOf("/watch") !== -1
         r.open("GET", "/assets/site-assets/apr1.css")
         r.send(null)
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 var style = document.createElement("style")
                 style.innerHTML = r.responseText;
                 document.body.appendChild(style)
@@ -2441,7 +2472,7 @@ function loadStats() {
     r.send(null)
     try {
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 statsLoaded = true;
                 $("#watch-tab-stats-body-content").innerHTML = r.responseText
             }
@@ -2493,7 +2524,7 @@ function loadVideoResponses() {
     try {
         r.send(document.querySelector(".watch-vid-ab-title").innerHTML)
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 videoResponsesLoaded = true;
                 document.querySelector("#watch-video-responses-children")
                         .innerHTML = r.responseText
@@ -2577,7 +2608,7 @@ function show_embed() {
         r.open("GET", "/embed_generate")
         r.send(null)
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 $("#watch-customize-embed-div").innerHTML = r.responseText
             }
         }
@@ -2751,13 +2782,15 @@ if(document.querySelector(".yt2009_marking_fetch_playlist_client")) {
         vr.setRequestHeader("force_next", "1")
     }
     vr.send(null)
-    vr.addEventListener("load", function(e) {
-        // add html from server
-        document.getElementById(
-            "watch-playlist-discoverbox"
-        ).innerHTML += vr.responseText
-        setTimeout(function() {scrollToPlaylistVideo()}, 100)
-    }, false)
+    vr.onreadystatechange = function(e) {
+        if((r.readyState == 4 || this.readyState == 4) && vr.responseText) {
+            // add html from server
+            document.getElementById(
+                "watch-playlist-discoverbox"
+            ).innerHTML += vr.responseText
+            setTimeout(function() {scrollToPlaylistVideo()}, 100)
+        }
+    }
 } else if(document.getElementById("watch-playlist-videos-panel")) {
     setTimeout(function() {scrollToPlaylistVideo()}, 100)
 }
@@ -2782,7 +2815,7 @@ function callPchelperPolls(comesFromS) {
     r.setRequestHeader("source", location.href)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             handleResponse()
         }
     }
@@ -2839,7 +2872,7 @@ function pickPollOption(pollActionKey) {
     r.open("POST", "/pchelper_comment_action?rt=" + Math.random())
     r.send(pollActionKey)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             setTimeout(function() {callPchelperPolls(true)}, 200)
         }
     }
@@ -2921,7 +2954,7 @@ turbocharge fillers
 ======
 */
 if(usingTurbocharge) {
-    onWatchCommentsShowMore("reload")
+    setTimeout(function() {onWatchCommentsShowMore("reload")}, 20)
     var id = window.location.href.split("v=")[1].split("&")[0]
     var r;
     if (window.XMLHttpRequest) {
@@ -2931,14 +2964,16 @@ if(usingTurbocharge) {
     }
     var response = ""
     function getResponseField(name) {
+        if(!response.split("=======-yt2009-field-" + name + "=======\n")[1]) return false;
         return response.split("=======-yt2009-field-" + name + "=======\n")[1]
                        .split("=======-yt2009-field")[0]
     }
     r.open("GET", "/etc_oex_videodata?video_id=" + id + "&rt=" + Math.random())
+    r.setRequestHeader("priority", "u=7")
     r.setRequestHeader("format", "ser")
-    r.send(null)
+    setTimeout(function() {r.send(null)}, 40)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             response = r.responseText
             document.querySelector(".yt2009-default-related").innerHTML = getResponseField("relatedVideosHTML");
             document.querySelector(".watch-video-added").innerHTML = getResponseField("uploadDate")
@@ -2946,6 +2981,20 @@ if(usingTurbocharge) {
             document.getElementById("watch-video-category").setAttribute(
                 "href", "/videos?c=" + getResponseField("categoryNumber")
             )
+            if(getResponseField("commentBox")) {
+                if(document.getElementById("watch-comment-post")) {
+                    document.getElementById("recent_comments").removeChild(
+                        document.getElementById("watch-comment-post")
+                    )
+                }
+                if(document.getElementById("div_main_comment")) {
+                    var box = document.getElementById("div_main_comment")
+                    box.parentNode.parentNode.removeChild(box.parentNode)
+                }
+                var container = document.createElement("div")
+                container.innerHTML = getResponseField("commentBox");
+                document.getElementById("recent_comments").appendChild(container)
+            }
         }
     }
 }

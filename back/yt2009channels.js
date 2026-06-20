@@ -1423,7 +1423,7 @@ module.exports = {
         // use_ryd clientside
         code = code.replace(`<!--yt2009_ryd_set-->`, `
         <script>
-            use_ryd = true;
+            window.use_ryd = true;
             use_ryd_first_video();
         </script>`)
 
@@ -2995,7 +2995,8 @@ module.exports = {
                                     ) + " views"
                                 }
                             })
-                            videos.push({
+                            
+                            let videoElement = {
                                 "id": id,
                                 "badges": badges,
                                 "length": time,
@@ -3004,7 +3005,14 @@ module.exports = {
                                 "upload": upload,
                                 "views": views,
                                 "title": title
-                            })
+                            }
+                            if(badges.filter(s => {
+                                return s[0] == "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"
+                            })[0]) {
+                                videoElement.isLive = true;
+                                videoElement.views = "";
+                            }
+                            videos.push(videoElement)
                         }
                         catch(error) {console.log(error)}
                         return;
@@ -3061,7 +3069,8 @@ module.exports = {
                         if(s && s.id
                         && data[s.id]
                         && data[s.id].viewCount
-                        && data[s.id].title) {
+                        && data[s.id].title
+                        && !s.isLive) {
                             s.views = yt2009utils.countBreakup(
                                 parseInt(data[s.id].viewCount)
                             ) + " views"
@@ -3106,21 +3115,28 @@ module.exports = {
                 createVideosFromChip([])
                 return;
             }
+            let createdVideos = false;
             r.onResponseReceivedActions.forEach(action => {
                 if(action.reloadContinuationItemsCommand
-                && action.reloadContinuationItemsCommand.slot
-                == "RELOAD_CONTINUATION_SLOT_BODY") {
+                && (action.reloadContinuationItemsCommand.slot
+                == "RELOAD_CONTINUATION_SLOT_BODY"
+                && action.reloadContinuationItemsCommand.continuationItems
+                && action.reloadContinuationItemsCommand.continuationItems[0]
+                && action.reloadContinuationItemsCommand.continuationItems[0].richItemRenderer)) {
                     createVideosFromChip(
                         action.reloadContinuationItemsCommand
                               .continuationItems
                     )
+                    createdVideos = true;
                 } else if(action.appendContinuationItemsAction) {
                     createVideosFromChip(
                         action.appendContinuationItemsAction
                               .continuationItems
                     )
+                    createdVideos = true;
                 }
             })
+            if(!createdVideos) {createVideosFromChip([])}
         })})
     },
 

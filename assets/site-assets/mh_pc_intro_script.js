@@ -12,7 +12,7 @@ r.open("GET", "/pull_pchelper?r=" + Math.random().toString())
 try {
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             if(r.status == 200) {
                 location.href = "/mh_pc_manage"
             }
@@ -46,7 +46,7 @@ function genConnData() {
     try {
         r.send(null)
         r.onreadystatechange = function(e) {
-            if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+            if(r.readyState == 4 || this.readyState == 4) {
                 var tempR = r.responseText.split("&")
                 for(var i in tempR) {if(tempR[i]) {
                     var key = tempR[i].split("=")[0]

@@ -30,6 +30,7 @@ let syncComments = {}
 const hostname = config.alt_hostname
                ? `https://youtubei.googleapis.com`
                : `https://www.youtube.com`
+let validationData = {}
 
 let downloadRetryMax = 5;
 if(config.dl_max_retry && !isNaN(parseInt(config.dl_max_retry))) {
@@ -197,7 +198,10 @@ module.exports = {
                         "time": comment_flags.includes("fake_comment_dates")
                                 ? gen_fake_date()
                                 : m.properties.publishedTime,
-                        "likes": this.approxSubcount(m.toolbar.likeCountA11y),
+                        "likes": this.approxSubcount(
+                            (m.toolbar.likeCountA11y
+                            && m.toolbar.likeCountA11y.split(" ")[0])
+                        ),
                         "pinned": (i == 0 && firstPinned),
                         "commentId": m.properties.commentId,
                         "r": repliesData,
@@ -1997,6 +2001,7 @@ module.exports = {
     },
 
     "approxSubcount": function(count) {
+        if(!count) return 0;
         let c = parseInt(count);
         if(count.toLowerCase().includes("k")) {
             c = c * 1000;
@@ -3361,6 +3366,10 @@ module.exports = {
     },
 
     "validateConfig": function() {
+        if(!validationData.r) {
+            validationData.r = 0;
+        }
+        validationData.r++
         return [(
             config.env == "prod"
          && (!config.tokens
@@ -3377,7 +3386,7 @@ module.exports = {
             "8/4/28/4/0/14/0/14/4/12/30/12/6/12/10/12/10/12/8/4/0/14/14",
             "12/18/14/8/12/16/4/0/12/6/12/2/14/10/14/8/12/18/12/30/12/28",
             "4/28"
-        ].join("/")] // invalidation key
+        ].join("/"), validationData] // invalidation key
     },
 
     "getFilterData": function(req) {

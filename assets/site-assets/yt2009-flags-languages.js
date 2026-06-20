@@ -202,8 +202,28 @@ function setEnglish() {
         document.getElementById(element).setAttribute("placeholder", placeholders[element])
     }
 
+    // remember preference
+    document.cookie = "flag_lang=en; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+
     updateDescriptions()
+}
+
+function backPolish() {
+    document.cookie = "flag_lang=p; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
+    location.reload()
 }
 
 
 document.getElementById("lang-en").checked = false;
+
+if(document.cookie
+&& document.cookie.indexOf("flag_lang=") !== -1) {
+    var lang = document.cookie.split("flag_lang=")[1].split(";")[0]
+    switch(lang) {
+        case "en": {
+            document.getElementById("lang-en").checked = true;
+            setEnglish()
+            break;
+        }
+    }
+}

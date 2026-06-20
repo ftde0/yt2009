@@ -3793,7 +3793,7 @@ term='channel'/>
     cdr.setRequestHeader("source", location.href)
     cdr.send(null)
     cdr.onreadystatechange = function(e) {
-        if(cdr.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(cdr.readyState == 4 || this.readyState == 4 || (e && e.readyState && e.readyState == 4)) {
             var message = document.getElementById("ratingMessage")
             message.innerHTML = message.innerHTML.replace(
                 "0", cdr.getResponseHeader("x-yt2009-rate-count")
