@@ -103,4 +103,4 @@ over time some tools and documentation was written about yt2009. for an easy ref
 - [config_params.md](config_params.md) - a list of ALL available config options.
 - [docker.md](docker.md) - yt2009 setup with docker. also listed in the setup section. (thanks, breakgimme!)
 - [flash_additions.md](flash_additions.md) - some info on caption and annotations modules within the default 2009 flash player.
-- [flash_player_patch.md](flash_player_patch.md) - manual patch info for using flash players with yt2009.
+- [flash_player_patch.md](flash_player_patch.md) - manual info for preparing vanilla flash players for use with yt2009.

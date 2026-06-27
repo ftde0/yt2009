@@ -94,7 +94,8 @@ module.exports = {
                 videoIds.push(r.id)
             })
             utils.dataApiBulk(videoIds, [
-                "title", "viewCount", "channelId"
+                "title", "viewCount", "channelId",
+                "publishedAt", "description", "categoryId"
             ], (dar) => {
                 if(dar) {
                     for(let v in dar) {
@@ -117,6 +118,9 @@ module.exports = {
                                 fourRandoms[i].uploaderId = vd.channelId;
                                 let url = "/channel/" + vd.channelId
                                 fourRandoms[i].uploaderUrl = url;
+                                fourRandoms[i].uploaded = vd.publishedAt
+                                fourRandoms[i].description = vd.description;
+                                fourRandoms[i].categoryId = vd.categoryId
                             }
                         } else if(category) {
                             category = category[1]
@@ -134,6 +138,9 @@ module.exports = {
                                     let up = "/channel/" + cid;
                                     feedVideos[category].uploaderId = cid;
                                     feedVideos[category].uploaderUrl = up;
+                                    feedVideos[category].uploaded = vData.publishedAt
+                                    feedVideos[category].description = vData.description;
+                                    feedVideos[category].categoryId = vData.categoryId;
                                 }
                             }
                         }

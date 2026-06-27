@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>gsign</title>
-    <style>*{font-family: sans-serif;}body{text-align:center;}.g{color:#666;}.panel button{margin-top:10px;}.error{color: red;}.panel6 input{width: 200px;}.sub{font-size: 12px;color: #666;margin-top: 50px;}</style>
+    <style>*{font-family: sans-serif;}body{text-align:center;}.g{color:#666;}.panel button{margin-top:10px;}.error{color: red;}.panel6 input{width: 200px;}.sub{font-size: 12px;color: #666;margin-top: 50px;}#already-have-pchelper{margin-top: 30px;}</style>
 </head>
 <body>
     <noscript>please enable javascript for this sign-in flow!</noscript>
@@ -22,6 +22,13 @@
         <h3>1. open the link below in a new incognito window.<br><b>don't sign in yet!</b></h3>
         <a href="https://accounts.google.com/embedded/setup/v2/android?source=com.google.android.gms&xoauth_display_name=Android%20Phone&ph=%2B15555215554&imsi=310260000000000&lang=en&langCountry=en_us&hl=en-US&cc=us&multilogin=1&hide_status_bar=0&use_native_navigation=0&alignment=center" target="_blank">https://accounts.google.com/embedded/setup...</a><br>
         <button>next &raquo;</button>
+        <p id="already-have-pchelper">already have a pchelper login? you can also put your pchelper user data here.<br>
+        use the "export pchelper cookie" button on the pchelper management page and put the value here to link them.</p>
+        <form action="/pchelper_linked_alias_mobilehelper" method="POST">
+            <input type="hidden" name="gdata_device" id="gdata_device_hidden_input"/>
+            <input type="text" name="pchelper_user" autocomplete="off" spellcheck="false" name="pchelper user cookie"/>
+            <input type="submit" value="link with pchelper"/>
+        </form>
         <p class="sub">yt2009 can't guarantee full reliability when linking an account.</p>
     </div>
     <div class="panel panel3" style="display: none;">
@@ -73,6 +80,7 @@
         var device = ""
         document.querySelector(".panel1 button").addEventListener("click", function() {
             device = document.querySelector(".devicecode").value;
+            document.getElementById("gdata_device_hidden_input").value = device
             var r = new XMLHttpRequest();
             r.open("GET", "/gsign_inited")
             r.setRequestHeader("device", device)

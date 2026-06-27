@@ -314,3 +314,164 @@ will turn into
 ```
 #throw v0
 ```
+
+# gdata and SABR
+
+as of v1.31, a SABR to HLS adapter (implemented in yt2009), combined with hidden (unused?)
+livestream support can be used to activate full SABR streaming on versions as old as youtube 2.3.4.
+
+the `sabr` flag can be enabled in `/mobile/app_connect.htm` (also listed in `/flags`), that may work for unmodified APKs,
+but you may see all videos set to a 00:00 timestamp, disabled seeking and semi-frequent crashing.
+
+**[!] the following assumes you can get around smali bytecode, as most modifications here cannot provide code samples you can just drop in.**
+
+## crashing
+
+old apps don't expect separate video/audio tracks and treat the audio track as a 0x0 video, which crashes the app about 50% of the time.
+
+thankfully, you can remove the check for 0x0 video and the app will work.
+
+- `2.3.4`
+
+the check is located in `YouTubePlayer$InternalListener`, in the `onVideoSizeChanged` function.
+
+- `3.5.5`
+
+the check is still located in `onVideoSizeChanged`, but class names may be obfuscated.
+
+you can grep for the message thrown when the error occurs - `video width must be positive` - to find the applicable class name.
+
+- `4.1.23`
+
+the check is a little different - the app won't crash, but the video will infinitely load.
+
+look for a class that calls `setVideoSize` after checking if 2 numbers are more than 0. find the file and function in your open smali decomp.
+
+you'll see code like this:
+
+```
+.line 693
+if-lez p2, :cond_0
+
+if-gtz p3, :cond_1
+
+.line 709
+:cond_0
+:goto_0
+return-void
+```
+
+the conditions are what interests us. `if-lez` checks if `p2` is <= 0, and `if-gtz` checks if `p3` is > 0.
+
+both ultimately achieving checking those 2 values (video width and video height) if they are greater than 0.
+
+by doing very small adjustments, like:
+
+```
+if-ltz p2, :cond_0
+
+if-gez p3, :cond_1
+```
+
+we change the checks: 1st one for `p2` < 0, and `p3` for >= 0. both returning true for `0` values.
+
+# 3.x.x and 4.x.x - SABR
+
+3.x.x apps are way more complex when it comes to "live" features, so we may bypass the live stuff and force the app to load only HLS formats instead.
+
+the major downside of this is that - once done that way - the app will always expect HLS (so in our case SABR).
+
+## `live.event` spec bypass
+
+the apps look for the `http://gdata.youtube.com/schemas/2007#live.event` rel spec to indicate a live event.
+yt2009 server appropriately sends this link in its responses if SABR is enabled to use HLS functionality. this works in v2 but not later.
+
+grep `http://gdata.youtube.com/schemas/2007#live.event` and change all values you see to anything you want that you're sure won't match, like `http://gdata.youtube.com/schemas/2007#sus`.
+
+## force HLS
+
+by default, HLS formats are only loaded when the video is a live stream. however, we are no longer dealing with a live stream. so to force our HLS stream in, we remove the check.
+
+with 3.5.5 as an example, classnames are obfuscated, but you can look in a java decompiler (such as JADX) to find it. you are looking for a check for `isLive` followed by a `getMatchingStream` call to get `STREAM_HLS` format (28). the same code block also checks if the video has 3D tags.
+
+4.x's check will look different code-wise but its function and the end goal is the same.
+
+# 2.x.x specifics - SABR
+
+## `00:00` timestamps
+
+**only applies to 2.x**
+
+- navigate to `com/google/android/youtube/core/model/Video.smali`
+
+- check the `isLive` function. if it's checking the duration, you need to change that.
+
+if it does, replace with one that only checks for live link presence:
+
+**make sure the `.line` number matches with yours, change if necessary! also check if the type of `liveEventUri` matches (`Landroid/net/Uri;`).**
+
+```
+.method public isLive()Z
+    .locals 1
+
+    .prologue
+    .line 685
+    iget-object v0, p0, Lcom/google/android/youtube/core/model/Video;->liveEventUri:Landroid/net/Uri;
+
+    if-eqz v0, :cond_0
+
+    const/4 v0, 0x1
+
+    :goto_0
+    return v0
+
+    :cond_0
+    const/4 v0, 0x0
+
+    goto :goto_0
+.end method
+```
+
+## live player style
+
+**only applies to 2.x**
+
+you may notice an issue where the player won't show the progressbar correctly.
+
+- navigate to `com/google/android/youtube/core/player/Director.smali`
+
+- check the `setControllerStyle` void. for instance, in 2.3.4, it checks the type of video playing and applies appropriate styling.
+
+for HLS playback, for example, it hides the progressbar by using a transparent color.
+
+you can very easily spoof this by forcing the player to set the regular video progressbar styling instead of HLS (live) styling.
+
+find a line similar to something like this:
+
+```
+sget-object v1, Lcom/google/android/youtube/core/player/ControllerOverlay$Style;->LIVE:Lcom/google/android/youtube/core/player/ControllerOverlay$Style;
+```
+
+and change the `LIVE` player style to the regular one. it will be most likely `YOUTUBE`, but you can always make sure
+
+by checking a few lines below.
+
+```
+sget-object v1, Lcom/google/android/youtube/core/player/ControllerOverlay$Style;->YOUTUBE:Lcom/google/android/youtube/core/player/ControllerOverlay$Style;
+```
+
+## `loadLiveVideo`
+
+**only applies to 2.x**
+
+you may have a `loadLiveVideo` function in `YouTubePlayer` that will set `live` to `1`. for SABR purposes, you don't want that. if you do:
+
+- navigate to `com/google/android/youtube/core/player/YouTubePlayer.smali`
+
+- find the `loadLiveVideo` function, then find the line sets the `live property`.
+
+```
+iput-boolean v0, p0, Lcom/google/android/youtube/core/player/YouTubePlayer;->live:Z
+```
+
+- note the register name `v0`. find the line setting it in the same function. it should have a value of `0x1`. change to `0x0`.

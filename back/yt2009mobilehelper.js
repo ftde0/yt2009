@@ -18,6 +18,10 @@ const creatorRequestSpecifics = require("./proto/creator_request_pb")
 const commentActions = require("./proto/comment_action_pb")
 const yt2009pot = require("./yt2009pot")
 const playerRequestProto = require("./proto/android_player_request_pb")
+let yt2009sabr;
+setTimeout(() => {
+    yt2009sabr = require("./yt2009exports").read().sabrMirror
+}, 100)
 const androidHeaders = {
     "Accept": "*/*",
     "Accept-Language": "en-US;q=0.7,en;q=0.3",
@@ -68,6 +72,43 @@ if(fs.existsSync(userdata_fname)) {
 const hostname = config.alt_hostname
                ? `https://youtubei.googleapis.com`
                : `https://www.youtube.com`
+
+// sabr
+function handleSabr(videoId, req) {
+    let flags = mobileflags.get_flags(req)
+    let urlFlags = mobileflags.url_flags(req)
+    if(flags.watch.includes("sabr")
+    || urlFlags.list.includes("sabr")
+    || (req && req.headers && req.headers.overrideAddSabr)) {
+        let qualities = ["720p", "480p", "360p", "240p", "144p"]
+        if(flags.watch.includes("sabr-nonhd")
+        || urlFlags.list.includes("sabr-nonhd")) {
+            qualities = ["480p", "360p", "240p", "144p"]
+        }
+        let sabrUrl = yt2009sabr.initPlaybackSession(
+            videoId, qualities
+        )
+        return {
+            "sabrUrl": sabrUrl,
+            "sabrUsesModdedApp": flags.watch.includes(
+                "sabr-uses-modded-app"
+            ) || urlFlags.list.includes("sabr-uses-modded-app"),
+            "sabrOverriden": (req && req.headers && req.headers.overrideAddSabr)
+        }
+    }
+    return {"sabrUrl": false}
+}
+function craftAdditional(defaultData, videoId, req) {
+    if(!defaultData) {
+        defaultData = {}
+    }
+    let fullData = JSON.parse(JSON.stringify(defaultData))
+    let sabr = handleSabr(videoId, req)
+    for(let property in sabr) {
+        fullData[property] = sabr[property]
+    }
+    return fullData;
+}
 
 module.exports = {
     "set": function(app) {
@@ -343,6 +384,41 @@ module.exports = {
             }
             res.send(userdata[device].savedFlags || "")
         })
+
+        const linkMessages = {
+            "nodata": "no user info! return to the previous page",
+            "success": "pchelper linked! manage through /mh_pc_manage",
+            "nohelper": "this pchelper id doesn't appear to exist."
+        }
+
+        app.post("/pchelper_linked_alias_mobilehelper", (req, res) => {
+            let targetDevice = ""
+            let sourceDevice = ""
+            try {
+                let body = req.body.slice(0,2048).toString()
+                targetDevice = decodeURIComponent(
+                    body.split("pchelper_user=")[1].split("&")[0]
+                )
+                sourceDevice = decodeURIComponent(
+                    body.split("gdata_device=")[1].split("&")[0]
+                )
+            }
+            catch(error){}
+            if(!targetDevice || !sourceDevice) {
+                res.status(400).send(linkMessages.nodata)
+                return;
+            }
+            let aliasedDevice = gmcu(targetDevice)
+            if(userdata[aliasedDevice]) {
+                // existent device
+                sourceDevice = gmcu(sourceDevice)
+                userdata[sourceDevice] = {"alias": aliasedDevice}
+                fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+                res.status(200).send(linkMessages.success)
+            } else {
+                res.status(400).send(linkMessages.nohelper)
+            }
+        })
     },
 
     "handle_recommendations": function(req, res) {
@@ -353,6 +429,7 @@ module.exports = {
                 device = decryptWthIk(deviceId.split("u2-")[1])
             }
             let r = templates.gdata_feedStart;
+            let urlFlags = mobileflags.url_flags(req)
             
             r += templates.gdata_feedVideo(
                 "12345678911",
@@ -367,7 +444,8 @@ currently used instance: ${config.ip}
 
 complete sign in:
 http://${config.ip}:${config.port}/gsign?device=${device}`,
-                "1900-01-01", "-", "-", "", ""
+                "1900-01-01", "-", "-", "", "",
+                craftAdditional({"urlFlags": urlFlags}, "W9nZ6u15yis", req)
             )
 
             r += templates.gdata_feedEnd;
@@ -416,6 +494,11 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 
                     let videoList = vl.slice(0, targetVids)
 
+                    let flags = mobileflags.get_flags(req).watch
+                    let urlFlags = mobileflags.url_flags(req)
+                    let isV4 = ((flags.watch && flags.watch.includes("v4-fix-channels"))
+                             || urlFlags.list.includes("v4-fix-channels"))
+
                     function applyData() {
                         videoList.forEach(v => {
                             if(!v.shortBylineText || !v.lengthText
@@ -452,17 +535,21 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                                     utils.time_to_seconds(
                                         v.lengthText.runs[0].text
                                     ),
-                                    "-", utils.relativeToAbsoluteApprox(
+                                    (v.description || "-"),
+                                    (v.publishedAt || utils.relativeToAbsoluteApprox(
                                         v.publishedTimeText.runs[0].text
-                                    ), "-", "-", mobileflags.get_flags(req).watch,
-                                    null, {
+                                    )), ((v.tags && v.tags.join(", ")) || "-"),
+                                    "-", flags, null, craftAdditional({
                                         "authorId": authorId,
-                                        "authorFull": authorFull
-                                    }
+                                        "authorFull": authorFull,
+                                        "isV4": isV4,
+                                        "isMobilehelper": true,
+                                        "urlFlags": urlFlags
+                                    }, v.videoId, req)
                                 )
                                 //console.log("successfully added video " + v.videoId)
                             }
-                            catch(error){}
+                            catch(error){console.log(error)}
                         })
 
                         rt += templates.gdata_feedEnd;
@@ -481,12 +568,17 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                                 if(i !== null && i !== undefined && i >= 0) {
                                     videoList[i].originalTitle = videoData.title
                                     videoList[i].dataApi = true;
+                                    videoList[i].publishedAt = videoData.publishedAt;
+                                    videoList[i].description = videoData.description;
+                                    videoList[i].tags = videoData.tags
                                 }
                             }
                         }
 
                         let videoIds = []
-                        let requestedParts = ["title"]
+                        let requestedParts = [
+                            "title", "publishedAt", "description", "tags"
+                        ]
 
                         let fetchesRequired = 1;
                         let fetchesDone = 0;
@@ -715,6 +807,10 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         let device = pullDeviceId(req)
         let videoId = req.originalUrl.split("videos/")[1].split("/related")[0]
         res.set("content-type", "application/xml")
+        let flags = mobileflags.get_flags(req).watch
+        let urlFlags = mobileflags.url_flags(req)
+        let isV4 = ((flags.watch && flags.watch.includes("v4-fix-channels"))
+                 || urlFlags.list.includes("v4-fix-channels"))
         let fullRes = templates.gdata_feedStart
         setupYouTube(device, (h) => {
 
@@ -761,7 +857,9 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                     fetchesRequired++
 
                     let videoIds = []
-                    let requestedParts = ["viewCount", "publishedAt", "title"]
+                    let requestedParts = [
+                        "viewCount", "publishedAt", "title", "description"
+                    ]
 
                     videos.forEach(v => {
                         if(v && v.id) {
@@ -780,6 +878,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                                 videos[i].upload = videoData.publishedAt
                                 videos[i].views = videoData.viewCount
                                 videos[i].title = videoData.title
+                                videos[i].description = videoData.description
                                 videos[i].dataApi = true;
                             }
                         }
@@ -793,13 +892,22 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 function applyResponse() {
                     videos.forEach(v => {
                         if(!v || !v.id) return;
-                        let author = v.authorHandle || v.authorId || ""
+                        let author = v.authorHandle
+                                  || (
+                                    v.authorFull
+                                    && utils.asciify(v.authorFull)
+                                  )
+                                  || v.authorId
+                                  || ""
                         fullRes += templates.gdata_feedVideo(
-                            v.id, v.title, author, v.views, v.length, "-",
-                            v.upload, "-", "-",
-                            mobileflags.get_flags(req).watch,
-                            null, {"authorFull": v.authorFull,
-                            "authorId": v.authorId}
+                            v.id, v.title, author, v.views, v.length,
+                            (v.description || "-"), v.upload, "-", "-",
+                            flags, null, craftAdditional({
+                                "authorFull": v.authorFull,
+                                "authorId": v.authorId,
+                                "isV4": isV4,
+                                "isMobilehelper": true
+                            }, v.id, req)
                         )
                     })
                     fullRes += templates.gdata_feedEnd;
@@ -1162,7 +1270,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                         fullRes += templates.gdata_feedVideo(
                             v.id, v.title, "",
                             "", v.length, "-", "", "-", "-",
-                            mobileflags.get_flags(req).watch
+                            mobileflags.get_flags(req).watch,
+                            null, craftAdditional({}, v.id, req)
                         )
                     } else {
                         if(!v.shortBylineText
@@ -1179,7 +1288,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                         fullRes += templates.gdata_feedVideo(
                             v.videoId + "/fav", v.title.runs[0].text, author,
                             "", parseInt(v.lengthSeconds), "-", "", "-",
-                            "-", mobileflags.get_flags(req).watch
+                            "-", mobileflags.get_flags(req).watch,
+                            null, craftAdditional({}, v.id, req)
                         )
                     }
                     
@@ -1318,6 +1428,11 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 
     "outsourceBareVideo": function(req, res) {
         let device = pullDeviceId(req)
+        if(device.startsWith("u2-")) {
+            device = decryptWthIk(device.split("u2-")[1])
+        }
+        let urlFlags = mobileflags.url_flags(req)
+        req.headers.overrideAddSabr = true
         res.send(templates.gdata_feedVideo(
             "12345678911",
             "open this video to complete your yt2009 sign in",
@@ -1331,7 +1446,8 @@ currently used instance: ${config.ip}
 
 complete sign in:
 http://${config.ip}:${config.port}/gsign?device=${device}`,
-            "1900-01-01", "-", "-", "", ""
+            "1900-01-01", "-", "-", "", "", 
+            craftAdditional({"urlFlags": urlFlags}, "W9nZ6u15yis", req)
         ))
     },
 
@@ -1713,7 +1829,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 						"videoId": req.query.video_id.substring(0,11),
 						"serviceIntegrityDimensions": pot
 					}),
-					"agent": yt2009utils.createFetchAgent()
+					"agent": utils.createFetchAgent()
 				}).then(r => {r.json().then(r => {
                     if(req.callbackPot) {
                         callback([r, potBytes, potKey])
@@ -4207,6 +4323,10 @@ function pullDeviceId(req) {
     && req.headers.cookie.includes("pchelper_user=")) {
         deviceId = req.headers.cookie.split("pchelper_user=")[1].split(";")[0]
     }
+    let device = gmcu(deviceId)
+    if(userdata[device] && userdata[device].alias) {
+        return userdata[device].alias
+    }
     return gmcu(deviceId)
 }
 
@@ -4240,7 +4360,6 @@ function pullUserIdFromDevice(device, callback) {
 }
 
 const crypto = require("crypto")
-const yt2009utils = require("./yt2009utils")
 const tranferIkRef = "../www-core-feather.css"
 const i = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
 let ik = false;

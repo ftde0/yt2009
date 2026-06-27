@@ -12,6 +12,30 @@ const hostname = config.alt_hostname
                ? `https://youtubei.googleapis.com`
                : `https://www.youtube.com`
 let cache = require("./cache_dir/playlist_cache_manager")
+const mobileflags = require("./yt2009mobileflags")
+const sabr = require("./yt2009sabr")
+function handleSabr(videoId, req) {
+    let flags = mobileflags.get_flags(req)
+    let urlFlags = mobileflags.url_flags(req)
+    if(flags.watch.includes("sabr")
+    || urlFlags.list.includes("sabr")) {
+        let qualities = ["720p", "480p", "360p", "240p", "144p"]
+        if(flags.watch.includes("sabr-nonhd")
+        || urlFlags.list.includes("sabr-nonhd")) {
+            qualities = ["480p", "360p", "240p", "144p"]
+        }
+        let sabrUrl = sabr.initPlaybackSession(
+            videoId, qualities
+        )
+        return {
+            "sabrUrl": sabrUrl,
+            "sabrUsesModdedApp": flags.watch.includes(
+                "sabr-uses-modded-app"
+            ) || urlFlags.list.includes("sabr-uses-modded-app")
+        }
+    }
+    return {"sabrUrl": false}
+}
 
 function splitEvery25(videoIds) {
      // slice every 25 for data api requests
@@ -373,7 +397,9 @@ module.exports = {
             )
             let videoIndex = 1;
             (data.videos || []).forEach(video => {
-                xmlResponse += yt2009templates.cpbVideo(video, videoIndex)
+                xmlResponse += yt2009templates.cpbVideo(
+                    video, videoIndex, handleSabr(video.id, req)
+                )
                 videoIndex += 1
             })
             xmlResponse += `

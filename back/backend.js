@@ -35,6 +35,7 @@ const yt2009_myvideos = require("./yt2009myvideos")
 const yt2009_autoshare = require("./yt2009autoshare")
 const yt2009sabr = require("./yt2009sabr")
 const yt2009_masf = require("./yt2009masf")
+const yt2009_hlsadapter = require("./yt2009hlsadapter")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -3811,6 +3812,7 @@ app.get("/yt2009_recommended", (req, res) => {
             "send": function(data) {data.split("<entry>").forEach(v => {
                 if(v.includes("<feed xmlns")) return;
                 let id = v.split(`/feeds/api/videos/`)[1].split(`</id>`)[0]
+                          .substring(0,11)
                 let title = v.split(`<title type='text'>`)[1].split("</title>")[0]
                 let creatorName = ""
                 try {
@@ -6163,7 +6165,11 @@ app.get("/v/*", (req, res) => {
     res.redirect("/embedF/" + video)
 })
 app.get("/avatar_wait", (req, res) => {
-    if(!yt2009_utils.isAuthorized(req)) {
+    if(!yt2009_utils.isAuthorized(req)
+    && !((req && req.headers && req.headers["user-agent"])
+    && (req.headers["user-agent"].includes("Android")
+    || req.headers["user-agent"].includes("iPhone")
+    || req.headers["user-agent"].includes("iPad")))) {
         res.sendStatus(401)
         return;
     }
@@ -6323,6 +6329,7 @@ app.get("/pchelper_related", (req, res) => {
             if(v.includes("<feed xmlns")
             || !v.includes("/feeds/api/videos")) return;
             let id = v.split(`/feeds/api/videos/`)[1].split(`</id>`)[0]
+                      .substring(0,11)
             let title = v.split(`<title type='text'>`)[1].split("</title>")[0]
             let creatorName = v.split(`<name>`)[1].split("</name>")[0]
             let creatorUrl = "/@" + creatorName
@@ -7753,6 +7760,13 @@ app.get("/pchelper_save_cookie", (req, res) => {
     `)
 })
 
+
+/*
+======
+sabr -> HLS adapter register
+======
+*/
+yt2009_hlsadapter.register(app)
 
 /*
 pizdec

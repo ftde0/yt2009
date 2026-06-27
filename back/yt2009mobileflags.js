@@ -5,9 +5,13 @@ if(!fs.existsSync("./cache_dir/mobile_flags.json")) {
 }
 const mflags = require("./cache_dir/mobile_flags.json")
 const knownFlagNames = {
-    "watch": ["new-related", "innertube-related", "realistic-view-count", "better-hd"],
+    "watch": [
+        "innertube-related", "realistic-view-count", "better-hd",
+        "sabr", "sabr-nonhd", "sabr-uses-modded-app", "v4-fix-channels"
+    ],
     "search": ["only-old"],
-    "channel": ["default-avatar-adapt", "uploads-count", "uncrop-avatar"]
+    "channel": ["default-avatar-adapt", "uploads-count", "uncrop-avatar"],
+    "homepage": ["hype-homepage"]
 }
 let sessions = {}
 
@@ -50,12 +54,13 @@ module.exports = {
         if(!body["watch"]
         || !body["search"]
         || !body["channel"]
+        || !body["homepage"]
         || !req.headers["device"]) {
             res.sendStatus(400)
             return;
         }
         let filteredUserFlags = {
-            "watch": [], "search": [], "channel": [], "login_simulate": ""
+            "watch": [], "search": [], "channel": [], "homepage": [], "login_simulate": ""
         }
         body.watch.forEach(flag => {
             if(knownFlagNames.watch.includes(flag)) {
@@ -72,6 +77,11 @@ module.exports = {
                 filteredUserFlags.channel.push(flag)
             }
         })
+        body.homepage.forEach(flag => {
+            if(knownFlagNames.homepage.includes(flag)) {
+                filteredUserFlags.homepage.push(flag)
+            }
+        })
         if(body.login_simulate && body.login_simulate.includes("/")) {
             filteredUserFlags.login_simulate = body.login_simulate
         }
@@ -86,7 +96,7 @@ module.exports = {
     },
 
     "get_flags": function(req) {
-        let flags = {"watch": [], "search": [], "channel": []}
+        let flags = {"watch": [], "search": [], "channel": [], "homepage": []}
         if(req.headers["x-gdata-device"]
         && req.headers["x-gdata-device"].includes("device-id=\"")) {
             let deviceId = req.headers["x-gdata-device"]
@@ -98,5 +108,27 @@ module.exports = {
         }
 
         return flags;
+    },
+
+    "url_flags": function(req) {
+        let flags = []
+        if(req && req.query && req.query.flags) {
+            flags = decodeURIComponent(req.query.flags).split(",").filter(f => {
+                return (
+                    knownFlagNames.watch.includes(f)
+                 || knownFlagNames.search.includes(f)
+                 || knownFlagNames.channel.includes(f)
+                 || knownFlagNames.homepage.includes(f)
+                )
+            })
+            return {
+                "url": "flags=" + flags.join(","),
+                "list": flags
+            }
+        }
+        return {
+            "url": "",
+            "list": []
+        }
     }
 }

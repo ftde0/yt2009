@@ -6,6 +6,43 @@ const config = require("./config.json")
 const mobileauths = require("./yt2009mobileauths")
 const mobileflags = require("./yt2009mobileflags")
 const yt2009jsongdata = require("./yt2009jsongdata")
+const yt2009sabr = require("./yt2009sabr")
+
+// sabr
+function handleSabr(videoId, req) {
+    let flags = mobileflags.get_flags(req)
+    let urlFlags = mobileflags.url_flags(req)
+    if(flags.watch.includes("sabr")
+    || urlFlags.list.includes("sabr")
+    || (req && req.headers && req.headers.overrideAddSabr)) {
+        let qualities = ["720p", "480p", "360p", "240p", "144p"]
+        if(flags.watch.includes("sabr-nonhd")
+        || urlFlags.list.includes("sabr-nonhd")) {
+            qualities = ["480p", "360p", "240p", "144p"]
+        }
+        let sabrUrl = yt2009sabr.initPlaybackSession(
+            videoId, qualities
+        )
+        return {
+            "sabrUrl": sabrUrl,
+            "sabrUsesModdedApp": flags.watch.includes(
+                "sabr-uses-modded-app"
+            ) || urlFlags.list.includes("sabr-uses-modded-app")
+        }
+    }
+    return {"sabrUrl": false}
+}
+function craftAdditional(defaultData, videoId, req) {
+    if(!defaultData) {
+        defaultData = {}
+    }
+    let fullData = JSON.parse(JSON.stringify(defaultData))
+    let sabr = handleSabr(videoId, req)
+    for(let property in sabr) {
+        fullData[property] = sabr[property]
+    }
+    return fullData;
+}
 
 module.exports = {
     "get_search": function(req, res) {
@@ -36,6 +73,8 @@ module.exports = {
                 req.query.q += " +only_old"
             }
         }
+
+        let urlFlags = mobileflags.url_flags(req)
         
         if(req.query.q.includes("+only_old")) {
             req.query.q = req.query.q.replace("+only_old", "")
@@ -70,6 +109,8 @@ module.exports = {
             let videosCount = 0;
             let resultCount = 0;
             let flags = mobileflags.get_flags(req).watch
+            let isV4 = ((flags.watch && flags.watch.includes("v4-fix-channels"))
+                     || urlFlags.list.includes("v4-fix-channels"))
             data.forEach(video => {
                 if(video.type == "metadata") {
                     resultCount = video.resultCount
@@ -103,6 +144,12 @@ module.exports = {
                     uploadDate = utils.relativeToAbsoluteApprox(video.upload)
                 }
 
+                let authorId = null
+                if(video.author_url && video.author_url.includes("channel/")) {
+                    authorId = video.author_url.split("channel/")[1]
+                                    .split("/")[0].split("?")[0]
+                }
+
                 videos += templates.gdata_feedVideo(
                     video.id,
                     video.title,
@@ -114,7 +161,13 @@ module.exports = {
                     (cacheData.tags || []).join() || "-",
                     cacheData.category || "-",
                     flags,
-                    cacheData.qualities || []
+                    cacheData.qualities || [],
+                    craftAdditional({
+                        "urlFlags": urlFlags,
+                        "authorId": authorId,
+                        "authorFull": video.author_name,
+                        "isV4": isV4
+                    }, video.id, req)
                 )
             })
 
@@ -142,10 +195,7 @@ module.exports = {
                 let first3Videos = []
                 let allVideos = []
                 let fetchesCompleted = 0;
-                let fetchesRequired = 1;
-                if(config.data_api_key) {
-                    fetchesRequired++
-                }
+                let fetchesRequired = 0;
                 data.forEach(video => {
                     if(video.type !== "video") return;
                     if(first3Videos.length < 3) {
@@ -154,16 +204,20 @@ module.exports = {
                     allVideos.push(video.id)
                 })
 
-                // add videos when preloading done
-                html.bulk_get_videos(first3Videos, () => {
-                    fetchesCompleted++
-                    if(fetchesCompleted >= fetchesRequired) {
-                        addVideosToResponse(data)
-                    }
-                })
+                // preload videos (legacy behavior) if no data api
+                if(!config.data_api_key) {
+                    fetchesRequired++
+                    html.bulk_get_videos(first3Videos, () => {
+                        fetchesCompleted++
+                        if(fetchesCompleted >= fetchesRequired) {
+                            addVideosToResponse(data)
+                        }
+                    })
+                }
 
                 // also if using data api wait for that
                 if(config.data_api_key) {
+                    fetchesRequired++
                     utils.dataApiBulk(allVideos, ["publishedAt"], (apidata) => {
                         for(let id in apidata) {
                             let videoData = apidata[id]

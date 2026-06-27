@@ -257,7 +257,7 @@ ${ap == 2 ? avatarCode : ""}
             addNext = true
         }
         nextUrl = nextUrl.split("&").join("&amp;")
-        let next = `\n    <link rel='next' type='application/atom+xml' href='${nextUrl}'/>`
+        let next = `\n    <link rel='next' type='application/atom+xml' href='${nextUrl.split("'").join("&apos;")}'/>`
         return `<?xml version='1.0' encoding='UTF-8'?>
 <feed>
     <id>http://gdata.youtube.com/feeds/api/videos</id>
@@ -879,7 +879,7 @@ ${ap == 2 ? avatarCode : ""}
     </media:group>
     <yt:playlistId>${id}</yt:playlistId>`
     },
-    "cpbVideo": function(video, index) {
+    "cpbVideo": function(video, index, additionals) {
         let videoUrl = `http://${config.ip}:${config.port}/get_video?video_id=${video.id}/mp4`
         if(config.trusted_context) {
             videoUrl += require("./yt2009trustedcontext").urlContext(
@@ -889,6 +889,25 @@ ${ap == 2 ? avatarCode : ""}
         function sd(i) {
             return i.split("<").join("").split(">").join("").split("&").join("")
         }
+        let rootLvlUrlFlags = ""
+        if(additionals && additionals.urlFlags) {
+            try {
+                rootLvlUrlFlags = "&" + additionals.urlFlags.url
+            }
+            catch(error) {}
+        }
+        let liveCode = ""
+        let qualityCode = ""
+        let length = `${video.time ? utils.time_to_seconds(video.time) : "0"}`
+        if(additionals && additionals.sabrUrl) {
+            let playbackId = additionals.sabrUrl.split("pid=")[1].split("&")[0]
+            let sabrUrl = `http://${config.ip}:${config.port}/sabr_hls_adapter/${playbackId}/${length}.m3u8`
+            liveCode = `\n<link rel="http://gdata.youtube.com/schemas/2007#live.event" href="${sabrUrl}"/>`
+            qualityCode = `<media:content url='${sabrUrl}' type='video/3gpp' medium='video' expression='full' duration='${length}' yt:format='28'/>`
+        }
+        if(additionals && additionals.sabrUrl && !additionals.sabrUsesModdedApp) {
+            length = 0;
+        }
         return `
     <entry>
         <id>${video.id}</id>
@@ -896,8 +915,8 @@ ${ap == 2 ? avatarCode : ""}
         <title>${sd(video.title)}</title>
         <link rel='alternate' type='text/html' href='http://www.youtube.com/watch?v=${video.id}&amp;feature=youtube_gdata'/>
         <link rel='http://gdata.youtube.com/schemas/2007#video.responses' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}/responses?v=2'/>
-        <link rel='http://gdata.youtube.com/schemas/2007#video.related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}/related?v=2'/>
-        <link rel='related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}?v=2'/>
+        <link rel='http://gdata.youtube.com/schemas/2007#video.related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}/related?v=2${rootLvlUrlFlags}'/>${liveCode}
+        <link rel='related' type='application/atom+xml' href='http://${config.ip}:${config.port}/feeds/api/videos/${video.id}?v=2${rootLvlUrlFlags}'/>
         <link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/playlists/0A7ED544A0D9877D/00A37F607671690E?v=2'/>
         <author>
             <name>${sd(video.uploaderName)}</name>
@@ -914,7 +933,7 @@ ${ap == 2 ? avatarCode : ""}
             <gd:feedLink href='http://gdata.youtube.com/feeds/api/videos/${video.id}/comments?v=2' countHint='1'/>
         </gd:comments>
         <media:group>
-            <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>
+            <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
             <media:credit role='uploader' scheme='urn:youtube' yt:type='partner'>${video.uploaderName}</media:credit>
             <media:description type='plain'>${sd(video.description || "")}</media:description>
             <media:keywords>-</media:keywords>
@@ -1161,6 +1180,14 @@ ${ap == 2 ? avatarCode : ""}
             }
             catch(error){}
         }
+        let rootLvlUrlFlags = ""
+        if(additional && additional.urlFlags) {
+            try {
+                flags += additional.urlFlags.list.join(",")
+                rootLvlUrlFlags = "?" + additional.urlFlags.url
+            }
+            catch(error) {}
+        }
         if(flags && flags.includes("realistic-view-count")
         && views >= 100000) {
             views = Math.floor(views / 90)
@@ -1258,25 +1285,58 @@ ${ap == 2 ? avatarCode : ""}
         // additional data
         let add = ""
         if(additional && additional.authorFull && !additional.omitY9) {
+            let name = utils.xss(additional.authorFull).split("&").join("&amp;").split("'").join("&apos;").split("\"").join("&quot;")
             add += "\n          <yt9full>" + utils.xss(additional.authorFull).split("&").join("&amp;") + "</yt9full>"
         }
         if(additional && additional.authorId && !additional.omitY9) {
             add += "\n          <yt9aid>" + additional.authorId + "</yt9aid>"
         }
 
+        // author role
+        let role = "uploader"
+        if(additional && additional.uploaderUnsure) {
+            role = "b"
+        }
+
+        // hls
+        let liveCode = ""
+        if(additional && additional.sabrUrl) {
+            let playbackId = additional.sabrUrl.split("pid=")[1].split("&")[0]
+            let sabrUrl = `http://${config.ip}:${config.port}/sabr_hls_adapter/${playbackId}/${length}.m3u8`
+            liveCode = `\n<link rel="http://gdata.youtube.com/schemas/2007#live.event" href="${sabrUrl}" start="0" end="1" video="w"/>`
+            if(additional.sabrOverriden) {
+                liveCode = ""
+            }
+            qualityCode = `<media:content url='${sabrUrl}' type='video/3gpp' medium='video' expression='full' duration='${length}' yt:format='28'/>`
+        }
+        if(additional && additional.sabrUrl && !additional.sabrUsesModdedApp) {
+            length = 0;
+        }
+
+        // author visible field
+        let authorFieldContent = author;
+        if(additional && additional.isV4 && additional.authorId) {
+            authorFieldContent = additional.authorId
+        }
+
+        // full authornames for mobilehelper + v4
+        if(additional && additional.isV4 && additional.authorFull) {
+            author = utils.xss(additional.authorFull).split("&").join("&amp;").split("'").join("&apos;").split("\"").join("&quot;")
+        }
+
         return `
         <entry>
-            <id>http://${config.ip}:${config.port}/feeds/api/videos/${id}</id>
+            <id>http://${config.ip}:${config.port}/feeds/api/videos/${id}${additional && rootLvlUrlFlags ? rootLvlUrlFlags : ""}</id>
             <youTubeId id='${id}'>${id}</youTubeId>
             <published>${uploadDate ? new Date(uploadDate).toISOString() : ""}</published>
             <updated>${uploadDate ? new Date(uploadDate).toISOString() : ""}</updated>
             <category scheme="http://gdata.youtube.com/schemas/2007/categories.cat" label="${category}" term="${category}">${category}</category>
             <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("&amp;")}</title>
             <content type='text'>${(description||"").split("<").join("").split(">").join("").split("&").join("&amp;")}</content>
-            <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related"/>${favCode}
+            <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related${rootLvlUrlFlags}"/>${favCode}${liveCode}
             <author>
                 <name>${author}</name>
-                <uri>http://${config.ip}:${config.port}/feeds/api/users/${author}</uri>
+                <uri>http://${config.ip}:${config.port}/feeds/api/users/${authorFieldContent}</uri>
                 <yt:userId>${((additional&&additional.authorId)||"")}</yt:userId>
             </author>
             <gd:comments>
@@ -1296,8 +1356,7 @@ ${ap == 2 ? avatarCode : ""}
                 <yt:uploaded>${uploadDate ? new Date(uploadDate).toISOString() : ""}</yt:uploaded>
                 <yt:uploaderId>${(additional&&additional.authorId)||""}</yt:uploaderId>
                 <yt:videoid id='${id}'>${id}</yt:videoid>
-                <youTubeId id='${id}'>${id}</youTubeId>
-                <media:credit role='uploader' yt:display='${author}' name='${author}'>${author}</media:credit>
+                <media:credit role='${role}' yt:display='${author}' name='${author}'>${authorFieldContent}</media:credit>
             </media:group>
             <gd:rating average='5' max='5' min='1' numRaters='${Math.floor(views / 600)}' rel='http://schemas.google.com/g/2005#overall'/>
             <yt:statistics favoriteCount="${Math.floor(views / 150)}" viewCount="${views}"/>
@@ -1325,7 +1384,7 @@ ${ap == 2 ? avatarCode : ""}
 		</author>
 	</entry>`
     },
-    "gdata_user": function(id, name, avatar, subs, videoCount, channelViews, uploadViews, flags) {
+    "gdata_user": function(id, name, avatar, subs, videoCount, channelViews, uploadViews, flags, urlFlags) {
         if(flags.includes("uncrop-avatar")
         && avatar.includes("/assets/")) {
             avatar = `http://${config.ip}:${config.port}/mobile/avatar_process?avatar=/assets/${avatar.split("assets/")[1]}`
@@ -1348,6 +1407,11 @@ ${ap == 2 ? avatarCode : ""}
             videoCount = parseInt(videoCount) * 1000000
         }
 
+        let urlFlagsCode = ``
+        if(urlFlags && urlFlags.url) {
+            urlFlags += `?${urlFlags.url}`
+        }
+
         return `<?xml version='1.0' encoding='UTF-8'?>
 <entry
     xmlns='http://www.w3.org/2005/Atom'
@@ -1368,7 +1432,7 @@ ${ap == 2 ? avatarCode : ""}
     </author>
     <yt:age>1</yt:age>
     <yt:description></yt:description>
-    <gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.uploads' href='http://gdata.youtube.com/feeds/api/users/${name}/uploads' countHint='${videoCount}'/>
+    <gd:feedLink rel='http://gdata.youtube.com/schemas/2007#user.uploads' href='http://gdata.youtube.com/feeds/api/users/${name}/uploads${urlFlagsCode}' countHint='${videoCount}'/>
     <yt:statistics lastWebAccess='2011-02-01T12:45:18.000-08:00' subscriberCount='${subs}' videoWatchCount='1' viewCount='${channelViews}' totalUploadViews='${uploadViews}'/>
     <media:thumbnail url='${avatar}'/>
     <yt:username>${name}</yt:username>
@@ -3049,6 +3113,7 @@ ${ap == 2 ? avatarCode : ""}
         <media:group>
             <media:category label='-' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>-</media:category>
             <media:content url='http://${config.ip}:${config.port}/assets/site-assets/black.mp4' type='video/3gpp' medium='video' expression='full' duration='25' yt:format='3'/>
+            <media:content url='http://${config.ip}:${config.port}/sus' type='video/3gpp' medium='video' expression='full' duration='25' yt:format='28'/>
             <media:description type='plain'>${msg}</media:description>
             <media:keywords>-</media:keywords>
             <media:player url='http://www.youtube.com/watch?v=12345678901'/>

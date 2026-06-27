@@ -56,14 +56,17 @@ function showFlags() {
     r.send(null)
     r.addEventListener("load", function(e) {
         var res = JSON.parse(r.responseText)
-        res.watch.forEach(flag => {
+        res.watch.forEach(function(flag) {
             $("#watch-" + flag).checked = true
         })
-        res.search.forEach(flag => {
+        res.search.forEach(function(flag) {
             $("#search-" + flag).checked = true
         })
-        res.channel.forEach(flag => {
+        res.channel.forEach(function(flag) {
             $("#channel-" + flag).checked = true
+        })
+        res.homepage.forEach(function(flag) {
+            $("#homepage-" + flag).checked = true
         })
     }, false)
 }
@@ -75,23 +78,30 @@ function saveFlags() {
     var flagsSelector = "-flags input[type=\"checkbox\"]"
     // watchpage flags
     var watchFlags = []
-    document.querySelectorAll(".watch" + flagsSelector).forEach(flag => {
+    document.querySelectorAll(".watch" + flagsSelector).forEach(function(flag) {
         if(flag.checked) {
             watchFlags.push(flag.id.replace("watch-", ""))
         }
     })
     // search flags
     var searchFlags = []
-    document.querySelectorAll(".search" + flagsSelector).forEach(flag => {
+    document.querySelectorAll(".search" + flagsSelector).forEach(function(flag) {
         if(flag.checked) {
             searchFlags.push(flag.id.replace("search-", ""))
         }
     })
     // channel flags
     var channelFlags = []
-    document.querySelectorAll(".channel" + flagsSelector).forEach(flag => {
+    document.querySelectorAll(".channel" + flagsSelector).forEach(function(flag) {
         if(flag.checked) {
             channelFlags.push(flag.id.replace("channel-", ""))
+        }
+    })
+    // homepage flags
+    var homepageFlags = []
+    document.querySelectorAll(".homepage" + flagsSelector).forEach(function(flag) {
+        if(flag.checked) {
+            homepageFlags.push(flag.id.replace("homepage-", ""))
         }
     })
 
@@ -141,6 +151,7 @@ function saveFlags() {
             "watch": watchFlags,
             "search": searchFlags,
             "channel": channelFlags,
+            "homepage": homepageFlags,
             "login_simulate": loginSimulate ? loginSimulate : null
         }))
         r.addEventListener("load", function(e) {

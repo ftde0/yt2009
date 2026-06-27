@@ -24,6 +24,8 @@
             <button onclick="saveDeviceId();">save</button>
         </div>
         <button onclick="getDeviceId();">check</button>
+        <p id="flags-request-notice"><b>you can now also select flags in requests themselves.</b> this means you can permanently
+        enable flags for users of your APK files. more info in <code>apk_setup.md</code></p>
     </div>
     <div id="flagspage" class="panel" style="display: none;">
         <h1>yt2009 mobileflags</h1>
@@ -41,14 +43,29 @@
                 <p class="subtext">use straight youtube related data for a video instead of using custom algorithms for old videos.</p>
             </div>
             <div class="checkbox">
-                <input type="checkbox" id="watch-new-related">
-                <label for="watch-new-related">new_related</label>
-                <p class="subtext"><b>legacy</b> show new videos within the Related section</p>
-            </div>
-            <div class="checkbox">
                 <input type="checkbox" id="watch-realistic-view-count">
                 <label for="watch-realistic-view-count">realistic_view_count</label>
                 <p class="subtext">adjust view counts to be more realistic for 2009 standards</p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-sabr">
+                <label for="watch-sabr">sabr</label>
+                <p class="subtext">enable SABR on gdata-enabled apps. device compatibility may vary. android 8.1+.</p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-sabr-nonhd">
+                <label for="watch-sabr-nonhd">sabr_nonhd</label>
+                <p class="subtext">drops quality for all sabr playback to 480p from the default 720p.</p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-sabr-uses-modded-app">
+                <label for="watch-sabr-uses-modded-app">sabr_uses_modded_app</label>
+                <p class="subtext">enables proper durations for sabr. <b>ONLY ENABLE AFTER MODDING THE APP FOR FULL SABR COMPATIBILITY.</b></p>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="watch-v4-fix-channels">
+                <label for="watch-v4-fix-channels">v4_fix_channels</label>
+                <p class="subtext">use more reliable channels code. for v4 apps.</p>
             </div>
         </div>
         <div class="section search-flags">
@@ -70,6 +87,14 @@
                 <input type="checkbox" id="channel-uncrop-avatar">
                 <label for="channel-uncrop-avatar">uncrop_avatar</label>
                 <p class="subtext">better fitting for avatars. use only if cropped within the app.</p>
+            </div>
+        </div>
+        <div class="section homepage-flags">
+            <h1>homepage</h1>
+            <div class="checkbox">
+                <input type="checkbox" id="homepage-hype-homepage">
+                <label for="homepage-hype-homepage">hype_homepage</label>
+                <p class="subtext">show modern videos on the homepage without mobilehelper.</p>
             </div>
         </div>
         <div class="checkbox">

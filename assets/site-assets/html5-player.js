@@ -2661,14 +2661,7 @@ setTimeout(function() {
         video.src = src;
     }
 }, 5000)
-// or after 2s if sabr (more just feels unacceptable)
-setTimeout(function() {
-    if(!video.playing && !videoStartedPlaying
-    && window.sabrBase && !playingAsLive) {
-        requestSabr(0)
-    }
-}, 2000)
-// actually force it in there if still not here (sabr)
+// force it in if not here (sabr)
 setTimeout(function() {
     if(!video.playing && !videoStartedPlaying
     && window.sabrBase && !playingAsLive) {
@@ -2679,7 +2672,7 @@ setTimeout(function() {
         catch(error) {}
         requestSabr(0, "FORCE", true)
     }
-}, 4000)
+}, 3000)
 
 // video loading sprite on unloaded area
 video.addEventListener("seeking", function(e) {

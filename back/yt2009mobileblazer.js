@@ -89,11 +89,6 @@ module.exports = {
             }
         }
 
-        let addSabrField = (
-            req.headers.cookie
-         && req.headers.cookie.includes("inline-player")
-        )
-
         // static response stuff
 
         let videoUrl = "/get_video?video_id=" + id + "/mp4"
@@ -117,11 +112,9 @@ module.exports = {
             }
         }
 
-        if(addSabrField) {
-            response.content.video.sabr_url = sabr.initPlaybackSession(
-                id, ["720p", "480p", "360p", "240p", "144p"]
-            )
-        }
+        response.content.video.sabr_url = sabr.initPlaybackSession(
+            id, ["720p", "480p", "360p", "240p", "144p"]
+        )
 
         // fill in the rest after we get true video data
         yt2009html.fetch_video_data(id, (data) => {
