@@ -722,6 +722,12 @@ module.exports = {
                     if(useRedir && word.includes("//www.youtube.com/")) {
                         word = word.replace("http://www.youtube.com", "")
                         word = word.replace("https://www.youtube.com", "")
+                    } else if(useRedir && word.includes("//youtu.be")) {
+                        word = word.replace("http://youtu.be", "")
+                        word = word.replace("https://youtu.be", "")
+                    } else if(useRedir && word.includes("//youtube.com")) {
+                        word = word.replace("http://youtube.com", "")
+                        word = word.replace("https://youtube.com", "")
                     }
                     descriptionMarkedup += 
                     "<a href=\"" + word + "\" target=\"_blank\">"
@@ -2603,7 +2609,7 @@ module.exports = {
         return false;
     },
 
-    "parseBackstageCont": function(r) {
+    "parseBackstageCont": function(r, includeAuthorAvatars) {
         let posts = []
         let mrun = this.mrun
         let xss = this.xss
@@ -2619,7 +2625,13 @@ module.exports = {
                         let text = mrun(post.contentText.runs)
                         let time = post.publishedTimeText.runs[0].text
                         let authorText = post.authorText.runs[0].text
-                        let authorId = post.authorEndpoint.browseEndpoint.browseId
+                        let authorId = post.authorEndpoint
+                        if(authorId.browseEndpoint) {
+                            authorId = authorId.browseEndpoint.browseId
+                        } else if(authorId.profileCardCommand) {
+                            authorId = authorId.profileCardCommand
+                                       .profileOwnerExternalChannelId
+                        }
                         let parsedPost = {
                             "text": text,
                             "time": time,
@@ -2694,6 +2706,14 @@ module.exports = {
                                 })
                             })
                             parsedPost.quizChoices = choices;
+                        }
+                        if(includeAuthorAvatars
+                        && post.authorThumbnail.thumbnails) {
+                            let thumbs = post.authorThumbnail.thumbnails
+                            let thumb = thumbs[thumbs.length - 1]
+                            if(thumb && thumb.url) {
+                                parsedPost.authorAvatar = saveAvatar(thumb.url)
+                            }
                         }
                         
                         posts.push(parsedPost)

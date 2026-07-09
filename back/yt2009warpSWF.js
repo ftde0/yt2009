@@ -3,6 +3,7 @@ const yt2009search = require("./yt2009search")
 const yt2009templates = require("./yt2009templates")
 const yt2009exports = require("./yt2009exports")
 const yt2009trusted = require("./yt2009trustedcontext");
+const yt2009sabr = require("./yt2009sabr")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const fs = require("fs")
 const utils = require("./yt2009utils")
@@ -111,6 +112,55 @@ module.exports = {
         }
         if(!req.query.video_id) {
             res.sendStatus(400)
+            return;
+        }
+        if((req.headers.cookie
+        && req.headers.cookie.includes("exp_sabr"))
+        || (req.headers.referer || "").includes("sabr=1")
+        || (req.query.sabr && req.query.sabr !== "0")) {
+            let v = req.query.video_id.substring(0,11)
+            let begin = 0;
+            if(req.query.begin && !isNaN(parseInt(req.query.begin))) {
+                begin = parseInt(req.query.begin)
+            } else if(req.query.start && !isNaN(parseInt(req.query.start))) {
+                begin = parseInt(req.query.start) * 1000
+            }
+            let sabrSession = ""
+            let sabrHfr = (
+                req.headers
+             && req.headers.cookie
+             && req.headers.cookie.includes("exp_turbocharge_sabr_hfr")
+            )
+            switch(req.query.fmt) {
+                case "37": {
+                    sabrSession = yt2009sabr.initPlaybackSession(
+                        v, ["1080p", "720p"], {
+                            "useHfr": sabrHfr, "knownSabrd": true
+                        }
+                    )
+                    break;
+                }
+                case "22": {
+                    sabrSession = yt2009sabr.initPlaybackSession(
+                        v, ["720p", "480p"], {"useHfr": sabrHfr}
+                    )
+                    break;
+                }
+                case "35": {
+                    sabrSession = yt2009sabr.initPlaybackSession(
+                        v, ["480p", "360p"]
+                    )
+                    break;
+                }
+                default: {
+                    sabrSession = yt2009sabr.initPlaybackSession(
+                        v, ["360p", "240p", "144p"]
+                    )
+                    break;
+                }
+            }
+            sabrSession = sabrSession.split("pid=")[1]
+            res.redirect("/sabr_flv_init/" + sabrSession + "?begin=" + begin)
             return;
         }
         if(req.query.fmt == 5

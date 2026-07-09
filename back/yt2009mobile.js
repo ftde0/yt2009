@@ -1153,6 +1153,7 @@ module.exports = {
             // create response
             function createResponse(rawData) {
                 // add search videos
+                rawData = JSON.parse(JSON.stringify(rawData))
                 rawData.forEach(video => {
                     if(video.type !== "video"
                     || (utils.time_to_seconds(video.time) >= 600

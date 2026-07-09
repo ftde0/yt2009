@@ -1,0 +1,14 @@
+syntax = "proto3";
+package community_tab_request;
+
+message runs {
+    string text = 1;
+}
+
+message root {
+    message container {
+        string browseId = 1;
+        runs param = 2;
+    }
+    container contain = 152;
+}

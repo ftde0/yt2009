@@ -1,6 +1,6 @@
 {
   "name": "yt2009",
-  "version": "1.31",
+  "version": "1.32",
   "description": "2009 frontend for youtube",
   "main": "back/backend.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "dependencies": {
     "express": "^4.21.2",
     "google-protobuf": "3.21.2",
-    "maxmind-db-reader": "^0.2.1",
+    "maxmind-db-reader": "git+https://github.com/ftde0/node-maxmind-db.git",
     "node-fetch": "^2.6.7",
     "node-html-parser": "5.3.3",
     "readline-sync": "^1.4.10",

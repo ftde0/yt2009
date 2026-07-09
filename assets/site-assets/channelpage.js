@@ -944,3 +944,26 @@ function markQuizAnswer(answerElement, addString) {
     }
     answerElement.getElementsByTagName("span")[1].innerHTML = addString
 }
+
+setTimeout(function() {
+    // clientside fill channel comments tab (use_community_for_comments)
+    if(document.getElementById("yt2009-community-comments-fill-mark")
+    && window.channelId) {
+        var currentVid = document.getElementById("playnav-watch-link").href
+                                 .split("v=")[1].substring(0,11)
+        var r = new XMLHttpRequest();
+        r.open(
+            "GET",
+            [
+                "/channel_community_tab",
+                "?channel=" + window.channelId,
+                "&video=" + currentVid,
+                "&rt=" + Date.now()
+            ].join("")
+        )
+        r.send(null)
+        r.addEventListener("load", function(e) {
+            $("#profile_comments_table tbody").innerHTML = r.responseText
+        }, false)
+    }
+}, 100)

@@ -9,6 +9,7 @@ function nlToArray(nl) {
     return array;
 }
 
+function loadNotifications() {
 var ntf_r = new XMLHttpRequest()
 ntf_r.open("GET", "/get_notifications?r=" + Math.random())
 ntf_r.send(null)
@@ -120,4 +121,8 @@ ntf_r.onreadystatechange = function(e) {
             }
         }
     }
+}
+}
+if(window.XMLHttpRequest && window.localStorage) {
+    loadNotifications()
 }

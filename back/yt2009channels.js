@@ -18,6 +18,7 @@ const config = require("./config.json")
 const userid_cache = require("./cache_dir/userid_cache")
 const overrideBgs = require("./channel_backgrounds.json")
 const customChannel = require("./proto/yt2009_channel_pb")
+const communityRequest = require("./proto/community_tab_request_pb")
 const yt2009homepage = require("./yt2009homepage");
 const devTimings = false;
 const hostname = config.alt_hostname
@@ -114,6 +115,23 @@ module.exports = {
                 let fetchesRequired = 4;
                 let fetchesCompleted = 0;
                 let fullData = {}
+
+                // check whether old background/banners can be used
+                this.tryout_legacy_images(id, (tryout) => {
+                    writeTimingData("tryout legacy images")
+                    if(fetchesCompleted >= (fetchesRequired - 1)
+                    && n_impl_yt2009channelcache.read("main")[id]) {
+                        let fd = n_impl_yt2009channelcache.read("main")[id]
+                        for(let property in tryout) {
+                            fd[property] = tryout[property]
+                        }
+                        n_impl_yt2009channelcache.write("main", id, fd)
+                    } else {
+                        for(let property in tryout) {
+                            fullData[property] = tryout[property]
+                        }
+                    }
+                })
 
                 // clean fetch the channel
                 fetch(`${hostname}/youtubei/v1/browse`, {
@@ -243,23 +261,6 @@ module.exports = {
                         sendResponse(fullData)
                     }
                 })})
-
-                // check whether old background/banners can be used
-                this.tryout_legacy_images(id, (tryout) => {
-                    writeTimingData("tryout legacy images")
-                    if(fetchesCompleted >= (fetchesRequired - 1)
-                    && n_impl_yt2009channelcache.read("main")[id]) {
-                        let fd = n_impl_yt2009channelcache.read("main")[id]
-                        for(let property in tryout) {
-                            fd[property] = tryout[property]
-                        }
-                        n_impl_yt2009channelcache.write("main", id, fd)
-                    } else {
-                        for(let property in tryout) {
-                            fullData[property] = tryout[property]
-                        }
-                    }
-                })
             }
 
             function sendResponse(data) {
@@ -576,21 +577,21 @@ module.exports = {
        } else {
            yt2009utils.channelGetSectionByParam(
                data.id, data.tabParams["playlists"], (r => {
-                   let tab = yt2009utils.channelJumpTab(r, "playlists")
-                                       .content
-                                       .sectionListRenderer.contents[0]
-                                       .itemSectionRenderer.contents[0]
-                   try {
-                       playlist_list = yt2009utils.parseChannelPlaylists(tab)
-                   }
-                   catch(error) {}
-        
-                   n_impl_yt2009channelcache.write(
-                       "playlist",
-                       data.id,
-                       JSON.parse(JSON.stringify(playlist_list))
-                   )
-                   markCompleteStep()
+                    let tab = yt2009utils.channelJumpTab(r, "playlists")
+                                        .content
+                                        .sectionListRenderer.contents[0]
+                                        .itemSectionRenderer.contents[0]
+                    try {
+                        playlist_list = yt2009utils.parseChannelPlaylists(tab)
+                    }
+                    catch(error) {}
+         
+                    n_impl_yt2009channelcache.write(
+                        "playlist",
+                        data.id,
+                        JSON.parse(JSON.stringify(playlist_list))
+                    )
+                    markCompleteStep()
                }
            ))
        }
@@ -1307,7 +1308,7 @@ module.exports = {
                             try {callback(code)}catch(error) {}
                         }
                     }, 100)
-                })
+                }, true)
             }
         }
         checkPchelperLogin()
@@ -1334,6 +1335,9 @@ module.exports = {
         let pchelperSetupDelimiter = "═"
         if(data.properties && data.properties.description
         && data.properties.description.includes(pchelperSetupDelimiter)) {
+            if(!clearDescription) {
+                clearDescription = data.properties.description
+            }
             // has done pchelper user setup, probably
             let tempd = data.properties.description.split("<br>").join("\n")
             try {
@@ -1476,6 +1480,9 @@ module.exports = {
                 JSON.stringify(featured_channels)
             )
         }
+
+        // id
+        code = code.split("yt2009_channel_id").join(data.id)
 
         /*
         =======
@@ -1658,7 +1665,8 @@ module.exports = {
                 let comments_html = ``
                 if(saved_channel_comments[video.id]
                 && saved_channel_comments[video.id].length > 0
-                && !wayback_settings.includes("comments")) {
+                && !wayback_settings.includes("comments")
+                && !flags.includes("use_community_for_comments")) {
                     let comments = saved_channel_comments[video.id]
                     let count = 0;
                     comments.forEach(comment => {
@@ -1700,6 +1708,11 @@ module.exports = {
                     
                     code = code.replace(`<!--yt2009_comments-->`, comments_html)
                     code = code.replace(`yt2009_channel_comment_count`, count)
+                } else if(flags.includes("use_community_for_comments")) {
+                    code = code.replace(
+                        `<!--yt2009_comments-->`,
+                        `<div id="yt2009-community-comments-fill-mark"></div>`
+                    )
                 } else if(!wayback_settings.includes("comments")) {
                     code = code.replace(
                         `<!--yt2009_no_comments-->`,
@@ -1775,6 +1788,9 @@ module.exports = {
                     if(watch_url.includes("cps2.swf")) {
                         flashUrl += `&iurl=http://i.ytimg.com/vi/${video.id}/hqdefault.jpg`
                         flashUrl += `&BASE_YT_URL=http://${config.ip}:${config.port}/`;
+                    }
+                    if(flags.includes("exp_sabr")) {
+                        flashUrl += "&sabr=1"
                     }
                     code = code.replace(
                         "<!--yt2009_player-->",
@@ -1902,7 +1918,7 @@ module.exports = {
         }
         for(let z in customPchelperProperties) {
             let leadin = pchelperSetupDelimiter + " " + z + ": "
-            if(clearDescription.includes(leadin)) {
+            if(clearDescription && clearDescription.includes(leadin)) {
                 let rest = clearDescription.split(leadin)[1]
                 clearDescription = clearDescription.replace(
                     leadin + rest, ""
@@ -3477,5 +3493,153 @@ module.exports = {
                 return;
             }
         })})
+    },
+
+    "getCommunityTab": function(channelId, sort, callback) {
+        // this pulls the "Community" tab - the one users can post on
+        // and NOT backstage/"posts"
+
+        // create request params
+        let c = new communityRequest.root()
+        let contents = new communityRequest.root.container()
+        let run = new communityRequest.runs()
+        switch(sort) {
+            case "mostPopular": {
+                run.setText("CgYIAhABEAISAQE%3D")
+                break;
+            }
+            case "creator": {
+                run.setText("CgYIAhABEAMSAQI%3D")
+                break;
+            }
+            case "newest":
+            default: {
+                run.setText("CgYIAhABEAISAQI%3D")
+                break;
+            }
+        }
+        contents.setParam(run)
+        contents.setBrowseid(channelId)
+        c.setContain(contents)
+        c = yt2009utils.base64toUrl(
+            Buffer.from(c.serializeBinary()).toString("base64")
+        )
+
+        // pull
+        fetch(`${hostname}/youtubei/v1/browse?fields=contents`, {
+            "headers": yt2009constants.headers,
+            "referrer": "https://www.youtube.com/",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": JSON.stringify({
+                "context": yt2009constants.cached_innertube_context,
+                "browseId": "FEcommunity_page",
+                "params": c
+            }),
+            "method": "POST",
+            "mode": "cors"
+        }).then(r => {r.json().then(r => {
+            try {
+                let wrap = r.contents.twoColumnBrowseResultsRenderer.tabs[0]
+                            .tabRenderer.content.sectionListRenderer
+                            .contents
+                wrap = wrap.map(s => {
+                    if(s.itemSectionRenderer) {
+                        s = s.itemSectionRenderer.contents[0]
+                    }
+                    return s;
+                })
+                let items = yt2009utils.parseBackstageCont({
+                    "continuationContents": {
+                        "itemSectionContinuation": {"contents": wrap}
+                    }
+                }, true)
+                callback(items)
+            }
+            catch(error) {
+                callback(false)
+                return;
+            }
+        })})
+    },
+
+    "communityTabRoot": function(req, res) {
+        if(!yt2009utils.isAuthorized(req)) {
+            res.sendStatus(401)
+            return;
+        }
+        function useStandardSource() {
+            let commentsHTML = ""
+            yt2009html.get_video_comments(req.query.video, (cmts) => {
+                cmts = cmts.filter(s => {
+                    return s && s.content && !s.content.includes("video")
+                })
+                res.set("x-yt2009-comment-count", cmts.length)
+                cmts.forEach(c => {
+                    commentsHTML += templates.channelComment(
+                        c.authorUrl,
+                        "/avatar_wait?av=" + encodeURIComponent(yt2009utils.saveAvatar(c.authorAvatar)),
+                        yt2009utils.xss(c.authorName),
+                        c.time,
+                        yt2009utils.xss(c.content).split("\n").join("<br>")
+                    )
+                })
+                if(cmts.length == 0) {
+                    commentsHTML = `<div class="alignC">There are no comments for this user.</div>`
+                }
+                res.send(commentsHTML)
+            })
+        }
+        let useFmode = (
+            req.headers.cookie
+         && (req.headers.cookie.indexOf("f_mode=on")!==-1)
+        )
+        let channel = req.query.channel
+        let sort = req.query.sort || "newest"
+        let video = req.query.video
+        if(!channel || !channel.startsWith("UC")
+        || !video || video.length !== 11) {
+            res.sendStatus(400)
+            return;
+        }
+        let responseHTML = ""
+        this.getCommunityTab(channel, sort, (data) => {
+            if(req.query.format == "raw") {
+                res.send(data)
+                return;
+            }
+            if(!data || data.length == 0) {
+                // fallback to standard video comments if no community
+                useStandardSource()
+                return;
+            }
+            res.set("x-yt2009-comment-count", data.length)
+            data.forEach(comment => {
+                let c = comment.text.split("\n").join("<br>")
+                let imagesHTML = `<div class="image-expo">`
+                if(comment.attachments && comment.attachments.length >= 1) {
+                    comment.attachments.forEach(a => {
+                        let u = a.imageAttachmentSmall
+                        let url = !useFmode
+                            ? `/avatar_wait?av=${encodeURIComponent(u)}`
+                            : `/fmodecomunitab?i=${yt2009utils.fmodeComunitab.assign(u)}`
+                        imagesHTML += templates.bareFeedImage(url)
+                    })
+                }
+                let avatar = "/avatar_wait?av=" + encodeURIComponent(
+                    comment.authorAvatar
+                 || "/assets/site-assets/default-centered.png"
+                )
+                imagesHTML += `</div>`
+                c += imagesHTML;
+                responseHTML += templates.channelComment(
+                    comment.authorUrl,
+                    avatar,
+                    comment.authorText,
+                    comment.time,
+                    c
+                )
+            })
+            res.send(responseHTML)
+        })
     }
 }

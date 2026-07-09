@@ -44,7 +44,7 @@ function getTfdt(mp4) {
 }
 
 let sabrFragmentTimestamps = {
-    "audio": 10,
+    "audio": 9,
     "video": 5,
 }
 let sabrVideoLengths = {}
@@ -198,7 +198,8 @@ ${audFragmentBase}/${playbackSession}/${a}${isHd ? "/hd" : ""}.aac\n`
                         case "xtags":
                         case "liveHead":
                         case "contentLengths":
-                        case "hasRedirect": {
+                        case "hasRedirect":
+                        case "usedXtag": {
                             break;
                         }
                         default: {
@@ -482,6 +483,8 @@ ${audFragmentBase}/${playbackSession}/${a}${isHd ? "/hd" : ""}.aac\n`
                         "-i", "pipe:",
                         "-c:v", "copy",
                         "-f", "adts",
+                        "-muxpreload", "0",
+                        "-muxdelay", "0",
                         "-"
                     ]
                     let c = child_process.spawn(

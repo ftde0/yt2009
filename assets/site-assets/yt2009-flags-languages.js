@@ -51,6 +51,7 @@ var languageData_EN = {
         "channel-remove-username-space": "removes spaces from usernames",
         "channel-show-times": "shows time durations of videos",
         "channel-username-asciify": "remove special characters from usernames",
+        "channel-use-community-for-comments": "uses the Community tab as channel comments. use without only_old and wayback_features",
         "channel-wayback-features": "use Wayback Machine data for yt2009",
 
         "mainpage-new-recommended": "will show new videos on the recommended section",

@@ -464,7 +464,7 @@ ${ap == 2 ? avatarCode : ""}
 		<div id="watch-playlist-actions" class="yt-uix-expander-body">
 			<span class="smallText">
 				<a href="#" onclick="clearQuicklist()" title="lang_ql_clear_desc" rel="nofollow">lang_ql_clear_title</a> <span class="smallText grayText">|</span>
-				<a href="#" title="lang_ql_save_desc" onmousedown="createPlaylistFromQuicklist()" rel="nofollow">lang_ql_save_title</a>
+				<a href="#" title="lang_ql_save_desc" onclick="createPlaylistFromQuicklist()" rel="nofollow">lang_ql_save_title</a>
 			</span>
 		</div>
 	</div>
@@ -4385,5 +4385,14 @@ ${topContentHTML}
 
     <span class="watch-action-text">lang_watch_tab_transcript</span></a>
     <button class="master-sprite watch-tab-arrow"></button>
-    </div>`
+    </div>`,
+
+    "apiV1_token": `<?xml version="1.0" encoding="utf-8"?>
+<ut_response status="ok">
+<t>amogus</t>
+</ut_response>`,
+
+    "bareFeedImage": function(url) {
+        return `<div style="float:left; margin-right: 8px;"><img class="feed-image" src="${url}"/></div>`
+    }
 }

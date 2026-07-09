@@ -2672,7 +2672,7 @@ setTimeout(function() {
         catch(error) {}
         requestSabr(0, "FORCE", true)
     }
-}, 3000)
+}, 1750)
 
 // video loading sprite on unloaded area
 video.addEventListener("seeking", function(e) {
@@ -2909,7 +2909,7 @@ function requestSabr(offset, source, force) {
 	
     function retryRequest(force) {
         sabrData.lastRequestFailCount++
-        if(sabrData.lastRequestFailCount > 3) {
+        if(sabrData.lastRequestFailCount > 3 && force) {
 			if(!videoStartedPlaying && !playingAsLive) {
 				var sabrlessUrl = "/watch" + location.href.split("/watch")[1]
 								+ "&unsabr=1";
@@ -5094,4 +5094,19 @@ if(document.cookie
 			}
         }
     }, false)
+}
+
+// clickable flashing btns
+if(document.querySelector(".flashing-btn")) {
+    try {
+        $(".flashing-btn.pause").addEventListener("click", function() {
+            video_play()
+            flash_middle_btn("play")
+        }, false)
+        $(".flashing-btn.play").addEventListener("click", function() {
+            video_pause()
+            flash_middle_btn("pause")
+        }, false)
+    }
+    catch(error){}
 }

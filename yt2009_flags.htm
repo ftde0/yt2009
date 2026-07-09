@@ -280,6 +280,8 @@
 			<label for="channel-show-times">show_times</label><br>
 			<input type="checkbox" id="channel-username-asciify" title="usuwa znaki specjalne z nazw użytkowników">
 			<label for="channel-username-asciify">username_asciify</label><br>
+			<input type="checkbox" id="channel-use-community-for-comments" title="używa zakładki społeczność do komentarzy pod kanałami. używać bez only_old ani wayback_features.">
+			<label for="channel-use-community-for-comments">use_community_for_comments</label><br>
 			<input type="checkbox" id="channel-wayback-features" title="użyj zapisów z Wayback Machine na yt2009">
 			<label for="channel-wayback-features">wayback_features</label>
 			<input type="text" id="channel-wayback-features-input" autocomplete="off" spellcheck="false" placeholder="tryb">
@@ -822,6 +824,14 @@
 						"unasciify_login",
 						"no_controls_fade"
 					].join(":")
+					if(document.cookie
+					&& document.cookie.indexOf("f_mode=on") !== -1) {
+						// hfr sabr can get very unstable on fmode
+						// so don't put as default
+						watchFlags = watchFlags.replace(
+							"exp_turbocharge_sabr_hfr:", ""
+						)
+					}
 					break;
 				}
 				case "oldvids": {

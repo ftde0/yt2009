@@ -178,16 +178,37 @@ if(window.localStorage) {
         }
         case "/watch_queue":
         case "/my_quicklist": {
-            storageObject = JSON.parse(localStorage.quicklistVids || "[]")
-            if(!storageObject || storageObject.length == 0) {
-                setTimeout(function() {
-                    qlNoVidsShow()
-                }, 100)
-            } else {
-                var nv = document.getElementById("novids-template")
-                nv.parentNode.removeChild(nv)
+            var usesPchelper = (
+                document.cookie
+            && document.cookie.indexOf
+            && document.cookie.indexOf("watchlater_sync") !== -1
+            )
+            function onStorageObjectReady() {
+                if(!storageObject || storageObject.length == 0) {
+                    setTimeout(function() {
+                        qlNoVidsShow()
+                    }, 100)
+                } else {
+                    var nv = document.getElementById("novids-template")
+                    nv.parentNode.removeChild(nv)
+                }
+                buildList()
             }
-            buildList()
+            if(!usesPchelper) {
+                storageObject = JSON.parse(localStorage.quicklistVids || "[]")
+                onStorageObjectReady()
+            } else {
+                var pwr = new XMLHttpRequest();
+                pwr.open("GET", "/pchelper_wl?r=" + Math.random())
+                pwr.send(null)
+                pwr.addEventListener("load", function(e) {
+                    try {
+                        storageObject = JSON.parse(pwr.responseText)
+                    }
+                    catch(error) {storageObject = [];}
+                    onStorageObjectReady()
+                }, false)
+            }
             break;
         }
     }
@@ -635,6 +656,10 @@ if(document.querySelector("#playlist-btn-play")
 
 // clear quicklist
 function quicklistClear() {
+    if(window.clearQuicklist) {
+        clearQuicklist()
+        return;
+    }
     localStorage.quicklistVids = "[]"
     location.reload()
 }
@@ -653,6 +678,10 @@ function removeSelectedFromQuicklist() {
     }
 
     // remove em
+    if(window.usesPchelper) {
+        removeFromQuicklist(videoIds, true)
+        return;
+    }
     var ql = JSON.parse(localStorage.quicklistVids)
     ql.forEach(function(vid) {
         if(videoIds.indexOf(vid.id) !== -1) {

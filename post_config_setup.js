@@ -382,10 +382,6 @@ let files = [
         "path": "./assets/site-assets/longform-underlay-1x1-vfl55396.png"
     },
     {
-        "url": "https://github.com/PaddeK/node-maxmind-db/raw/master/test/data/GeoLite2-City.mmdb",
-        "path": "./back/GeoLite2-City.mmdb"
-    },
-    {
         "url": "https://s.ytimg.com/yt/img/youtube_logo_small_grey-vfl41206.png",
         "path": "./assets/site-assets/youtube_logo_small_grey-vfl41206.png"
     }

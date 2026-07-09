@@ -1600,7 +1600,8 @@ function switchVideo(video) {
     currentVideo = id;
 
     var videoUrl = customPlayerUrl + '?' + customPlayerArg + '=' + id
-    if(document.cookie.indexOf("f_h264=on") !== -1) {
+    if(document.cookie.indexOf("f_h264=on") !== -1
+    && document.cookie.indexOf("exp_sabr") == -1) {
         videoUrl += "%2Fmp4"
         var fmtMap = "5/0/7/0/0"
         var fmtUrls = "5|http://" + location.host
@@ -1614,6 +1615,9 @@ function switchVideo(video) {
         catch(error) {}
         videoUrl += "&fmt_map=" + encodeURIComponent(fmtMap)
         videoUrl += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+    }
+    if(document.cookie.indexOf("exp_sabr") !== -1) {
+        videoUrl += "&sabr=1"
     }
     if(customPlayerUrl.indexOf("2012.swf") !== -1
     || customPlayerUrl.indexOf("cps2.swf") !== -1) {
@@ -2998,3 +3002,70 @@ if(usingTurbocharge) {
         }
     }
 }
+
+/*
+======
+sabr fillers
+======
+
+this code is run on 2009 flash player, as switching qualities
+in the player itself can cause video glitches (skipping, freezing, ...)
+*/
+function flashQualityReinit(quality, currentTime) {
+    var videoPlayer = document.getElementById("watch-player-div")
+    var param = videoPlayer.getElementsByTagName("param")[0]
+    var embed = videoPlayer.getElementsByTagName("embed")[0]
+    var url = embed.getAttribute("src")
+    if(url.indexOf("&start=") !== -1) {
+        var start = url.split("&start=")[1].split("&")[0]
+        url = url.replace("&start=" + start, "")
+    }
+    if(url.indexOf("&vq=") !== -1) {
+        var vq = url.split("&vq=")[1].split("&")[0]
+        url = url.replace("&vq=" + vq, "")
+    }
+    url += "&vq=" + quality + "&start=" + parseInt(currentTime || 0)
+    param.setAttribute("value", url)
+    embed.setAttribute("src", url)
+    videoPlayer.innerHTML = videoPlayer.innerHTML // force re-render
+}
+
+/*
+======
+channel "community" tab
+======
+
+not to be confused with posts/backstage
+activate with use_community_for_comments
+*/
+
+setTimeout(function() {
+    // clientside fill channel comments tab (use_community_for_comments)
+    if(document.getElementById("yt2009-community-comments-fill-mark")
+    && window.channelId) {
+        var currentVid = document.getElementById("playnav-watch-link").href
+                                 .split("v=")[1].substring(0,11)
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        r.open(
+            "GET",
+            [
+                "/channel_community_tab",
+                "?channel=" + window.channelId,
+                "&video=" + currentVid,
+                "&r=" + Math.random()
+            ].join("")
+        )
+        r.send(null)
+        r.onreadystatechange = function(e) {
+            if(r.readyState == 4 || this.readyState == 4) {
+                document.getElementById("profile_comments_table")
+                        .getElementsByTagName("tbody")[0].innerHTML = r.responseText
+            }
+        }
+    }
+}, 100)

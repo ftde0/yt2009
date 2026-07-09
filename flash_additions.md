@@ -118,11 +118,11 @@ save and progress forward.
 
 open `subtitle-module.swf` bundled within the yt2009 repo in the flash player decompiler.
 
-bundled module is prepatched for `192.168.1.7`, so you can perform a text search and replace all occurences of this address by your yt2009 ip in all files.
+bundled module is pre-set for `192.168.1.7`, so you can perform a text search and replace all occurences of this address by your yt2009 ip in all files.
 
 <img src="./doc-imgs/19216817captions.png"/>
 
 if using a different subtitle module, open the files listed above and replace the following:
 
 - `SubtitleModule` & `SubtitleTracks`: `video.google.com` => `<yt2009 ip:port>`
-- `CrossDomainer`: add your yt2009 ip to the array just like patching video players themselves.
+- `CrossDomainer`: add your yt2009 ip to the array just like with video players themselves.

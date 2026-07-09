@@ -3196,6 +3196,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         function fillFlashIfNeeded() {
             // flash
             if(useFlash) {
+                let sabr = flags.includes("exp_sabr")
+                let sabrHfr = (
+                    flags.includes("exp_turbocharge_sabr_hfr")
+                 && flags.includes("exp_turbocharge")
+                )
                 let vq = "2"
                 if(flash_url.includes("2012.swf")
                 || flash_url.includes("2010.swf")) {
@@ -3217,39 +3222,59 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         flash_url += "&flip=1"
                     }
                 }
-                if((req.headers["cookie"] || "").includes("f_h264")
+                if(((req.headers["cookie"] || "").includes("f_h264")
+                || sabr)
                 && flash_url.includes("/watch.swf")
                 && !flashCompat.includes("formats")) {
                     // create format maps and urls for the 2009 player
+                    // 37 - hd1080 (sabr exclusive)
                     // 22 - hd720
                     // 35 - "large" - hq - 480p
                     // 5 - standard quality, other numbers may have worked too
                     let fmtMap = ""
                     let fmtUrls = ""
-                    if(qualityList.includes("720p")) {
-                        fmtMap += "22/2000000/9/0/115"
-                        fmtUrls += `22|http://${config.ip}:${config.port}/exp_hd?video_id=${data.id}`
-                        fmtUrls += yt2009trusted.urlContext(
-                            data.id, "PLAYBACK_HD", (data.length >= 60 * 30)
-                        )
-                    } else if(qualityList.includes("480p")) {
-                        fmtMap += `35/0/9/0/115`
-                        fmtUrls += `35|http://${config.ip}:${config.port}/get_480?video_id=${data.id}`
-                        fmtUrls += yt2009trusted.urlContext(
+                    if(qualityList.includes("1080p")
+                    && sabr && flags.includes("hd_1080")
+                    || (flags.includes("hd_1080") && sabr && sabrHfr
+                    && qualityList.filter(s => {
+                        return s&&s.includes("1080p")
+                    })[0])) {
+                        fmtMap += "37/3000000/9/0/115"
+                    }
+                    if(qualityList.includes("720p")
+                    || (sabr
+                    && sabrHfr
+                    && qualityList.filter(s => {
+                        return s&&s.includes("720p")
+                    })[0])) {
+                        let fmtUrl = `http://${config.ip}:${config.port}/exp_hd?video_id=${data.id}`
+                        fmtUrl += yt2009trusted.urlContext(
                             data.id, "PLAYBACK_HQ", (data.length >= 60 * 30)
                         )
+                        fmtMap += "22/2000000/9/0/115"
+                        fmtUrls += `22|${fmtUrl}`
+                    } else if(qualityList.includes("480p")) {
+                        let fmtUrl = `http://${config.ip}:${config.port}/get_480?video_id=${data.id}`
+                        fmtUrl += yt2009trusted.urlContext(
+                            data.id, "PLAYBACK_HQ", (data.length >= 60 * 30)
+                        )
+                        fmtMap += `35/0/9/0/115`
+                        fmtUrls += `35|${fmtUrl}`
                     }
                     if(fmtMap.length > 0) {
                         fmtMap += ","
                         fmtUrls += ","
                     }
                     fmtMap += "5/0/7/0/0"
-                    fmtUrls += `5|http://${config.ip}:${config.port}/get_video?video_id=${data.id}/mp4`
-                    fmtUrls += yt2009trusted.urlContext(
+                    let basicFmtUrl = `http://${config.ip}:${config.port}/get_video?video_id=${data.id}/mp4`
+                    basicFmtUrl += yt2009trusted.urlContext(
                         data.id, "PLAYBACK_STD", (data.length >= 60 * 30)
                     )
+                    fmtUrls += `5|${basicFmtUrl}`
                     flash_url += "&fmt_map=" + encodeURIComponent(fmtMap)
-                    flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+                    if(!sabr) {
+                        flash_url += "&fmt_url_map=" + encodeURIComponent(fmtUrls)
+                    }
                 }
                 
                 let ccModuleAs2 = encodeURIComponent(
@@ -3364,6 +3389,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }
                 
                 flash_url += render_endscreen_f()
+
+                // sabr & sabr hd handling
+                if(sabr) {
+                    flash_url += "&sabr=1"
+                }
 
                 // final flash object
                 code = code.replace(
@@ -4352,6 +4382,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 		}
 		let videoDetails = playerResponse.videoDetails
 		if(!videoDetails) return data;
+        if(playerResponse.playabilityStatus
+        && playerResponse.playabilityStatus.status == "UNPLAYABLE") {
+            data.unplayable = true;
+        }
 		data.description = videoDetails.shortDescription
 		data.viewCount = videoDetails.viewCount
 		data.author_name = videoDetails.author;
@@ -4500,6 +4534,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
             if(shouldGetRelated) {
                 this.get_related_videos(id, (related) => {
+                    if(!related || !related.forEach) related = []
                     // render endscreen
                     const endscreen_sections = [
                         `<div class="endscreen-section" style="opacity: 1;">`,

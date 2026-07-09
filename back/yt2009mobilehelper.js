@@ -61,6 +61,7 @@ const uida = "1234567890abcde".split("")
 let genericDg = fs.readFileSync("../mobile/mobilehelper/generic_dg.txt").toString()
 let userdata = {"ikmc": 1,"ikmc2":1}
 let initedSessions = []
+let pchelperWlCaching = {}
 if(fs.existsSync(userdata_fname)) {
     try {
         userdata = JSON.parse(fs.readFileSync(userdata_fname).toString())
@@ -324,6 +325,10 @@ module.exports = {
 
             userdata[device].pageId = req.headers.uid;
             userdata[device].cachedName = req.headers.username
+            if(userdata[device].userId) {
+                userdata[device].userId = null;
+                delete userdata[device].userId
+            }
             if(req.headers.first) {
                 userdata[device].isFirst = true;
             } else {
@@ -922,6 +927,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 
     "addToPlaylist": function(req, res) {
         let device = pullDeviceId(req)
+        pchelperWlCaching[device] = null;
         res.set("content-type", "application/xml")
         let playlist = req.originalUrl.split("/playlists/")[1].split("?")[0]
         let v = req.body.toString().split("<id>")[1].split("</id>")[0]
@@ -948,6 +954,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 
     "removeFromPlaylist": function(req, res) {
         let device = pullDeviceId(req)
+        pchelperWlCaching[device] = null;
         res.set("content-type", "application/xml")
         let playlist = req.originalUrl.split("/playlists/")[1].split("?")[0]
         let v = req.body.toString().split("<id>")[1].split("</id>")[0]
@@ -1260,6 +1267,39 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
     
         // add to response
         function createGdata() {
+            if(req.requestSmallJson) {
+                if(!pchelperWlCaching[deviceId]) {
+                    setTimeout(() => {
+                        pchelperWlCaching[deviceId] = null;
+                        delete pchelperWlCaching[deviceId]
+                    }, 1000 * 15)
+                }
+                pchelperWlCaching[deviceId] = videos;
+
+                let vs = []
+                videos.forEach(v => {
+                    try {
+                        if(v.type && v.type == "viewmodel_parsed") {
+                            if(!v.length) return;
+                            vs.push({
+                                "id": v.id,
+                                "title": v.title,
+                                "author": ""
+                            })
+                        } else {
+                            let author = v.shortBylineText.runs[0].text
+                            vs.push({
+                                "id": v.videoId,
+                                "title": v.title.runs[0].text,
+                                "author": author
+                            })
+                        }
+                    }
+                    catch(error) {}
+                })
+                res.send(vs)
+                return;
+            }
             let fullRes = templates.gdata_feedStart
             fullRes += `<yt:playlistId>${playlistId}</yt:playlistId>`
     
@@ -1328,6 +1368,14 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                     })})
                 })
             }, 200)
+        }
+
+        if(pchelperWlCaching[deviceId]
+        && req.enableWlCache
+        && playlistId == "WL") {
+            videos = pchelperWlCaching[deviceId]
+            createGdata()
+            return;
         }
     
         // pull first request + 2 continuations
@@ -2263,16 +2311,28 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
     },
 
-    "openBrowseId": function(req, callback) {
+    "openBrowseId": function(req, callback, canUseCache) {
         let device = pullDeviceId(req)
         if(!userdata[device]) {
             callback(false)
             return;
         }
+        if(canUseCache && userdata[device].userId) {
+            callback(userdata[device].userId)
+            return;
+        }
         pullUserIdFromDevice(pullDeviceId(req), (id) => {
             if(id.type) {
+                if(canUseCache && !userdata[device].userId) {
+                    userdata[device].userId = "none"
+                    fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
+                }
                 callback(false)
                 return;
+            }
+            if(canUseCache && !userdata[device].userId) {
+                userdata[device].userId = id;
+                fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
             }
             callback(id)
         })

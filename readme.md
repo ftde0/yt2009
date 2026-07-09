@@ -21,8 +21,8 @@ for $5/month, you can also join this list! --> https://github.com/sponsors/ftde0
 
 - **make sure you have [imagemagick](https://imagemagick.org/) and [ffmpeg](https://ffmpeg.org/) in your PATH.**
 
-- install node.js
-- open a terminal (windows powershell/cmd) in the directory you cloned yt2009 to, then:
+- install node.js (git is heavily recommeded as well)
+- open a terminal (windows powershell/cmd) in the directory you `git clone`d yt2009 to, then:
 - install required dependencies with: `npm install`
 - create a config file by launching and following: `node yt2009setup.js`
 - run to set and download remaining assets `node post_config_setup.js`
@@ -41,10 +41,26 @@ more info in [config_params.md](config_params.md) / [docker.md](docker.md). obta
 
 ---
 
+if you get error with lines like this below:
+```
+npm ERR! code ENOENT
+npm ERR! syscall spawn git
+```
+
+the proper way to fix is to install [git](https://git-scm.com/) and set up yt2009 that way.
+this will save you a lot of trouble later on.
+
+if you - for whatever reason - cannot use git, refer to the `gitless` section in windows 7 part below.
+
 ## !! if hosting on windows 7 !!
 
 the last version of node.js supported on windows 7 doesn't support latest versions of packages, so you need to install older ones to run on windows 7.
 
+git:
+```
+npm install express@4.17.1 google-protobuf@3.21.2 git+https://github.com/ftde0/node-maxmind-db.git node-fetch@2.6.7 node-html-parser@5.3.3 readline-sync ws
+```
+gitless **(heavily not recommended)**:
 ```
 npm install express@4.17.1 google-protobuf@3.21.2 maxmind-db-reader node-fetch@2.6.7 node-html-parser@5.3.3 readline-sync ws
 ```
@@ -103,4 +119,4 @@ over time some tools and documentation was written about yt2009. for an easy ref
 - [config_params.md](config_params.md) - a list of ALL available config options.
 - [docker.md](docker.md) - yt2009 setup with docker. also listed in the setup section. (thanks, breakgimme!)
 - [flash_additions.md](flash_additions.md) - some info on caption and annotations modules within the default 2009 flash player.
-- [flash_player_patch.md](flash_player_patch.md) - manual info for preparing vanilla flash players for use with yt2009.
+- [flash_player_setup.md](flash_player_setup.md) - manual info for preparing vanilla flash players for use with yt2009.

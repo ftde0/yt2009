@@ -7,6 +7,7 @@ const yt2009constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const yt2009mobilehelper = require("./yt2009mobilehelper")
 const config = require("./config.json")
+const DEV_SABR_DOWNLOAD_DEBUG = config.dev_sabr_download_debug
 const child_process = require("child_process")
 const fs = require("fs")
 const audioItags = [139, 140]
@@ -107,12 +108,13 @@ module.exports = {
                 return (s && s.includes("720p"))
             })[0])))) {
                 // hd
-                if(req.headers
+                if((req.headers
                 && req.headers.cookie
-                && req.headers.cookie.includes("hd_1080")) {
-                    vItags = [304, 299, 298, 137, 136, 135, 134, 133]
+                && req.headers.cookie.includes("hd_1080"))
+                || p.knownSabrd) {
+                    vItags = [304, 299, 298, 216, 137, 136, 135, 134, 133]
                 } else {
-                    vItags = [299, 298, 136, 135, 134, 133]
+                    vItags = [299, 298, 214, 136, 135, 134, 133]
                 }
             } else if(req.query.hd
             && (p.qualities.includes("480p"))) {
@@ -1093,6 +1095,10 @@ module.exports = {
                                 data[part] = writeNewDuration(
                                     data[part], cl.l, cl.ts
                                 )
+                            } else if(DEV_SABR_DOWNLOAD_DEBUG) {
+                                console.log(
+                                    `[sabr] no contentlength for ${part}?`
+                                )
                             }
                             partCount++
                             if(!fs.existsSync(fname)) {
@@ -1248,6 +1254,12 @@ module.exports = {
 
                     return;
                 }
+                if(DEV_SABR_DOWNLOAD_DEBUG) {
+                    let o = yt2009utils.seconds_to_time(offsetSeconds)
+                    console.log(
+                        `[sabr] got response for offset ${o} - ${partCount} ps`
+                    )
+                }
                 if(partCount >= 1) {
                     // safe to call next
                     concurrentReplayerCount = 0;
@@ -1261,6 +1273,11 @@ module.exports = {
                     }, 150)
                 } else {
                     // no parts? try recalling
+                    if(DEV_SABR_DOWNLOAD_DEBUG) {
+                        console.log(
+                            `[sabr] no parts? (hasRedirect: ${hasRedirect})`
+                        )
+                    }
                     if(!hasRedirect) {
                         concurrentReplayerCount++
                         if(concurrentReplayerCount > 3) {
