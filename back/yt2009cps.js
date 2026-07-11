@@ -49,11 +49,6 @@ module.exports = {
         req = utils.addFakeCookie(req)
         
         let compatAuth = false;
-        if((req.headers.referer && req.headers.referer.includes(".swf"))
-        || (req.headers["user-agent"]
-        && req.headers["user-agent"].includes("Shockwave Flash"))) {
-            compatAuth = true;
-        }
         if(!compatAuth && !mobileauths.isAuthorized(req, res, "feed")) return;
 
         if(!req.query.q && req.query.vq) {

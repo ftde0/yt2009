@@ -19,7 +19,7 @@ const androidHeaders = {"headers": {
     "user-agent": "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
 }}
 const wlist = /discord.gg|tiktok|tik tok|pre-vevo|2023|lnk.to|official hd video|smarturl/gui
-let ip_uses_flash = []
+let ip_embed_cmpl = {}
 let ratelimitData = {}
 let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
@@ -820,23 +820,6 @@ module.exports = {
         }
         catch(error) {}
 
-        // limited nontoken access for flash
-        // initially put it in iirc for some warp endpoint??
-        // will probably revamp/remove in the future
-        if(req.headers["user-agent"] == "Shockwave Flash"
-        && !ip_uses_flash[req.ip]) {
-            ip_uses_flash[req.ip] = 1
-        }
-        if(req.headers["user-agent"] == "Shockwave Flash"
-        && ip_uses_flash[req.ip] <= 20) {
-            tr = true;
-            ip_uses_flash[req.ip]++;
-
-            setTimeout(function() {
-                ip_uses_flash[req.ip]--;
-            }, 120000)
-        }
-
         // embed endpoints
         let embed_endpoints_whitelist = [
             "/timedtext",
@@ -847,8 +830,15 @@ module.exports = {
         if((req.headers["referrer"] || "").includes("embed/")
         && req.headers["is-embed"]) {
             embed_endpoints_whitelist.forEach(endpoint => {
-                if(req.originalUrl.includes(endpoint)) {
+                if(req.originalUrl.includes(endpoint)
+                && !ip_embed_cmpl[this.getIP(req)]) {
                     tr = true;
+                    if(!ip_embed_cmpl[this.getIP(req)]) {
+                        ip_embed_cmpl[this.getIP(req)] = 1;
+                        setTimeout(() => {
+                            ip_embed_cmpl[this.getIP(req)] = 0;
+                        }, 10000)
+                    }
                 }
             })
         }

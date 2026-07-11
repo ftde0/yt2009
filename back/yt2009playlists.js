@@ -359,11 +359,6 @@ module.exports = {
     "create_cpb_xml": function(req, res) {
         res.set("content-type", "application/atom+xml")
         let compatAuth = false;
-        if((req.headers.referer && req.headers.referer.includes(".swf"))
-        || (req.headers["user-agent"]
-        && req.headers["user-agent"].includes("Shockwave Flash"))) {
-            compatAuth = true;
-        }
         if(!compatAuth && !mobileauths.isAuthorized(req, res, "feed")) return;
         let id = req.originalUrl.split("playlists/")[1].split("?")[0]
         let xmlResponse = ""
