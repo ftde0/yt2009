@@ -261,7 +261,16 @@ module.exports = {
                     let parseOptions = {};
                     if(req && req.query && req.query.return_part_lengths) {
                         parseOptions.returnPartLengths = true;
-                        //console.log("returning lenghts")
+                    }
+                    if(DEV_SABR_DOWNLOAD_DEBUG) {
+                        let o = yt2009utils.seconds_to_time(
+                            Math.floor(offset / 1000)
+                        )
+                        let filename = `dsabr-raw-${playbackSession}-${offset}`
+                        console.log(
+                            `saving raw response for ${o} as ${filename}`
+                        )
+                        fs.writeFile("../assets/" + filename, r, (e) => {})
                     }
                     parseResponse(r, (data) => {
                         if(data.type && data.type == "redirect") {
@@ -376,7 +385,7 @@ module.exports = {
             }
             if(p.pchelperBindingReq) {
                 p.pchelperBindingReq.usePot = true;
-                p.pchelperBindingReq.callbackPot = true;
+                //p.pchelperBindingReq.callbackPot = true;
                 p.pchelperBindingReq.query = {
                     "video_id": p.id
                 }

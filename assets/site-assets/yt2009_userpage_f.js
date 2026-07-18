@@ -83,7 +83,7 @@ function show_playlist(element) {
             r.open("GET", playlistUrl)
             setTimeout(function() {r.send(null)},100)
             r.onreadystatechange = function(e) {
-                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r.readyState == 4 || this.readyState == 4) {
                     rawVideos = r.responseText
                     /*$(".yt2009-videos-insert").innerHTML = rawVideos;
                     playlistAddPchelperDelete(id)*/
@@ -107,7 +107,7 @@ function show_playlist(element) {
             r.open("GET", playlistUrl)
             setTimeout(function() {r.send(null)},100)
             r.onreadystatechange = function(e) {
-                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r.readyState == 4 || this.readyState == 4) {
                     rawVideos = r.responseText
                     /*$(".yt2009-videos-insert").innerHTML = rawVideos;
                     playlistAddPchelperDelete(id) you piece of shit IE*/
@@ -230,7 +230,7 @@ function playlistAddPchelperDelete(playlistId) {
             r.open("POST", "/pchelper_playlists?r=" + Math.random().toString())
             r.send(pchelperRequest)
             r.onreadystatechange = function(e) {
-                if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+                if(r.readyState == 4 || this.readyState == 4) {
                     // reload playlist
 
                     if(pchelperFavPage) {
@@ -286,7 +286,7 @@ function switchChannel(element) {
     r.setRequestHeader("url", url)
     r.send(null)
     r.onreadystatechange = function(e) {
-        if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
+        if(r.readyState == 4 || this.readyState == 4) {
             // html sent from server
             videos_element.innerHTML = r.responseText
             document.getElementById("view-pane")
@@ -302,4 +302,135 @@ function deletePrompt(videoId) {
     if(ans) {
         document.getElementById("video-delete-" + videoId).submit()
     }
+}
+
+
+// switchpage
+var currentPage = 0;
+function switchPage(target) {
+    // all shown pages
+    var allPages = []
+    var s = document.getElementById("table").getElementsByTagName("tr")
+    for(var p in s) {
+        if(s[p]) {
+            try {
+                s[p].getBoundingClientRect() // will fail if not html element
+                allPages.push(s[p].parentNode)
+            }
+            catch(error){}
+        }
+    }
+    allPages.shift()
+
+    // figure out which one to get to
+    var targetPage = 0;
+    switch(target) {
+        case "f": {
+            targetPage = 0;
+            break;
+        }
+        case -1: {
+            targetPage = currentPage - 1
+            break;
+        }
+        case 1: {
+            targetPage = currentPage + 1
+            break;
+        }
+        case "l": {
+            targetPage = allPages.length - 1
+            break;
+        }
+    }
+
+    if(targetPage >= allPages.length && !window.historyContinuation) {
+        targetPage = allPages.length - 1
+    } else if(targetPage >= allPages.length && window.historyContinuation) {
+        var loc = "/my_history?continuation=" + window.historyContinuation
+        loc += "&display_page=" + (
+            (allPages.length + 1) + (window.pageNumVisualOffset - 1 || 0)
+        )
+        location.href = loc;
+        return;
+    } else if(targetPage < 0 & !window.historyContinuation) {
+        targetPage = 0;
+    } else if(targetPage < 0
+    && window.historyContinuation
+    && window.pageNumVisualOffset !== -1) {
+        history.back();
+        return;
+    }
+
+    // hide all pages
+    for(var p in allPages) {
+        if(allPages[p]
+        && allPages[p].className
+        && allPages[p].className.indexOf(" hid") == -1) {
+            allPages[p].className += " hid"
+        }
+    }
+
+    // show the needed one
+    currentPage = targetPage;
+    allPages[targetPage].className = allPages[targetPage].className
+                                     .split(" hid").join("");
+
+    // desc
+    var pString = "Page " + (currentPage + 1) + " - " + (allPages + 1)
+    if(window.historyContinuation) {
+        pString = "Page " + ((currentPage + 1) + (window.pageNumVisualOffset - 1 || 0))
+    }
+    // update page numbers
+    document.getElementById("yt2009-page-n1").innerHTML = pString;
+    document.getElementById("yt2009-page-n2").innerHTML = pString;
+}
+
+// clear history
+function viewingHistoryClear() {
+    if(hasPchelperMarker) {
+        var a = confirm("Clear your entire viewing history?")
+        if(a) {
+            var r;
+            if (window.XMLHttpRequest) {
+                r = new XMLHttpRequest()
+            } else {
+                r = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+			r.open(
+                "GET", "/pchelper_get_clear_history_token?r=" + Math.random()
+            )
+			r.send(null)
+            r.onreadystatechange = function(e) {
+                if(r.readyState == 4 || this.readyState == 4) {
+                    if(r.status >= 400) {
+                        alert("An error has occured clearing viewing history.")
+                        return;
+                    }
+                    var token = r.responseText;
+                    var rr;
+                    if (window.XMLHttpRequest) {
+                        rr = new XMLHttpRequest()
+                    } else {
+                        rr = new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                    rr.open(
+                        "POST", "/pchelper_history_remove?r=" + Math.random()
+                    )
+                    rr.send(token)
+                    rr.onreadystatechange = function(e) {
+                        if(rr.readyState == 4 || this.readyState == 4) {
+                            setTimeout(function() {
+                                location.href = location.href.replace("#", "")
+                                            + "?nc=" + Date.now()
+                            }, 1000)
+                        }
+                    }
+                }
+            }
+        }
+        return;
+    }
+    var c = "watch_history=; Path=/; expires=Fri, 31 Dec 2009 23:59:59 GMT"
+    document.cookie = c;
+    location.reload();
 }

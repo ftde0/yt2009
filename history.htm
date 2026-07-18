@@ -151,11 +151,11 @@
 			<div id="view-pane">
 				<div class="header">
 					<div class="pager">
-						<a href="#" onclick="switchPage('f')">lang_userpage_paging_first</a>
-						<a href="#" onclick="switchPage(-1)">lang_userpage_paging_prev</a>&nbsp;
+						<a href="javascript:switchPage('f')">lang_userpage_paging_first</a>
+						<a href="javascript:switchPage(-1)">lang_userpage_paging_prev</a>&nbsp;
 						<span id="yt2009-page-n2">lang_userpage_paging_ind 1 - yt2009_page_count</span>
-						<a href="#" onclick="switchPage(1)">lang_userpage_paging_next</a>&nbsp;
-						<a href="#" onclick="switchPage('l')">lang_userpage_paging_last</a>
+						<a href="javascript:switchPage(1)">lang_userpage_paging_next</a>&nbsp;
+						<a href="javascript:switchPage('l')">lang_userpage_paging_last</a>
 					</div>
 					<h2>lang_userpage_subfolder_history</h2>
 				</div>
@@ -233,11 +233,11 @@
 						</div>
 						<div class="footer">
 							<div class="pager">
-								<a href="#" onclick="switchPage('f')">lang_userpage_paging_first</a>
-								<a href="#" onclick="switchPage(-1)">lang_userpage_paging_prev</a>&nbsp;
+								<a href="javascript:switchPage('f')">lang_userpage_paging_first</a>
+								<a href="javascript:switchPage(-1)">lang_userpage_paging_prev</a>&nbsp;
 								<span id="yt2009-page-n1">lang_userpage_paging_ind 1 - yt2009_page_count</span>
-								<a href="#" onclick="switchPage(1)">lang_userpage_paging_next</a>&nbsp;
-								<a href="#" onclick="switchPage('l')">lang_userpage_paging_last</a>
+								<a href="javascript:switchPage(1)">lang_userpage_paging_next</a>&nbsp;
+								<a href="javascript:switchPage('l')">lang_userpage_paging_last</a>
 							</div>
 						</div>
 					</div>
@@ -333,6 +333,7 @@
 		</div>
 		<div id="copyright">lang_footer_copyright</div>
 		</div>
+		<!--yt2009_history_source_marker_div-->
 		<!-- end bottom section -->
 	</div>
 	<div>
@@ -340,11 +341,14 @@
 	<a name="pageBottom"></a>
 	<script>
 		var lsViewStringPrefix = "lang_userpage_views_prefix";
+		var historyContinuation = "";
+		var pageNumVisualOffset = 1;
 
 		function removeSelectedElements() {
 			// get ids of selected elements
 			var removeIds = []
 			var removeVideoElements = []
+			var removeTokens = []
 			var divs = document.getElementById("table")
 							   .getElementsByTagName("div");
 			for(var div in divs) {
@@ -354,9 +358,28 @@
 					var checkbox = divs[div].getElementsByTagName("input")[0]
 					if(checkbox.checked) {
 						removeIds.push(checkbox.getAttribute("value"))
+						if(checkbox.getAttribute("data-remove-token")) {
+							removeTokens.push(
+								checkbox.getAttribute("data-remove-token")
+							)
+						}
 						removeVideoElements.push(divs[div])
 					}
 				}
+			}
+
+			// pchelper history
+			if(removeTokens.length >= 1) {
+				var r = new XMLHttpRequest();
+				r.open("POST", "/pchelper_history_remove")
+				r.send(removeTokens.join(","))
+				r.addEventListener("load", function(e) {
+					setTimeout(function() {
+						location.href = location.href.replace("#", "")
+                                      + "?nc=" + Date.now()
+					}, 1000)
+				}, false)
+				return;
 			}
 
 			// remove from localstorage
@@ -423,7 +446,9 @@
 			}
 
 			setTimeout(function() {
-				location.reload()
+				if(removeTokens.length == 0) {
+					location.reload()
+				}
 			}, 200)
 		}
 	</script>

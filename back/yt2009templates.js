@@ -1935,13 +1935,13 @@ ${ap == 2 ? avatarCode : ""}
                     </a>
                 </div>`
     },
-    "historyVideo": function(video, req) {
+    "historyVideo": function(video, req, removeToken) {
         let thumbUrl = utils.getThumbUrl(video.id, req)
         return `
                 <div class="video" style="float: left; margin: 15px 0 0 0; padding: 10px 0 10px 10px; width: 150px;">
                     <div style="float: left;">
                         <div style="float: left;">
-                            <input type="checkbox" class="checkbox" value="${video.id}" />
+                            <input type="checkbox" class="checkbox" value="${video.id}"${removeToken ? ` data-remove-token="${removeToken}"` : ""} />
                         </div>
                     </div>
                     <div style="float: left; width: 124px;">
@@ -1954,8 +1954,8 @@ ${ap == 2 ? avatarCode : ""}
                     </div>
                 </div>`;
     },
-    "historyParts": [function (pageNum){return `
-    <tbody id="videos" class="videos-page videos-page-${pageNum} ${pageNum !== 0 ? "hid" : ""}">
+    "historyParts": [function (pageNum, isFirstPage){return `
+    <tbody id="videos" class="videos-page videos-page-${pageNum} ${(pageNum !== 0 && !isFirstPage) ? "hid" : ""}">
         <tr>
             <td colspan="2">`},
             `

@@ -109,14 +109,18 @@ module.exports = {
 							// is first file, get WEBP size
 							// to make sure youtube spec isn't off
 							let size = identifyWebpImgSize(r.slice(0,70))
-							let actWidth = size[0]
-							if(actWidth !== ytWidth
-							&& Math.abs(ytWidth - actWidth) <= 15) {
-								if(config.env == "dev") {
-									console.log("fix storyboard spec for "+ id)
+							if(size && size[0]) {
+								let actWidth = size[0]
+								if(actWidth !== ytWidth
+								&& Math.abs(ytWidth - actWidth) <= 15) {
+									if(config.env == "dev") {
+										console.log(
+											"fix storyboard spec for "+ id
+										)
+									}
+									let w = actWidth / storyboard.partsPerRow
+									storyboard.thumbWidth = w
 								}
-								let w = actWidth / storyboard.partsPerRow
-								storyboard.thumbWidth = w
 							}
 						}
                         fs.writeFileSync(`../assets/${filename}`, r)

@@ -1206,6 +1206,11 @@ function showEndscreen() {
         }
     }, 7500)
     timeouts.push(timeout_switch)
+
+    if(window.watchtimeIdShorthand) {
+        var watchtime = window.watchtimeIdShorthand;
+        sendWatchtimeRequest(watchtime, true)
+    }
 }
 
 function videoNav(id) {
@@ -2672,7 +2677,7 @@ setTimeout(function() {
         catch(error) {}
         requestSabr(0, "FORCE", true)
     }
-}, 1750)
+}, 2800)
 
 // video loading sprite on unloaded area
 video.addEventListener("seeking", function(e) {
@@ -2839,7 +2844,7 @@ function initAsLive() {
 				])
 				t++
 			}
-			var rangeIndex = ranges.filter(s => {
+			var rangeIndex = ranges.filter(function(s) {
 				return video.currentTime >= s[0]
 					&& video.currentTime <= s[1]
 			})[0]
@@ -3244,8 +3249,10 @@ function initAsSabr() {
             })
         } else {
             h264Res.forEach(function(res) {
-                sabrResTemp.push(res)
-                addedResolutions.push(res[1])
+                if(addedResolutions.indexOf(res[1]) == -1) {
+                    sabrResTemp.push(res)
+                    addedResolutions.push(res[1])
+                }
             })
         }
         
@@ -5110,3 +5117,53 @@ if(document.querySelector(".flashing-btn")) {
     }
     catch(error){}
 }
+
+// history tracking
+var lastWatchtimeStatus = 0;
+function sendWatchtimeRequest(watchtime, final) {
+    var trackingBaseUrl = "/playback_progress_report?pid="
+    var wrurl = [
+        trackingBaseUrl + watchtime,
+        "&rt=" + Date.now(),
+        "&st=" + video.currentTime.toFixed(1),
+        "&state=" + (video.paused ? "paused" : "playing")
+    ]
+    if(final) {
+        wrurl.push("&final=1")
+    }
+    wrurl = wrurl.join("")
+    var wr = new XMLHttpRequest();
+    wr.open("GET", wrurl)
+    wr.send(null)
+    wr.addEventListener("load", function() {
+        lastWatchtimeStatus = wr.status;
+    }, false)
+}
+setTimeout(function() {
+    if(window.watchtimeIdShorthand && window.playbackIdShorthand) {
+        var trackingBaseUrl = "/playback_progress_report?pid="
+        var watchtime = window.watchtimeIdShorthand;
+        var playback = window.playbackIdShorthand;
+
+        var pr = new XMLHttpRequest();
+        pr.open(
+            "GET", trackingBaseUrl + playback + "&rt=" + Date.now()
+        )
+        pr.send(null)
+        
+        var temporaryDisableSend = true; // to be further tracked
+        // why doesn't work
+        var s = setInterval(function() {
+            if(lastWatchtimeStatus >= 400
+            || (window.sabrData && window.sabrData.fEnd)
+            || video.ended
+            || temporaryDisableSend) {
+                // server errors, prevent further requests
+                clearInterval(s)
+                return;
+            }
+            if(video.paused) return;
+            sendWatchtimeRequest(watchtime)
+        }, 10000)
+    }
+}, 10)

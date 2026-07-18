@@ -101,3 +101,10 @@ node_modules/
 node_modules/*
 back/GeoLite2-City.mmdb
 back/ikPlayground.js
+.setup_done
+.setup.bat
+.setup-part1.bat
+.setup-part2.bat
+.start.bat
+.setup_error
+yt2009starter.exe

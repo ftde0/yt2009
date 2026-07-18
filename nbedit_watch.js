@@ -259,7 +259,11 @@ function toggleQuicklistExpander(element) {
 }
 
 // append to history
-if(useLocalStorage) {
+var pchelperHistory = (
+    document.cookie
+ && document.cookie.indexOf("use_yt_history") !== -1
+)
+if(useLocalStorage && !pchelperHistory) {
     // localstorage
     var currentId = $(".email-video-url").value.split("?v=")[1].split("&")[0].split("#")[0]
     var title = $(".watch-vid-ab-title").innerHTML
@@ -281,7 +285,7 @@ if(useLocalStorage) {
     })
 
     localStorage.watch_history = JSON.stringify(watch_history)
-} else {
+} else if(!pchelperHistory) {
     // cookie
     var watchHistory = ""
     document.cookie.split(";").forEach(function(cookie) {
@@ -2053,7 +2057,8 @@ function watch_comments_pref_save() {
 turbocharge fillers
 ======
 */
-if(usingTurbocharge) {
+if(usingTurbocharge
+|| usingPchelper) {
     setTimeout(function() {onWatchCommentsShowMore({"source": "reload"})}, 20)
     var id = window.location.href.split("v=")[1].split("&")[0]
     var r = new XMLHttpRequest();

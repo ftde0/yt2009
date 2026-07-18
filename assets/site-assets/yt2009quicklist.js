@@ -113,7 +113,8 @@ function createQuicklistPanel() {
     r.addEventListener("load", function(e) {
         if((localStorage
         && localStorage.quicklistVids
-        && JSON.parse(localStorage.quicklistVids).length == 0)
+        && JSON.parse(localStorage.quicklistVids).length == 0
+        && !usesPchelper)
         || (usesPchelper && pchelperWl.length == 0)) {
             document.querySelector(".yt2009-ql-top").innerHTML = ""
             return;

@@ -6,6 +6,9 @@
 
 // zmiana strony
 // 2009 style
+
+var hasPchelperMarker = document.getElementById("yt2009-pchelper-fetched-marker")
+
 function switchPage(num) {
     var currentView = document.querySelector(
         "#grid-view:not(.hid), #expand-view:not(.hid)"
@@ -18,18 +21,45 @@ function switchPage(num) {
     currentPage = parseInt(s.className.split("videos-page-")[1].split(" ")[0])
 
     // what page to open
+    // TODO: TEST AND ACCOUNT FOR NON PCHELPER
+    // TODO: DELETING VIDEOS
     var targetPage = 0;
 
     if(num == "l") {
+        if(window.historyContinuation) return;
         targetPage = pages.length - 1;
     } else if(num == "f") {
-        targetPage = 0;
+        if(window.historyContinuation
+        && window.pageNumVisualOffset !== 1) {
+            location.href = "/my_history"
+            return;
+        } else {
+            targetPage = 0;
+        }
     } else {
         targetPage = currentPage + num;
     }
 
     if(targetPage == -1
-    || !currentView.querySelector(".videos-page-" + targetPage)) return;
+    || !currentView.querySelector(".videos-page-" + targetPage)) {
+        if(window.historyContinuation
+        && targetPage !== -1) {
+            var loc = "/my_history?continuation=" + window.historyContinuation
+            var pageNum = 0;
+            try {
+                pageNum = nlToArray(
+                    currentView.querySelectorAll(".videos-page")
+                ).length
+            }
+            catch(error) {}
+            loc += "&display_page=" + ((pageNum + 1) + (window.pageNumVisualOffset - 1 || 0))
+            location.href = loc;
+        } else if(window.historyContinuation
+        && window.pageNumVisualOffset !== -1) {
+            history.back()
+        }
+        return;
+    }
 
     // hide other pages
     nlToArray(
@@ -46,6 +76,9 @@ function switchPage(num) {
     var pString = "Page " + (targetPage + 1) + " - " + nlToArray(
         currentView.querySelectorAll(".videos-page")
     ).length
+    if(window.historyContinuation) {
+        pString = "Page " + ((targetPage + 1) + (window.pageNumVisualOffset - 1 || 0))
+    }
     // update page numbers
     document.querySelector("#yt2009-page-n1").innerHTML = pString;
     document.querySelector("#yt2009-page-n2").innerHTML = pString;
@@ -61,6 +94,31 @@ function switchPage(num) {
 
 // clear history
 function viewingHistoryClear() {
+    if(hasPchelperMarker) {
+        var a = confirm("Clear your entire viewing history?")
+        if(a) {
+            var r = new XMLHttpRequest();
+			r.open("GET", "/pchelper_get_clear_history_token")
+			r.send(null)
+			r.addEventListener("load", function(e) {
+				if(r.status >= 400) {
+                    alert("An error has occured clearing viewing history.")
+                    return;
+                }
+                var token = r.responseText;
+                r = new XMLHttpRequest();
+				r.open("POST", "/pchelper_history_remove")
+				r.send(token)
+				r.addEventListener("load", function(e) {
+					setTimeout(function() {
+						location.href = location.href.replace("#", "")
+                                      + "?nc=" + Date.now()
+					}, 1000)
+				}, false)
+			}, false)
+        }
+        return;
+    }
     var c = "watch_history=; Path=/; expires=Fri, 31 Dec 2009 23:59:59 GMT"
     document.cookie = c;
     localStorage.watch_history = "[]"
@@ -172,8 +230,10 @@ if(window.localStorage) {
             break;
         }
         case "/my_history": {
-            storageObject = JSON.parse(localStorage.watch_history)
-            buildList()
+            if(!hasPchelperMarker) {
+                storageObject = JSON.parse(localStorage.watch_history)
+                buildList()
+            }
             break;
         }
         case "/watch_queue":

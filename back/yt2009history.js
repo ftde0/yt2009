@@ -12,6 +12,7 @@ const page = fs.readFileSync("../history.htm").toString()
 const doodles = require("./yt2009doodles")
 const templates = require("./yt2009templates")
 const languages = require("./language_data/language_engine")
+const mobilehelper = require("./yt2009mobilehelper")
 
 module.exports = {
     "apply": function(req, res) {
@@ -21,6 +22,11 @@ module.exports = {
         }
         req = utils.addFakeCookie(req)
         
+        let usePchelper = (
+            req.headers.cookie
+         && req.headers.cookie.includes("use_yt_history")
+         && mobilehelper.hasLogin(req)
+        )
         let code = page;
 
         // shows tab
@@ -29,6 +35,27 @@ module.exports = {
                 `<a href="/channels">lang_channels</a>`,
                 `<a href="/channels">lang_channels</a><a href="#">lang_shows</a>`
             )
+        }
+
+        // fmode
+        if(req.headers.cookie
+        && req.headers.cookie.includes("f_mode=on")) {
+            code = code.replace(
+                `/assets/site-assets/yt2009_userpage_common.js`,
+                `/assets/site-assets/yt2009_userpage_f.js`
+            )
+        }
+
+        // read pchelper based history
+        if(usePchelper) {
+            code = code.replace(
+                `<!--yt2009_history_source_marker_div-->`,
+                `<div id="yt2009-pchelper-fetched-marker"></div>`
+            )
+            mobilehelper.requestWatchHistory(req, (history) => {
+                createFromVideos((history || []))
+            })
+            return;
         }
 
         // read cookie based history
@@ -54,7 +81,7 @@ module.exports = {
         history = history.split(":")
         let historyReadable = []
 
-        if(typeof(history) == "object") {
+        if(typeof(history) == "object" && !usePchelper) {
             history.forEach(video => {
                 if(video.startsWith("undefined")) {
                     video = video.replace("undefined", "")
@@ -76,6 +103,7 @@ module.exports = {
                     "id": id
                 })
             })
+            createFromVideos(historyReadable)
         }
         
 
@@ -95,26 +123,59 @@ module.exports = {
             return tr;
         }
 
-        let videosHTML = ``
+        // create html
+        function createFromVideos(historySource) {
+            let hasContinuation = historySource.filter(s => {
+                return s && s.type == "continuation"
+            })[0]
+            if(hasContinuation) {
+                historySource = historySource.filter(s => {
+                    return s && s.type == "video"
+                })
+            }
+            let videosHTML = ``
         
-        // foreach and to html
-        let pageNum = 0;
+            // foreach and to html
+            let isFirstPage = true;
+            let pageNum = 0;
+            if(req.query.display_page
+            && !isNaN(parseInt(req.query.display_page))) {
+                //pageNum = parseInt(req.query.display_page)
+                code = code.split(`lang_userpage_paging_ind 1`).join(
+                    `lang_userpage_paging_ind ${parseInt(req.query.display_page)}`
+                )
+                code = code.replace(
+                    `pageNumVisualOffset = 1;`,
+                    `pageNumVisualOffset = ${parseInt(req.query.display_page)};`
+                )
+            }
 
-        splitEvery(historyReadable, 20).forEach(videosPage => {
-            videosHTML += templates.historyParts[0](pageNum)
-            videosPage.forEach(video => {
-                videosHTML += templates.historyVideo(video, req)
+            splitEvery(historySource, 20).forEach(videosPage => {
+                videosHTML += templates.historyParts[0](pageNum, isFirstPage)
+                videosPage.forEach(video => {
+                    videosHTML += templates.historyVideo(video, req, video.removeToken)
+                })
+                videosHTML += templates.historyParts[1]
+                pageNum++;
+                isFirstPage = false;
             })
-            videosHTML += templates.historyParts[1]
-            pageNum++;
-        })
 
-        code = require("./yt2009loginsimulate")(req, code, true);
-        code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
-        code = code.split(`yt2009_page_count`).join(pageNum)
-        code = doodles.applyDoodle(code, req)
-        code = languages.apply_lang_to_code(code, req)
+            if(hasContinuation) {
+                code = code.replace(
+                    `historyContinuation = "";`,
+                    `historyContinuation = "${hasContinuation.token}";`
+                )
+            }
+            code = require("./yt2009loginsimulate")(req, code, true);
+            code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
+            if(usePchelper){
+                code = code.split(` - yt2009_page_count`).join("")
+            }
+            code = code.split(`yt2009_page_count`).join(pageNum)
+            code = doodles.applyDoodle(code, req)
+            code = languages.apply_lang_to_code(code, req)
 
-        res.send(code);
+            res.send(code);
+        }
     }
 }

@@ -141,6 +141,10 @@ if(location.href.indexOf("watch") !== -1) {
 
     // save watched video to history
     // only cookie approach
+    var pchelperHistory = (
+        document.cookie
+    && document.cookie.indexOf("use_yt_history") !== -1
+    )
     var watchHistory = ""
     var cookies = document.cookie.split(";")
     for(var c in cookies) {
@@ -149,7 +153,7 @@ if(location.href.indexOf("watch") !== -1) {
         }
     }
     
-    if(watchHistory.length > 4000) {
+    if(watchHistory.length > 4000 && !pchelperHistory) {
         // if we surpass the cookie limit (4KB) make a backup for use later and clear
         document.cookie = "watch_history_backup_" + Date.now()
                           + "=" + watchHistory
@@ -159,7 +163,7 @@ if(location.href.indexOf("watch") !== -1) {
     }
 
     var videoId = $(".email-video-url").value.split("?v=")[1]
-    if(watchHistory.indexOf(videoId) == -1) {
+    if(watchHistory.indexOf(videoId) == -1 && !pchelperHistory) {
         watchHistory = encodeURIComponent($(".watch-vid-ab-title").innerHTML)
                        + "&" + $("#watch-view-count").innerHTML
                        + "&" + $(".email-video-url").value.split("?v=")[1]
@@ -2705,12 +2709,13 @@ var usingTurbocharge = ((
  && window.location
  && location.href.indexOf("/watch") !== -1
 ))
+var usingPchelper = false;
 try {
     var related = getElementsByClassName(
         document.getElementById("watch-related-discoverbox"),
         "video-entry"
     )
-	var usingPchelper = (
+	usingPchelper = (
 		window.location
 	 && location.href
 	 && location.href.indexOf("with_pchelper=1") !== -1
@@ -2957,7 +2962,8 @@ function watch_comments_pref_save() {
 turbocharge fillers
 ======
 */
-if(usingTurbocharge) {
+if(usingTurbocharge
+|| usingPchelper) {
     setTimeout(function() {onWatchCommentsShowMore("reload")}, 20)
     var id = window.location.href.split("v=")[1].split("&")[0]
     var r;
@@ -3069,3 +3075,39 @@ setTimeout(function() {
         }
     }
 }, 100)
+
+
+/*
+======
+save to history
+======
+*/
+setTimeout(function() {
+    if(window.watchtimeIdShorthand) {
+        var trackingBaseUrl = "/playback_progress_report?pid="
+        var playback = window.playbackIdShorthand;
+        var date = "";
+        try {
+            date = Date.now()
+        }
+        catch(error) {
+            try {
+                date = new Date().getTime()
+            }
+            catch(error){}
+        }
+
+        var r;
+        if (window.XMLHttpRequest) {
+            r = new XMLHttpRequest()
+        } else {
+            r = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        pr.open(
+            "GET", trackingBaseUrl + playback
+                   + "&rt=" + date
+                   + "&r=" + Math.random()
+        )
+        pr.send(null)
+    }
+}, 10)

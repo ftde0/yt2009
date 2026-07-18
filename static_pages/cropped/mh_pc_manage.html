@@ -46,6 +46,9 @@
         margin-top: 20px;
         text-align: center;
     }
+    #with-pchelper-watch-notice {
+        margin-left: 15px;
+    }
 </style>
 <div class="panel" id="panel1">
     <h1>Account Picker</h1>
@@ -65,8 +68,12 @@
     <label for="pchelper-subscriptions-sync">subscriptions_sync</label><br>
     <input type="checkbox" id="pchelper-user-related" title="show personal related videos on the top of related section on watchpage.">
     <label for="pchelper-user-related">user_related</label><br>
+    <input type="checkbox" id="pchelper-use-yt-history" title="show your remote youtube history on /my_history." onchange="notifyWithWatch()">
+    <label for="pchelper-use-yt-history">use_yt_history</label><span class="hid bold" id="with-pchelper-watch-notice">if you want to also update your youtube history when watching through yt2009, enable <code>with_pchelper_watch</code></span>.<br>
     <input type="checkbox" id="pchelper-watchlater-sync" title="enable sync of watch later to as quicklist.">
     <label for="pchelper-watchlater-sync">watchlater_sync</label><br>
+    <input type="checkbox" id="pchelper-with-pchelper-watch" title="use watchpages requested as you, enabling saving to your youtube history and watching private videos.">
+    <label for="pchelper-with-pchelper-watch">with_pchelper_watch</label><br>
     <a class="yt-button yt-button-primary" href="#" onclick="save_settings()">
         <span>save</span>
     </a>
@@ -217,6 +224,12 @@
 			}
 		}
         s = s.join(":")
+        if(s.indexOf("watchlater-sync") !== -1
+        && window.localStorage
+        && window.localStorage.removeItem) {
+            try {window.localStorage.removeItem("quicklistVids")}
+            catch(error){}
+        }
         function saveCookie() {
             location.href = "/pchelper_save_cookie?p=" + s + "&r=" + Math.random().toString()
         }
@@ -440,5 +453,9 @@ should we do so?");
                 }
             }
         }
+    }
+
+    function notifyWithWatch() {
+        document.getElementById("with-pchelper-watch-notice").className = "bold"
     }
 </script>

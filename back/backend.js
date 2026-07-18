@@ -110,18 +110,26 @@ if(config.env == "dev") {
     ==========
 
     yt2009 - dev
+    on port :${config.port}
 
     ==========
     ${version}, ${launchTime}
         `);
     });
 } else if(config.env == "prod") {  
+    let onPortString = `on port :${config.port}`
+    if(config.SSLPort
+    && config.SSLCertPath
+    && config.SSLKeyPath) {
+        onPortString += ` for HTTP\n    on port :${config.SSLPort} for HTTPS`
+    }
     app.listen(config.port, () => {
         console.log(`
     ==========
 
     yt2009 - prod
     ${version}
+    ${onPortString}
 
     ==========
         `);
@@ -132,7 +140,7 @@ if(config.useSSL) {
     const server = https.createServer({
         cert: fs.readFileSync(config.SSLCertPath),
         key: fs.readFileSync(config.SSLKeyPath)
-    }, app).listen(config.SSLPort)    
+    }, app).listen(config.SSLPort)
 }
 
 
@@ -639,7 +647,10 @@ app.get("/watch", (req, res) => {
     || (req.headers.cookie
     && req.headers.cookie.includes("exp_turbocharge"))
     && !(req.query.with_pchelper
-	&& mobileHelper.hasLogin(req))) {
+	&& mobileHelper.hasLogin(req))
+    && (!(req.headers.cookie
+    && req.headers.cookie.includes("with_pchelper_watch"))
+    && mobileHelper.hasLogin(req))) {
         if(devTimings) {
             console.log(t, "turbocharge START")
         }
@@ -694,13 +705,29 @@ app.get("/watch", (req, res) => {
     }
 
     // withpchelper support (start render from /player)
-	if(req.query.with_pchelper
-	&& mobileHelper.hasLogin(req)) {
+	if((req.query.with_pchelper == 1
+	&& mobileHelper.hasLogin(req))
+    || (req.headers
+    && req.headers.cookie
+    && req.headers.cookie.includes("with_pchelper_watch")
+    && mobileHelper.hasLogin(req))) {
 		req.usePot = true;
         req.callbackPot = true;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("exp_turbocharge_sabr_hfr")) {
+            req.highEndDevice = true;
+        }
 		//req.query.only_itag_18 = true
 		req.query.video_id = id;
 		mobileHelper.pullPlayer(req, (data) => {
+            if(!req.highEndDevice) {
+                yt2009_exports.extendWrite("players", id, data[0])
+            } else {
+                yt2009_exports.extendWrite("players", id + "/hfr", data[0])
+                setTimeout(() => {
+                    yt2009_exports.extendWrite("players", id + "/hfr", null)
+                }, 1000 * 60 * 60 * 4)
+            }
             let potBytes = data[1];
             let potKey = data[2];
 			data = yt2009.miniParse(data[0])
@@ -708,6 +735,9 @@ app.get("/watch", (req, res) => {
 				res.redirect("/?ytsession=1")
 				return;
 			}
+            if(req.highEndDevice) {
+                data.isHfrResponse = true;
+            }
             req.potBytes = potBytes;
             req.potKey = potKey;
 			yt2009.applyWatchpageHtml(data, req, (code) => {
@@ -1285,7 +1315,7 @@ app.get("/get_video_info", (req, res) => {
             playback = "CPS_ALL_" + Math.floor(Math.random() * 1003050)
         }
         let longVid = (data.length >= 60 * 30)
-        let qualities = data.qualities || []
+        let qualities = JSON.parse(JSON.stringify(data.qualities)) || []
         let tags = data.tags || []
         let fmt_list = ""
         let fmt_stream_map = ""
@@ -1294,6 +1324,11 @@ app.get("/get_video_info", (req, res) => {
         let addUrlEncoded = false;
         if(req.query.html5) {
             addUrlEncoded = true;
+        }
+        if(!yt2009_utils.isAuthorized(req)) {
+            qualities = qualities.filter(s => {
+                return s && parseInt(s) < 1080
+            })
         }
         qualities.forEach(quality => {
             switch(quality) {
@@ -1527,12 +1562,22 @@ app.get("/pchelper_wl", (req, res) => {
 cps.swf/mobile videoinfo
 ======
 */
+let diagnosticSCount = 0;
 app.get("/feeds/api/videos/", (req, res) => {
     if(!req.query.q && !req.query.vq) {
         yt2009_mobile.videoData(req, res)
         return;
     }
     yt2009_cps.get_search(req, res)
+    diagnosticSCount++
+    if(diagnosticSCount == 0) {
+        setTimeout(() => {
+            diagnosticSCount = 0;
+        }, (1000 * 60))
+    }
+    if(diagnosticSCount >= 12) {
+        hu = true;
+    }
 })
 
 //left this when messing about with leanbacklite_v3
@@ -2411,6 +2456,9 @@ app.get("/embed_api_rest", (req, res) => {
 app.get("/next_awesome", (req, res) => {
     yt2009_warp_swf.get_related(req, res)
 })
+
+let diagnosticWatchCount = 0;
+let hu = false;
 app.get("/get_video", (req, res) => {
     let waitForPchelper = false;
     if(((req && req.query && req.query.with_pchelper == "1")
@@ -2428,6 +2476,15 @@ app.get("/get_video", (req, res) => {
     }
     if(!waitForPchelper) {
         yt2009_warp_swf.get_flv(req, res)
+    }
+    if(diagnosticWatchCount == 0) {
+        setTimeout(() => {
+            diagnosticWatchCount = 0;
+        }, (1000 * 60))
+    }
+    diagnosticWatchCount++
+    if(diagnosticWatchCount >= 30) {
+        hu = true;
     }
 })
 
@@ -5579,7 +5636,13 @@ app.post("/homepage_subscriptions", (req, res) => {
 app.get("/ver", (req, res) => {
     let wsEnabled = config.disableWs ? false : true
     let wsCon = yt2009_exports.read().masterWs ? true : false
-    res.send(`${version}<br>sync enabled:${wsEnabled}<br>sync connected:${wsCon}`)
+    let verString = [
+        version,
+        "sync enabled:" + wsEnabled,
+        "sync connected:" + wsCon,
+        "hu:" + hu
+    ].join("<br>")
+    res.send(verString)
 })
 
 /*
@@ -7218,7 +7281,7 @@ app.get("/sabr_playback", (req, res) => {
             if(sendTime - initTime >= 12000) {
                 let respTime = sendTime - initTime
                 console.log("slow response time for", req.query.pid, respTime)
-                res.set("x-yt2009-slow-response", true)
+                try{res.set("x-yt2009-slow-response", true)}catch(error){}
             }
         }
         if(!result) {
@@ -7801,6 +7864,15 @@ sabr -> FLV adapter register
 ======
 */
 yt2009_flvadapter.set(app)
+
+/*
+======
+playback tracking (pchelper html5)
+======
+*/
+app.get("/playback_progress_report", (req, res) => {
+    yt2009.progressReport(req, res)
+})
 
 /*
 pizdec

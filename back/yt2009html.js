@@ -151,6 +151,15 @@ let oldCommentsWrite = setInterval(function() {
     )
 }, 1000 * 60 * 60)
 let sups = []
+let statsUrlShorthands = {}
+function genStatShorthand() {
+    let x = ""
+    let chars = "qwertyuiopasdfghjklzxcvbnm".split("")
+    while(x.length !== 16) {
+        x += chars[Math.floor(Math.random() * chars.length)]
+    }
+    return x;
+}
 
 function handleUploadDate(data, req) {
     let uploadDate = data.upload
@@ -572,6 +581,22 @@ module.exports = {
                 // basic data
                 data.description = videoData.videoDetails.shortDescription
                 data.viewCount = videoData.videoDetails.viewCount
+                if(!data.viewCount) {
+                    // try pull from /next
+                    try {
+                        data.viewCount = videoData.contents
+                                         .twoColumnWatchNextResults
+                                         .results.results.contents[1]
+                                         .videoPrimaryInfoRenderer
+                                         .viewCount.videoViewCountRenderer
+                                         .viewCount.simpleText
+                        data.viewCount = yt2009utils.bareCount(data.viewCount)
+                                         .toString()
+                    }
+                    catch(error){
+                        data.viewCount = "0"
+                    }
+                }
                 data.author_name = videoData.videoDetails.author;
                 data.id = id;
                 data.author_url = ""
@@ -1261,8 +1286,10 @@ module.exports = {
         let sabrBaseUrl = ""
         let sabrExtraProperties = {}
         if(flags.includes("exp_sabr")
-        && req.query
-        && req.query.with_pchelper == 1) {
+        && (req.query
+        && req.query.with_pchelper == 1
+        || (req.headers.cookie
+        && req.headers.cookie.includes("with_pchelper_watch")))) {
             sabrExtraProperties.pchelperBindingReq = req;
         }
         if(data.isHfrResponse) {
@@ -3106,6 +3133,49 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             code = code.replace(`<!--yt2009_owned_video_panel-->`, ``)
         }
 
+        // playback tracking data
+        if(data.playbackTracking
+        && (req.query.with_pchelper == 1
+        || (req.headers.cookie
+        && req.headers.cookie.includes("with_pchelper_watch")))) {
+            let tracks = data.playbackTracking;
+            let playbackUrl = (
+                tracks
+             && tracks.videostatsPlaybackUrl
+             && tracks.videostatsPlaybackUrl.baseUrl
+            )
+            let watchtimeUrl = (
+                tracks
+             && tracks.videostatsWatchtimeUrl
+             && tracks.videostatsWatchtimeUrl.baseUrl
+            )
+            // generate cpn
+            const max = 4294967295;
+            let cpn = Buffer.alloc(12)
+            for (let i = 0; i < 3; i++) {
+                cpn.writeUint32LE(Math.floor(Math.random() * max), (i * 4))
+            }
+            cpn = yt2009utils.base64toUrl(cpn.toString("base64"))
+            playbackUrl += "&cpn=" + cpn
+            watchtimeUrl += "&cpn=" + cpn
+            // let know
+            let playbackShorthand = genStatShorthand()
+            while(statsUrlShorthands[playbackShorthand]) {
+                playbackShorthand = genStatShorthand()
+            }
+            let watchtimeShorthand = genStatShorthand()
+            while(statsUrlShorthands[watchtimeShorthand]) {
+                watchtimeShorthand = genStatShorthand()
+            }
+            statsUrlShorthands[playbackShorthand] = ["PLAYBACK", playbackUrl]
+            statsUrlShorthands[watchtimeShorthand] = ["WATCHTIME", watchtimeUrl]
+            code = code.replace(
+                `//yt2009-stats`,
+                `var playbackIdShorthand = "${playbackShorthand}";
+                var watchtimeIdShorthand = "${watchtimeShorthand}"`
+            )
+        }
+
         // sharing
         let shareBehaviorServices = constants.shareBehaviorServices
         
@@ -3791,7 +3861,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
         // channel banners
         let serversideBannerPull = true;
-        if(req.query.with_pchelper == 1
+        if((req.query.with_pchelper == 1
+        || (req.headers.cookie
+        && req.headers.cookie.includes("with_pchelper_watch")))
         || (req.query.exp_turbocharge == 1
         || flags.includes("exp_turbocharge"))) {
             serversideBannerPull = false;
@@ -4706,6 +4778,53 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         chartUrl.push("&chm=" + chm.join("|"))
         
         return chartUrl.join("");
+    },
+
+    "progressReport": function(req, res) {
+        if(!yt2009utils.isAuthorized(req)
+        || !yt2009mobilehelper.hasLogin(req)) {
+            res.sendStatus(401)
+            return;
+        }
+        if(!req.query.pid || !statsUrlShorthands[req.query.pid]) {
+            res.sendStatus(400)
+            return;
+        }
+        let url = statsUrlShorthands[req.query.pid]
+        switch(url[0]) {
+            case "PLAYBACK": {
+                // playback start
+                yt2009mobilehelper.requestStatsUrl(
+                    req,
+                    url[1]
+                    + [
+                        "&ver=2&cplatform=mobile",
+                        "&cbr=com.google.android.youtube",
+                        "&cff=SMALL_FORM_FACTOR&c=android"
+                    ].join("")
+                )
+                break;
+            }
+            case "WATCHTIME": {
+                // watchtime
+                let rt = req.query.st
+                let state = (req.query.state == "paused" ? "paused" : "playing")
+                let final = req.query.final == "1"
+                yt2009mobilehelper.requestStatsUrl(
+                    req,
+                    url[1]
+                    + [
+                        "&ver=2&cplatform=mobile",
+                        "&cbr=com.google.android.youtube&cff=SMALL_FORM_FACTOR",
+                        "&c=android&state=" + state + "&rt=" + rt,
+                        "&et=" + rt + "&st=" + rt
+                    ].join("")
+                    + (final ? "&final=1" : "")
+                )
+                break;
+            }
+        }
+        res.send("")
     }
 }
 

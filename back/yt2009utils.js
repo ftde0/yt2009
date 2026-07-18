@@ -24,6 +24,7 @@ let ratelimitData = {}
 let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
 const yt2009pot = require("./yt2009pot")
+const playerParams = "YAF4AQ"
 let fmodeCommunityPictureIds = {}
 let wyjebaData = {}
 let syncComments = {}
@@ -1625,7 +1626,7 @@ module.exports = {
         || yt2009exports.read().session_use_onesie) {
             this.wyjebaTypuOnesie(id, (data) => {
                 callback(data)
-            })
+            }, extraSettings)
             return;
         }
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
@@ -1666,26 +1667,10 @@ module.exports = {
             client.deviceModel = "Pixel 9"
             client.deviceCodename = "tegu"
         }
-        fetch(hostname + "/youtubei/v1/player?prettyPrint=false", {
-            "headers": rHeaders,
-            "referrer": "https://www.youtube.com/watch?v=" + id,
-            "referrerPolicy": "origin-when-cross-origin",
-            "body": JSON.stringify({
-                "context": {
-                    "client": client
-                },
-                "videoId": id,
-                "racyCheckOk": true,
-                "contentCheckOk": true,
-                "params": "YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D",
-                "serviceIntegrityDimensions": {
-                    "poToken": potBase64
-                }
-            }),
-            "method": "POST",
-            "mode": "cors",
-            "agent": this.createFetchAgent()
-        }).then(r => {r.json().then(r => {
+        let receivedPlayerResponse = false;
+        function processPlayerResponse(r) {
+            if(receivedPlayerResponse) return;
+            receivedPlayerResponse = true;
             try {
                 if(r.responseContext && r.responseContext.visitorData) {
                     let visitor = r.responseContext.visitorData
@@ -1694,8 +1679,12 @@ module.exports = {
                     if(!yt2009exports.read().potgenTemporarilyTakenover
                     && !yt2009signin.needed()) {
                         yt2009pot.generatePo(visitor, (data) => {
-                            yt2009exports.writeData("potBytes", data.encryptData)
-                            yt2009exports.writeData("potKey", data.backup)
+                            yt2009exports.writeData(
+                                "potBytes", data.encryptData
+                            )
+                            yt2009exports.writeData(
+                                "potKey", data.backup
+                            )
                         }, true)
                     }
                 }
@@ -1725,7 +1714,39 @@ module.exports = {
             }
             catch(error) {console.log(error)}
             callback(r);
-        })})
+        }
+        let createFetchAgent = this.createFetchAgent
+        function requestPlayer() {
+            fetch(hostname + "/youtubei/v1/player?prettyPrint=false", {
+                "headers": rHeaders,
+                "referrer": "https://www.youtube.com/watch?v=" + id,
+                "referrerPolicy": "origin-when-cross-origin",
+                "body": JSON.stringify({
+                    "context": {
+                        "client": client
+                    },
+                    "videoId": id,
+                    "racyCheckOk": true,
+                    "contentCheckOk": true,
+                    "params": playerParams,
+                    "serviceIntegrityDimensions": {
+                        "poToken": potBase64
+                    }
+                }),
+                "method": "POST",
+                "mode": "cors",
+                "agent": createFetchAgent()
+            }).then(r => {r.json().then(r => {
+                processPlayerResponse(r)
+            })})
+        }
+        requestPlayer();
+        setTimeout(() => {
+            if(!receivedPlayerResponse) {
+                devlog("exceeding /player time, retrying")
+                requestPlayer();
+            }
+        }, 500)
     },
 
     "downloadInParts_file": function(url, out, callback, metadata) {
@@ -2362,7 +2383,7 @@ module.exports = {
         root.setVideoid(id)
         root.setRacycheckok(1)
         root.setContentcheckok(1)
-        root.setPps("YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D")
+        root.setPps(playerParams)
         let context = new p.root.contextType()
         let client = new p.root.contextType.clientType()
         client.setDevicemake("Google")
@@ -3086,7 +3107,7 @@ module.exports = {
         }
     },
 
-    "wyjebaTypuOnesie": function(id, callback) {
+    "wyjebaTypuOnesie": function(id, callback, extraSettings) {
         if(!wyjebaData.initialonesieurl
         || !wyjebaData.clientKey
         || !wyjebaData.expire
@@ -3103,7 +3124,12 @@ module.exports = {
             id.split("-").join("+").split("_").join("/"), "base64"
         ).toString("hex")
 
+        let slowRetried = false;
+        let gotResponse = false;
+        let sentCallback = false;
+
         function readyToPull() {
+            if(slowRetried) return;
             // called when we have a ready body and have a ready url
             fetch(fullUrl, {
                 "headers": {
@@ -3115,37 +3141,46 @@ module.exports = {
                 "method": "POST",
                 "body": requestBody
             }).then(r => {r.buffer().then(r => {
+                gotResponse = true;
                 yt2009exports.read().umpParseFun(r, (data) => {
-                    data.forEach(p => {
-                        try {
-                            p = proto.part11Resp.deserializeBinary(p)
-                                     .toObject();
-                            let r = Buffer.from(p.body, "base64").toString()
-                            if(r.includes("responseContext")) {
-                                try {
-                                    let a = JSON.parse(r)
-                                    if(a.responseContext && a.responseContext.visitorData) {
-                                        let visitor = a.responseContext.visitorData
-                                        devlog("received upgraded ANDROID visitor: " + visitor)
-                                        yt2009exports.writeData("visitor", visitor)
-                                        if(!yt2009exports.read().potgenTemporarilyTakenover
-                                        && !yt2009signin.needed()) {
-                                            yt2009pot.generatePo(visitor, (data) => {
-                                                yt2009exports.writeData("potBytes", data.encryptData)
-                                                yt2009exports.writeData("potKey", data.backup)
-                                            }, true)
-                                        }
-                                    }
+                    data.forEach(p => {try {
+                        p = proto.part11Resp.deserializeBinary(p)
+                                 .toObject();
+                        let r = Buffer.from(p.body, "base64").toString()
+                        if(r.includes("responseContext")) {try {
+                            let a = JSON.parse(r)
+                            if(a.responseContext
+                            && a.responseContext.visitorData) {
+                                let visitor = a.responseContext.visitorData
+                                devlog("received upgraded ANDROID visitor: " + visitor)
+                                yt2009exports.writeData("visitor", visitor)
+                                if(!yt2009exports.read().potgenTemporarilyTakenover
+                                && !yt2009signin.needed()) {
+                                    yt2009pot.generatePo(visitor, (data) => {
+                                        yt2009exports.writeData("potBytes", data.encryptData)
+                                        yt2009exports.writeData("potKey", data.backup)
+                                    }, true)
                                 }
-                                catch(error){}
+                            }
+                            }catch(error){};
+                            if(!sentCallback) {
                                 callback(JSON.parse(r))
+                                sentCallback = true;
                             }
                         }
-                        catch(error){}
-                    })
+                    }
+                    catch(error){}})
                 }, false, {"parseAsOnesieWyjebka": true})
             })})
         }
+
+        setTimeout(() => {
+            if(!gotResponse && !slowRetried) {
+                devlog("onesie request too slow, resending")
+                readyToPull();
+                slowRetried = true;
+            }
+        }, 500)
 
         serverBase = wyjebaData.initialonesieurl.split("/initplayback")[0]
         fullUrl = serverBase + wyjebaData.appendUrl
@@ -3208,23 +3243,29 @@ module.exports = {
                               .split("/").join("_")
                               .split("=").join("");
         }
+        let client = {
+            "hl": "en",
+            "clientName": "ANDROID",
+            "clientVersion": "21.16",
+            "deviceMake": "Google",
+            "deviceModel": "Android SDK built for x86",
+            "deviceCodename": "ranchu;",
+            "osName": "Android",
+            "osVersion": "14"
+        }
+        if(extraSettings && extraSettings.highEndDevice) {
+            client.deviceMake = "Google"
+            client.deviceModel = "Pixel 9"
+            client.deviceCodename = "tegu"
+        }
         player.setRequestbody(JSON.stringify({
             "context": {
-                "client": {
-                    "hl": "en",
-                    "clientName": "ANDROID",
-                    "clientVersion": "21.16",
-                    "deviceMake": "Google",
-                    "deviceModel": "Android SDK built for x86",
-                    "deviceCodename": "ranchu;",
-                    "osName": "Android",
-                    "osVersion": "14"
-                }
+                "client": client
             },
             "videoId": id,
             "contentCheckOk": true,
             "racyCheckOk": true,
-            "params": "YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D",
+            "params": playerParams,
             "serviceIntegrityDimensions": {
                 "poToken": potBase64
             }

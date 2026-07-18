@@ -62,6 +62,7 @@ let genericDg = fs.readFileSync("../mobile/mobilehelper/generic_dg.txt").toStrin
 let userdata = {"ikmc": 1,"ikmc2":1}
 let initedSessions = []
 let pchelperWlCaching = {}
+let datasyncIdCaching = {}
 if(fs.existsSync(userdata_fname)) {
     try {
         userdata = JSON.parse(fs.readFileSync(userdata_fname).toString())
@@ -334,6 +335,10 @@ module.exports = {
             } else {
                 userdata[device].isFirst = false;
             }
+            if(datasyncIdCaching[device]) {
+                datasyncIdCaching[device] = null;
+                delete datasyncIdCaching[device];
+            }
             fs.writeFileSync(userdata_fname, JSON.stringify(userdata))
 
             res.send("")
@@ -423,6 +428,20 @@ module.exports = {
             } else {
                 res.status(400).send(linkMessages.nohelper)
             }
+        })
+
+        app.get("/pchelper_get_clear_history_token", (req, res) => {
+            this.getWatchHistoryClearToken(req, (token) => {
+                if(!token) {
+                    res.sendStatus(500)
+                    return;
+                }
+                res.send(token)
+            })
+        })
+
+        app.post("/pchelper_history_remove", (req, res) => {
+            this.removeFromHistory(req, res)
         })
     },
 
@@ -1034,8 +1053,6 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                         let id = v.split(`<yt:videoid id='`)[1].split("'")[0]
                         vs.push(id)
                     })
-
-                    console.log(vs, v)
 
                     if(!vs.includes(v)) {
                         // not in favorites
@@ -1841,10 +1858,24 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             callback(false)
             return;
         }
+        const EXP_GET_WATCH = false;
+        const GET_WATCH_URL = hostname + "/youtubei/v1/get_watch?prettyPrint=false"
+        const PLAYER_URL = hostname + "/youtubei/v1/player?prettyPrint=false"
+        const PP = "YAE"
+        //"YAF4AQ"//YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D
+        //console.log("use pchelper")
+        let callbackSent = false;
+        let resentRequestSlow = false;
 		let pot = null;
 		let waitForPot = false;
         let potBytes = null;
         let potKey = null;
+        let context = androidContext;
+        if(req.highEndDevice) {
+            context.client.deviceMake = "Google"
+            context.client.deviceModel = "Pixel 9"
+            context.client.deviceCodename = "tegu"
+        }
 		if(req.usePot) {
 			waitForPot = true;
 			this.openDatasyncId(req, (datasync) => {
@@ -1869,22 +1900,69 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 		}
 		function doRequest() {
 			setupYouTube(device, (h) => {
-				fetch(hostname + "/youtubei/v1/player", {
+                if(EXP_GET_WATCH) {
+                    fetch(GET_WATCH_URL, {
+                        "headers": h,
+                        "method": "POST",
+                        "body": JSON.stringify({
+                            "context": context,
+                            "playerRequest": {
+                                "videoId": req.query.video_id.substring(0,11),
+                                "serviceIntegrityDimensions": {
+                                    "poToken": pot
+                                },
+                                "params": PP,
+                                "racyCheckOk": true,
+                                "contentCheckOk": true
+                            }
+                        }),
+                        "agent": utils.createFetchAgent()
+                    }).then(r => {r.json().then(r => {
+                        if(callbackSent) return;
+                        r = r.filter(s => {
+                            return s && s.playerResponse
+                        })[0].playerResponse
+                        if(req.callbackPot) {
+                            callback([r, potBytes, potKey])
+                        } else {
+                            callback(r)
+                        }
+                        callbackSent = true;
+                    })})
+                    return;
+                }
+				fetch(PLAYER_URL, {
 					"headers": h,
 					"method": "POST",
 					"body": JSON.stringify({
-						"context": androidContext,
+						"context": context,
 						"videoId": req.query.video_id.substring(0,11),
-						"serviceIntegrityDimensions": pot
+						"serviceIntegrityDimensions": {
+                            "poToken": pot
+                        },
+                        "params": PP,
+                        "racyCheckOk": true,
+                        "contentCheckOk": true
 					}),
 					"agent": utils.createFetchAgent()
 				}).then(r => {r.json().then(r => {
+                    if(callbackSent) return;
                     if(req.callbackPot) {
                         callback([r, potBytes, potKey])
                     } else {
                         callback(r)
                     }
+                    callbackSent = true;
 				})})
+                setTimeout(() => {
+                    if(!callbackSent && !resentRequestSlow) {
+                        resentRequestSlow = true;
+                        if(config.env == "dev") {
+                            console.log("mh /player too slow, resending")
+                        }
+                        doRequest();
+                    }
+                }, 500)
 			})
 		}
 		if(!waitForPot) {doRequest()}
@@ -3376,6 +3454,12 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                     return;
                 }
                 try {
+                    if(!r.contents && config.dev_report_mh_fail_notif) {
+                        fs.writeFileSync(
+                            "../media/dev_mobilehelper_fail_n" + Date.now(),
+                            JSON.stringify(r)
+                        )
+                    }
                     r = r.contents.singleColumnBrowseResultsRenderer.tabs[0]
                         .tabRenderer.content.sectionListRenderer.contents
                     r = r.filter(s => {
@@ -3948,15 +4032,26 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             callback(false)
             return;
         }
-		pullAllYouTubeAccounts(userdata[device], (data) => {
-			let datasyncId = false;
-			data.forEach(a => {
-                if(a.selected) {
-                    datasyncId = a.datasyncId
-                }
+        if(datasyncIdCaching[device] && !req.noCache) {
+            callback(datasyncIdCaching[device])
+            return;
+        }
+		refreshTube(device, () => {
+            pullAllYouTubeAccounts(userdata[device], (data) => {
+                let datasyncId = false;
+                data.forEach(a => {
+                    if(a.selected) {
+                        datasyncId = a.datasyncId
+                    }
+                })
+                datasyncIdCaching[device] = datasyncId
+                setTimeout(() => {
+                    datasyncIdCaching[device] = null;
+                    delete datasyncIdCaching[device]
+                }, 1000 * 60 * 3)
+                callback(datasyncId)
             })
-            callback(datasyncId)
-		})
+        })
 	},
 
     "openRequestTest": function(req, callbac) {
@@ -4079,6 +4174,260 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 callback({"r": true, "c": content, "i": commentId})
             })})
         }, req)
+    },
+
+    "getMessagingInviteLink": function(req, callback) {
+        // broken: waiting for yt to fix this feature
+
+        let device = pullDeviceId(req);
+        if(!userdata[device]) {
+            res.sendStatus(400)
+            return;
+        }
+
+        let root = new customizableRequest.root()
+        let context = new customizableRequest.root.contextType()
+        let client = new customizableRequest.root.contextType.clientType()
+        client.setClientnumber(3)
+        client.setClientversion("21.16")
+        client.setD(1)
+        context.addClient(client)
+        root.addContext(context)
+        root.setBrowseid("igICCAE%3D")
+        let pbmsg = Buffer.from(root.serializeBinary())
+
+        setupYouTube(device, (h) => {
+            h["Content-Type"] = "application/x-protobuf"
+            h["x-goog-api-format-version"] = "2"
+            fetch(hostname+"/youtubei/v1/share/get_share_panel", {
+                "method": "POST",
+                "headers": h,
+                "body": pbmsg
+            }).then(r => {r.json().then(r => {
+                try {
+                    let s = r.contents.unifiedSharePanelRenderer.contents[0]
+                             .thirdPartyNetworkSection.shareTargets[0]
+                             .shareTargetServiceUpdateRenderer.serviceEndpoint
+                             .sendShareExternallyEndpoint
+                             .sendShareResponseNoConversation.navigationEndpoint
+                             .copyTextEndpoint.text
+                    if(s.includes("/sharing/invite/")) {
+                        callback(
+                            "https://youtube.com/sharing/invite/" +
+                            s.split("sharing/invite/")[1]
+                        )
+                    }
+                }
+                catch(error) {
+                    let s = JSON.stringify(r)
+                    if(s.includes("/sharing/invite/")) {
+                        callback(
+                            "https://youtube.com/sharing/invite/" +
+                            s.split("sharing/invite/")[1]
+                             .split("\"")[0].split("'")[0]
+                        )
+                    } else {
+                        callback(false)
+                    }
+                }
+            })})
+        }, req)
+    },
+
+    "requestStatsUrl": function(req, url) {
+        let device = pullDeviceId(req);
+        if(!userdata[device] || !url || !url.includes("api/stats/")) {
+            return;
+        }
+
+        setupYouTube(device, (h) => {
+            this.openDatasyncId(req, (datasyncId) => {
+                h["x-goog-datasync-id"] = datasyncId
+                h["x-goog-request-time"] = Date.now()
+                h["x-goog-event-time"] = req.query.rt || Date.now()
+                fetch(url, {
+                    "method": "POST",
+                    "headers": h,
+                    "body": null
+                }).then(r => {})
+            })
+        }, req)
+    },
+
+    "requestWatchHistory": function(req, callback) {
+        let device = pullDeviceId(req)
+        if(!userdata[device]) {
+            res.sendStatus(400);
+            return;
+        }
+        let continuation = new browseNavigation.root()
+        let navi = new browseNavigation.root.browseNavigation()
+        navi.setBrowseid("FEhistory")
+        continuation.setMsg(navi)
+        continuation = utils.base64toUrl(
+            Buffer.from(continuation.serializeBinary()).toString("base64")
+        )
+        if(req.query.continuation) {
+            continuation = req.query.continuation
+        }
+        setupYouTube(device, (h) => {
+            fetch(hostname + "/youtubei/v1/browse?fields=continuationContents", {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "continuation": continuation
+                })
+            }).then(r => {r.json().then(r => {
+                if(req.raw) {
+                    callback(r)
+                    return;
+                }
+                try {
+                    let videos = []
+                    let conts = r.continuationContents
+                                 .sectionListContinuation
+                                 .continuations
+                    r = r.continuationContents.sectionListContinuation.contents
+                    r.forEach(section => {
+                        if(section.itemSectionRenderer
+                        && section.itemSectionRenderer.contents) {
+                            section = section.itemSectionRenderer.contents
+                        }
+                        if(section.forEach) {
+                        section.forEach(v => {if(v.compactVideoRenderer) {
+                                v = v.compactVideoRenderer
+                                let id = v.videoId;
+                                let views = "";
+                                if(v.viewCountText && v.viewCountText.runs) {
+                                    views = v.viewCountText.runs[0].text
+                                }
+                                if(views) {
+                                    try {
+                                        if(views.toLowerCase().includes("no ")) {
+                                            views = 0;
+                                        }
+                                    }
+                                    catch(error){}
+                                }
+                                let title = false;
+                                if(v.title && v.title.runs) {
+                                    title = v.title.runs[0].text
+                                }
+                                let removeToken = false;
+                                try {
+                                    let rm = v.menu.menuRenderer.items.filter(s => {
+                                        return (
+                                            s
+                                         && s.menuServiceItemRenderer
+                                         && s.menuServiceItemRenderer.icon
+                                         && s.menuServiceItemRenderer
+                                             .icon.iconType == "REMOVE"
+                                        )
+                                    })[0].menuServiceItemRenderer
+                                    removeToken = rm.serviceEndpoint
+                                                    .feedbackEndpoint
+                                                    .feedbackToken
+                                }
+                                catch(error){}
+                                videos.push({
+                                    "type": "video",
+                                    "id": id,
+                                    "views": views ? views.split(" ")[0] : "",
+                                    "title": title,
+                                    "removeToken": removeToken
+                                })
+                            }
+                        })}
+                    })
+                    let continuation = ""
+                    if(conts && conts.forEach) {
+                        conts.forEach(c => {
+                            if(c.nextContinuationData
+                            && c.nextContinuationData.continuation) {
+                                continuation = c.nextContinuationData
+                                                .continuation
+                            }
+                        })
+                    }
+                    if(continuation) {
+                        videos.push({
+                            "type": "continuation",
+                            "token": continuation
+                        })
+                    }
+                    callback(videos)
+                }
+                catch(error) {callback(false)}
+            })})
+        })
+    },
+
+    "removeFromHistory": function(req, res) {
+        let device = pullDeviceId(req)
+        if(!userdata[device] || !utils.isAuthorized(req)) {
+            res.sendStatus(401);
+            return;
+        }
+        if(!req.body
+        || !req.body.toString) {
+            res.sendStatus(400)
+            return;
+        }
+        let feedbackTokens = req.body.toString().split(",")
+        setupYouTube(device, (h) => {
+            fetch(hostname + "/youtubei/v1/feedback?prettyPrint=false", {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "feedbackTokens": feedbackTokens
+                })
+            }).then(r => {
+                res.sendStatus(r.status)
+            })
+        })
+    },
+
+    "getWatchHistoryClearToken": function(req, callback) {
+        let device = pullDeviceId(req)
+        if(!userdata[device] || !utils.isAuthorized(req)) {
+            callback(false);
+            return;
+        }
+        setupYouTube(device, (h) => {
+            fetch(hostname + "/youtubei/v1/browse?fields=toolbarMenu", {
+                "method": "POST",
+                "headers": h,
+                "body": JSON.stringify({
+                    "context": androidContext,
+                    "browseId": "FEhistory"
+                })
+            }).then(r => {r.json().then(r => {
+                if(req.query.format == "raw") {
+                    callback(r)
+                    return;
+                }
+                try {
+                    let i = r.toolbarMenu.menuRenderer.items.filter(s => {
+                        return s
+                            && s.menuNavigationItemRenderer
+                            && s.menuNavigationItemRenderer.icon
+                            && s.menuNavigationItemRenderer.icon.iconType
+                               == "DELETE"
+                    })[0]
+                    if(!i) {
+                        callback(false)
+                        return;
+                    }
+                    i = i.menuNavigationItemRenderer.navigationEndpoint
+                         .confirmDialogEndpoint.content.confirmDialogRenderer
+                         .confirmEndpoint.feedbackEndpoint.feedbackToken;
+                    callback(i)
+                }
+                catch(error) {callback(false)}
+            })})
+        })
     }
 }
 
