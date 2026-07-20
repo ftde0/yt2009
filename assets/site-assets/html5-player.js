@@ -3958,7 +3958,7 @@ those can be changed at any time:<br>\
             }
             wf += "exp_sabr:"
             if(addModern) {
-                wf += "watch_modern_features:"
+                wf += "watch_modern_features:exp_turbocharge:"
             }
             document.cookie = " watch_flags=" + wf + "; " 
                               + "Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT; "

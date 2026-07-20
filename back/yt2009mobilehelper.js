@@ -1,4 +1,5 @@
 const fs = require("fs")
+const https = require("https")
 const config = require("./config.json")
 const templates = require("./yt2009templates")
 const fetch = require("node-fetch")
@@ -18,9 +19,10 @@ const creatorRequestSpecifics = require("./proto/creator_request_pb")
 const commentActions = require("./proto/comment_action_pb")
 const yt2009pot = require("./yt2009pot")
 const playerRequestProto = require("./proto/android_player_request_pb")
+const yt2009exports = require("./yt2009exports")
 let yt2009sabr;
 setTimeout(() => {
-    yt2009sabr = require("./yt2009exports").read().sabrMirror
+    yt2009sabr = yt2009exports.read().sabrMirror
 }, 100)
 const androidHeaders = {
     "Accept": "*/*",
@@ -1876,6 +1878,10 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
             context.client.deviceModel = "Pixel 9"
             context.client.deviceCodename = "tegu"
         }
+        function processPlayerResponse(r) {
+            r = utils.markOriginalAudioFormats(r)
+            return r;
+        }
 		if(req.usePot) {
 			waitForPot = true;
 			this.openDatasyncId(req, (datasync) => {
@@ -1922,6 +1928,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                         r = r.filter(s => {
                             return s && s.playerResponse
                         })[0].playerResponse
+                        r = processPlayerResponse(r)
                         if(req.callbackPot) {
                             callback([r, potBytes, potKey])
                         } else {
@@ -1947,6 +1954,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
 					"agent": utils.createFetchAgent()
 				}).then(r => {r.json().then(r => {
                     if(callbackSent) return;
+                    r = processPlayerResponse(r)
                     if(req.callbackPot) {
                         callback([r, potBytes, potKey])
                     } else {
@@ -4245,6 +4253,18 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 h["x-goog-datasync-id"] = datasyncId
                 h["x-goog-request-time"] = Date.now()
                 h["x-goog-event-time"] = req.query.rt || Date.now()
+                if(yt2009exports.read().youtubeIp) {
+                    h["host"] = "www.youtube.com"
+                    let req = https.request({
+                        "host": yt2009exports.read().youtubeIp,
+                        "port": 443,
+                        "servername": "www.youtube.com",
+                        "headers": h,
+                        "path": "/" + url.split("youtube.com/")[1]
+                    }, (res) => {});
+                    req.end();
+                    return;
+                }
                 fetch(url, {
                     "method": "POST",
                     "headers": h,

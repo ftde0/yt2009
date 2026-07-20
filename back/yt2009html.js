@@ -824,6 +824,10 @@ module.exports = {
                         let viewCount = metadataParts.filter(s => {
                             return s.includes(" views")
                         })[0]
+                        if(!viewCount && metadataParts[1]
+                        && yt2009utils.approxSubcount(metadataParts[1])) {
+                            viewCount = metadataParts[1]
+                        }
                         if(viewCount) {
                             viewCount = yt2009utils.approxSubcount(
                                 viewCount.split(" ")[0]
@@ -2139,7 +2143,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let uploadDate = handleUploadDate(data, req)
 
         let channelIcon = data.author_img;
-        if(flags.includes("default_avataradapt")) {
+        if(flags.includes("default_avataradapt")
+        && fs.existsSync(".." + channelIcon)) {
             if(yt2009defaultavatarcache.use(`../${channelIcon}`)) {
                 channelIcon = "/assets/site-assets/default.png"
             }
@@ -2155,9 +2160,13 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         function setChannelIcon() {
             if(channelIcon.startsWith("/assets/")
             && !fs.existsSync(".." + channelIcon)) {
+                let avatarUrl = "/avatar_wait?av=" + channelIcon
+                if(flags.includes("default_avataradapt")) {
+                    avatarUrl += "&defaultadapt=1"
+                }
                 code = code.replace(
                     "channel_icon",
-                    "/avatar_wait?av=" + channelIcon
+                    avatarUrl
                 )
             }
             code = code.replace("channel_icon", channelIcon)
@@ -4871,9 +4880,10 @@ const validationKeys = {
     "altData": 0x5a,
     "alt2Data": 0xa,
     "alt4Data": [
-        101,99,54,52,55,50,56,48,49,102,52,54,99,54,
-        52,52,48,100,97,49,97,55,56,54,56,50,55,56,
-        53,51,99,50,55,101,53,51,57,53,101,100
+        50,97,55,52,53,101,101,56,51,56,
+        97,48,52,52,99,57,52,51,56,98,
+        49,97,49,57,53,48,57,56,53,53,
+        53,99,50,101,51,48,98,52,50,102
     ],
     "nameKeys": [
         "90591020308095113033",

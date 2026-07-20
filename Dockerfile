@@ -1,5 +1,5 @@
-FROM node:lts-alpine3.20
-RUN apk add --no-cache imagemagick cabextract && \
+FROM node:lts-alpine3.24
+RUN apk add --no-cache imagemagick cabextract git && \
     wget -P /tmp/ https://www.freedesktop.org/software/fontconfig/webfonts/webfonts.tar.gz && \
     tar -xzf /tmp/webfonts.tar.gz -C /tmp && \
     cabextract /tmp/msfonts/arial32.exe -d /tmp && \

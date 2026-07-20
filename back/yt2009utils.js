@@ -1333,7 +1333,12 @@ module.exports = {
 
             if(sabrEnforced
             && quality
-            && quality !== "360p") {
+            && (quality !== "360p"
+            || (quality == "360p"
+            && !(r.streamingData
+            && r.streamingData.formats
+            && r.streamingData.formats[0]
+            && r.streamingData.formats[0].url)))) {
                 if(config.env == "dev") {
                     console.log(`[${id}] sabr enforced! using sabr downloader`)
                 }
@@ -3462,6 +3467,51 @@ module.exports = {
         return {
             "videos": videoFilters, "channels": videoChannelFilters
         }
+    },
+
+    "markOriginalAudioFormats": function(r) {
+        if(!r
+        || !r.streamingData
+        || !r.streamingData.adaptiveFormats) return r;
+        let checkedFmts = r.streamingData.adaptiveFormats.map(s => {
+            if(s.itag == 140 || s.itag == 139) {
+                if(s.audioTrack) {
+                    s.audioTrack.vss_id = s.audioTrack.id;
+                    s.audioTrack.label = s.audioTrack.displayName;
+                }
+                if(s.xtags && s.audioTrack) {
+                    let decode = playerResponsePb.xtags
+                                 .deserializeBinary(s.xtags)
+                                 .toObject()
+                    let isOg = decode.partList.filter(z => {
+                        return z.value == "original"
+                    })[0]
+                    if(isOg) {
+                        s.isOriginal = true;
+                    }
+                }
+                return s;
+            } else {
+                return s;
+            }
+        })
+        r.streamingData.adaptiveFormats = checkedFmts
+        return r;
+    },
+
+    "initYtDNS": function() {
+        fetch("https://cloudflare-dns.com/dns-query?name=www.youtube.com", {
+            "headers": {
+                "accept": "application/dns-json",
+                "user-agent": "yt2009+https://github.com/ftde0/yt2009"
+            }
+        }).then(r => {r.json().then(r => {
+            if(!r || !r.Answer || r.Answer.length == 0) {
+                devlog("youtube.com dns query returned no results(!?)")
+                return;
+            }
+            yt2009exports.writeData("youtubeIp", r.Answer[0].data)
+        })})
     }
 }
 

@@ -26,7 +26,7 @@ module.exports = function(file_path) {
         + ` | sort ${(
             process.platform == "linux"
             || process.platform == "darwin"
-        ) ? "-n" : ""}`
+        ) ? "-n" : ""}`, {"stdio": "pipe"}
     ).toString()
     let split_output = stdout.split("\n")[0];
     try {

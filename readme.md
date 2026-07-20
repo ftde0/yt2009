@@ -19,6 +19,12 @@ for $5/month, you can also join this list! --> https://github.com/sponsors/ftde0
 ### if you prefer using docker rather than installing directly, go [here](docker.md) for setup instructions instead
 ### if hosting on windows xp, follow [xp specific instructions](windowsxp.md) instead.
 
+**[!] ZIP downloads may work but you will have problems updating in the future.**
+
+**sooner or later, you will need to update because of constant youtube-side breakages.**
+
+**for this reason, using [git](https://git-scm.com/) is heavily recommended.**
+
 - **make sure you have [imagemagick](https://imagemagick.org/) and [ffmpeg](https://ffmpeg.org/) in your PATH.**
 
 - install node.js (git is heavily recommeded as well)
@@ -86,6 +92,10 @@ you can make a copy of your modified file and reapply the mod after the pull is 
 
 ---
 
+## putting yt2009 over www.youtube.com
+
+if you wish to use yt2009 on www.youtube.com instead of over the IP address, follow the [hostsfile.md](hostsfile.md) file.
+
 ## usage
 
 now that you're in, you can just use it as it is, but there is a bit more you can do.
@@ -120,3 +130,4 @@ over time some tools and documentation was written about yt2009. for an easy ref
 - [docker.md](docker.md) - yt2009 setup with docker. also listed in the setup section. (thanks, breakgimme!)
 - [flash_additions.md](flash_additions.md) - some info on caption and annotations modules within the default 2009 flash player.
 - [flash_player_setup.md](flash_player_setup.md) - manual info for preparing vanilla flash players for use with yt2009.
+- [hostsfile.md](hostsfile.md) - a guide on using yt2009 at www.youtube.com

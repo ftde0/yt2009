@@ -4,6 +4,8 @@ const parser = require("node-html-parser")
 const fs = require("fs")
 const templates = require("./yt2009templates")
 const utils = require("./yt2009utils")
+const ytexports = require("./yt2009exports")
+const https = require("https")
 
 module.exports = {
     "main": function(req, res) {
@@ -79,6 +81,43 @@ module.exports = {
             <text start="0" dur="0.1"> </text>
             </transcript>`
         ]
+        function makeRequest(url, fcallback) {
+            if(ytexports.read().youtubeIp) {
+                let req = https.request({
+                    "host": ytexports.read().youtubeIp,
+                    "port": 443,
+                    "servername": "www.youtube.com",
+                    "headers": {
+                        "host": "www.youtube.com"
+                    },
+                    "path": "/" + url.split("youtube.com/")[1]
+                }, (res) => {
+                    res.on("error", (e) => {
+                        getFile(true)
+                        retryCount++
+                        return;
+                    })
+                    let data = Buffer.from("")
+                    res.on("data", (d) => {
+                        data = Buffer.concat([data, d])
+                    });
+                    res.on("end", () => {
+                        fcallback(data.toString())
+                    })
+                });
+                req.end();
+            } else {
+                fetch(data[langName].url)
+                .catch(error => {
+                    console.log("1", error)
+                    retryCount++;
+                    getFile(true)
+                })
+                .then(r => {r.text().then(r => {
+                    readResponse(r, fcallback)
+                })})
+            }
+        }
         id = id.split("/mp4")[0]
         let getLanguages = this.getLanguages;
         let retryCount = 0;
@@ -93,42 +132,31 @@ module.exports = {
                 callback(fs.readFileSync(fName).toString())
             } else {
                 // doesn't exist, get the url and download
-                getLanguages(id, (data) => {
-                    for(let langName in data) {
-                        if(langName == language) {
-                            try {
-                                fetch(data[langName].url)
-                                .catch(error => {
-                                    console.log("1", error)
-                                    retryCount++;
+                getLanguages(id, (data) => {for(let langName in data) {
+                    if(langName == language) {try {
+                        makeRequest(data[langName].url, (r) => {
+                            if(r.includes(defaults[0])) {
+                                if(retryCount < 2) {
+                                    retryCount++
                                     getFile(true)
-                                })
-                                .then(r => {r.text().then(r => {
-                                    if(r.includes(defaults[0])) {
-                                        if(retryCount < 2) {
-                                            retryCount++
-                                            getFile(true)
-                                            return;
-                                        }
-                                        r = defaults[1]
-                                    }
-
-                                    if(data[langName].url.includes("kind=asr")) {
-                                        r = fixupAutoCaptions(r)
-                                    }
-
-                                    callback(r)
-                                    fs.writeFileSync(fName, r)
-                                })})
+                                    return;
+                                }
+                                r = defaults[1]
                             }
-                            catch(error) {
-                                retryCount++;
-                                getFile(true);
-                                console.log("2", error)
+
+                            if(data[langName].url.includes("kind=asr")) {
+                                r = fixupAutoCaptions(r)
                             }
-                        }
-                    }
-                }, resetCache)
+
+                            callback(r)
+                            fs.writeFileSync(fName, r)
+                        })
+                    }catch(error) {
+                        retryCount++;
+                        getFile(true);
+                        console.log("2", error)
+                    }}
+                }}, resetCache)
             }
         }
         

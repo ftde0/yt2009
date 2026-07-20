@@ -1410,9 +1410,9 @@ module.exports = {
         // channel avatar
         let channelAvatar = data.avatar
         if(flags.includes("default_avataradapt")) {
-            if(yt2009defaultavatarcache.use(`../${data.avatar}`)) {
-                channelAvatar = "/assets/site-assets/default.png"
-            }
+            channelAvatar = "/avatar_wait?av="
+                            + data.avatar
+                            + "&defaultadapt=1"
         } else if(
             flags.includes("default_avatar")
         && !flags.includes("default_avataradapt")

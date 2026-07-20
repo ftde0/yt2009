@@ -1945,7 +1945,7 @@ ${ap == 2 ? avatarCode : ""}
                         </div>
                     </div>
                     <div style="float: left; width: 124px;">
-                        <a href="/watch?v=${video.id}" class="video-thumb"><img src="${thumbUrl}"/></a>
+                        <a href="/watch?v=${video.id}" class="video-thumb"><img src="${thumbUrl}"${removeToken ? ` loading="lazy"` : ""}/></a>
                         <a href="/watch?v=${video.id}" class="title" style="display: block; color: #03c;">${video.title}</a>
                         <div class="video-stats">
                             <div class="video-stat"><span class="stat-views">lang_userpage_views_prefix${video.views}</span></div>
