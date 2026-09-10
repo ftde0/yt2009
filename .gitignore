@@ -12,6 +12,7 @@ assets/*.wmv
 assets/*.avi
 assets/sbt-*
 assets/charts_temp/
+assets/iphone-hls/
 assets/user-uploads-tmp/
 back/cache_dir/annotations/*
 back/cache_dir/*.json

@@ -1,3 +1,4 @@
+const yt2009IphoneHls = require("./yt2009iphonehls")
 const express = require("express");
 const yt2009 = require("./yt2009html");
 const yt2009_embed = require("./yt2009embed")
@@ -7873,6 +7874,7 @@ sabr -> HLS adapter register
 ======
 */
 yt2009_hlsadapter.register(app)
+yt2009IphoneHls.register(app)
 
 /*
 ======

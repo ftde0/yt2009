@@ -1339,7 +1339,19 @@ module.exports = {
         }
 
         // useragent
-        let userAgent = req.headers["user-agent"]
+        // useragent
+        let userAgent = req.headers["user-agent"] || ""
+
+        // Use native HLS on iPhone and iPod Safari.
+        let useIphoneHls =
+            userAgent.includes("iPhone") ||
+            userAgent.includes("iPod")
+
+        if(useIphoneHls) {
+            // Never send Flash or yt2009 SABR to the old iPhone.
+            useFlash = false
+            useSabr = false
+        }
 
         // quality list
         let showHQ = false;
@@ -2307,26 +2319,77 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
         if(!useFlash && !data.live && !useSabr) {
-            let tcData = ""
-            if(config.trusted_context) {
-                tcData = "&" + yt2009trusted.generateContext(
-                    data.id, "PLAYBACK_STD", (data.length >= 60 * 30)
-                )
-            }
-            code = code.replace(
-                "mp4_files", 
-                `<source src="${autoHQ || "/get_video?video_id=" + data.id + "/mp4" + tcData}" type="video/mp4"></source>
-                <source src="${data.mp4}.ogg" type="video/ogg"></source>`
-            )
-            if(data.pMp4) {
+            if(useIphoneHls) {
+                let iphoneHlsUrl =
+                    `/iphone-hls/${data.id}/index.m3u8`
+
+                // Replace the complete video element with a direct HLS link.
                 code = code.replace(
-                    "//yt2009-pmp4",
-                    "showLoadingSprite()"
+                    /<video class="html5_video" preload="auto">[\s\S]*?<\/video>/,
+                    `<a href="${iphoneHlsUrl}"
+                        style="
+                            display:block;
+                            position:relative;
+                            z-index:9999;
+                            width:100%;
+                            height:340px;
+                            line-height:340px;
+                            background:#111;
+                            color:#fff;
+                            text-align:center;
+                            font-size:24px;
+                            font-weight:bold;
+                            text-decoration:none;
+                        ">Play Video</a>`
                 )
+
+                // Remove yt2009's custom HTML5 player code for iPhone.
                 code = code.replace(
-                    `0:00 / 0:00`,
-                    `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
+                    `<script src="/assets/site-assets/html5-player.js"></script>`,
+                    ``
                 )
+
+                code = code.replace(
+                    `initPlayer(document.querySelector("#watch-player-div"), true)`,
+                    `// Native iPhone HLS link`
+                )
+            } else {
+                let tcData = ""
+
+                if(config.trusted_context) {
+                    tcData = "&" + yt2009trusted.generateContext(
+                        data.id,
+                        "PLAYBACK_STD",
+                        (data.length >= 60 * 30)
+                    )
+                }
+
+                code = code.replace(
+                    "mp4_files",
+                    `<source src="${
+                        autoHQ ||
+                        "/get_video?video_id=" +
+                        data.id +
+                        "/mp4" +
+                        tcData
+                    }" type="video/mp4"></source>
+                    <source src="${data.mp4}.ogg"
+                            type="video/ogg"></source>`
+                )
+
+                if(data.pMp4) {
+                    code = code.replace(
+                        "//yt2009-pmp4",
+                        "showLoadingSprite()"
+                    )
+
+                    code = code.replace(
+                        `0:00 / 0:00`,
+                        `0:00 / ${
+                            yt2009utils.seconds_to_time(data.length)
+                        }`
+                    )
+                }
             }
         } else if(!useFlash && useSabr) {
             let script = `
