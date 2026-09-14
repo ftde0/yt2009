@@ -262,6 +262,9 @@ module.exports = {
                     if(req && req.query && req.query.return_part_lengths) {
                         parseOptions.returnPartLengths = true;
                     }
+                    if(p.supportsRedirectInMain) {
+                        parseOptions.supportsRedirectInMain = true;
+                    }
                     if(DEV_SABR_DOWNLOAD_DEBUG) {
                         let o = yt2009utils.seconds_to_time(
                             Math.floor(offset / 1000)
@@ -790,6 +793,7 @@ module.exports = {
         let fullRes = r;
         let contentLengths = {}
         let liveHead = null;
+        let redirect = null;
 
         // concat fragments and write
         function finalize() {
@@ -823,6 +827,10 @@ module.exports = {
 
             if(liveHead) {
                 finalFragments.liveHead = liveHead;
+            }
+
+            if(redirect) {
+                finalFragments.hasRedirect = true;
             }
 
             // output callback
@@ -859,6 +867,9 @@ module.exports = {
                 }
                 redirUrl = redirUrl.join("")
                 redirCb(redirUrl)
+                if(parseOptions && parseOptions.supportsRedirectInMain) {
+                    redirect = redirUrl;
+                }
             }
 
             // actual media bytes
@@ -948,6 +959,9 @@ module.exports = {
                 redirUrl = redirUrl.join("")
                 redirCb(redirUrl)
                 finalFragments = {"type": "redirect"}
+                if(parseOptions && parseOptions.supportsRedirectInMain) {
+                    finalFragments.hasRedirect = true;
+                }
                 fCallback(finalFragments)
                 return;
             }

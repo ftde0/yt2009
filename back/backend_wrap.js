@@ -18,7 +18,7 @@ if(!fs.existsSync("./androiddata.json")) {
     ]
     // test /player fetch to check if we need android sign in on host
     let rv = vids[Math.floor(Math.random() * vids.length)]
-    fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+    fetch("https://youtubei.googleapis.com/youtubei/v1/player?prettyPrint=false", {
         "credentials": "include",
         "headers": {
             "Accept": "*/*",

@@ -24,11 +24,9 @@ what environment should be used? (dev/prod)
 dev:
 - logs usage in terminal
 - doesn't require access tokens
-- no possibility of creating an ssl version
 prod:
 - doesn't log normal activity
-- if enabled, will create a bunch of random tokens users will have to enter to use
-- will be possible to create an ssl version on a separate port`)
+- if enabled, will create a bunch of random tokens users will have to enter to use`)
 while(env !== "dev" && env !== "prod") {
     env = readline.question("environment (dev/prod): ")
 }

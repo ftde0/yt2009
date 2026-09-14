@@ -8,7 +8,8 @@ if(!config.fallbackMode) {
         cache = JSON.parse(fs.readFileSync(`${__dirname}/userid.json`).toString())
     }
     catch(error) {}
-} 
+}
+const hostname = config.alt_hostname ? "https://youtubei.googleapis.com" : "https://www.youtube.com"
 
 module.exports = {
     "write": function(id, data) {
@@ -24,7 +25,7 @@ module.exports = {
                 let id = url.split("channel/")[1]
                 callback(id)
             } else {
-                fetch("https://www.youtube.com/youtubei/v1/navigation/resolve_url", {
+                fetch(hostname + "/youtubei/v1/navigation/resolve_url", {
                     "headers": constants.headers,
                     "referrer": "https://www.youtube.com/",
                     "referrerPolicy": "origin-when-cross-origin",
@@ -57,10 +58,10 @@ module.exports = {
                 // fetch with ANDROID client when WEB fails to send user id
                 function androidFallback() {
                     let headers = JSON.parse(JSON.stringify(constants.headers))
-                    headers["user-agent"] = "com.google.android.youtube/20.06.36 (Linux; U; Android 14) gzip"
+                    headers["user-agent"] = "com.google.android.youtube/21.30.209 (Linux; U; Android 14) gzip"
                     delete headers.cookie
 
-                    fetch("https://www.youtube.com/youtubei/v1/navigation/resolve_url", {
+                    fetch(hostname + "/youtubei/v1/navigation/resolve_url", {
                         "headers": headers,
                         "referrer": "https://www.youtube.com/",
                         "referrerPolicy": "origin-when-cross-origin",
@@ -69,7 +70,7 @@ module.exports = {
                                 "client": {
                                     "hl": "en",
                                     "clientName": "ANDROID",
-                                    "clientVersion": "20.06.36",
+                                    "clientVersion": "21.30",
                                     "androidSdkVersion": 34
                                 }
                             },

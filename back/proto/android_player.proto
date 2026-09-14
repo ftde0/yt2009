@@ -44,7 +44,7 @@ message root {
         optional int32 playableInEmbed = 9;
         string contentParams = 31;
     }
-    repeated playabilityStatus playability = 2;
+    playabilityStatus playability = 2;
     message playerFormats {
         int32 expiresInSeconds = 1;
         message format {
@@ -54,12 +54,12 @@ message root {
             int32 totalBitrate = 6;
             int32 videoWidth = 7;
             int32 videoHeight = 8;
-            repeated numberRange initRange = 9;
-            repeated numberRange indexRange = 10;
+            numberRange initRange = 9;
+            numberRange indexRange = 10;
             int64 lastChanged = 11;
             string videoQuality = 16;
             string xtags = 23;
-            int32 twentyFive = 25;
+            int32 fps = 25;
             string qualityLabel = 26;
             optional int32 projectionType = 27;
             /*^^^ 360deg:
@@ -70,16 +70,17 @@ message root {
             int32 audioBitrate = 44;
             int32 audioSample = 45;
             int32 audioChannels = 46;
-            optional int32 isDrc = 49;
+            optional bool isDrc = 49;
         }
         repeated format nondashFormat = 2;
         repeated format dashFormat = 3;
         string serverAbrStreamingUrl = 15;
     }
-    repeated playerFormats formats = 4;
+    playerFormats formats = 4;
     message statUrls {
         message statUrl {
             string url = 1;
+            repeated bytes sendHeader = 3;
         }
         statUrl playback = 1;
         statUrl delayplay = 2;
@@ -101,24 +102,11 @@ message root {
                 string trackName = 11;
             }
             repeated captionTrack track = 1;
-            message audioTracks {
-                optional int32 int2 = 2;
-                optional int32 int3 = 3;
-                optional int32 int5 = 5;
-                optional int32 int6 = 6;
-            }
-            repeated audioTracks audioTrack = 2;
             optional int32 defaultAudioTrackIndex = 4;
         }
-        repeated contents content = 51621377;
-        message v6Field {
-            string str1 = 1;
-            optional int32 visibility = 2; // usually 2 or 3
-            optional int32 int3 = 3;
-        }
-        repeated v6Field contentV6Field = 49413586;
+        contents content = 51621377;
     }
-    repeated captionTracks captions = 10;
+    captionTracks captions = 10;
     message metadata {
         string id = 1;
         string title = 15;
@@ -134,48 +122,42 @@ message root {
             }
             repeated thumb thumbnail = 1;
         }
-        repeated thumbList thumbnails = 25;
+        thumbList thumbnails = 25;
         string viewCount = 32;
         string authorName = 33;
-        optional int32 isOwnerViewing = 20;
-        optional int32 isCrawlable = 22;
-        optional int32 allowRatings = 31;
-        optional int32 isPrivate = 37;
-        optional int32 isUnpluggedCorpus = 38;
-        optional int32 isLiveContent = 41;
+        optional bool isOwnerViewing = 20;
+        optional bool isCrawlable = 22;
+        optional bool allowRatings = 31;
+        optional bool isPrivate = 37;
+        optional bool isUnpluggedCorpus = 38;
+        optional bool isLiveContent = 41;
     }
-    repeated metadata videoMetadata = 11;
+    metadata videoMetadata = 11;
     message storyboardData {
-        message sbContainer {
-            string sbLink = 1;
-            int32 c = 3;
+        message playerStoryboardSpecRenderer {
+            string spec = 1;
+            int32 recommendedLevel = 3;
         }
-        repeated sbContainer sb = 55735497;
+        repeated playerStoryboardSpecRenderer sb = 55735497;
     }
-    repeated storyboardData storyboard = 16;
-    message pbVarious21 {
-        optional int32 int1 = 1;
-        optional int32 int2 = 2;
-    }
-    repeated pbVarious21 pb21 = 21;
+    storyboardData storyboards = 16;
+    bytes trackingParams = 21;
     message attestationMsg {
         message playerAttestationRenderer {
             string challenge = 1;
         }
-        repeated playerAttestationRenderer attest = 59961494;
+        playerAttestationRenderer attest = 59961494;
     }
-    optional attestationMsg attestation = 22;
-    string pbVarious69 = 69;
-
+    attestationMsg attestation = 22;
 
     message playerConfig {
         message mediaCommonConfig {
             message mediaustreamerrequestconfig {
                 bytes mediaustreamerrequestConfig = 4;
             }
-            repeated mediaustreamerrequestconfig mediaustreamerconfig = 2;
+            mediaustreamerrequestconfig mediaustreamerconfig = 2;
         }
-        repeated mediaCommonConfig mediacommonconfigmsg = 215771584;
+        mediaCommonConfig mediacommonconfigmsg = 215771584;
     }
-    repeated playerConfig playerconfigmsg = 15;
+    playerConfig playerconfigmsg = 15;
 }

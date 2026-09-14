@@ -126,6 +126,7 @@ proto.bare_android_request.root.toObject = function(includeInstance, msg) {
     proto.bare_android_request.root.contextType.toObject, includeInstance),
     browseid: jspb.Message.getFieldWithDefault(msg, 2, ""),
     params: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    query: msg.getQuery_asB64(),
     continuation: jspb.Message.getFieldWithDefault(msg, 7, ""),
     creatorquery: jspb.Message.getFieldWithDefault(msg, 11, ""),
     navigationtype: jspb.Message.getFieldWithDefault(msg, 15, 0),
@@ -178,6 +179,10 @@ proto.bare_android_request.root.deserializeBinaryFromReader = function(msg, read
     case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setParams(value);
+      break;
+    case 4:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setQuery(value);
       break;
     case 7:
       var value = /** @type {string} */ (reader.readString());
@@ -244,6 +249,13 @@ proto.bare_android_request.root.serializeBinaryToWriter = function(message, writ
   if (f.length > 0) {
     writer.writeString(
       3,
+      f
+    );
+  }
+  f = message.getQuery_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      4,
       f
     );
   }
@@ -700,6 +712,48 @@ proto.bare_android_request.root.prototype.getParams = function() {
  */
 proto.bare_android_request.root.prototype.setParams = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional bytes query = 4;
+ * @return {!(string|Uint8Array)}
+ */
+proto.bare_android_request.root.prototype.getQuery = function() {
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * optional bytes query = 4;
+ * This is a type-conversion wrapper around `getQuery()`
+ * @return {string}
+ */
+proto.bare_android_request.root.prototype.getQuery_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getQuery()));
+};
+
+
+/**
+ * optional bytes query = 4;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getQuery()`
+ * @return {!Uint8Array}
+ */
+proto.bare_android_request.root.prototype.getQuery_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getQuery()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.bare_android_request.root} returns this
+ */
+proto.bare_android_request.root.prototype.setQuery = function(value) {
+  return jspb.Message.setProto3BytesField(this, 4, value);
 };
 
 

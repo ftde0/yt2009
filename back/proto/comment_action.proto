@@ -10,6 +10,7 @@ message root {
     9 = select (poll)
     10 = deselect (poll)
     */
+    int32 a = 2;
     string id = 3;
     string videoId = 5;
     string channelId = 11;

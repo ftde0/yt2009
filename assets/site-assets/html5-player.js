@@ -527,7 +527,8 @@ video.addEventListener("pause", function() {
 
 video.addEventListener("play", function() {
     video_show_play_btn()
-    if(window.sabrData && window.sabrData.fEnd) {
+    if((window.sabrData && window.sabrData.fEnd)
+    || (window.dashData && window.dashData.fEnd)) {
         if(window.sabrData.seekedTempArchive
         && Math.floor(window.sabrData.seekedTempArchive) - Math.floor(video.duration) <= 2) return;
         video.currentTime = 0;
@@ -2658,7 +2659,8 @@ catch(error) {}
 setTimeout(function() {
     if(!video.playing && video.buffered.length <= 0
     && !videoStartedPlaying && !window.sabrBase
-    && !window.overrideFallbackC) {
+    && !window.overrideFallbackC
+    && !window.dashData) {
         var src = video.src;
         if(!src) {
             src = video.querySelector("source").getAttribute("src")
@@ -2708,7 +2710,7 @@ document.body.addEventListener("keydown", function(e) {
     && e.target.nodeName.toLowerCase() !== "textarea"
     && e.target.nodeName.toLowerCase() !== "input") {
         e.preventDefault();
-        if(video.ended) {
+        if(video.ended || (window.sabrData && window.sabrData.fEnd) || (window.dashData && window.dashData.fEnd)) {
             videoReplay()
             return;
         }
@@ -2914,7 +2916,8 @@ function requestSabr(offset, source, force) {
 	
     function retryRequest(force) {
         sabrData.lastRequestFailCount++
-        if(sabrData.lastRequestFailCount > 3 && force) {
+        if((sabrData.lastRequestFailCount > 3 && force)
+        || (sabrData.lastRequestFailCount > 25) && !force) {
 			if(!videoStartedPlaying && !playingAsLive) {
 				var sabrlessUrl = "/watch" + location.href.split("/watch")[1]
 								+ "&unsabr=1";
@@ -3242,14 +3245,16 @@ function initAsSabr() {
                 addedResolutions.push(res[1])
             })
             h264Res.forEach(function(res) {
-                if(addedResolutions.indexOf(res[1]) == -1) {
+                if(addedResolutions.indexOf(res[1]) == -1
+                || res[0] == 214 || res[0] == 216) {
                     sabrResTemp.push(res)
                     addedResolutions.push(res[1])
                 }
             })
         } else {
             h264Res.forEach(function(res) {
-                if(addedResolutions.indexOf(res[1]) == -1) {
+                if(addedResolutions.indexOf(res[1]) == -1
+                || res[0] == 214 || res[0] == 216) {
                     sabrResTemp.push(res)
                     addedResolutions.push(res[1])
                 }
@@ -3276,12 +3281,6 @@ function initAsSabr() {
                 || document.cookie.indexOf("hd_1080") !== -1)
             )
         }
-        
-        /*if(!useTeneighty) {
-            sabrResTemp = sabrResTemp.filter(function(res) {
-                return res[2] <= 720
-            })
-        }*/
 
         window.sabrExactRes = sabrResTemp.sort(function(a,b) {
             return b[2] - a[2]
@@ -3350,11 +3349,12 @@ function initAsSabr() {
                 if(isSr && !moreSpacedPicker) {
                     moreSpacedPicker = true;
                 }
-                if(isSr &&
+                if((isSr &&
                 (q[1].indexOf("p") !== -1
                 && q[1].split("p")[1]
                 && q[1].split("p")[1].length >= 1)
-                && !maxSpacePicker) {
+                && !maxSpacePicker)
+                || q[1].indexOf("HDR") !== -1) {
                     maxSpacePicker = true;
                 }
                 if(isSr) {
@@ -4744,6 +4744,26 @@ function attachContextmenuListener(element) {
                     }
                 }
             }
+            if(window.dashData) {
+                // playing in dash
+                if(dashData.fEndCallback) {
+                    if(video.loop) {
+                        dashData.ogFendCallback = dashData.fEndCallback;
+                        dashData.fEndCallback = function() {
+                            video.currentTime = 0;
+                        }
+                    } else if(dashData.ogFendCallback) {
+                        dashData.fEndCallback = dashData.ogFendCallback;
+                        dashData.ogFendCallback = null;
+                    } else {
+                        dashData.fEndCallback = null;
+                    }
+                } else {
+                    dashData.fEndCallback = function() {
+                        video.currentTime = 0;
+                    }
+                }
+            }
             removeCtxmenu()
         }]
     ]
@@ -4909,6 +4929,9 @@ function attachContextmenuListener(element) {
                 "sabr: " + !!(window.sabrData),
 				"live: " + playingAsLive
             ]
+            if(window.dashData) {
+                s.push("dashback: yes (o_o)")
+            }
 			if(playingAsLive) {
 				s.push("live currentTime: " + Math.floor(video.currentTime))
 				s.push("live head: " + window.liveHead)
@@ -5156,6 +5179,7 @@ setTimeout(function() {
         var s = setInterval(function() {
             if(lastWatchtimeStatus >= 400
             || (window.sabrData && window.sabrData.fEnd)
+            || (window.dashData && window.dashData.fEnd)
             || video.ended
             || temporaryDisableSend) {
                 // server errors, prevent further requests
@@ -5167,3 +5191,276 @@ setTimeout(function() {
         }, 10000)
     }
 }, 10)
+
+// dash fallback
+function initAsDash() {
+    var ms = new MediaSource();
+    var dashBase = "/dash_playback"
+    var vStream;
+    var aStream;
+    video.src = URL.createObjectURL(ms);
+    window.dashData = {
+        "videoUrl": "",
+        "audioUrl": "",
+        "chunkingApproach": "url",
+        "videoHeader": null,
+        "audioHeader": null,
+        "rawMs": ms,
+        "appendQueue": [],
+        //"videoTable": staticTableVideo,
+        //"audioTable": staticTableAudio,
+        "readAhead": 50
+    }
+    if(window.hqPlaying && window.playbackIds[2]) {
+        window.dashData.videoUrl = [
+            dashBase,
+            "?pid=" + window.playbackIds[2]
+        ].join("")
+    } else {
+        window.dashData.videoUrl = [
+            dashBase,
+            "?pid=" + window.playbackIds[0]
+        ].join("")
+    }
+    window.dashData.audioUrl = dashBase + "?pid=" + window.playbackIds[1]
+    function dashTableRequest(mediaUrl, callback) {
+        var r = new XMLHttpRequest();
+        var url = mediaUrl + "&type=table"
+        function retryRequest() {
+            dashTableRequest(mediaUrl, callback)
+        }
+        r.open("GET", url)
+        r.setRequestHeader("priority", "u=0")
+        r.send(null)
+        r.addEventListener("timeout", function(e) {retryRequest()}, false)
+        r.addEventListener("error", function(e) {retryRequest()}, false)
+        r.addEventListener("load", function(e) {
+            callback(JSON.parse(r.responseText))
+        }, false)
+    }
+    var recentVRequestStarts = []
+    var recentARequestStarts = []
+    function dashRequest(mediaUrl, start, end, callback) {
+        var r = new XMLHttpRequest();
+        var url = mediaUrl + "&type=media"
+        if(dashData.chunkingApproach == "url") {
+            url += "&range=" + start + "-" + end
+        }
+        function retryRequest() {
+            dashRequest(mediaUrl, start, end, callback)
+        }
+        r.open("GET", url)
+        r.responseType = "arraybuffer"
+        if(dashData.chunkingApproach == "header") {
+            r.setRequestHeader("range", "bytes=" + start + "-" + end)
+        }
+        r.setRequestHeader("priority", "u=0")
+        r.send(null)
+        r.addEventListener("timeout", function(e) {retryRequest()}, false)
+        r.addEventListener("error", function(e) {retryRequest()}, false)
+        r.addEventListener("load", function(e) {
+            callback(r.response)
+        }, false)
+    }
+    function request(offset) {
+        // request audio and video dash using offset (ms)
+        var videoFragment = dashData.videoTable.mediaLookup.filter(function(s) {
+            return offset >= s.startMs && s.endMs >= offset
+        })[0]
+        var audioFragment = dashData.audioTable.mediaLookup.filter(function(s) {
+            return offset >= s.startMs && s.endMs >= offset
+        })[0]
+        if(!videoFragment || !audioFragment) return;
+        // vid
+        if(recentVRequestStarts.indexOf(videoFragment.start) !== -1) return;
+        recentVRequestStarts.push(videoFragment.start)
+        setTimeout(function() {
+            recentVRequestStarts = recentVRequestStarts.filter(function(s) {
+                return s !== videoFragment.start
+            })
+        }, 3000)
+        dashRequest(
+            dashData.videoUrl, videoFragment.start,
+            (videoFragment.start + videoFragment.size - 1),
+        function(data) {
+            // create full fragment
+            var full = new Uint8Array(
+                dashData.videoHeader.byteLength + data.byteLength
+            )
+            full.set(dashData.videoHeader, 0)
+            full.set(new Uint8Array(data), dashData.videoHeader.byteLength)
+            dashData.appendQueue.push(["VIDEO", full])
+        })
+        // aud
+        if(recentARequestStarts.indexOf(audioFragment.start) !== -1) return;
+        recentARequestStarts.push(audioFragment.start)
+        setTimeout(function() {
+            recentARequestStarts = recentARequestStarts.filter(function(s) {
+                return s !== audioFragment.start
+            })
+        }, 3000)
+        dashRequest(
+            dashData.audioUrl, audioFragment.start,
+            (audioFragment.start + audioFragment.size - 1),
+        function(data) {
+            // create full fragment
+            var full = new Uint8Array(
+                dashData.audioHeader.byteLength + data.byteLength
+            )
+            full.set(dashData.audioHeader, 0)
+            full.set(new Uint8Array(data), dashData.audioHeader.byteLength)
+            dashData.appendQueue.push(["AUDIO", full])
+        })
+    }
+    function initHeaders() {
+        var headersDone = 0;
+        var headersRequired = 2;
+        function markDone() {
+            headersDone++
+            if(headersDone >= headersRequired) {
+                // get actual media
+                request(0)
+            }
+        }
+        var vH = dashData.videoTable.firstFragmentStart - 1
+        dashRequest(dashData.videoUrl, 0, vH, function(data) {
+            dashData.videoHeader = new Uint8Array(data);
+            markDone()
+        })
+        var aH = dashData.audioTable.firstFragmentStart - 1
+        dashRequest(dashData.audioUrl, 0, aH, function(data) {
+            dashData.audioHeader = new Uint8Array(data);
+            markDone()
+        })
+    }
+    function startMediasource() {
+        function readyStart() {
+            dashData.videoMime = "video/mp4; codecs=\"avc1.4D4028\""
+            dashData.audioMime = "audio/mp4; codecs=\"mp4a.40.2\""
+            vStream = ms.addSourceBuffer(dashData.videoMime)
+            aStream = ms.addSourceBuffer(dashData.audioMime)
+            dashData.videoBuffer = vStream
+            dashData.audioBuffer = aStream
+            var haveTables = 0;
+            var tablesNeeded = 2;
+            // back to time after quality switch
+            function markTableDone() {
+                haveTables++
+                if(haveTables >= tablesNeeded) {
+                    initHeaders()
+                }
+            }
+            dashTableRequest(dashData.videoUrl, function(t) {
+                dashData.videoTable = t;
+                markTableDone()
+            })
+            dashTableRequest(dashData.audioUrl, function(t) {
+                dashData.audioTable = t;
+                markTableDone()
+            })
+        }
+        // init
+        ms.addEventListener("sourceopen", function() {
+            readyStart()
+        }, false)
+    }
+    startMediasource()
+    // appends
+    var x = setInterval(function() {
+        if(dashData.appendQueue[0]) {
+            if(dashData.appendQueue[0][0] == "AUDIO"
+            && dashData.audioBuffer
+            && !dashData.audioBuffer.updating) {
+                try {
+                    dashData.audioBuffer.appendBuffer(
+                        dashData.appendQueue[0][1]
+                    )
+                    dashData.appendQueue.shift()
+                }
+                catch(error){}
+            } else if(dashData.appendQueue[0][0] == "VIDEO"
+            && dashData.videoBuffer
+            && !dashData.videoBuffer.updating) {
+                try {
+                    dashData.videoBuffer.appendBuffer(
+                        dashData.appendQueue[0][1]
+                    )
+                    dashData.appendQueue.shift()
+                }
+                catch(error){}
+            }
+            //TODO FIX
+            if(window.dashTime) {
+                video.currentTime = window.dashTime;
+                window.dashTime = null;
+                delete window.dashTime;
+            }
+        }
+    }, 200)
+    // pull more video data
+    video.addEventListener("timeupdate", function() {
+        if(video.currentTime > 120
+        && !dashData.videoBuffer.updating
+        && !dashData.audioBuffer.updating) {
+            // don't keep much backwards buffer to not overfill
+            try {
+                dashData.videoBuffer.remove(0, video.currentTime - 120)
+                dashData.audioBuffer.remove(0, video.currentTime - 120)
+            }
+            catch(error){console.log(error)}
+        }
+        var c = video.currentTime;
+        var arrayedRanges = []
+        for (var k = 0; k < video.buffered.length; k++) {
+            arrayedRanges.push({
+                "start": video.buffered.start(k),
+                "end": video.buffered.end(k)
+            })
+        }
+        var currentRange = arrayedRanges.filter(function(s) {
+            return (s.start <= c && s.end >= c)
+        })[0]
+        if(currentRange && ((currentRange.end - c) < dashData.readAhead
+        && (currentRange.end - c) > 0.1
+        && !(video.duration - currentRange.end <= 0.3))
+        && !dashData.appendQueue[0]) {
+            request(Math.floor(currentRange.end * 1000) + 2000)
+        }
+        
+        if(video.duration - video.currentTime <= 0.4) {
+            var t = 0;
+            while(t !== 3) {
+                dashData.fEnd = true;
+                video_pause();
+                showEndscreen()
+                if(dashData.fEndCallback) {
+                    dashData.fEndCallback()
+                }
+                if(elapsedbar.style.width
+                && parseInt(elapsedbar.style.width) <= 97) {
+                    elapsedbar.style.width = "100%"
+                }
+                t++
+            }
+        } else {
+            dashData.fEnd = false;
+        }
+    }, false)
+    // random seeking
+    video.addEventListener("seeking", function(s) {
+        var vc = video.currentTime
+        var arrayedRanges = []
+        for (var k = 0; k < video.buffered.length; k++) {
+            arrayedRanges.push({
+                "start": video.buffered.start(k),
+                "end": video.buffered.end(k)
+            })
+        }
+        var currentRange = arrayedRanges.filter(function(s) {
+            return (s.start <= vc && s.end >= vc)
+        })
+        if(!currentRange[0]) {
+            request(Math.floor(vc * 1000))
+        }
+    }, false)
+}

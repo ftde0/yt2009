@@ -6,6 +6,7 @@ const utils = require("./yt2009utils")
 const config = require("./config.json")
 const trusted = require("./yt2009trustedcontext")
 const sabrlib = require("./yt2009sabr")
+const ytexports = require("./yt2009exports")
 
 let ip_request_count = {}
 
@@ -86,6 +87,7 @@ module.exports = function(req, res) {
     let sabr = ((req.headers && req.headers.cookie
                 && req.headers.cookie.includes("exp_sabr"))
                 || req.query.sabr == "1")
+                && !ytexports.read().d
 	let usePchelper = (req && req.query && req.query.with_pchelper == "1");
 	if(usePchelper) {
 		sabr = false;

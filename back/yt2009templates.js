@@ -4394,5 +4394,43 @@ ${topContentHTML}
 
     "bareFeedImage": function(url) {
         return `<div style="float:left; margin-right: 8px;"><img class="feed-image" src="${url}"/></div>`
+    },
+
+    "backupBasicChip": "EgZ2aWRlb3PyBgQKAjoA",
+
+    "playerHDdashback": function(use720p, autoHQ, videoLengthMinutes) {
+        let seekbarRemoveWidth = 245
+        if(videoLengthMinutes && videoLengthMinutes >= 60) {
+            seekbarRemoveWidth = 277
+        } else if(videoLengthMinutes && videoLengthMinutes >= 10) {
+            seekbarRemoveWidth = 255
+        }
+        return `
+        //exp_hq
+        seekbarRemoveWidth = ${seekbarRemoveWidth};
+        adjustSeekbarWidth();
+        var hqPlaying = false;
+        $(".video_controls .hq").addEventListener("click", function() {
+            video_pause();
+            window.dashTime = video.currentTime;
+
+            if(!hqPlaying) {
+                hqPlaying = true;
+                var length = seconds_to_time(Math.floor(video.duration || 0))
+                setTimeout(function() {
+                    $(".video_controls .timer").innerHTML = "0:00 / " + length;
+                    showLoadingSprite();
+                }, 500)
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""} enabled"
+                initAsDash()
+            } else {
+                hqPlaying = false;
+                $(".video_controls .hq").className = "hq ${use720p ? "hd" : ""}"
+                initAsDash()
+            }
+        }, false)${autoHQ ? `
+        
+        hqPlaying = true;
+        showLoadingSprite();` : ""}`
     }
 }

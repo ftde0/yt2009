@@ -14,6 +14,7 @@ message root {
     repeated contextType context = 1;
     string browseId = 2;
     string params = 3;
+    bytes query = 4;
     string continuation = 7;
     string creatorQuery = 11;
     optional int32 navigationType = 15;

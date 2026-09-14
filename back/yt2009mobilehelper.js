@@ -53,7 +53,14 @@ const androidContext = {
         "deviceModel": "Android SDK built for x86",
         "deviceCodename": "ranchu;",
         "osName": "Android",
-        "osVersion": "10"
+        "osVersion": "10",
+        "gl": "US",
+        "timeZone": "Europe/Warsaw",
+        "screenDensityFloat": 1,
+        "screenHeightPoints": 2160,
+        "screenPixelDensity": 1,
+        "screenWidthPoints": 3840,
+        "utcOffsetMinutes": 60
     }
 }
 const genericDefault = fs.readFileSync(
@@ -1719,10 +1726,20 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                 r.frameworkUpdates.entityBatchUpdate.mutations.forEach(m => {
                     if(m.payload && m.payload.creatorVideoData) {try {
                         let v = m.payload.creatorVideoData
-                        let likes = parseInt(v.metrics.likeCount)
-                        let dislikes = parseInt(v.metrics.dislikeCount)
-                        let comments = v.metrics.commentCount
-                        let views = v.metrics.viewCount
+                        let likes = 0;
+                        let dislikes = 0;
+                        let comments = 0;
+                        let views = 0;
+                        if(v.metrics) {
+                            likes = parseInt(v.metrics.likeCount)
+                            dislikes = parseInt(v.metrics.dislikeCount)
+                            comments = v.metrics.commentCount
+                            views = v.metrics.viewCount
+                        } else if(v.publicMetrics) {
+                            likes = parseInt(v.publicMetrics.likeCount)
+                            comments = v.publicMetrics.commentCount;
+                            views = v.publicMetrics.externalViewCount
+                        }
                         let added = parseInt(v.timeCreatedSeconds) * 1000
                         let needThumbnail = false
                         if(v.privacy == "VIDEO_PRIVACY_PRIVATE") {
@@ -1746,7 +1763,7 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                             "privacy": v.privacy,
                             "thumbnail": needThumbnail
                         })
-                    }catch(error){}}
+                    }catch(error){console.log(error)}}
                 })
                 callback(videos)
                 return true;
@@ -1863,8 +1880,9 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         const EXP_GET_WATCH = false;
         const GET_WATCH_URL = hostname + "/youtubei/v1/get_watch?prettyPrint=false"
         const PLAYER_URL = hostname + "/youtubei/v1/player?prettyPrint=false"
-        const PP = "YAE"
-        //"YAF4AQ"//YAHIAQHwBAH4BAGiBhUBRjgLxeEsOtiCEU04oesIlhrQEA8%3D
+        const PP = yt2009exports.read().d
+                 ? yt2009exports.read().dkey
+                 : "YAHIAQG4BAXwBAH4BAGiBhUBO2AyIiLNmoS-Uloagnd1K2d5DPc%3D"
         //console.log("use pchelper")
         let callbackSent = false;
         let resentRequestSlow = false;
@@ -1880,6 +1898,12 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
         }
         function processPlayerResponse(r) {
             r = utils.markOriginalAudioFormats(r)
+            if(r.streamingData
+            && r.streamingData.serverAbrStreamingUrl
+            && yt2009exports.read().d) {
+                r.streamingData.serverAbrStreamingUrl = null;
+                r.streamingData.isD = true;
+            }
             return r;
         }
 		if(req.usePot) {
@@ -4104,6 +4128,9 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                          ? 4 : 5 // default like (5)
         let action = new commentActions.root()
         action.setAction(actionNumber)
+        if(req.headers.rating == "dislike") {
+            action.setA(2)
+        }
         action.setId(commentId)
         action.setVideoid(videoId)
         action = utils.base64toUrl(
@@ -4761,11 +4788,12 @@ function pullDeviceId(req) {
 
 function pullUserIdFromDevice(device, callback) {
     setupYouTube(device, (h) => {
-        fetch(hostname + "/youtubei/v1/guide", {
+        fetch(hostname + "/youtubei/v1/browse?fields=contents&prettyPrint=false", {
             "method": "POST",
             "headers": h,
             "body": JSON.stringify({
-                "context": androidContext
+                "context": androidContext,
+                "browseId": "FElibrary"
             })
         }).then(r => {r.json().then(r => {
             //fs.writeFileSync("test.json", JSON.stringify(r))
@@ -4777,9 +4805,14 @@ function pullUserIdFromDevice(device, callback) {
             } else {
                 uid = JSON.stringify(r)
                 // account with no channel, try to get data
-                let avatar = uid.split(`{"avatar":{"thumbnails":[{"url":"`)[1]
+                let avatar = ""
+                try {
+                    avatar = "https://yt3.ggpht.com/"
+                           + uid.split(`"https://yt3.ggpht.com/`)[1]
                                 .split('"')[0]
-                let username = uid.split(`{"accountName":{"runs":[{"text":"`)[1]
+                }
+                catch(error){}
+                let username = uid.split(`{"accountName":{"content":"`)[1]
                                   .split('"')[0]
                 callback({"type": "b", "avatar": avatar, "username": username})
             }

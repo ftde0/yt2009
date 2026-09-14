@@ -8,6 +8,7 @@ a fairly accurate 2009 youtube frontend with account features.
 
 ## thank you to yt2009's top tier monthly sponsors!
 
+- *private* - $50!
 - [Szprinktrap](https://github.com/Szprinktrap)
 - [RF7391](https://github.com/RF7391)
 
@@ -29,7 +30,7 @@ for $5/month, you can also join this list! --> https://github.com/sponsors/ftde0
 
 - install node.js (git is heavily recommeded as well)
 - open a terminal (windows powershell/cmd) in the directory you `git clone`d yt2009 to, then:
-- install required dependencies with: `npm install`
+- install required dependencies with: `npm install --allow-git=root`
 - create a config file by launching and following: `node yt2009setup.js`
 - run to set and download remaining assets `node post_config_setup.js`
 - run yt2009 by changing directory to `back` (`cd back`) and starting with `node backend.js`

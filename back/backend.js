@@ -265,11 +265,16 @@ if(fs.existsSync("../Dockerfile")) {
     let d = crypto.createHash("sha1")
     d.update(dockerfile)
     let digest = d.digest("hex")
-    if(digest !== "393f05199de22c6bfeac7abfce6807b3301add9d") {
+    if(digest !== "12ebf7846712a281f149fcf0804eae9011a3983b") {
         console.log("Docker Validation Failure")
         process.exit(1);
     }
 }
+
+yt2009_exports.writeData("dkey", Buffer.from(
+    "WUFISUFRSFlBd0c0QkFYd0JBSDRCQUdpQmhVQk8yQXlJaUxObW9TLVVsb2FnbmQxSzJkNURQYyUzRA",
+    "base64"
+).toString())
 
 if(fs.existsSync("./yt2009experimentals.js")) {
     try {
@@ -649,6 +654,7 @@ app.get("/watch", (req, res) => {
     
     // exp_turbocharge (start render from /player)
     if(req.query.exp_turbocharge == 1
+    || yt2009_exports.read().d
     || (req.headers.cookie
     && req.headers.cookie.includes("exp_turbocharge"))
     && !(req.query.with_pchelper
@@ -791,6 +797,20 @@ app.get("/watch", (req, res) => {
 
 app.get("/etc_oex_videodata", (req, res) => {
     yt2009.turbochargeFillin(req, res)
+})
+
+app.get("/shorts/*", (req, res) => {
+    let v = req.originalUrl.split("/shorts/")[1].split("?")[0]
+    let serializedQuery = []
+    for(let p in req.query) {
+        serializedQuery.push(p + "=" + encodeURIComponent(req.query[p]))
+    }
+    if(serializedQuery.length >= 1) {
+        serializedQuery = "&" + serializedQuery.join("&")
+    } else {
+        serializedQuery = ""
+    }
+    res.redirect("/watch?v=" + v + serializedQuery)
 })
 
 /*
@@ -7359,6 +7379,10 @@ app.get("/sabr_playback", (req, res) => {
         )
         res.send(resp)
     })
+})
+
+app.get("/dash_playback", (req, res) => {
+    yt2009.dashPlaybackHandler(req, res)
 })
 
 /*

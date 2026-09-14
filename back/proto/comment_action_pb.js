@@ -92,6 +92,7 @@ proto.comment_action.root.prototype.toObject = function(opt_includeInstance) {
 proto.comment_action.root.toObject = function(includeInstance, msg) {
   var f, obj = {
     action: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    a: jspb.Message.getFieldWithDefault(msg, 2, 0),
     id: jspb.Message.getFieldWithDefault(msg, 3, ""),
     videoid: jspb.Message.getFieldWithDefault(msg, 5, ""),
     channelid: jspb.Message.getFieldWithDefault(msg, 11, ""),
@@ -135,6 +136,10 @@ proto.comment_action.root.deserializeBinaryFromReader = function(msg, reader) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setAction(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setA(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
@@ -188,6 +193,13 @@ proto.comment_action.root.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getA();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getId();
   if (f.length > 0) {
     writer.writeString(
@@ -234,6 +246,24 @@ proto.comment_action.root.prototype.getAction = function() {
  */
 proto.comment_action.root.prototype.setAction = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int32 a = 2;
+ * @return {number}
+ */
+proto.comment_action.root.prototype.getA = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.comment_action.root} returns this
+ */
+proto.comment_action.root.prototype.setA = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 

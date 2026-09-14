@@ -2095,6 +2095,24 @@ if(usingTurbocharge
     }, false)
 }
 
+function fillViewCount() {
+    var id = window.location.href.split("v=")[1].split("&")[0]
+    var r;
+    if (window.XMLHttpRequest) {
+        r = new XMLHttpRequest()
+    } else {
+        r = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    r.open("GET", "/stream_current_vc?ac="+Math.random()+"&video_id=" + id)
+    r.send(null)
+    r.onreadystatechange = function(e) {
+        if((r.readyState == 4 || this.readyState == 4)
+        && r.status < 400) {
+            document.getElementById("watch-views").innerHTML = r.responseText
+        }
+    }
+}
+
 /*
 ======
 transcript functionality

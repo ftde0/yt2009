@@ -190,15 +190,28 @@ module.exports = {
                     })
                 })})
 
-                // pull videos at the same time
-                // shortens load times
+                // pull videos
                 this.get_direct_by_chipparam(
                     templates.popularChip, id, (vids) => {
-                        fullData.videos = vids;
-                        writeTimingData("separate videos fetch")
-                        fetchesCompleted++
-                        if(fetchesCompleted >= fetchesRequired) {
-                            sendResponse(fullData)
+                        if(!vids || vids.length == 0) {
+                            // retry with backupchip (no sorting)
+                            this.get_direct_by_chipparam(
+                                templates.backupBasicChip, id, (vs) => {
+                                    fullData.videos = vs;
+                                    writeTimingData("separate videos fetch")
+                                    fetchesCompleted++
+                                    if(fetchesCompleted >= fetchesRequired) {
+                                        sendResponse(fullData)
+                                    }
+                                }
+                            )
+                        } else {
+                            fullData.videos = vids;
+                            writeTimingData("separate videos fetch")
+                            fetchesCompleted++
+                            if(fetchesCompleted >= fetchesRequired) {
+                                sendResponse(fullData)
+                            }
                         }
                     }
                 )
@@ -3127,6 +3140,14 @@ module.exports = {
             "method": "POST",
             "mode": "cors"
         }).then(r => {r.json().then(r => {
+            if(r.continuationContents
+            && r.continuationContents.richGridContinuation
+            && r.continuationContents.richGridContinuation.contents) {
+                createVideosFromChip(
+                    r.continuationContents.richGridContinuation.contents
+                )
+                return;
+            }
             if(!r.onResponseReceivedActions) {
                 createVideosFromChip([])
                 return;

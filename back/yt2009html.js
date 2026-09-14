@@ -28,9 +28,8 @@ const hostname = config.alt_hostname
                ? `https://youtubei.googleapis.com`
                : `https://www.youtube.com`
 
-const EXTRA_RISK_BLOCK = true; //EXPERIMENT: reduce number of /player requests
-// to hopefully reduce IP blocks that started happening recently
-// when hosting on datacenter IPs
+const EXTRA_RISK_BLOCK = true;
+const EXTRA_RISK_AGGRESSIVE_VISITOR = config.extra_risk_aggressive_visitor
 const ANDROID_REQ_UA = "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
 let frequentRestartEnvironmentDisablePotgen = false;
 if(process && process.argv && process.argv.includes
@@ -39,50 +38,62 @@ if(process && process.argv && process.argv.includes
     console.log(`!! potgen disabled! playback will NOT work in this mode! !!`)
 }
 let visitorId = ""
+let visitorCreatedOnce = false;
 if(EXTRA_RISK_BLOCK && !frequentRestartEnvironmentDisablePotgen) {
-    fetch("https://youtubei.googleapis.com/youtubei/v1/visitor_id", {
-        "body": JSON.stringify({
-            "context": {
-                "client": {
-                    "hl": "en",
-                    "clientName": "ANDROID",
-                    "clientVersion": "21.16",
-                    "deviceMake": "Google",
-                    "deviceModel": "Android SDK built for x86",
-                    "deviceCodename": "ranchu;",
-                    "osName": "Android",
-                    "osVersion": "14"
+    function createVisitor() {
+        fetch("https://youtubei.googleapis.com/youtubei/v1/visitor_id", {
+            "body": JSON.stringify({
+                "context": {
+                    "client": {
+                        "hl": "en",
+                        "clientName": "ANDROID",
+                        "clientVersion": "21.16",
+                        "deviceMake": "Google",
+                        "deviceModel": "Android SDK built for x86",
+                        "deviceCodename": "ranchu;",
+                        "osName": "Android",
+                        "osVersion": "14"
+                    }
+                }
+            }),
+            "method": "POST",
+            "headers": {
+                "user-agent": ANDROID_REQ_UA
+            }
+        }).then(r => {r.json().then(r => {
+            try {
+                visitorId = r.responseContext.visitorData
+                yt2009exports.writeData("visitor", visitorId)
+                if(config.env == "dev") {
+                    let msg = [
+                        `got ANDROID visitor:`,
+                        visitorId,
+                        "\n"
+                    ].join(" ")
+                    console.log(msg)
+                }
+                // if not signed in, bind to visitor id
+                if(!yt2009androidsignin.needed()) {
+                    createPot(visitorId, "visitor")
+                } else {
+                    // bind to datasyncid
+                    yt2009androidsignin.getDatasyncId((id) => {
+                        createPot(id, "datasync")
+                    })
                 }
             }
-        }),
-        "method": "POST",
-        "headers": {
-            "user-agent": ANDROID_REQ_UA
-        }
-    }).then(r => {r.json().then(r => {
-        try {
-            visitorId = r.responseContext.visitorData
-            yt2009exports.writeData("visitor", visitorId)
-            if(config.env == "dev") {
-                let msg = [
-                    `[EXTRA_RISK EXP/DEV] got ANDROID visitor:`,
-                    visitorId,
-                    "\n"
-                ].join(" ")
-                console.log(msg)
-            }
-            // if not signed in, bind to visitor id
-            if(!yt2009androidsignin.needed()) {
-                createPot(visitorId, "visitor")
-            } else {
-                // bind to datasyncid
-                yt2009androidsignin.getDatasyncId((id) => {
-                    createPot(id, "datasync")
-                })
-            }
-        }
-        catch(error){}
-    })})
+            catch(error){}
+            visitorCreatedOnce = true;
+        })})
+    }
+    if(EXTRA_RISK_AGGRESSIVE_VISITOR) {
+        let cr = setInterval(() => {
+            console.log("regening")
+            // regen every 30m
+            createVisitor()
+        }, (1000 * 60 * 30))
+    }
+    createVisitor()
 }
 
 function createPot(visitorId, type) {
@@ -90,6 +101,10 @@ function createPot(visitorId, type) {
     yt2009pot.generatePo(visitorId, (data) => {
         yt2009exports.writeData("potBytes", data.encryptData)
         yt2009exports.writeData("potKey", data.backup)
+        if(!data.backup
+        || data.backup.byteLength && data.backup.byteLength < 4) {
+            yt2009exports.writeData("d", true)
+        }
         if(config.env == "dev") {
             let msg = [
                 "generated pot:",
@@ -106,8 +121,10 @@ function createPot(visitorId, type) {
             } else {
                 createPot(visitorId, type)
             }
-        }, (data.valid - 1800) * 1000)
-    })
+        }, (data.valid > 1800
+        ? (data.valid - 1800)
+        : Math.min((data.valid + 40), 20)) * 1000)
+    }, visitorCreatedOnce)
 }
 
 const watchpage_code = fs.readFileSync("../watch.html").toString();
@@ -152,6 +169,7 @@ let oldCommentsWrite = setInterval(function() {
 }, 1000 * 60 * 60)
 let sups = []
 let statsUrlShorthands = {}
+let videoUrlShorthands = {}
 function genStatShorthand() {
     let x = ""
     let chars = "qwertyuiopasdfghjklzxcvbnm".split("")
@@ -761,6 +779,11 @@ module.exports = {
                     data.unplayable = true;
                 }
 
+                if(videoData.streamingData && videoData.streamingData.isD) {
+                    data.d = true;
+                    data.rawStreams = videoData.streamingData
+                }
+
                 // "related" videos
 
                 let related = []
@@ -1299,6 +1322,7 @@ module.exports = {
         if(data.isHfrResponse) {
             sabrExtraProperties.useHfr = true;
         }
+        sabrExtraProperties.supportsRedirectInMain = true;
         if((flags.includes("exp_sabr")
         || data.live)
 		&& !(req.query&&req.query.unsabr=="1")
@@ -1307,6 +1331,12 @@ module.exports = {
             sabrBaseUrl = yt2009sabr.initPlaybackSession(
                 data.id, data.qualities, sabrExtraProperties
             )
+        }
+        if(data.d) {
+            useSabr = false;
+            if(req.query&&req.query.unsabr=="1") {
+                data.d = false;
+            }
         }
 
         // disable playback mode picker on unsupported node hosts
@@ -1509,10 +1539,11 @@ module.exports = {
 
         // auto hd
         let autoHQ = false;
-        if((req.headers.cookie
+        if(((req.headers.cookie
         && req.headers.cookie.includes("playback_quality=2"))
         || (req.query.fmt
-        && (req.query.fmt == "18" || req.query.fmt == "22"))) {
+        && (req.query.fmt == "18" || req.query.fmt == "22")))
+        && !data.d) {
             let startQuality = false;
             let has720 = (data.qualities.includes("720p"))
             if(data.isHfrResponse) {
@@ -1551,9 +1582,14 @@ module.exports = {
             }
 
             // start saving in advance for quicker video load for end user
-            if(startQuality && !data.live && !useSabr) {
+            if(startQuality && !data.live && !useSabr && !data.d) {
                 yt2009utils.saveMp4_android(data.id, () => {}, false, startQuality)
             }
+        } else if(
+            data.d
+        && (req.headers.cookie
+        && req.headers.cookie.includes("playback_quality=2"))) {
+            autoHQ = true;
         }
 
         // unplayable state
@@ -2306,7 +2342,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         code = code.replace("channel_name", yt2009utils.xss(author_name))
         code = code.split("channel_url").join(data.author_url)
         code = code.replace("upload_date", uploadDate)
-        if(!useFlash && !data.live && !useSabr) {
+        if(!useFlash && !data.live && !useSabr && !data.d) {
             let tcData = ""
             if(config.trusted_context) {
                 tcData = "&" + yt2009trusted.generateContext(
@@ -2328,7 +2364,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
                 )
             }
-        } else if(!useFlash && useSabr) {
+        } else if(!useFlash && useSabr && !data.d) {
             let script = `
                 showLoadingSprite();
                 var sabrBase = "${sabrBaseUrl}";
@@ -2348,6 +2384,119 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     `0:00 / 0:00`,
                     `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
                 )
+            }
+            code = code.replace(
+                "//yt2009-pmp4",
+                script
+            )
+        } else if(!useFlash && data.d) {
+            let audioUrl = ""
+            let sdUrl = ""
+            let hdUrl = ""
+            let audioIndexEnd = 4096;
+            let sdIndexEnd = 4096;
+            let hdIndexEnd = 4096;
+            let audioShorthand = ""
+            let sdShorthand = ""
+            let hdShorthand = ""
+            try {
+                let rs = data.rawStreams.adaptiveFormats
+                rs = rs.filter(s => {
+                    return s.mimeType
+                        && (s.mimeType.includes("avc1")
+                        || s.mimeType.includes("mp4a"))
+                })
+                let maxHeight = 960
+                if(req.headers.cookie
+                && req.headers.cookie.includes("hd_1080")) {
+                    maxHeight = 1300
+                }
+                sdUrl = rs.filter(s => {
+                    return s.height < 480
+                }).sort((a,b) => {return b.height - a.height})[0]
+                sdIndexEnd = sdUrl.indexRange.end;
+                sdUrl = sdUrl.url
+                hdUrl = rs.filter(s => {
+                    return s.height >= 480 && s.height <= maxHeight
+                }).sort((a,b) => {return b.height - a.height})[0]
+                hdIndexEnd = hdUrl.indexRange.end;
+                hdUrl = hdUrl.url;
+                audioUrl = rs.filter(s => {
+                    return s.mimeType && s.mimeType.includes("mp4a")
+                }).sort((a,b) => {return b.bitrate - a.bitrate})[0]
+                audioIndexEnd = audioUrl.indexRange.end;
+                audioUrl = audioUrl.url
+            }
+            catch(error) {
+                console.log(error)
+            }
+            if(hdUrl) {
+                if(autoHQ) {
+                    code = code.replace(
+                        `<!--yt2009_hq_btn-->`,
+                        `<span class="hq hd enabled"></span>`
+                    )
+                } else {
+                    code = code.replace(
+                        `<!--yt2009_hq_btn-->`,
+                        `<span class="hq hd"></span>`
+                    )
+                }
+                code = code.replace(
+                    `<!--yt2009_style_hq_button-->`,
+                    yt2009templates.playerCssHDBtn   
+                )
+            }
+            let script = ""
+            if(!audioUrl || !sdUrl) {
+                var sabrlessUrl = "/watch" + req.originalUrl.split("/watch")[1]
+								+ "&unsabr=1";
+                // necessary for playback, fail if not work
+                script = `showUnrecoverableError(
+                    "all attempts to reliably stream this video have failed. "
+                  + '<a href="${sabrlessUrl}">try legacy playback</a>'
+                );`
+                code = code.replace(
+                    "//yt2009-pmp4",
+                    script
+                )
+            }
+            audioShorthand = genStatShorthand()
+            while(videoUrlShorthands[audioShorthand]) {
+                audioShorthand = genStatShorthand()
+            }
+            sdShorthand = genStatShorthand()
+            while(videoUrlShorthands[sdShorthand]) {
+                sdShorthand = genStatShorthand()
+            }
+            videoUrlShorthands[audioShorthand] = [audioUrl, audioIndexEnd]
+            videoUrlShorthands[sdShorthand] = [sdUrl, sdIndexEnd]
+            if(hdUrl) {
+                hdShorthand = genStatShorthand()
+                while(videoUrlShorthands[hdShorthand]) {
+                    hdShorthand = genStatShorthand()
+                }
+                videoUrlShorthands[hdShorthand] = [hdUrl, hdIndexEnd]
+            }
+            script = `
+                ${hdUrl ? yt2009templates.playerHDdashback(
+                    true, autoHQ, Math.floor(data.length / 60)
+                ) : ""}
+                showLoadingSprite();
+                var playbackIds = [
+                    "${sdShorthand}", "${audioShorthand}", "${hdShorthand}"
+                ];
+                initAsDash();
+                fillViewCount();
+            `
+            code = code.replace(
+                `0:00 / 0:00`,
+                `0:00 / ${yt2009utils.seconds_to_time(data.length)}`
+            )
+            if(data.live) {
+                script = `showUnrecoverableError(
+                    "live streams are currently unavailable."
+                );`
             }
             code = code.replace(
                 "//yt2009-pmp4",
@@ -3275,7 +3424,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         function fillFlashIfNeeded() {
             // flash
             if(useFlash) {
-                let sabr = flags.includes("exp_sabr")
+                let sabr = flags.includes("exp_sabr") && !data.d
                 let sabrHfr = (
                     flags.includes("exp_turbocharge_sabr_hfr")
                  && flags.includes("exp_turbocharge")
@@ -3507,7 +3656,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         && (qualityList.includes("720p")
         || qualityList.includes("480p"))
         && !data.live
-        && !useSabr) {
+        && !useSabr
+        && !data.d) {
             let enableConnCheck = "";
             if(req.headers.cookie
             && req.headers.cookie.includes("playback_quality=0")) {
@@ -3559,7 +3709,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         || (qualityList.filter(s => {
             return (s && s.includes("720p"))
         })[0]))))
-        && useSabr)) {
+        && useSabr)
+        && !data.d) {
             // hd buttons for sabr
             let use720p = qualityList.includes("720p")
             if(flags.includes("exp_turbocharge_sabr_hfr")) {
@@ -4468,7 +4619,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             data.unplayable = true;
         }
 		data.description = videoDetails.shortDescription
-		data.viewCount = videoDetails.viewCount
+		data.viewCount = videoDetails.viewCount || "0"
 		data.author_name = videoDetails.author;
 		data.id = videoDetails.videoId;
 		data.author_url = "/channel/" + videoDetails.channelId
@@ -4528,6 +4679,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     quality.xtags,quality.mimeType,xtags
                 ])
             })
+        }
+        if(playerResponse.streamingData
+        && playerResponse.streamingData.isD) {
+            data.d = true;
+            data.rawStreams = playerResponse.streamingData
         }
         if(playerResponse.playbackTracking) {
             data.playbackTracking = playerResponse.playbackTracking
@@ -4834,6 +4990,121 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             }
         }
         res.send("")
+    },
+
+    "dashPlaybackHandler": function(req, res) {
+        if(!req.query.pid
+        || (req.query.type !== "table" && req.query.type !== "media")
+        || (req.query.type == "media" && !req.query.range)
+        || !videoUrlShorthands[req.query.pid]) {
+            res.sendStatus(400)
+            return;
+        }
+        let checkRange = req.query.range
+        if(req.query.type == "media") {
+            if(!checkRange.includes("-")) {
+                res.sendStatus(400)
+                return;
+            }
+            let rangeStart = parseInt(checkRange.split("-")[0])
+            let rangeEnd = parseInt(checkRange.split("-")[1])
+            if(req.query.type == "media"
+            && (isNaN(rangeStart) || isNaN(rangeEnd)
+            || rangeEnd - rangeStart <= 0
+            || rangeEnd - rangeStart >= 9000000)) {
+                res.sendStatus(400)
+                return;
+            }
+        }
+        if(req.query.type == "table") {
+            let shorthand = videoUrlShorthands[req.query.pid]
+            fetch(shorthand[0] + "&range=0-" + parseInt(shorthand[1]) + 500, {
+                "headers": {
+                    "user-agent": ANDROID_REQ_UA
+                }
+            }).then(r => {
+                if(r.status >= 400) {
+                    res.sendStatus(r.status)
+                    return;
+                }
+                r.buffer().then(r => {
+                    let metadataResponse = {}
+                    function readTimescale(file) {
+                        let mvhdBox = file.indexOf("mvhd") + 16
+                        return file.readUInt32BE(mvhdBox)
+                    }
+
+                    let header = r
+                    let duration = header.indexOf("mvhd") + 20
+                    duration = header.readUInt32BE(duration)
+                    let timescale = readTimescale(r)
+                    duration = Math.floor(duration / timescale)
+
+                    // offset
+                    let firstMoof = r.indexOf("moof")
+                    let mediaStart = firstMoof - 4
+
+                    // read sidx
+                    let sidx = header.indexOf("sidx")
+                    let sidxSize = header.readUInt32BE(sidx - 4)
+                    sidx = header.slice(sidx + 4, sidx + sidxSize - 4)
+                    let cursor = 8; // skip flags + refid
+                    let sidxTimescale = sidx.readUInt32BE(cursor)
+                    cursor += 14
+                    let referenceCount = sidx.readUInt16BE(cursor)
+                    cursor += 2
+                    sidx = sidx.slice(cursor)
+                    cursor = 0
+                    let sidxRefs = []
+                    let msOffset = 0;
+                    let bOffset = mediaStart;
+                    for (let i = 0; i < referenceCount ; i++) {
+                        let sample = sidx.slice(cursor, cursor + 12)
+                        let refSize = sample.readUInt32BE(0)
+                        let duration = sample.readUInt32BE(4)
+                        cursor += 12
+                        let durationMs = Math.floor(
+                            (duration / sidxTimescale) * 1000
+                        )
+                        let start = msOffset;
+                        let end = msOffset + durationMs
+                        msOffset += durationMs
+                        sidxRefs.push({
+                            "size": refSize,
+                            "start": bOffset,
+                            "duration": durationMs,
+                            "startMs": start,
+                            "endMs": end
+                        })
+                        bOffset += refSize
+                    }
+
+                    metadataResponse = {
+                        "firstFragmentStart": mediaStart,
+                        "mediaLookup": sidxRefs
+                    }
+
+                    res.send(metadataResponse)
+                })
+            })
+        } else {
+            fetch(
+                videoUrlShorthands[req.query.pid][0]
+                + "&range=" + req.query.range,
+            {
+                "headers": {
+                    "user-agent": ANDROID_REQ_UA
+                }
+            }).then(r => {
+                if(r.status >= 400) {
+                    res.status(r.status).send("")
+                    return;
+                }
+                r.buffer().then(r => {
+                    res.send(r)
+                })
+            })
+        }
     }
 }
 
@@ -4880,10 +5151,10 @@ const validationKeys = {
     "altData": 0x5a,
     "alt2Data": 0xa,
     "alt4Data": [
-        50,97,55,52,53,101,101,56,51,56,
-        97,48,52,52,99,57,52,51,56,98,
-        49,97,49,57,53,48,57,56,53,53,
-        53,99,50,101,51,48,98,52,50,102
+        102,102,102,97,56, 97,49,57,97, 53,
+        101, 55, 53,99,99, 97,97,50,54,100,
+        51, 57,101,53,52, 48,54,53,99, 52,
+        49,101, 98,55,54,101,98,55,98, 56
     ],
     "nameKeys": [
         "90591020308095113033",

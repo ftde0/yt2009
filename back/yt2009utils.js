@@ -24,7 +24,7 @@ let ratelimitData = {}
 let ytConfigData = false;
 const playerResponsePb = require("./proto/android_player_pb")
 const yt2009pot = require("./yt2009pot")
-const playerParams = "YAF4AQ"
+let playerParams = "YAHIAQG4BAXwBAH4BAGiBhUBO2AyIiLNmoS-Uloagnd1K2d5DPc%3D"
 let fmodeCommunityPictureIds = {}
 let wyjebaData = {}
 let syncComments = {}
@@ -1603,7 +1603,8 @@ module.exports = {
             return;
         }
 
-        const formatRequestMode = (!this.isUnsupportedNode() ? "protobuf" : "json")
+        const formatRequestMode = "json"
+        //(!this.isUnsupportedNode() ? "protobuf" : "json")
 
         if(formatRequestMode == "protobuf") {
             rHeaders["content-type"] = "application/x-protobuf"
@@ -1623,7 +1624,7 @@ module.exports = {
 
         this.pullBarePlayer(id, (r) => {
             parseResponse(r)
-        })
+        }, {"tryOldVersion": true})
     },
 
     "pullBarePlayer": function(id, callback, extraSettings) {
@@ -1634,8 +1635,17 @@ module.exports = {
             }, extraSettings)
             return;
         }
+        let VERSION = "21.16"
+        let VERSION_FULL = "21.16.256"
+        if(extraSettings && extraSettings.tryOldVersion) {
+            // last for non-sabr downloads
+            VERSION = "20.40"
+            VERSION_FULL = "20.40.00"
+        }
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
-        rHeaders["user-agent"] = "com.google.android.youtube/21.16.256 (Linux; U; Android 14) gzip"
+        rHeaders["user-agent"] = "com.google.android.youtube/"
+                               + VERSION_FULL
+                               + " (Linux; U; Android 14) gzip"
         if(yt2009exports.read().visitor) {
             rHeaders["X-Goog-Visitor-Id"] = yt2009exports.read().visitor
         }
@@ -1660,12 +1670,19 @@ module.exports = {
         let client = {
             "hl": "en",
             "clientName": "ANDROID",
-            "clientVersion": "21.16",
+            "clientVersion": VERSION,
             "deviceMake": "Google",
             "deviceModel": "Android SDK built for x86",
             "deviceCodename": "ranchu;",
             "osName": "Android",
-            "osVersion": "14"
+            "osVersion": "14",
+            "gl": "US",
+            "timeZone": "Europe/Warsaw",
+            "screenDensityFloat": 1,
+            "screenHeightPoints": 2160,
+            "screenPixelDensity": 1,
+            "screenWidthPoints": 3840,
+            "utcOffsetMinutes": 60
         }
         if(extraSettings && extraSettings.highEndDevice) {
             client.deviceMake = "Google"
@@ -1692,6 +1709,12 @@ module.exports = {
                             )
                         }, true)
                     }
+                }
+                if(r.streamingData
+                && r.streamingData.serverAbrStreamingUrl
+                && yt2009exports.read().d) {
+                    r.streamingData.serverAbrStreamingUrl = null;
+                    r.streamingData.isD = true;
                 }
                 let checkedFmts = r.streamingData.adaptiveFormats.map(s => {
                     if(s.itag == 140 || s.itag == 139) {
@@ -1721,6 +1744,9 @@ module.exports = {
             callback(r);
         }
         let createFetchAgent = this.createFetchAgent
+        if(yt2009exports.read().d) {
+            playerParams = yt2009exports.read().dkey
+        }
         function requestPlayer() {
             fetch(hostname + "/youtubei/v1/player?prettyPrint=false", {
                 "headers": rHeaders,
@@ -1741,17 +1767,39 @@ module.exports = {
                 "method": "POST",
                 "mode": "cors",
                 "agent": createFetchAgent()
-            }).then(r => {r.json().then(r => {
-                processPlayerResponse(r)
-            })})
+            }).then(r => {
+                if(r.status >= 400
+                && extraSettings
+                && extraSettings.tryOldVersion) {
+                    // old version dead
+                    // retry with current
+                    extraSettings.tryOldVersion = false;
+                    client.clientVersion = "21.16"
+                    rHeaders["user-agent"] = androidHeaders.headers["user-agent"]
+                    requestPlayer()
+                    return;
+                }
+                r.json().then(r => {
+                    processPlayerResponse(r)
+                })
+            })
         }
-        requestPlayer();
-        setTimeout(() => {
-            if(!receivedPlayerResponse) {
-                devlog("exceeding /player time, retrying")
-                requestPlayer();
+
+        this.getYtConfig((c) => {
+            try {
+                rHeaders["x-youtube-hot-hash-data"] = c.hotHashData || ""
+                rHeaders["x-youtube-cold-hash-data"] = c.coldHashData || ""
             }
-        }, 500)
+            catch(error){}
+            requestPlayer();
+            setTimeout(() => {
+                if(!receivedPlayerResponse
+                && !(extraSettings && extraSettings.tryOldVersion)) {
+                    devlog("exceeding /player time, retrying")
+                    requestPlayer();
+                }
+            }, 500)
+        })
     },
 
     "downloadInParts_file": function(url, out, callback, metadata) {
@@ -2383,6 +2431,9 @@ module.exports = {
     },
 
     "craftPlayerProto": function(id, callback) {this.getYtConfig(cfg => {
+        if(yt2009exports.read().d) {
+            playerParams = yt2009exports.read().dkey
+        }
         const p = require("./proto/android_player_request_pb")
         let root = new p.root()
         root.setVideoid(id)
@@ -2832,7 +2883,7 @@ module.exports = {
         }
 
         let resp = playerResponsePb.root.deserializeBinary(b).toObject()
-        let formats = resp.formatsList[0]
+        let formats = resp.formats
         let bp = {} //bp -- backport
         function backportFormat(f) {
             let a = JSON.parse(JSON.stringify(f))
@@ -2865,6 +2916,8 @@ module.exports = {
                     "audioIsDefault": Boolean(at.isdefault)
                 }
             }
+            f.initRange = f.initrange;
+            f.indexRange = f.indexrange;
             return a;
         }
         if(!formats) {
@@ -2897,10 +2950,16 @@ module.exports = {
             bp.streamingData.serverAbrStreamingUrl = formats.serverabrstreamingurl
             bp.streamingData.expiresInSeconds = formats.expiresinseconds;
         }
-        if(resp.playerconfigmsgList&&resp.playerconfigmsgList[0]) {
-            let ustreamerConfig = resp.playerconfigmsgList[0]
-                                  .mediacommonconfigmsgList[0]
-                                  .mediaustreamerconfigList[0]
+        if(bp.streamingData
+        && bp.streamingData.serverAbrStreamingUrl
+        && yt2009exports.read().d) {
+            bp.streamingData.serverAbrStreamingUrl = null;
+            bp.streamingData.isD = true;
+        }
+        if(resp.playerconfigmsg) {
+            let ustreamerConfig = resp.playerconfigmsg
+                                  .mediacommonconfigmsg
+                                  .mediaustreamerconfig
                                   .mediaustreamerrequestconfig
             bp.playerConfig = {
                 "mediaCommonConfig": {
@@ -2911,8 +2970,8 @@ module.exports = {
             }
         }
 
-        if(resp.videometadataList && resp.videometadataList[0]) {
-            let m = resp.videometadataList[0]
+        if(resp.videometadata) {
+            let m = resp.videometadata
             bp.videoDetails = {
                 "videoId": m.id,
                 "allowRatings": m.allowratings,
@@ -2920,7 +2979,7 @@ module.exports = {
                 "channelId": m.channelid,
                 "title": m.title,
                 "shortDescription": m.description,
-                "viewCount": m.viewcount,
+                "viewCount": m.viewcount || "0",
                 "lengthSeconds": ((m.videolength&&m.videolength.toString())||"0"),
                 "isLiveContent": m.islivecontent,
                 "isLive": m.islivecontent,
@@ -2928,9 +2987,9 @@ module.exports = {
             }
         }
 
-        if(resp.captionsList&&resp.captionsList[0]) {
+        if(resp.captions) {
             try {
-                let c = resp.captionsList[0].contentList[0].trackList
+                let c = resp.captions.content.trackList
                 let tracks = []
                 c.forEach(track => {
                     let name = track.nameList[0].runList[0].text;
@@ -2956,8 +3015,8 @@ module.exports = {
             catch(error){}
         }
 
-        if(resp.playabilityList&&resp.playabilityList[0]) {
-            let p = resp.playabilityList[0]
+        if(resp.playability) {
+            let p = resp.playability
             bp.playabilityStatus = {
                 "status": usedPlayStatuses[(p.status||0).toString()]
             }
@@ -2966,10 +3025,10 @@ module.exports = {
             }
         }
 
-        if(resp.storyboardList&&resp.storyboardList[0]) {
+        if(resp.storyboard) {
             try {
-                let p = resp.storyboardList[0]
-                let spec = p.sbList[0].sblink
+                let p = resp.storyboard
+                let spec = p.sbList[0].spec
                 bp.storyboards = {
                     "playerStoryboardSpecRenderer": {
                         "spec": spec

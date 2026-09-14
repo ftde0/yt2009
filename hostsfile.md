@@ -6,6 +6,10 @@
 
 enables using yt2009 at www.youtube.com.
 
+**hostsfile setup can only be done once yt2009 setup is complete.**
+
+**do NOT do hostsfile setup before you have a running and working yt2009.**
+
 
 # 1. editing config
 
@@ -51,7 +55,11 @@ find the `cert.crt` file in `back/hostsfile-certs`, open it, and click `Install 
 <img src="doc-imgs/ssl-cert-initial.PNG"/>
 
 keep the store location as current user, and click next. select "Place all certificates in the following stores",
-and click Browse to get all locations. select Trusted Root Certification Authorities, OK and finish setting up the certificate.
+and click Browse to get all locations. select Trusted Root Certification Authorities
+
+<img src="doc-imgs/ssl-cert-p2.PNG"/>
+
+OK and finish setting up the certificate.
 
 <img src="doc-imgs/ssl-cert-p3.PNG"/>
 
@@ -65,12 +73,25 @@ import the `server.p12` file from `back/hostsfile-certs` into Your Certificates.
 
 <img src="doc-imgs/firefox-import.PNG"/>
 
-
 # 4.
 
 RESTART ALL BROWSERS. sometimes, a PC restart may work as well.
 
 if you get the current youtube layout even after doing all of this, press ctrl+f5 to clear caches on youtube.com
+
+## firefox forks
+
+firefox forks (such as Nocturne) may have stricter privacy settings set by default, preventing yt2009 from
+properly functioning on youtube.com
+
+if you get certificate issues **even after doing all the above**,
+open `about:config` and make sure `security.cert_pinning.enforcement_level` is set to `1`.
+
+also make sure this setting is enabled.
+
+<img src="doc-imgs/nocturne-certs.png"/>
+
+restart browser and try going to youtube.com once done.
 
 ## **DISABLE ALL EXTENSIONS RUNNING ON YOUTUBE WHEN RUNNING YT2009 ON WWW.YOUTUBE.COM.**
 

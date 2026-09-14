@@ -97,7 +97,7 @@ module.exports = {
                     let isOk = parseInt(
                         d.substring(d.length - 27, d.length - 26)
                     )
-                    if(!isOk) {
+                    if(!isOk || !valid) {
                         console.log("[!] backup po provider marked not ok")
                     }
                     resp = pb.potResponse.deserializeBinary(
