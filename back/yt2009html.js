@@ -124,7 +124,7 @@ function createPot(visitorId, type) {
         }, (data.valid > 1800
         ? (data.valid - 1800)
         : Math.min((data.valid + 40), 20)) * 1000)
-    }, visitorCreatedOnce)
+    }, false)
 }
 
 const watchpage_code = fs.readFileSync("../watch.html").toString();
