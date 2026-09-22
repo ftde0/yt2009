@@ -10,7 +10,10 @@ const knownFlagNames = {
         "sabr", "sabr-nonhd", "sabr-uses-modded-app", "v4-fix-channels"
     ],
     "search": ["only-old"],
-    "channel": ["default-avatar-adapt", "uploads-count", "uncrop-avatar"],
+    "channel": [
+        "default-avatar-adapt", "uploads-count", "uncrop-avatar",
+        "videos_sort_new"
+    ],
     "homepage": ["hype-homepage"]
 }
 let sessions = {}

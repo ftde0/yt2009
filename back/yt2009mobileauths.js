@@ -18,10 +18,12 @@ let gdataAuths = require("./cache_dir/gdata_auths.json")
 
 module.exports = {
     "isAuthorized": function(req, res, onError) {
-        if(!config.gdata_auth
-        || (config.gdata_auth && !config.tokens)
-        || (config.gdata_auth && !config.tokens[0])
-        || (config.gdata_auth && config.tokens[0] == "*")) {
+        if(config.env == "dev"
+        || config.gdata_auth == false // explicitly disabled
+        || ((config.env == "prod" || config.gdata_auth) && !config.tokens)
+        || ((config.env == "prod" || config.gdata_auth) && !config.tokens[0])
+        || ((config.env == "prod" || config.gdata_auth)
+        && config.tokens[0] == "*")) {
             return true;
         }
 

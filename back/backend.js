@@ -45,7 +45,6 @@ const child_process = require("child_process")
 const yt2009charts = require("./yt2009charts")
 const yt2009gdataauths = require("./yt2009mobileauths")
 const yt2009basefeeds = require("./yt2009basefeeds")
-const yt2009m = require("./yt2009m")
 const yt2009trusted = require("./yt2009trustedcontext")
 const mobileHelper = require("./yt2009mobilehelper")
 const devTimings = false;
@@ -325,6 +324,89 @@ if(config.wyjeba_typu_onesie) {
 
 if(config.alt_hostname) {
     yt2009_utils.initYtDNS()
+
+    const PASSTHROUGH_URLS = [
+        "/api/",
+        "/youtubei",
+        "/sorry/continue",
+        "/redirect?event",
+        "/s/",
+        "/generate_204",
+        "/csi_204",
+        "/error_204",
+        "/upgrade_visitor_cookie"
+    ]
+    console.log(`
+
+[info--advice]
+this instance can be used as a direct proxy to youtube domains.
+this is intended if using yt2009 with a hostsfile redirect
+to www.youtube.com, but may be a security risk if misused.
+
+make sure your yt2009 is not port-forwarded to the open internet,
+and if it is, it's best to disable hostsfile redirs by disabling
+config.alt_hostname.
+        
+`)
+    function passthroughRequest(req, res) {
+        if(!req.headers.host
+        || !req.headers.host.includes("www.youtube.com")) {
+            res.sendStatus(400)
+            return;
+        }
+        req.headers.host = "www.youtube.com"
+        req.headers["content-encoding"] = ""
+        delete req.headers["content-encoding"]
+        if(req.body && Buffer.isBuffer(req.body)) {
+            req.headers["content-length"] = req.body.byteLength
+        }
+        let preq = https.request({
+            "host": yt2009_exports.read().youtubeIp,
+            "port": 443,
+            "servername": "www.youtube.com",
+            "headers": req.headers,
+            "path": req.originalUrl,
+            "method": req.method
+        }, (pres) => {
+            res.status(pres.statusCode)
+            if(pres.headers) {
+                for(let h in pres.headers) {
+                    res.set(h, pres.headers[h])
+                }
+            }
+            pres.on("error", (e) => {
+                res.send("[yt2009] passthrough network error")
+                return;
+            })
+            pres.on("data", (d) => {
+                res.write(d)
+            });
+            pres.on("end", () => {
+                res.end()
+            })
+        });
+        if(req.body && Buffer.isBuffer(req.body)) {
+            preq.write(req.body)
+        }
+        preq.end()
+    }
+    function checkPassthrough(req,res,next) {
+        if(req.query.polymer == "1"
+        || PASSTHROUGH_URLS.filter(s => {
+            return req.originalUrl.indexOf(s) == 0
+        })[0]) {
+            // passthrough requests to yt
+            passthroughRequest(req, res)
+        } else {
+            next()
+        }
+    }
+    app.get("/*", (req, res, next) => {
+        checkPassthrough(req,res,next)
+    })
+    app.post("/*", (req, res, next) => {
+        checkPassthrough(req,res,next)
+    })
 }
 
 // ws sync with master
@@ -457,14 +539,7 @@ if(!config.disableWs) {
     try {
         initWs()
     }
-    catch(error) {
-        child_process.exec("npm install ws",
-        (error, stdout, stderr) => {
-            setTimeout(() => {
-                initWs()
-            }, 150)
-        })
-    }
+    catch(error) {}
 }
 
 app.get('/back/*', (req,res) => {
@@ -1600,7 +1675,7 @@ app.get("/feeds/api/videos/", (req, res) => {
             diagnosticSCount = 0;
         }, (1000 * 60))
     }
-    if(diagnosticSCount >= 12) {
+    if(diagnosticSCount >= 42) {
         hu = true;
     }
 })
@@ -2275,6 +2350,17 @@ app.get("/get_more_comments", (req, res) => {
             return null;
         }
 
+        let trueDate = false;
+        if(comment.date
+        && flags.includes("watch_modern_features")) {
+            try {
+                trueDate = yt2009.languageHandleUploadDate(
+                    yt2009_utils.dateFormat(comment.date), req
+                )
+            }
+            catch(error){}
+        }
+
         let commentHTML = yt2009_templates.videoComment(
             comment.authorUrl,
             comment.authorName,
@@ -2289,7 +2375,8 @@ app.get("/get_more_comments", (req, res) => {
             comment.r,
             (flags.includes("watch_modern_features")
             ? additionalContentHeader : ""),
-            handleCommentAvatar(comment.authorAvatar)
+            handleCommentAvatar(comment.authorAvatar),
+            trueDate
         )
 
         if(customRating == 1) {
@@ -2508,7 +2595,7 @@ app.get("/get_video", (req, res) => {
         }, (1000 * 60))
     }
     diagnosticWatchCount++
-    if(diagnosticWatchCount >= 30) {
+    if(diagnosticWatchCount >= 90) {
         hu = true;
     }
 })
@@ -3641,14 +3728,6 @@ if(useMobileHelper) {
         mobileHelper.unlink(req, res)
     })
 }
-
-
-app.post("/deviceregistration/v1/devices", (req, res) => {
-    yt2009m.staticRegister(req, res)
-})
-app.post("/youtubei/*", (req, res) => {
-    yt2009m.rootHandle(req, res)
-})
 
 
 app.post("/m/appreq/mobilevideo", (req, res) => {

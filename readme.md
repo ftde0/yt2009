@@ -11,6 +11,7 @@ a fairly accurate 2009 youtube frontend with account features.
 - *private* - $50!
 - [Szprinktrap](https://github.com/Szprinktrap)
 - [RF7391](https://github.com/RF7391)
+- [Makasikq](https://github.com/Makasikq)
 
 for $5/month, you can also join this list! --> https://github.com/sponsors/ftde0
 

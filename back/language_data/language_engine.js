@@ -67,8 +67,10 @@ module.exports = {
         if(typeof(req) == "string") {
             lang = req;
         }
-        if((req.headers.cookie || "").includes("lang=")) {
-            let langName = req.headers.cookie.split("lang=")[1].split(";")[0]
+        let cookie = " " + (req.headers.cookie || "")
+        let delim = cookie.includes(" lang=") ? " lang=" : "lang="
+        if((req.headers.cookie || "").includes(delim)) {
+            let langName = req.headers.cookie.split(delim)[1].split(";")[0]
             lang = langName
         }
         if(req.query.hl) {

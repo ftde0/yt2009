@@ -260,6 +260,11 @@
     background-position: -122px 0px;
 }
 
+.player_additions_popout .annotations.unavailable,
+.player_additions_popout .cc.unavailable {
+    opacity: 0.3;
+}
+
 
 
 

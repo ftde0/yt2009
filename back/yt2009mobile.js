@@ -15,6 +15,7 @@ const mobileauths = require("./yt2009mobileauths")
 const yt2009jsongdata = require("./yt2009jsongdata")
 const yt2009hype = require("./yt2009hype")
 const yt2009sabr = require("./yt2009sabr")
+const yt2009subscriptions = require("./yt2009subscriptions")
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 const ffmpeg_process_144 = [
     "ffmpeg",
@@ -1256,68 +1257,94 @@ module.exports = {
         if(!mobileauths.isAuthorized(req, res)) return;
         let id = req.originalUrl.split("/videos/")[1]
                                 .split("/comments")[0]
+        let requestContinuation = req.query.continuation
+        let thn = req.query.thn
 
-        yt2009html.get_video_comments(id, (data) => {
+        function onComments(data) {
+            let continuation = false;
             let response = templates.gdata_feedStart
-            let customComments = yt2009html.custom_comments()
-            if(customComments[id]) {
-                customComments[id].forEach(c => {
-                    if(!c.author) return;
-                    response += templates.gdata_feedComment(
-                        id,
-                        utils.asciify(c.author),
-                        c.text.replace(/\p{Other_Symbol}/gui, ""),
-                        c.time
-                    )
-                })
+            if(thn && !isNaN(parseInt(thn))) {
+                response = response.replace(">1<", ">" + parseInt(thn) + "<")
             }
-            if(useMobileHelper) {
-                let comments = require("./yt2009mobilehelper")
-                               .pullCommentsByUser(req);
-                comments = comments.filter(s => s.video == id)
-                comments.forEach(c => {
-                    response += templates.gdata_feedComment(
-                        c.video,
-                        c.name,
-                        c.content,
-                        c.date
-                    )
-                })
+            if(data && data.filter && data.filter(s => {
+                return s&&s.continuation
+            })[0]) {
+                continuation = encodeURIComponent(data.filter(s => {
+                    return s&&s.continuation
+                })[0].continuation)
+                if(thn && !isNaN(parseInt(thn))) {
+                    thn = parseInt(thn) + 20
+                } else {
+                    thn = 20
+                }
+                continuation = [
+                    `http://${config.ip}:${config.port}/feeds/api/videos`,
+                    `/${id}/comments/?continuation=${continuation}`,
+                    "&thn=" + thn
+                ].join("")
+                response += templates.gdataNext(continuation)
+            }
+            if(!requestContinuation) {
+                let customComments = yt2009html.custom_comments()
+                if(customComments[id]) {
+                    customComments[id].forEach(c => {
+                        if(!c.author) return;
+                        response += templates.gdata_feedComment(
+                            id,
+                            utils.asciify(c.author),
+                            c.text.replace(/\p{Other_Symbol}/gui, ""),
+                            c.time
+                        )
+                    })
+                }
+                if(useMobileHelper) {
+                    let comments = require("./yt2009mobilehelper")
+                                .pullCommentsByUser(req);
+                    comments = comments.filter(s => s.video == id)
+                    comments.forEach(c => {
+                        response += templates.gdata_feedComment(
+                            c.video,
+                            c.name,
+                            c.content,
+                            c.date
+                        )
+                    })
+                }
             }
             if(data) {
                 data.forEach(comment => {
-                    // check if comment has content and fits
-                    // to comment_remove_future rules
                     if(!comment.content) return;
-                    let futurePass = true;
                     let commentContent = comment.content
-                    commentContent = commentContent.replace(/\p{Other_Symbol}/gui, "")
-                    let future = constants.comments_remove_future_phrases
-                    future.forEach(futureWord => {
-                        if(commentContent.toLowerCase().includes(futureWord)) {
-                            futurePass = false;
-                        }
-                    })
-                    if(commentContent.trim().length == 0
-                    || commentContent.trim().length > 500) {
-                        futurePass = false;
-                    }
-
-                    // add comment if comment_remove_future pass
-                    if(futurePass) {
-                        response += templates.gdata_feedComment(
-                            id,
-                            utils.asciify(comment.authorName),
-                            commentContent,
-                            utils.relativeToAbsoluteApprox(comment.time || "1 week ago")
-                        )
-                    }
+                    commentContent = commentContent.replace(
+                        /\p{Other_Symbol}/gui, ""
+                    )
+                    response += templates.gdata_feedComment(
+                        id,
+                        utils.asciify(comment.authorName),
+                        commentContent,
+                        comment.date || (utils.relativeToAbsoluteApprox(
+                            comment.time || "1 week ago"
+                        ))
+                    )
                 })
             }
             response += templates.gdata_feedEnd
             res.set("content-type", "application/atom+xml")
             res.send(response)
-        })
+        }
+
+        if(!requestContinuation) {
+            yt2009html.get_video_comments(id, (data) => {
+                onComments(data)
+            }, ["continuation-y", "no-cache"])
+        } else {
+            yt2009html.request_continuation(
+                decodeURIComponent(requestContinuation), 
+                id, "", (data) => {
+                    onComments(data)
+                }
+            , true)
+        }
     },
 
     // apk user info
@@ -1414,25 +1441,14 @@ module.exports = {
         if(id.startsWith("UC") && id.length == 24) {
             path = "/channel/" + id
         }
-        channels.main({"path": path, 
-        "headers": {"cookie": ""},
-        "query": {"f": 0}}, 
-        {"send": function(data) {
-
-            if(req.query.alt == "json") {
-                yt2009jsongdata.userVideos(data, res, req.query.callback)
-                return;
-            }
-
-            let response = templates.gdata_feedStart;
-
-            let videosSource = (data.videos || [])
+        function buildFromVideosSource(videosSource, ogData) {
             videosSource = videosSource.filter(s => {return !(
                 s.badges
                 && (s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
                 || s.badges.includes("BADGE_MEMBERS_ONLY"))
             )})
 
+            let response = templates.gdata_feedStart;
             let flags = mobileflags.get_flags(req).watch
             let urlFlags = mobileflags.url_flags(req)
             let isV4 = ((flags.watch && flags.watch.includes("v4-fix-channels"))
@@ -1441,6 +1457,14 @@ module.exports = {
             function buildFeed() {
                 videosSource.forEach(video => {
                     let cacheVideo = yt2009html.get_cache_video(video.id)
+                    let data = {
+                        "handle": id,
+                        "id": "",
+                        "name": ""
+                    }
+                    if(ogData) {
+                        data = ogData
+                    }
                     let user = data.handle ? data.handle.replace("@", "")
                              : (data.id ? data.id : utils.asciify(data.name))
 
@@ -1515,6 +1539,44 @@ module.exports = {
             if(fetchesCompleted >= fetchesRequired) {
                 buildFeed()
             }
+        }
+        let flags = mobileflags.get_flags(req).channel
+        let urlFlags = mobileflags.url_flags(req)
+        if((flags.includes("videos_sort_new")
+        || urlFlags.list.includes("videos_sort_new"))
+        && !req.query.alt) {
+            yt2009subscriptions.fetch_new_videos({
+                "headers": {
+                    "url": path
+                },
+                "query": {
+                    "flags": ""
+                }
+            }, {
+                "send": function(data) {
+                    buildFromVideosSource(data.videos)
+                }
+            }, true)
+            return;
+        }
+        channels.main({"path": path, 
+        "headers": {"cookie": ""},
+        "query": {"f": 0}}, 
+        {"send": function(data) {
+
+            if(req.query.alt == "json") {
+                yt2009jsongdata.userVideos(data, res, req.query.callback)
+                return;
+            }
+
+            let videosSource = (data.videos || [])
+            videosSource = videosSource.filter(s => {return !(
+                s.badges
+                && (s.badges.includes("BADGE_STYLE_TYPE_MEMBERS_ONLY")
+                || s.badges.includes("BADGE_MEMBERS_ONLY"))
+            )})
+
+            buildFromVideosSource(videosSource, data)
         }}, "", true)
     },
 
@@ -1662,13 +1724,12 @@ module.exports = {
             return;
         }
 
-        // i do love being too lazy to develop this function properly
         let path = "/@" + req.query.author
         if(req.query.author.startsWith("UC")
         && req.query.author.length == 24) {
             path = "/channel/" + path
         }
-        require("./yt2009subscriptions").fetch_new_videos({
+        yt2009subscriptions.fetch_new_videos({
             "headers": {
                 "url": path
             },
@@ -1677,7 +1738,6 @@ module.exports = {
             }
         }, {
             "send": function(data) {
-                // anyway, we got videos to throw there
                 let fetchesRequired = 0;
                 let fetchesCompleted = 0;
 

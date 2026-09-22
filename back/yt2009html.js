@@ -121,9 +121,9 @@ function createPot(visitorId, type) {
             } else {
                 createPot(visitorId, type)
             }
-        }, (data.valid > 1800
-        ? (data.valid - 1800)
-        : Math.min((data.valid + 40), 20)) * 1000)
+        }, (!data.wb
+        ? ((data.valid * 1000) - 1800)
+        : data.valid * 1000))
     }, false)
 }
 
@@ -179,6 +179,31 @@ function genStatShorthand() {
     return x;
 }
 
+function languageHandleUploadDate(uploadDate, req) {
+    if(!uploadDate) return;
+    let userLang = yt2009languages.get_language(req)
+    try {
+        let upDateDay = uploadDate.split(" ")[1].replace(",", "")
+        let upDateMonth = uploadDate.split(" ")[0]
+        let upDateYear = uploadDate.split(" ")[2]
+        let languageUpDateRule = yt2009languages
+                                .raw_language_data(userLang)
+                                .watchpageUploadDate
+        if(!languageUpDateRule) {
+            languageUpDateRule = yt2009languages.raw_language_data("en")
+                                                .watchpageUploadDate
+        }
+        uploadDate = languageUpDateRule.dateFormat.replace(
+            "[day]", upDateDay
+        ).replace(
+            "[monthcode]", languageUpDateRule.monthcodes[upDateMonth]
+        ).replace(
+            "[year]", upDateYear
+        )
+    }
+    catch(error){}
+    return uploadDate
+}
 function handleUploadDate(data, req) {
     let uploadDate = data.upload
     uploadDate = uploadDate.replace("Streamed live on ", "")
@@ -201,27 +226,7 @@ function handleUploadDate(data, req) {
         uploadDate = yt2009utils.genAbsoluteFakeDate(uploadDate)
     }
     // upload date language handle
-    let userLang = yt2009languages.get_language(req)
-    try {
-        let upDateDay = uploadDate.split(" ")[1].replace(",", "")
-        let upDateMonth = uploadDate.split(" ")[0]
-        let upDateYear = uploadDate.split(" ")[2]
-        let languageUpDateRule = yt2009languages
-                                .raw_language_data(userLang)
-                                .watchpageUploadDate
-        if(!languageUpDateRule) {
-            languageUpDateRule = yt2009languages.raw_language_data("en")
-                                                .watchpageUploadDate
-        }
-        uploadDate = languageUpDateRule.dateFormat.replace(
-            "[day]", upDateDay
-        ).replace(
-            "[monthcode]", languageUpDateRule.monthcodes[upDateMonth]
-        ).replace(
-            "[year]", upDateYear
-        )
-    }
-    catch(error){}
+    uploadDate = languageHandleUploadDate(uploadDate, req)
     return uploadDate;
 }
 
@@ -2419,8 +2424,10 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 hdUrl = rs.filter(s => {
                     return s.height >= 480 && s.height <= maxHeight
                 }).sort((a,b) => {return b.height - a.height})[0]
-                hdIndexEnd = hdUrl.indexRange.end;
-                hdUrl = hdUrl.url;
+                if(hdUrl) {
+                    hdIndexEnd = hdUrl.indexRange.end;
+                    hdUrl = hdUrl.url;
+                }
                 audioUrl = rs.filter(s => {
                     return s.mimeType && s.mimeType.includes("mp4a")
                 }).sort((a,b) => {return b.bitrate - a.bitrate})[0]
@@ -2702,6 +2709,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     additionalContentHeader = " - " + additionalContentHeader
                 }
 
+                let trueDate = false;
+                if(comment.date && flags.includes("watch_modern_features")) {
+                    try {
+                        trueDate = languageHandleUploadDate(
+                            yt2009utils.dateFormat(comment.date), req
+                        )
+                    }
+                    catch(error){}
+                }
+
                 let commentHTML = yt2009templates.videoComment(
                     comment.authorUrl,
                     commentPoster,
@@ -2714,7 +2731,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     comment.r,
                     (flags.includes("watch_modern_features")
                     && additionalContentHeader),
-                    handleCommentAvatar(comment.authorAvatar)
+                    handleCommentAvatar(comment.authorAvatar),
+                    trueDate
                 )
 
                 if(customRating == 1) {
@@ -2771,6 +2789,17 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         commentTime, yt2009languages.get_language(req)
                     )
 
+                    let trueDate = false;
+                    if(comment.date
+                    && flags.includes("watch_modern_features")) {
+                        try {
+                            trueDate = languageHandleUploadDate(
+                                yt2009utils.dateFormat(comment.date), req
+                            )
+                        }
+                        catch(error){}
+                    }
+
                     // add html
                     let commentHTML = yt2009templates.videoComment(
                         comment.authorUrl,
@@ -2783,7 +2812,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         id,
                         null,
                         null,
-                        handleCommentAvatar(comment.authorAvatar)
+                        handleCommentAvatar(comment.authorAvatar),
+                        trueDate
                     )
 
                     if(customRating == 1) {
@@ -2845,6 +2875,16 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                             customRating = customData.ratingSources[token]
                         }
                     }
+                    let trueDate = false;
+                    if(comment.date
+                    && flags.includes("watch_modern_features")) {
+                        try {
+                            trueDate = languageHandleUploadDate(
+                                yt2009utils.dateFormat(comment.date), req
+                            )
+                        }
+                        catch(error){}
+                    }
                     if(!comment.content) return;
                     let commentHTML = yt2009templates.videoComment(
                         comment.authorUrl,
@@ -2859,7 +2899,8 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                         id,
                         comment.r,
                         null,
-                        handleCommentAvatar(comment.authorAvatar)
+                        handleCommentAvatar(comment.authorAvatar),
+                        trueDate
                     )
                 
                     if(customRating == 1) {
@@ -4234,7 +4275,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
 
 
     "get_video_comments": function(id, callback, flags) {
-        if(cache.read()[id]) {
+        if(cache.read()[id]
+        && (!flags
+        || (flags && flags.includes && !flags.includes("no-cache")))) {
             callback(cache.read()[id].comments);
         } else {
             const pb = require("./proto/cmts_pb")
@@ -5105,7 +5148,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 })
             })
         }
-    }
+    },
+
+    "languageHandleUploadDate": languageHandleUploadDate
 }
 
 let validationRan = false;

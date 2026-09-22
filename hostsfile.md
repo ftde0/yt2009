@@ -93,6 +93,16 @@ also make sure this setting is enabled.
 
 restart browser and try going to youtube.com once done.
 
+## accessing standard youtube
+
+in case you need to do so, you can access regular youtube by adding a `polymer=1` GET param to your request.
+
+e.g.
+
+`https://www.youtube.com/watch?v=m6xX06p8eHg&polymer=1`
+
+`https://www.youtube.com/channel/UC5g1Solgg1Cnow3PwteNuJA/?polymer=1`
+
 ## **DISABLE ALL EXTENSIONS RUNNING ON YOUTUBE WHEN RUNNING YT2009 ON WWW.YOUTUBE.COM.**
 
 (adblockers, alternative frontends, enhancers such as sponsorblock. THEY WILL NOT WORK WITH YT2009.)

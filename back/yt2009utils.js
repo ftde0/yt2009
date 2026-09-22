@@ -1978,6 +1978,10 @@ module.exports = {
 		if(timeValue.toString() !== w1) {
 			timeType = w1.replace(/[0-9]/g, "")
 			switch(timeType) {
+                case "s": {
+                    timeText = "seconds"
+                    break;
+                }
 				case "m": {
 					timeType = "minutes"
 					break;

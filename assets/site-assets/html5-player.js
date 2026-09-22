@@ -244,7 +244,9 @@ function initPlayer(parent, fullscreenEnabled) {
             || checkBounds($("#watch-player-div"), mouse_left, mouse_top))
             return;
             setTimeout(function() {
-                mousedown = false;
+                if(fadeControlsEnable) {
+                    mousedown = false;
+                }
 
                 // hide volume if it were to get glitched
                 if(volume_up) {
@@ -581,7 +583,8 @@ function timeUpdate() {
         videoStartedPlaying = true;
     }
     if(playingAsLive
-    || (window.sabrData && window.sabrData.seekToLength)) return;
+    || (window.sabrData && window.sabrData.seekToLength)
+    || animSeekVisualLockout) return;
     elapsedbar.style.width = (video.currentTime / video.duration) * 100 + "%"
     if(video.duration <= video.currentTime) {
         // ??
@@ -853,7 +856,7 @@ function mousedownf() {
     mousedown = true;
 }
 
-function mouseup() {
+function mouseup(e) {
     if(window.sabrData && window.sabrData.seekToLength) {
         video.currentTime = window.sabrData.seekToLength
         window.sabrData.seekedTempArchive = window.sabrData.seekToLength
@@ -876,9 +879,15 @@ function videoSeek(e) {
         }, 40)
         $(".seek_btn").className = "seek_btn hovered"
         var offsetX = e.pageX - seekbar.getBoundingClientRect().left;
+        var tc = (offsetX / seekbar.getBoundingClientRect().width)
+                 * video.duration
+        if(e && e.isAnimSeek) {
+            animSeek2(tc, function() {
+                video.currentTime = tc;
+            })
+            return;
+        }
         if(window.sabrData) {
-            var tc = (offsetX / seekbar.getBoundingClientRect().width)
-                     * video.duration
             var elapsedbarWidth = (tc / video.duration) * 100
             elapsedbarWidth = Math.min(elapsedbarWidth, 100)
             elapsedbar.style.width = elapsedbarWidth + "%"
@@ -887,8 +896,7 @@ function videoSeek(e) {
             }
             sabrData.seekToLength = Math.abs(tc);
         } else {
-            video.currentTime = (offsetX / seekbar.getBoundingClientRect().width)
-                                * video.duration
+            video.currentTime = tc
         }
         
     } else {
@@ -896,6 +904,7 @@ function videoSeek(e) {
     }
 }
 
+document.body.addEventListener("mousemove", videoSeek, false)
 seekbar.addEventListener("mousemove", videoSeek, false)
 elapsedbar.addEventListener("mousemove", videoSeek, false)
 loadedbar.addEventListener("mousemove", videoSeek, false)
@@ -906,14 +915,21 @@ elapsedbar.addEventListener("mousedown", mousedownf, false)
 loadedbar.addEventListener("mousedown", mousedownf, false)
 $(".video_controls .seek_btn").addEventListener("mousedown", mousedownf, false)
 
-seekbar.addEventListener("mouseup", mouseup, false)
-elapsedbar.addEventListener("mouseup", mouseup, false)
-loadedbar.addEventListener("mousedown", mousedownf, false)
-$(".video_controls .seek_btn").addEventListener("mouseup", mouseup, false)
+try {
+    window.addEventListener("mouseup", mouseup, false)
+}
+catch(error){
+    seekbar.addEventListener("mouseup", mouseup, false)
+    elapsedbar.addEventListener("mouseup", mouseup, false)
+    loadedbar.addEventListener("mousedown", mousedownf, false)
+    $(".video_controls .seek_btn").addEventListener("mouseup", mouseup, false)
+}
 
 // normal click
 function click_seek(e) {
     mousedownf()
+    if(!e) {e = {}}
+    e.isAnimSeek = true;
     videoSeek(e)
     mouseup()
 }
@@ -1146,6 +1162,37 @@ function animSeek(point, callback) {
     }, 20)
 }
 
+var animSeekVisualLockout = false;
+function animSeek2(targetTime, callback) {
+    if(animSeekVisualLockout) {
+        callback()
+        return;
+    }
+    animSeekVisualLockout = true;
+    // animSeek approach 2 (better for random placements)
+    var ct = video.currentTime;
+    var targetPercent = ((targetTime / video.duration) * 100)
+    var currentPercent = ((ct / video.duration) * 100)
+    var diff = targetPercent - currentPercent
+    var stepIndex = 0
+    var steps = [diff / 3, diff / 3, diff / 6, diff / 6]
+    var x = setInterval(function() {
+        currentPercent += steps[stepIndex];
+        var v = currentPercent.toFixed(1) + "%"
+        $(".progress_container .elapsed").style.width = v;
+        stepIndex++;
+        if(!steps[stepIndex]) {
+            currentPercent = targetPercent;
+            clearInterval(x)
+            v = targetPercent + "%"
+            $(".progress_container .elapsed").style.width = v;
+            setTimeout(function() {
+                animSeekVisualLockout = false;
+            }, 10)
+            callback()
+        }
+    }, 34)
+}
 
 // endscreen
 var videoEnded = false;
@@ -2023,6 +2070,31 @@ function dbg_stepFrame() {
 
 var annotationsSwitch = $(".player_additions_popout .annotations")
 
+var annotationsPaTooltipTexts = [
+    "Turn on Annotations", "Turn off Annotations",
+    "Annotations are not available"
+]
+var annotationsPaIndex = 0;
+var annotationsPaHovered = false;
+if(annotationsSwitch) {
+    annotationsSwitch.addEventListener("mousemove", function() {
+        annotationsPaHovered = true;
+        setTimeout(function() {
+            if(annotationsPaHovered) {
+                updatePaTooltip(annotationsPaTooltipTexts[annotationsPaIndex])
+                showPaTooltip()
+                paTooltipContainer.style.top = "0px"
+            }
+        }, 500)
+    }, false)
+    function tooltipHide() {
+        hidePaTooltip()
+        annotationsPaHovered = false;
+    }
+    annotationsSwitch.addEventListener("mouseout", tooltipHide, false)
+    annotationsSwitch.addEventListener("click", tooltipHide, false)
+}
+
 function annotationsMain() {
     annotationsEnabled = !annotationsEnabled;
 
@@ -2068,24 +2140,12 @@ function annotationsMain() {
             if(annotationsExist) {
                 // proper icon if at least 1 annotation
                 annotationsSwitch.className = "annotations"
+                annotationsPaIndex = 1;
             } else {
                 // show paTooltip if no annotations
                 // (use annotationsPaHovered for delay)
-                var annotationsPaHovered = false;
-                annotationsSwitch.addEventListener("mousemove", function() {
-                    annotationsPaHovered = true;
-                    setTimeout(function() {
-                        if(annotationsPaHovered) {
-                            updatePaTooltip("Annotations are not available")
-                            showPaTooltip()
-                            paTooltipContainer.style.top = "0px"
-                        }
-                    }, 500)
-                }, false)
-                annotationsSwitch.addEventListener("mouseout", function() {
-                    hidePaTooltip()
-                    annotationsPaHovered = false;
-                }, false)
+                annotationsPaIndex = 2;
+                annotationsSwitch.className += " unavailable"
             }
 
             // interval for annotations checking
@@ -2118,6 +2178,7 @@ function annotationsMain() {
         }, false)
     } else {
         // turned off annotations, cleanup
+        annotationsPaIndex = 0
         $(".player_additions_popout .annotations")
         .className = "annotations none"
         var s = mainElement.querySelectorAll(
@@ -2134,6 +2195,33 @@ annotationsSwitch.addEventListener("click", annotationsMain, false)
 // captions
 var captionsSwitch = $(".player_additions_popout .cc")
 var ccListLoaded = false;
+
+var paCcTooltipTexts = [
+    "Turn on Captions", "Turn off Captions", "Captions are not available"
+]
+var paCcTooltipTextIndex = 0;
+var captionsPaHovered = false;
+if(captionsSwitch) {
+    captionsSwitch.addEventListener("mousemove", function() {
+        captionsPaHovered = true;
+        setTimeout(function() {
+            if(captionsPaHovered
+            && (!document.querySelector(".captions_popup")
+            || (document.querySelector(".captions_popup")
+            && $(".captions_popup").style.display == "none"))) {
+                updatePaTooltip(paCcTooltipTexts[paCcTooltipTextIndex])
+                showPaTooltip()
+                paTooltipContainer.style.top = "25px"
+            }
+        }, 500)
+    }, false)
+    function tooltipHide() {
+        hidePaTooltip()
+        captionsPaHovered = false;
+    }
+    captionsSwitch.addEventListener("mouseout", tooltipHide, false)
+    captionsSwitch.addEventListener("click", tooltipHide, false)
+}
 
 // main function to fetch available caption languages
 function captionsMain(source) {
@@ -2200,25 +2288,15 @@ function captionsMain(source) {
             }
 
             if(!captionsFound && !audiotracksEnabled) {
-                var captionsPaHovered = false;
-                captionsSwitch.addEventListener("mousemove", function() {
-                    captionsPaHovered = true;
-                    setTimeout(function() {
-                        if(captionsPaHovered) {
-                            updatePaTooltip("Captions are not available")
-                            showPaTooltip()
-                            paTooltipContainer.style.top = "25px"
-                        }
-                    }, 500)
-                }, false)
-                captionsSwitch.addEventListener("mouseout", function() {
-                    hidePaTooltip()
-                    captionsPaHovered = false;
-                }, false)
+                paCcTooltipTextIndex = 2;
+                captionsSwitch.className += " unavailable"
             }
         }, false)
     } else {
         // show ui disabled and remove previous captions
+        if(paCcTooltipTextIndex !== 2) {
+            paCcTooltipTextIndex = 0;
+        }
         $(".player_additions_popout .cc").className += " none"
         $(".captions_popup").style.display = "none"
         var s = document.querySelectorAll(".caption")
@@ -2240,6 +2318,7 @@ function captionsMain(source) {
 
 // place all captions into menu
 function placeCaptions() {
+    paCcTooltipTextIndex = 1;
     var videoId = ""
     if(location.href.indexOf("v=") !== -1) {
         videoId = location.href.split("v=")[1].split("#")[0].split("&")[0]
@@ -2634,7 +2713,9 @@ try {
                     if(window.sabrData) {
                         sabrData.skipSource = "ARROW"
                     }
-                    video.currentTime += skipAmount
+                    animSeek2(video.currentTime + skipAmount, function() {
+                        video.currentTime += skipAmount
+                    })
                 }
                 break;
             }
@@ -2647,7 +2728,9 @@ try {
                     if(window.sabrData) {
                         sabrData.skipSource = "ARROW"
                     }
-                    video.currentTime -= skipAmount
+                    animSeek2(video.currentTime - skipAmount, function() {
+                        video.currentTime -= skipAmount
+                    })
                 }
             }
         }
@@ -2741,7 +2824,7 @@ player_add_popout.appendChild(paTooltipContainer)
 
 function updatePaTooltip(text) {
     paTooltipContainer.querySelector("#tooltip-text").innerHTML = text;
-    var approxTextLength = Math.floor(text.length * 5)
+    var approxTextLength = Math.floor(text.length * 5.2)
     paTooltipContainer.querySelector("#tooltip-text-container")
     .style.width = approxTextLength + "px"
     
@@ -4407,7 +4490,7 @@ $(".pause_btn").addEventListener("mousemove", function() {
     dropSeek()
 }, false)
 $(".timer").addEventListener("mousemove", dropSeek, false)
-video.addEventListener("mousemove", dropSeek, false)
+//video.addEventListener("mousemove", dropSeek, false)
 
 // rebuild endscreen sections on resizes if needed
 var endscreenCurrentVideoCount = 2;
@@ -5061,7 +5144,9 @@ if(document.cookie
 	}
     function skipToPercentage(v) {
         var targetTime = Math.floor((video.duration / 100) * v)
-        video.currentTime = targetTime;
+        animSeek2(targetTime, function() {
+            video.currentTime = targetTime;
+        })
     }
 	mainElement.addEventListener("keydown", function(e) {
         if(!isFocusedOnVideo(e) || e.ctrlKey) return;
@@ -5103,7 +5188,9 @@ if(document.cookie
             }
 			// j
 			case 74: {
-                video.currentTime -= 10
+                animSeek2(video.currentTime - 10, function() {
+                    video.currentTime -= 10
+                })
 				break;
 			}
 			// k
@@ -5119,7 +5206,9 @@ if(document.cookie
 			}
 			// l
 			case 76: {
-                video.currentTime += 10
+                animSeek2(video.currentTime + 10, function() {
+                    video.currentTime += 10
+                })
 				break;
 			}
         }

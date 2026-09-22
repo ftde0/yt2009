@@ -12,7 +12,7 @@ module.exports = {
         authorUrl, authorName, commentTime,
         content, flags, useLanguage, likes,
         id, replyData, additionalRenderHeader,
-        avatarData
+        avatarData, trueCommentTime
     ) {
         if(!additionalRenderHeader) {
             additionalRenderHeader = ""
@@ -95,7 +95,7 @@ module.exports = {
             <div class="watch-comment-head">
                 <div class="watch-comment-info">
                     <a class="watch-comment-auth" href="${authorUrl}" rel="nofollow">${ap == 1 ? avatarCode : ""}${authorName}</a>
-                    <span class="watch-comment-time"> (${commentTime}) ${utils.xss(additionalRenderHeader)}</span>
+                    <span class="watch-comment-time"${trueCommentTime ? `title="${utils.xss(trueCommentTime)}"` : ""}> (${commentTime}) ${utils.xss(additionalRenderHeader)}</span>
                 </div>
                 <div class="watch-comment-voting">
                     <span class="watch-comment-score watch-comment-${likeColor}" data-initial="${likes || 0}">${likePrefix}${likes || 0}</span>
@@ -1157,7 +1157,7 @@ ${ap == 2 ? avatarCode : ""}
     "gdata_feedStart": `<?xml version='1.0' encoding='UTF-8'?>
 <feed xmlns='http://www.w3.org/2005/Atom' xmlns:media='http://search.yahoo.com/mrss/' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' xmlns:gd='http://schemas.google.com/g/2005' xmlns:yt='http://gdata.youtube.com/schemas/2007'>
     <id>http://gdata.youtube.com/feeds/api/standardfeeds/us/recently_featured</id>
-    <updated>2010-12-21T18:59:58.000-08:00</updated>
+    <updated>${new Date().toISOString()}</updated>
     <category scheme='http://schemas.google.com/g/2005#kind' term='http://gdata.youtube.com/schemas/2007#video'/>
     <title type='text'> </title>
     <logo>http://www.youtube.com/img/pic_youtubelogo_123x63.gif</logo>
@@ -1324,6 +1324,17 @@ ${ap == 2 ? avatarCode : ""}
             author = utils.xss(additional.authorFull).split("&").join("&amp;").split("'").join("&apos;").split("\"").join("&quot;")
         }
 
+        title = title.split("<").join("").split(">").join("")
+                     .split("&").join("&amp;")
+                     .split("'").join("&apos;")
+                     .split("\"").join("&quot;")
+        if(description) {
+            description = description.split("<").join("").split(">").join("")
+                                     .split("&").join("&amp;")
+                                     .split("'").join("&apos;")
+                                     .split("\"").join("&quot;")
+        }
+
         return `
         <entry>
             <id>http://${config.ip}:${config.port}/feeds/api/videos/${id}${additional && rootLvlUrlFlags ? rootLvlUrlFlags : ""}</id>
@@ -1331,8 +1342,8 @@ ${ap == 2 ? avatarCode : ""}
             <published>${uploadDate ? new Date(uploadDate).toISOString() : ""}</published>
             <updated>${uploadDate ? new Date(uploadDate).toISOString() : ""}</updated>
             <category scheme="http://gdata.youtube.com/schemas/2007/categories.cat" label="${category}" term="${category}">${category}</category>
-            <title type='text'>${title.split("<").join("").split(">").join("").split("&").join("&amp;")}</title>
-            <content type='text'>${(description||"").split("<").join("").split(">").join("").split("&").join("&amp;")}</content>
+            <title type='text'>${title}</title>
+            <content type='text'>${(description||"")}</content>
             <link rel="http://gdata.youtube.com/schemas/2007#video.related" href="http://${config.ip}:${config.port}/feeds/api/videos/${id}/related${rootLvlUrlFlags}"/>${favCode}${liveCode}
             <author>
                 <name>${author}</name>
@@ -1343,10 +1354,10 @@ ${ap == 2 ? avatarCode : ""}
                 <gd:feedLink href='http://${config.ip}:${config.port}/feeds/api/videos/${id}/comments' countHint='530'/>
             </gd:comments>
             <media:group>
-                <media:title>${title.split("<").join("").split(">").join("").split("&").join("&amp;")}</media:title>
+                <media:title>${title}</media:title>
                 <media:category label='${category}' scheme='http://gdata.youtube.com/schemas/2007/categories.cat'>${category}</media:category>
                 <media:content url='${videoUrl}' type='video/3gpp' medium='video' expression='full' duration='999' yt:format='3'/>${qualityCode}
-                <media:description type='plain'>${(description||"").split("<").join("").split(">").join("").split("&").join("&amp;")}</media:description>
+                <media:description type='plain'>${(description||"")}</media:description>
                 <media:keywords>${unduplicateKeywordList.join(", ")}</media:keywords>
                 <media:player url='http://www.youtube.com/watch?v=${id}'/>
                 <media:thumbnail yt:name='hqdefault' url='http://i.ytimg.com/vi/${id}/hqdefault.jpg' height='240' width='320' time='00:00:00'/>
@@ -1364,7 +1375,7 @@ ${ap == 2 ? avatarCode : ""}
         </entry>`
     },
     "gdata_feedComment": function(id, authorName, comment, time) {
-        return `<entry gd:etag=' '>
+        return `<entry>
 		<id>tag:youtube.com,2008:video:b:comment:c</id>
 		<published>${new Date(time).toISOString()}</published>
 		<updated>${new Date(time).toISOString()}</updated>
@@ -1374,10 +1385,12 @@ ${ap == 2 ? avatarCode : ""}
                           .split("<").join("")
                           .split(">").join("")
                           .split("&").join("")
+                          .split("\"").join("&quot;")
+                          .split("'").join("&apos;")
                           .trim()}</content>
 		<link rel='related' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/${id}?v=2'/>
 		<link rel='alternate' type='text/html' href='http://www.youtube.com/watch?v=${id}'/>
-		<link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/${id}/comments/c?v=2'/>
+		<link rel='self' type='application/atom+xml' href='http://gdata.youtube.com/feeds/api/videos/${id}/comments/c?v=2&amp;z=${Math.random()}'/>
 		<author>
 			<name>${authorName}</name>
 			<uri>http://gdata.youtube.com/feeds/api/users/${authorName}</uri>
@@ -4432,5 +4445,9 @@ ${topContentHTML}
         
         hqPlaying = true;
         showLoadingSprite();` : ""}`
+    },
+
+    "gdataNext": function(url) {
+        return `\n    <link rel='next' type='application/atom+xml' href='${url.split("'").join("&apos;").split("&").join("&amp;")}'/>`
     }
 }

@@ -137,6 +137,18 @@
 		//yt2009-iv
 		//yt2009-cc
 		//yt2009-live
+		var durationChecked = false;
+		video.addEventListener("canplay", function() {
+			if(durationChecked) return;
+			durationChecked = true;
+			var dMinutes = Math.floor(video.duration / 60)
+			if(dMinutes >= 60) {
+				seekbarRemoveWidth = 255;
+			} else if(dMinutes >= 10) {
+				seekbarRemoveWidth = 235;
+			}
+			adjustSeekbarWidth();
+		}, false)
 	</script>
 
 	<!--autoplay_hook-->

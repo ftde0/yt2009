@@ -1241,7 +1241,7 @@ module.exports = {
                             if(vdata) {
                                 vdata = vdata.payload.creatorVideoData
                                 try {
-                                    let views = vdata.metrics.viewCount;
+                                    let views = vdata.publicMetrics.viewCount;
                                     vdata.views = views;
                                 }
                                 catch(error){}

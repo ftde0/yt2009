@@ -21,6 +21,9 @@ const youtubePkgname = "com.google.android.youtube"
 let resp = null;
 let overridenKeyId = null;
 let overridenKey = null;
+let connectionFails = 0;
+const connectionRetriesMax = 5;
+let lastWasBackup = false;
 
 module.exports = {
     "generatePo": function(visitor, callback, canUseExistingChallenge) {
@@ -64,7 +67,8 @@ module.exports = {
             callback({
                 "encryptData": potEncryptdata,
                 "backup": potBackup,
-                "valid": resp.time || 7200
+                "valid": resp.time || 7200,
+                "wb": lastWasBackup
             })
         }
         if(canUseExistingChallenge) {
@@ -82,12 +86,39 @@ module.exports = {
             resp = pb.potResponse.deserializeBinary(d).toObject()
             if(!resp || !resp.time || d.length == 0 || testBackupProvider) {
                 // something went wrong with the response, try backup provider
+                lastWasBackup = true;
                 console.log("using backup po provider")
                 let c = net.connect(7077, "46.62.131.50")
                 c.on("connect", (cs) => {
                     c.write("pbr\x00")
                 })
+                let failEvents = [
+                    "error", "timeout",
+                    "connectionAttemptFailed", "connectionAttemptTimeout"
+                ]
+                failEvents.forEach(e => {
+                    c.on(e, () => {
+                        console.log("backup po provider failed")
+                        connectionFails++
+                        if(connectionRetriesMax > connectionFails - 1) {
+                            console.log(
+                                `retry ${connectionFails}/${connectionRetriesMax}`
+                            )
+                            console.log("in 3s")
+                            setTimeout(() => {
+                                this.generatePo(visitor, callback, false)
+                            }, 3000)
+                        } else {
+                            console.log(
+                                "max attempts exceeded. playback may break"
+                            )
+                            resp = null;
+                            packagePot()
+                        }
+                    })
+                })
                 c.on("data", (d) => {
+                    connectionFails = 0;
                     d = d.toString().split("pbrk--")[1]
                     overridenKey = Buffer.from(d.substring(0,32), "hex")
                     overridenKeyId = Buffer.from(d.substring(32,42), "hex")
@@ -108,6 +139,7 @@ module.exports = {
                 })
                 return;
             }
+            lastWasBackup = false;
             overridenKey = null;
             overridenKeyId = null;
             packagePot()
