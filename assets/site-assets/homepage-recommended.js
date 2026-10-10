@@ -62,10 +62,11 @@ function homepageRequest() {
     && document.cookie.indexOf("reco_homepage_style=list") !== -1) {
         isListView = true;
     }
+    var recBody = document.getElementById("REC-feedmodule-body")
     if(isListView && !isVideosPage) {
-        document.getElementById("REC-feedmodule-body").className = "feedmodule-body list-view"
+        recBody.className = "feedmodule-body list-view"
     } else if(!isVideosPage) {
-        document.getElementById("REC-feedmodule-body").className = "feedmodule-body grid-view"
+        recBody.className = "feedmodule-body grid-view"
     }
 
 
@@ -98,6 +99,9 @@ function homepageRequest() {
                 if(r.responseText.indexOf("YT2009_NO_DATA") !== -1
                 && !isVideosPage) {
                     document.getElementById("feedmodule-REC").style.display = "none"
+                }
+                if(window.initTurbochargePreloads) {
+                    window.initTurbochargePreloads(recBody)
                 }
             }
         }

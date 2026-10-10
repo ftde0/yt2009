@@ -322,9 +322,8 @@ if(config.wyjeba_typu_onesie) {
     })
 }
 
+yt2009_utils.initYtDNS()
 if(config.alt_hostname) {
-    yt2009_utils.initYtDNS()
-
     const PASSTHROUGH_URLS = [
         "/api/",
         "/youtubei",
@@ -334,7 +333,8 @@ if(config.alt_hostname) {
         "/generate_204",
         "/csi_204",
         "/error_204",
-        "/upgrade_visitor_cookie"
+        "/upgrade_visitor_cookie",
+        "/jnn"
     ]
     console.log(`
 
@@ -720,7 +720,8 @@ app.get("/watch", (req, res) => {
 
     let disableDownloads = false;
     if(req.headers.cookie
-    && req.headers.cookie.includes("exp_sabr")) {
+    && req.headers.cookie.includes("exp_sabr")
+    && !req.query.unsabr) {
         disableDownloads = true
     }
 
@@ -735,12 +736,21 @@ app.get("/watch", (req, res) => {
     && !(req.query.with_pchelper
 	&& mobileHelper.hasLogin(req))
     && (!(req.headers.cookie
-    && req.headers.cookie.includes("with_pchelper_watch"))
-    && mobileHelper.hasLogin(req))) {
+    && req.headers.cookie.includes("with_pchelper_watch")))) {
         if(devTimings) {
             console.log(t, "turbocharge START")
         }
-        let extraSettings = {}
+        let turbochargeSession = false;
+        if(req.headers.cookie
+        && req.headers.cookie.includes("turbocharge_user_session=")) {
+            turbochargeSession = req.headers.cookie.split(
+                "turbocharge_user_session="
+            )[1].split(";")[0]
+        }
+        let extraSettings = {
+            "perfMode": true,
+            "turbochargeSession": turbochargeSession
+        }
         if(req.headers.cookie
         && req.headers.cookie.includes("exp_turbocharge_sabr_hfr")) {
             extraSettings.highEndDevice = true;
@@ -756,7 +766,29 @@ app.get("/watch", (req, res) => {
                 yt2009_exports.extendWrite("players", id, data)
             }
             data.emptyUploadString = ""
+            let sabrBase = null;
+            let sabrPfid = null;
+            if(disableDownloads && !useFlash) {
+                let hdDefault1080 = (
+                    req.headers
+                 && req.headers.cookie
+                 && req.headers.cookie.includes("hd_1080")
+                )
+                let qualities = ["720p", "480p", "360p", "240p", "144p"]
+                if(hdDefault1080) {
+                    qualities.unshift("1080p")
+                }
+                sabrBase = yt2009sabr.initPlaybackSession(id, qualities, {
+                    "useHfr": extraSettings.highEndDevice,
+                    "supportsRedirectInMain": true
+                })
+                data.sabrBase = sabrBase
+                sabrPfid = yt2009.prestartSabr(req, data)
+                if(devTimings) {console.log("prestarting sabr", sabrPfid)}
+            }
             data = yt2009.miniParse(data)
+            data.sabrBase = sabrBase
+            data.sabrPfid = sabrPfid
             if(extraSettings.highEndDevice) {
                 data.isHfrResponse = true;
             }
@@ -3247,6 +3279,7 @@ app.get("/exp_hd", (req, res) => {
     if(!yt2009trusted.isValid(req, res)) return;
     let lower = req.query.video_id.includes("/lower")
     let id = req.query.video_id.substring(0, 11)
+    let forceRedownload = req.query.force_redownload == "1"
     let quality = "720p"
     if((req.headers.cookie
     && req.headers.cookie.includes("hd_1080"))
@@ -3257,13 +3290,15 @@ app.get("/exp_hd", (req, res) => {
     if(quality == "1080p"
     && fs.existsSync(`../assets/${id}-1080p.mp4`)
     && fs.statSync(`../assets/${id}-1080p.mp4`).size < 5
-    && fs.existsSync(`../assets/${id}-720p.mp4`)) {
+    && fs.existsSync(`../assets/${id}-720p.mp4`)
+    && !forceRedownload) {
         res.redirect(`/assets/${id}-720p.mp4?ac=${Math.random()}`)
         return;
     }
 
     if(fs.existsSync(`../assets/${id}-${quality}.mp4`)
-    && fs.statSync(`../assets/${id}-${quality}.mp4`).size > 5) {
+    && fs.statSync(`../assets/${id}-${quality}.mp4`).size > 5
+    && !forceRedownload) {
         res.redirect(`/assets/${id}-${quality}.mp4?ac=${Math.random()}`)
     } else {
         yt2009_utils.saveMp4_android(id, (success) => {
@@ -3293,9 +3328,11 @@ app.get("/get_480", (req, res) => {
     if(!yt2009trusted.isValid(req, res)) return;
     let lower = req.query.video_id.includes("/lower")
     let id = req.query.video_id.substring(0, 11)
+    let forceRedownload = req.query.force_redownload == "1"
     let quality = "480p"
     // callback mp4 if we already have one
-    if(fs.existsSync(`../assets/${id}-${quality}.mp4`)) {
+    if(fs.existsSync(`../assets/${id}-${quality}.mp4`)
+    && !forceRedownload) {
         res.redirect(`/assets/${id}-${quality}.mp4?ac=${Math.random()}`)
     } else {
         yt2009_utils.saveMp4_android(id, (success) => {
@@ -4058,7 +4095,8 @@ app.get("/yt2009_recommended", (req, res) => {
     if(usePchelper) {
         let fReq = {
             "headers": req.headers,
-            "targetVids": 100
+            "targetVids": 100,
+            "isPchelper": true
         }
         let fRes = {
             "set":function(name,key){},
@@ -6520,7 +6558,8 @@ app.get("/pchelper_related", (req, res) => {
     let oId = req.query.id;
     let fReq = {
         "originalUrl": "videos/" + oId + "/related",
-        "headers": req.headers
+        "headers": req.headers,
+        "isPchelper": true
     }
     let html = ""
     let fRes = {
@@ -7385,7 +7424,19 @@ app.get("/sabr_playback", (req, res) => {
     if(config.dev_sabr_report_html5_slow_responses) {
         initTime = Date.now()
     }
-    yt2009sabr.handlePlayer(req.query.pid, offset, req, (result) => {
+    if(offset == 0
+    && req.query.pfid
+    && yt2009sabr.hasOngoingFetch(req.query.pfid)
+    && !req.query.force_replayer) {
+        yt2009sabr.hookToOngoingFetch(req.query.pfid, (result) => {
+            onSabrResponse(result)
+        })
+    } else {
+        yt2009sabr.handlePlayer(req.query.pid, offset, req, (result) => {
+            onSabrResponse(result)
+        })
+    }
+    function onSabrResponse(result) {
         if(config.dev_sabr_report_html5_slow_responses) {
             let sendTime = Date.now()
             if(sendTime - initTime >= 12000) {
@@ -7457,7 +7508,7 @@ app.get("/sabr_playback", (req, res) => {
             partCount
         )
         res.send(resp)
-    })
+    }
 })
 
 app.get("/dash_playback", (req, res) => {
@@ -7991,6 +8042,33 @@ playback tracking (pchelper html5)
 */
 app.get("/playback_progress_report", (req, res) => {
     yt2009.progressReport(req, res)
+})
+
+
+app.get("/turbocharge_preload", (req, res) => {
+    if(!yt2009_utils.isAuthorized(req)) {
+        res.sendStatus(401)
+        return;
+    }
+    if(!req.headers.cookie
+    || !req.headers.cookie.includes("turbocharge_user_session=")
+    || !req.query.video_id) {
+        res.sendStatus(400)
+        return;
+    }
+    res.sendStatus(204)
+    let tcSession = req.headers.cookie.split(
+        "turbocharge_user_session="
+    )[1].split(";")[0]
+    let highEndDevice = (
+        req.headers.cookie
+     && req.headers.cookie.includes("exp_turbocharge_sabr_hfr")
+    )
+    yt2009_utils.pullBarePlayer(req.query.video_id, (z) => {}, {
+        "perfMode": true,
+        "turbochargeSession": tcSession,
+        "highEndDevice": highEndDevice
+    })
 })
 
 /*

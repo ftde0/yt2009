@@ -1326,8 +1326,10 @@ ${ap == 2 ? avatarCode : ""}
 
         title = title.split("<").join("").split(">").join("")
                      .split("&").join("&amp;")
-                     .split("'").join("&apos;")
-                     .split("\"").join("&quot;")
+        if(!additional || !additional.isPchelper) {
+            title = title.split("'").join("&apos;")
+                         .split("\"").join("&quot;")
+        }
         if(description) {
             description = description.split("<").join("").split(">").join("")
                                      .split("&").join("&amp;")
@@ -1906,7 +1908,7 @@ ${ap == 2 ? avatarCode : ""}
     "banner": function(url) {return `<div id="user_banner" class="profile-banner-box"><img src="${url}" onerror="document.getElementById('user_banner').style.display = 'none'" class="" width="960" height="150"></div>`},
     "watchBanner": function(link, img) {
     return `<div id="watch-channel-brand-cap">
-        <a href="${link}"><img src="${img}" onerror="document.getElementById('watch-channel-brand-cap').style.display = 'none';" width="300" height="50" border="0"></a>
+        <a href="${link}"><img src="${img}" onerror="document.getElementById('watch-channel-brand-cap').style.display = 'none';" loading="lazy" width="300" height="50" border="0"></a>
     </div>`},
     "sidebarSub": function(sub) {return `<div class="subfolder channel-subfolder" onclick="switchChannel(this)" data-url="${sub.url}"><a class="name" href="#">${sub.name.trim()}</a></div>`},
     "langPickerBase": `
@@ -4449,5 +4451,9 @@ ${topContentHTML}
 
     "gdataNext": function(url) {
         return `\n    <link rel='next' type='application/atom+xml' href='${url.split("'").join("&apos;").split("&").join("&amp;")}'/>`
-    }
+    },
+
+    "turbochargeJSIncludes": `
+    <script src="/assets/site-assets/turbocharge-preloads.js" defer></script>
+    `
 }

@@ -2752,17 +2752,24 @@ setTimeout(function() {
     }
 }, 5000)
 // force it in if not here (sabr)
-setTimeout(function() {
-    if(!video.playing && !videoStartedPlaying
-    && window.sabrBase && !playingAsLive) {
-        try {
-            sabrData.currentRequest.abort()
-            sabrData.waitingSabrFetch = false;
+var restarterCanceled = false
+function setupVideoRestarter(first) {
+    restarterCanceled = false;
+    setTimeout(function() {
+        if(!video.playing
+        && (first && !videoStartedPlaying)
+        && window.sabrBase && !playingAsLive
+        && !restarterCanceled) {
+            try {
+                sabrData.currentRequest.abort()
+                sabrData.waitingSabrFetch = false;
+            }
+            catch(error) {}
+            requestSabr(0, "FORCE", true)
         }
-        catch(error) {}
-        requestSabr(0, "FORCE", true)
-    }
-}, 2800)
+    }, 2000)
+}
+setupVideoRestarter(true)
 
 // video loading sprite on unloaded area
 video.addEventListener("seeking", function(e) {
@@ -3215,6 +3222,21 @@ function requestSabr(offset, source, force) {
     }, false)
 }
 
+function encodeSabrPref() {
+    if(window.localStorage
+    && window.localStorage.sabrQualityPref
+    && window.btoa) {
+        var serverEncode = btoa(
+            window.localStorage.sabrQualityPref
+        ).split("+").join("-").split("/").join("_").split("=").join("")
+        document.cookie = "server_encoded_sabr_pref=" 
+                        + serverEncode + "; "
+                        + "Path=/; "
+                        + "expires=Fri, 31 Dec 2066 23:59:59 GMT; "
+                        + "SameSite=Lax"
+    }
+}
+
 var sabrInitCount = 0;
 function initAsSabr() {
     if(!window.MediaSource) {
@@ -3573,6 +3595,7 @@ function initAsSabr() {
                         try {qElement.click()}
                         catch(error){}
                         removeCtxmenu()
+                        encodeSabrPref()
                     }, false)
                     mainElement.appendChild(ctxMenu)
                     return false;
@@ -3643,6 +3666,10 @@ function initAsSabr() {
     }, false)
 
     // buffer queue
+    var turbocharge = (document.cookie
+    && document.cookie.indexOf
+    && document.cookie.indexOf("exp_turbocharge") !== -1)
+    
     var vbq = setInterval(function() {
         if(sabrData.appendQueue[0]) {
             if(sabrData.appendCallback) {
@@ -3686,10 +3713,13 @@ function initAsSabr() {
                 sabrData.appendQueue.shift()
             }
         }
-    }, 250)
+    }, turbocharge ? 75 : 250)
 
     // watch for new buffer fetches
     video.addEventListener("timeupdate", function() {
+        if(video.currentTime < 3) {
+            restarterCanceled = true;
+        }
         if(!sabrData.defaultLongReadaheadSet
         && video.duration >= (60 * 20)
         && video.videoHeight <= 720) {
@@ -3787,6 +3817,9 @@ function initAsSabr() {
                 sabrData.waitingSabrFetch = true;
                 sabrData.addedSegments = []
                 requestSabr(Math.floor(vc * 1000), "SEEK")
+                if(vc < 3) {
+                    setupVideoRestarter()
+                }
             } else {
                 // wait for current sabr fetch to end
                 var x = setInterval(function() {
@@ -3795,6 +3828,9 @@ function initAsSabr() {
                         sabrData.addedSegments = []
                         clearInterval(x)
                         requestSabr(Math.floor(vc * 1000), "SEEK")
+                        if(vc < 3) {
+                            setupVideoRestarter()
+                        }
                     }
                 }, 100)
             }
@@ -3810,6 +3846,9 @@ function initAsSabr() {
             }
         }, 1000)
     })
+
+    // make sure server-encoded quality pref is set for turbocharge
+    encodeSabrPref()
 }
 
 function sabrQualityChanged(source) {

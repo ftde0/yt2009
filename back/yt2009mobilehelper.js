@@ -577,7 +577,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                                         "authorFull": authorFull,
                                         "isV4": isV4,
                                         "isMobilehelper": true,
-                                        "urlFlags": urlFlags
+                                        "urlFlags": urlFlags,
+                                        "isPchelper": req.isPchelper
                                     }, v.videoId, req)
                                 )
                                 //console.log("successfully added video " + v.videoId)
@@ -939,7 +940,8 @@ http://${config.ip}:${config.port}/gsign?device=${device}`,
                                 "authorFull": v.authorFull,
                                 "authorId": v.authorId,
                                 "isV4": isV4,
-                                "isMobilehelper": true
+                                "isMobilehelper": true,
+                                "isPchelper": req.isPchelper
                             }, v.id, req)
                         )
                     })

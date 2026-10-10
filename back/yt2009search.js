@@ -796,6 +796,15 @@ module.exports = {
 
         code = yt2009doodles.applyDoodle(code, req)
 
+        if(req.headers
+        && req.headers.cookie
+        && req.headers.cookie.includes("exp_turbocharge")) {
+            code = code.replace(
+                `<!--yt2009_tc_tweaks-->`,
+                yt2009templates.turbochargeJSIncludes
+            )
+        }
+
         let baseUrl = `/results?search_query=${query.split(" ").join("+")}`
         code = code.replace(
             `var YT2009_BASE_SEARCH_URL = "";`,

@@ -331,6 +331,10 @@ function morefrom_load() {
         // remove indicator so it doesn't load all the time
         var mark = document.querySelector(".yt2009-mark-morefrom-fetch");
         mark.parentNode.removeChild(mark)
+
+        if(window.initTurbochargePreloads) {
+            window.initTurbochargePreloads($("#watch-channel-discoverbox"))
+        }
     }, false)
 }
 
@@ -624,6 +628,9 @@ if(document.querySelector("#watch-playlist-videos-panel")) {
             // add html from server
             $("#watch-playlist-discoverbox").innerHTML += vr.responseText
             setTimeout(function() {scrollToPlaylistVideo()}, 100)
+            if(window.initTurbochargePreloads) {
+                window.initTurbochargePreloads($("#watch-playlist-discoverbox"))
+            }
         }, false)
     } else {
         setTimeout(function() {scrollToPlaylistVideo()}, 100)
@@ -2067,10 +2074,13 @@ if(usingTurbocharge
     setTimeout(function() {r.send(null)}, 30)
     r.addEventListener("load", function(e) {
         var res = JSON.parse(r.responseText)
-        document.querySelector(".yt2009-default-related").innerHTML = res.relatedVideosHTML;
+        var related = document.querySelector(".yt2009-default-related")
+        related.innerHTML = res.relatedVideosHTML;
         if(document.querySelector(".endscreen")) {
             setTimeout(function() {
-                document.querySelector(".endscreen").innerHTML += res.endscreenHTML
+                var endscreen = document.querySelector(".endscreen")
+                endscreen.innerHTML += res.endscreenHTML
+                turbochargeEndscreenBind(endscreen)
             }, 3000)
         }
         document.querySelector(".watch-video-added").innerHTML = res.uploadDate
@@ -2092,6 +2102,7 @@ if(usingTurbocharge
             container.innerHTML = res.commentBox;
             document.getElementById("recent_comments").appendChild(container)
         }
+        initTurbochargePreloads(related)
     }, false)
 }
 

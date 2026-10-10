@@ -14,6 +14,9 @@ function pchelperRelated() {
         if(r.readyState == 4 || this.readyState == 4 || e.readyState == 4) {
             pchelperRelatedEl.removeChild(pchelperWaiter)
             pchelperRelatedEl.innerHTML = r.responseText;
+            if(window.initTurbochargePreloads) {
+                window.initTurbochargePreloads(pchelperRelatedEl)
+            }
 
             if(window.video && window.endscreenCurrentVideoCount) {
                 // in html5 player

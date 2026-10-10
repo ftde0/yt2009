@@ -1,5 +1,7 @@
 const fetch = require("node-fetch")
 const https = require("https")
+const zlib = require("zlib")
+const net = require("net")
 const constants = require("./yt2009constants.json")
 const yt2009exports = require("./yt2009exports")
 const fs = require("fs")
@@ -32,6 +34,7 @@ const hostname = config.alt_hostname
                ? `https://youtubei.googleapis.com`
                : `https://www.youtube.com`
 let validationData = {}
+let turbochargeProcessPulls = {}
 
 let downloadRetryMax = 5;
 if(config.dl_max_retry && !isNaN(parseInt(config.dl_max_retry))) {
@@ -1280,8 +1283,17 @@ module.exports = {
         let testF18 = this.testF18;
         let downloadInParts_file = this.downloadInParts_file;
         let funcRef = this.saveMp4_android;
+
+        if(!quality) {
+            quality = "360p"
+        }
+
+        let fname = `${id}-${quality}`
+        if(quality == "360p") {
+            fname = id;
+        }
         
-        function parseResponse(r) {
+        function parseResponse(r, fname) {
             // parse formats
             if(!r.streamingData) {
                 callback(false)
@@ -1358,6 +1370,15 @@ module.exports = {
 
             if(audioFormats.length > 0) {
                 audioFormats = audioFormats.sort((a, b) => b.bitrate - a.bitrate)
+            }
+            let hasOriginalSeparation = !!(audioFormats.filter(s => {
+                return s&&s.isOriginal
+            })[0])
+            if(hasOriginalSeparation) {
+                // use only original audio for dash downloader
+                audioFormats = audioFormats.filter(s => {
+                    return s&&s.isOriginal
+                })
             }
             if(audioFormats[0]) {
                 h264DashAudioUrl = audioFormats[0].url
@@ -1551,17 +1572,8 @@ module.exports = {
         }
 
         if(existingPlayer) {
-            parseResponse(existingPlayer)
+            parseResponse(existingPlayer, fname)
             return;
-        }
-
-        if(!quality) {
-            quality = "360p"
-        }
-
-        let fname = `${id}-${quality}`
-        if(quality == "360p") {
-            fname = id;
         }
 
         if(yt2009exports.getStatus(fname)) {
@@ -1576,9 +1588,10 @@ module.exports = {
             "verboseDownloadProgress", fname, {"state": "STARTED"}
         )
 
-        if(yt2009exports.read().players[id]) {
+        if(yt2009exports.read().players[id]
+        && !yt2009exports.read().players[id].turbochargePartial) {
             devlog(`using cached streamingdata for ${id} download`)
-            parseResponse(yt2009exports.read().players[id])
+            parseResponse(yt2009exports.read().players[id], fname)
             return;
         }
 
@@ -1598,7 +1611,7 @@ module.exports = {
         if(config.wyjeba_typu_onesie
         || yt2009exports.read().session_use_onesie) {
             this.wyjebaTypuOnesie(id, (data) => {
-                parseResponse(data)
+                parseResponse(data, fname)
             })
             return;
         }
@@ -1616,14 +1629,14 @@ module.exports = {
                     "body": pbmsg,
                     "agent": this.createFetchAgent()
                 }).then(r => {r.buffer().then(b => {
-                    parseResponse(this.protoportPlayer(b))
+                    parseResponse(this.protoportPlayer(b), fname)
                 })})
             })
             return;
         }
 
         this.pullBarePlayer(id, (r) => {
-            parseResponse(r)
+            parseResponse(r, fname)
         }, {"tryOldVersion": true})
     },
 
@@ -1643,6 +1656,8 @@ module.exports = {
             VERSION_FULL = "20.40.00"
         }
         let rHeaders = JSON.parse(JSON.stringify(constants.headers))
+        rHeaders["cookie"] = null;
+        delete rHeaders["cookie"]
         rHeaders["user-agent"] = "com.google.android.youtube/"
                                + VERSION_FULL
                                + " (Linux; U; Android 14) gzip"
@@ -1747,23 +1762,124 @@ module.exports = {
         if(yt2009exports.read().d) {
             playerParams = yt2009exports.read().dkey
         }
-        function requestPlayer() {
+        let fullBody = {
+            "context": {
+                "client": client
+            },
+            "videoId": id,
+            "racyCheckOk": true,
+            "contentCheckOk": true,
+            "params": playerParams,
+            "serviceIntegrityDimensions": {
+                "poToken": potBase64
+            }
+        }
+        function requestPlayer(isRetry) {
+            if(extraSettings && extraSettings.perfMode
+            && !isRetry) {
+                // turbocharge: save around 15ms per received response
+                // by requesting only required parts
+                let isBlocked = false;
+                let pullId = false;
+                if(extraSettings.turbochargeSession) {
+                    pullId = extraSettings.turbochargeSession + "/" + id
+                    if(turbochargeProcessPulls[pullId]) {
+                        isBlocked = true;
+                        console.log("pull blocked callback waiting")
+                        turbochargeProcessPulls[pullId].push(function(d) {
+                            processPlayerResponse(d)
+                            return;
+                        })
+                    } else {
+                        turbochargeProcessPulls[pullId] = []
+                    }
+                }
+                if(isBlocked) return;
+                rHeaders["host"] = "youtubei.googleapis.com"
+                rHeaders["referer"] = "https://www.youtube.com/watch?v=" + id
+                rHeaders["referer-policy"] = "origin-when-cross-origin"
+                rHeaders["mode"] = "cors"
+                rHeaders["accept-encoding"] = ""
+                let fields = [
+                    "streamingData.adaptiveFormats",
+                    "streamingData.serverAbrStreamingUrl",
+                    "responseContext.visitorData",
+                    "playabilityStatus.status",
+                    "playabilityStatus.reason",
+                    "videoDetails",
+                    "playerConfig.mediaCommonConfig.mediaUstreamerRequestConfig",
+                    "captions.playerCaptionsTracklistRenderer.captionTracks",
+                    "storyboards"
+                ].join(",")
+                let url = [
+                    "/youtubei/v1/player",
+                    "?prettyPrint=false",
+                    "&fields=" + fields
+                ]
+                let preq = https.request({
+                    "host": yt2009exports.read().youtubeIp,
+                    "port": 443,
+                    "servername": "youtubei.googleapis.com",
+                    "headers": rHeaders,
+                    "method": "POST",
+                    "path": url.join(""),
+                    "agent": createFetchAgent()
+                }, (pres) => {
+                    let data = Buffer.from("")
+                    pres.on("data", (d) => {
+                        data = Buffer.concat([data, d])
+                    });
+                    pres.on("end", () => {
+                        if(pres.headers["content-encoding"]
+                        && pres.headers["content-encoding"].includes("gzip")) {
+                            data = zlib.gunzipSync(data)
+                        }
+                        let d = JSON.parse(data.toString())
+                        d.turbochargePartial = true;
+                        let waitCallback = false;
+                        function callbackToWaiters() {
+                            if(waitCallback) return true;
+                            if(pullId && turbochargeProcessPulls[pullId]) {
+                                console.log("callbacktowaiters success")
+                                turbochargeProcessPulls[pullId].forEach(c => {
+                                    c(d)
+                                })
+                                waitCallback = true;
+                                turbochargeProcessPulls[pullId] = null;
+                                delete turbochargeProcessPulls[pullId]
+                            }
+                        }
+                        if(!turbochargeProcessPulls[pullId]) {
+                            // maybe player too fast, check for 1s
+                            // if pending player to avoid requesting twice
+                            let l = 0;
+                            let x = setInterval(() => {
+                                callbackToWaiters()
+                                if(waitCallback) {
+                                    clearInterval(x)
+                                    return;
+                                }
+                                l++
+                                if(l >= 100) {
+                                    // no
+                                    clearInterval(x)
+                                }
+                            }, 10)
+                        } else {
+                            callbackToWaiters()
+                        }
+                        processPlayerResponse(d)
+                    })
+                });
+                preq.write(JSON.stringify(fullBody))
+                preq.end();
+                return;
+            }
             fetch(hostname + "/youtubei/v1/player?prettyPrint=false", {
                 "headers": rHeaders,
                 "referrer": "https://www.youtube.com/watch?v=" + id,
                 "referrerPolicy": "origin-when-cross-origin",
-                "body": JSON.stringify({
-                    "context": {
-                        "client": client
-                    },
-                    "videoId": id,
-                    "racyCheckOk": true,
-                    "contentCheckOk": true,
-                    "params": playerParams,
-                    "serviceIntegrityDimensions": {
-                        "poToken": potBase64
-                    }
-                }),
+                "body": JSON.stringify(fullBody),
                 "method": "POST",
                 "mode": "cors",
                 "agent": createFetchAgent()
@@ -1796,7 +1912,7 @@ module.exports = {
                 if(!receivedPlayerResponse
                 && !(extraSettings && extraSettings.tryOldVersion)) {
                     devlog("exceeding /player time, retrying")
-                    requestPlayer();
+                    requestPlayer(true);
                 }
             }, 500)
         })
@@ -2614,35 +2730,54 @@ module.exports = {
             "&key=" + config.data_api_key
         ].join("")
         
-        fetch(url, {
-            "headers": constants.headers,
-            "method": "GET"
-        }).then(r => {try {r.json().then(r => {
-            if(!r.error && r.items) {
-                let index = 0;
-                r.items.forEach(item => {
-                    let neededData = {}
-                    requestedData.forEach(property => {
-                        if(item.snippet && item.snippet[property]) {
-                            neededData[property] = item.snippet[property]
-                        } else if(item.statistics && item.statistics[property]) {
-                            neededData[property] = item.statistics[property]
-                        } else if(item.contentDetails && item.contentDetails[property]) {
-                            neededData[property] = item.contentDetails[property]
-                        }
-                    })
-                    neededData.index = index;
-                    results[item.id] = neededData
-                    index++
-                })
-
-                callback(results)
+        let retryCount = 0;
+        function pullData() {
+            if(retryCount > downloadRetryMax) {
+                devlog("data api pull network error! retry limit exceeded")
+                callback({})
                 return;
             }
-            callback(results)
-        })}catch(error){
-            callback(results)
-        }})
+            fetch(url, {
+                "headers": constants.headers,
+                "method": "GET"
+            }).catch(e => {
+                if(e) {
+                    retryCount++
+                    pullData()
+                }
+            }).then(r => {try {r.json().then(r => {
+                if(!r.error && r.items) {
+                    let index = 0;
+                    r.items.forEach(item => {
+                        let neededData = {}
+                        requestedData.forEach(property => {
+                            if(item.snippet
+                            && item.snippet[property]) {
+                                neededData[property] = item.snippet[property]
+                            } else if(item.statistics
+                            && item.statistics[property]) {
+                                neededData[property] = item.statistics[property]
+                            } else if(item.contentDetails
+                            && item.contentDetails[property]) {
+                                neededData[property] = item.contentDetails[property]
+                            }
+                        })
+                        neededData.index = index;
+                        results[item.id] = neededData
+                        index++
+                    })
+
+                    callback(results)
+                    return;
+                }
+                devlog("unexpected data from data api", JSON.stringify(r))
+                callback(results)
+            })}catch(error){
+                devlog("unexpected error from data api", JSON.stringify(r))
+                callback(results)
+            }})
+        }
+        pullData()
     },
 
     "privExpStreamEligible": function(req) {
@@ -3563,18 +3698,67 @@ module.exports = {
     },
 
     "initYtDNS": function() {
-        fetch("https://cloudflare-dns.com/dns-query?name=www.youtube.com", {
-            "headers": {
-                "accept": "application/dns-json",
-                "user-agent": "yt2009+https://github.com/ftde0/yt2009"
+        // test if this server supports ipv6 if unspecified
+        let enablesIpv6 = false;
+        let ipv6GotResult = false;
+        if(!this.createFetchAgent() && !config.disable_ipv6_for_tcplayer) {
+            let c = net.connect(7078, "2a01:4f9:c013:f2a7::1")
+            let failEvents = [
+                "error", "timeout",
+                "connectionAttemptFailed", "connectionAttemptTimeout"
+            ]
+            failEvents.forEach(e => {
+                c.on(e, () => {
+                    devlog("ipv6 connectivity test error; likely no ipv6")
+                    ipv6GotResult = true;
+                    onIpv6Result()
+                })
+            })
+            c.on("data", (d) => {
+                if(d.toString() == "hi") {
+                    enablesIpv6 = true;
+                    ipv6GotResult = true;
+                    devlog("using ipv6 for https module")
+                    onIpv6Result()
+                }
+            })
+            setTimeout(() => {
+                // fallback if still nothing
+                if(!ipv6GotResult) {
+                    onIpv6Result()
+                }
+            }, 3000)
+        } else {
+            onIpv6Result()
+        }
+        let createFetchAgent = this.createFetchAgent
+        function onIpv6Result() {
+            let url = [
+                "https://cloudflare-dns.com/dns-query",
+                "?name=www.youtube.com"
+            ]
+            if(enablesIpv6) {
+                url.push("&type=AAAA")
             }
-        }).then(r => {r.json().then(r => {
-            if(!r || !r.Answer || r.Answer.length == 0) {
-                devlog("youtube.com dns query returned no results(!?)")
-                return;
-            }
-            yt2009exports.writeData("youtubeIp", r.Answer[0].data)
-        })})
+            fetch(url.join(""), {
+                "headers": {
+                    "accept": "application/dns-json",
+                    "user-agent": "yt2009+https://github.com/ftde0/yt2009"
+                },
+                "agent": createFetchAgent()
+            }).then(r => {r.json().then(r => {
+                if(!r || !r.Answer || r.Answer.length == 0) {
+                    devlog("youtube.com dns query returned no results(!?)")
+                    return;
+                }
+                devlog("got youtube dns ip")
+                let ip = r.Answer[0].data
+                if(ip && ip.endsWith("::")) {
+                    ip += "1"
+                }
+                yt2009exports.writeData("youtubeIp", r.Answer[0].data)
+            })})
+        }
     }
 }
 

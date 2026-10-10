@@ -166,6 +166,15 @@ module.exports = {
                     `historyContinuation = "${hasContinuation.token}";`
                 )
             }
+
+            if(req.headers
+            && req.headers.cookie
+            && req.headers.cookie.includes("exp_turbocharge")) {
+                code = code.replace(
+                    `<!--yt2009_tc_tweaks-->`,
+                    templates.turbochargeJSIncludes
+                )
+            }
             code = require("./yt2009loginsimulate")(req, code, true);
             code = code.replace(`<!--yt2009_videos_insert-->`, videosHTML)
             if(usePchelper){

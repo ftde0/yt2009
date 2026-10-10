@@ -15,6 +15,7 @@ const audioItags = [139, 140]
 let players = {}
 let playbackSessions = {}
 let downloadProgresses = []
+let ongoingFetchPfids = {}
 
 module.exports = {
     "initPlaybackSession": function(id, videoQualities, extraProperties) {
@@ -1396,6 +1397,54 @@ module.exports = {
         }
 
         return f;
+    },
+
+    "writeOngoingFetch": function(fetchId) {
+        ongoingFetchPfids[fetchId] = []
+    },
+
+    "callbackOngoingFetch": function(fetchId, data) {
+        try {
+            function canCallback() {
+                console.log("preload can callback")
+                ongoingFetchPfids[fetchId].forEach(c => {
+                    c(data)
+                })
+                ongoingFetchPfids[fetchId] = null;
+                delete ongoingFetchPfids[fetchId]
+            }
+            if(ongoingFetchPfids[fetchId].length == 0) {
+                // wait for connection for 1s
+                let z = 0
+                let x = setInterval(() => {
+                    if(ongoingFetchPfids[fetchId].length >= 1) {
+                        canCallback()
+                        clearInterval(x)
+                        return;
+                    }
+                    z++
+                    if(z >= 100) {
+                        // abandon
+                        clearInterval(x)
+                        ongoingFetchPfids[fetchId] = null;
+                        delete ongoingFetchPfids[fetchId]
+                        return;
+                    }
+                }, 10)
+            } else {
+                canCallback()
+            }
+        }
+        catch(error){}
+    },
+
+    "hookToOngoingFetch": function(fetchId, callback) {
+        if(!ongoingFetchPfids[fetchId]) return false;
+        ongoingFetchPfids[fetchId].push(callback)
+    },
+
+    "hasOngoingFetch": function(fetchId) {
+        return !!(ongoingFetchPfids[fetchId])
     }
 }
 

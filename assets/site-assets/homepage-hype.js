@@ -20,11 +20,21 @@ function getHypes() {
                         var sId = "yt2009-hype-category-video-" + section
                         var content = p.split("=========")[1]
                         document.getElementById(sId).innerHTML = content;
+                        if(window.initTurbochargePreloads) {
+                            window.initTurbochargePreloads(
+                                document.getElementById(sId)
+                            )
+                        }
                     } else if(header == "FEAT-FILLER-HYPE") {
                         var e = document.getElementById("PRO-data")
                                         .getElementsByTagName("div")[1]
                         var content = p.split("=========")[1]
                         e.innerHTML = content;
+                        if(window.initTurbochargePreloads) {
+                            window.initTurbochargePreloads(
+                                document.getElementById(e)
+                            )
+                        }
                     }
                 }
                 catch(error){}

@@ -188,6 +188,11 @@ if(process.env.YT2009_ALTHOSTNAME) {
     cfg.alt_hostname = true;
 }
 
+// set disable turbocharge ipv6
+if(process.env.YT2009_DISABLE_IPV6_FOR_TCPLAYER) {
+    cfg.disable_ipv6_for_tcplayer = true;
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':

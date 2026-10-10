@@ -107,7 +107,7 @@ module.exports = {
                 });
                 req.end();
             } else {
-                fetch(data[langName].url)
+                fetch(url)
                 .catch(error => {
                     console.log("1", error)
                     retryCount++;

@@ -422,6 +422,15 @@ module.exports = function(req, res) {
         )
     }
 
+    if(req.headers
+    && req.headers.cookie
+    && req.headers.cookie.includes("exp_turbocharge")) {
+        code = code.replace(
+            `<!--yt2009_tc_tweaks-->`,
+            templates.turbochargeJSIncludes
+        )
+    }
+
 
     code = languages.apply_lang_to_code(code, req)
     code = doodles.applyDoodle(code, req)

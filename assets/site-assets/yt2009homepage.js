@@ -178,12 +178,16 @@ try {
     geor.send(null)
     geor.onreadystatechange = function(e) {
         if(geor.readyState == 4 || this.readyState == 4) {
+            var feedmoduleGEO = document.getElementById("feedmodule-GEO")
             document.getElementById("hometown-loading-sprite")
                     .style.display = "none"
             document.getElementById("yt2009-hometown-cells-container")
                     .innerHTML = geor.responseText
             if(geor.responseText.indexOf("YT2009_NO_DATA") !== -1) {
-                document.getElementById("feedmodule-GEO").style.display = "none"
+                feedmoduleGEO.style.display = "none"
+            }
+            if(window.initTurbochargePreloads) {
+                window.initTurbochargePreloads(feedmoduleGEO)
             }
         }
     }

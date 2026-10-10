@@ -178,6 +178,7 @@ function genStatShorthand() {
     }
     return x;
 }
+let tcFullDataPulls = {}
 
 function languageHandleUploadDate(uploadDate, req) {
     if(!uploadDate) return;
@@ -1333,9 +1334,12 @@ module.exports = {
 		&& !(req.query&&req.query.unsabr=="1")
 		&& !(req.query&&req.query.only_itag_18=="1")) {
             useSabr = true;
-            sabrBaseUrl = yt2009sabr.initPlaybackSession(
+            sabrBaseUrl = data.sabrBase || yt2009sabr.initPlaybackSession(
                 data.id, data.qualities, sabrExtraProperties
             )
+            if(data.sabrPfid) {
+                sabrBaseUrl += "&pfid=" + data.sabrPfid
+            }
         }
         if(data.d) {
             useSabr = false;
@@ -3857,6 +3861,15 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             )
         }
 
+        // turbocharge js includes
+        if(flags.includes("exp_turbocharge")
+        && !useFlash) {
+            code = code.replace(
+                `<!--yt2009_tc_tweaks-->`,
+                yt2009templates.turbochargeJSIncludes
+            )
+        }
+
         // exp_related
         if(flags.includes("exp_related")) {
             requiredCallbacks++;
@@ -5150,7 +5163,183 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         }
     },
 
-    "languageHandleUploadDate": languageHandleUploadDate
+    "languageHandleUploadDate": languageHandleUploadDate,
+
+    "prestartSabr": function(req, pr, callback) {
+        if(!pr.sabrBase) return;
+        let cookie = req.headers.cookie || ""
+        
+        // recreate user itag selection, normally done mostly by client js
+        let hd = cookie.includes("playback_quality=2")
+        let userPref = false;
+        let enableSr = cookie.includes("exp_sabr_enable_superresolution")
+        let hdDefault1080 = cookie.includes("hd_1080")
+        if(cookie.includes("server_encoded_sabr_pref=")) {
+            try {
+                userPref = cookie.split("server_encoded_sabr_pref=")[1]
+                                 .split(";")[0]
+                userPref = JSON.parse(Buffer.from(
+                    userPref.split("-").join("+").split("_").join("/"),
+                    "base64"
+                ))
+            }
+            catch(error){}
+        }
+        let qualities = [];
+        let addedResolutions = []
+        try {
+            // adapted from clientside html5-player
+            let fmts = pr.streamingData.adaptiveFormats
+            fmts = fmts.map(s => {
+                if(s.xtags) {
+                    try {
+                        s.xtagsC = playerProto.xtags.deserializeBinary(
+                            s.xtags
+                        ).toObject()
+                    }
+                    catch(error){}
+                }
+                return s;
+            })
+            if(!enableSr) {
+                fmts = fmts.filter(s => {
+                    if(!s.xtagsC) return 1;
+                    try {
+                        let isSr = ((s.xtagsC.partList[0].key == "sr")
+                                && (s.xtagsC.partList[0].value == "1"))
+                        if(isSr) return false;
+                    }
+                    catch(error){}
+                    return true;
+                })
+            }
+            let vp8Res = fmts.filter(s => {
+                return s.mimeType&&s.mimeType.includes("vp8")
+            })
+            let h264Res = fmts.filter(s => {
+                return s.mimeType&&s.mimeType.includes("avc1")
+            })
+            let vp9Res = fmts.filter(s => {
+                return s.mimeType&&s.mimeType.includes("vp9")
+            })
+            let av1Res = fmts.filter(s => {
+                return s.mimeType&&s.mimeType.includes("av01")
+            })
+            if(vp8Res.length >= 1) {
+                vp8Res.forEach(function(res) {
+                    qualities.push(res)
+                    addedResolutions.push(res.qualityLabel)
+                })
+                h264Res.forEach(function(res) {
+                    if(addedResolutions.indexOf(res.qualityLabel) == -1
+                    || res.itag == 214 || res.itag == 216) {
+                        qualities.push(res)
+                        addedResolutions.push(res.qualityLabel)
+                    }
+                })
+            } else {
+                h264Res.forEach(function(res) {
+                    if(addedResolutions.indexOf(res.qualityLabel) == -1
+                    || res.itag == 214 || res.itag == 216) {
+                        qualities.push(res)
+                        addedResolutions.push(res.qualityLabel)
+                    }
+                })
+            }
+            vp9Res.forEach(function(res) {
+                if(addedResolutions.indexOf(res.qualityLabel) == -1) {
+                    qualities.push(res)
+                    addedResolutions.push(res.qualityLabel)
+                }
+            })
+            av1Res.forEach(function(res) {
+                if(addedResolutions.indexOf(res.qualityLabel) == -1) {
+                    qualities.push(res)
+                    addedResolutions.push(res.qualityLabel)
+                }
+            })
+            qualities = qualities.sort(function(a,b) {
+                return b.height - a.height
+            }).sort(function(a,b) {
+                return b.qualityLabel.length - a.qualityLabel.length
+            });
+        }
+        catch(error){
+            console.log(error)
+        }
+        if(qualities.length == 0) return;
+
+        let videoItag = false;
+        if(userPref) {
+            let qualityPrefData = {
+                "tier1": [],
+                "tier2": []
+            }
+            qualities.forEach(q => {
+                if(q.itag == userPref[0]) {
+                    // perfect match, tier1
+                    qualityPrefData.tier1.push(q)
+                } else if(q.qualityLabel.indexOf(userPref[1]) !== -1
+                || userPref[1].indexOf(q.qualityLabel) !== -1) {
+                    // resolution match but itag not, tier2
+                    qualityPrefData.tier2.push(q)
+                }
+
+
+                if(qualityPrefData.tier1
+                && qualityPrefData.tier1.length >= 1) {
+                    videoItag = qualityPrefData.tier1[0].itag
+                } else if(qualityPrefData.tier2
+                && qualityPrefData.tier2.length >= 1) {
+                    videoItag = qualityPrefData.tier2[0].itag
+                }
+            })
+        } else if(enableSr && hd) {
+            let topHeight = hdDefault1080 ? 1080 : 720
+            let topSrQuality = qualities.filter(s => {
+                return s
+                    && s.xtagsC
+                    && s.xtagsC.partList
+                    && s.xtagsC.partList[0].key=="sr"
+                    && s.xtagsC.partList[0].value=="1"
+                    && s.height <= topHeight
+            })[0]
+            if(topSrQuality && topSrQuality.itag) {
+                videoItag = topSrQuality.itag
+            }
+        }
+
+        let pid = pr.sabrBase.split("pid=")[1].split("&")[0]
+        let fReq = {
+            "query": {
+                "user_video_itag": videoItag,
+                "ri": "1",
+                "hd": hd,
+                "headers": req.headers,
+                "offset": "0"
+            }
+        }
+
+        let pfid = ""
+        let pfch = "qwertyuiopasdfghjklzxcvbnm".split("")
+        while(pfid.length !== 8) {
+            pfid += pfch[Math.floor(Math.random() * 26)]
+        }
+
+        if(devTimings) {
+            console.log("prestarting sabr", pid, Date.now(), videoItag)
+        }
+
+        yt2009sabr.writeOngoingFetch(pfid)
+        yt2009sabr.handlePlayer(pid, 0, fReq, (sabrResp) => {
+            if(devTimings) {
+                console.log("prestart sabr got", Date.now())
+            }
+            yt2009sabr.callbackOngoingFetch(pfid, sabrResp)
+        })
+
+        return pfid;
+    }
 }
 
 let validationRan = false;
