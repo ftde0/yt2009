@@ -98,8 +98,8 @@ module.exports = {
                 earlyProgressPulls.push(id)
             }
             writeTimingData("userid get")
-            let cached = n_impl_yt2009channelcache.read("main")[id]
-                      || n_impl_yt2009channelcache.read("main")[url]
+            let cached = n_impl_yt2009channelcache.read("main", id)
+                      || n_impl_yt2009channelcache.read("main", url)
             // read from cache
             if(cached
             && cached.oldTryoutComplete
@@ -120,8 +120,8 @@ module.exports = {
                 this.tryout_legacy_images(id, (tryout) => {
                     writeTimingData("tryout legacy images")
                     if(fetchesCompleted >= (fetchesRequired - 1)
-                    && n_impl_yt2009channelcache.read("main")[id]) {
-                        let fd = n_impl_yt2009channelcache.read("main")[id]
+                    && n_impl_yt2009channelcache.read("main", id)) {
+                        let fd = n_impl_yt2009channelcache.read("main", id)
                         for(let property in tryout) {
                             fd[property] = tryout[property]
                         }
@@ -583,7 +583,7 @@ module.exports = {
 
        // playlists
        let playlist_list = {}
-       if(n_impl_yt2009channelcache.read("playlist")[data.id]
+       if(n_impl_yt2009channelcache.read("playlist", data.id)
        || !data.tabParams
        || !data.tabParams["playlists"]) {
            markCompleteStep()
@@ -2055,9 +2055,9 @@ module.exports = {
         */
         let all_scrollbox_playlists_html = templates.allScrollboxPlaylistHead
         let playlists_scrollbox_html = templates.playlistScrollboxHead
-        let savedPlaylists = n_impl_yt2009channelcache.read("playlist")[data.id]
+        let savedPlaylists = n_impl_yt2009channelcache.read("playlist", data.id)
         if(savedPlaylists && savedPlaylists.length > 0) {
-            let playlists = n_impl_yt2009channelcache.read("playlist")[data.id]
+            let playlists = savedPlaylists
 
             // "all" scrollbox playlists
             JSON.parse(JSON.stringify(playlists)).splice(0, 5).forEach(playlist => {
@@ -2566,10 +2566,15 @@ module.exports = {
         // wait for dominant color complete
         let dominantColor = []
         function waitDominantColor(callback) {
+            let polls = 0;
             let z = setInterval(() => {
-                let utd = n_impl_yt2009channelcache.read("main")[data.id]
-                if(utd.dominant_color) {
+                polls++;
+                let utd = n_impl_yt2009channelcache.read("main", data.id)
+                if(utd && utd.dominant_color) {
                     dominantColor = utd.dominant_color;
+                    clearInterval(z)
+                    callback()
+                } else if(polls >= 100) {
                     clearInterval(z)
                     callback()
                 }
@@ -2595,8 +2600,15 @@ module.exports = {
             ac()
         }
         if(!flags.includes("disable_old_banners")) {
+            let polls = 0;
             let y = setInterval(() => {
-                let utd = n_impl_yt2009channelcache.read("main")[data.id]
+                polls++;
+                if(polls >= 100) {
+                    setDefaults()
+                    clearInterval(y)
+                    return;
+                }
+                let utd = n_impl_yt2009channelcache.read("main", data.id)
 
                 if(!utd) {
                     setDefaults()
@@ -2802,11 +2814,12 @@ module.exports = {
                     }
                     catch(error) {} 
                 }
-                if(n_impl_yt2009channelcache.read("main")[id]
-                && !n_impl_yt2009channelcache.read("main")[id].videoCount
+                let vcEntry = n_impl_yt2009channelcache.read("main", id)
+                if(vcEntry
+                && !vcEntry.videoCount
                 && videoCount.length !== 0) {
                     let newCache = JSON.parse(
-                        JSON.stringify(n_impl_yt2009channelcache.read("main")[id])
+                        JSON.stringify(vcEntry)
                     )
                     newCache.videoCount = videoCount
                     n_impl_yt2009channelcache.write("main", id, newCache)
@@ -2845,12 +2858,11 @@ module.exports = {
                 compare()
             } else {
                 // try to get handle from cache
-                if((n_impl_yt2009channelcache.read("main")[url]
-                &&  n_impl_yt2009channelcache.read("main")[url].handle)
-                || (n_impl_yt2009channelcache.read("main")[userId]
-                &&  n_impl_yt2009channelcache.read("main")[userId].handle)) {
-                    let cache = n_impl_yt2009channelcache.read("main")
-                    cache = cache[url] || cache[userId]
+                let urlEntry = n_impl_yt2009channelcache.read("main", url)
+                let userEntry = n_impl_yt2009channelcache.read("main", userId)
+                if((urlEntry && urlEntry.handle)
+                || (userEntry && userEntry.handle)) {
+                    let cache = urlEntry || userEntry
                     userHandle = cache.handle.replace("@", "")
                     compare()
                     return;
@@ -3354,11 +3366,11 @@ module.exports = {
     },
 
     "subCount": function(cId, callback) {
-        if(n_impl_yt2009channelcache.read("main")[cId]
-        && n_impl_yt2009channelcache.read("main")[cId].properties
-        && n_impl_yt2009channelcache.read("main")[cId].properties.subscribers) {
-            let subc = n_impl_yt2009channelcache.read("main")[cId]
-                       .properties.subscribers;
+        let subEntry = n_impl_yt2009channelcache.read("main", cId)
+        if(subEntry
+        && subEntry.properties
+        && subEntry.properties.subscribers) {
+            let subc = subEntry.properties.subscribers;
             callback(yt2009utils.approxSubcount(subc.split(" ")[0]))
         } else {
             fetch(`${hostname}/youtubei/v1/browse`, {
@@ -3400,7 +3412,7 @@ module.exports = {
                     successful = true;
                     //console.log("early reported done")
                     clearInterval(x)
-                    callback(n_impl_yt2009channelcache.read("main")[id])
+                    callback(n_impl_yt2009channelcache.read("main", id))
                 }
             }, 100)
             // timeout after 5s
@@ -3411,10 +3423,10 @@ module.exports = {
                     callback(false)
                 }
             }, 5000)
-        } else if(n_impl_yt2009channelcache.read("main")[id]) {
+        } else if(n_impl_yt2009channelcache.read("main", id)) {
             // already done, callback as is
             //console.log("called when done")
-            callback(n_impl_yt2009channelcache.read("main")[id])
+            callback(n_impl_yt2009channelcache.read("main", id))
         } else {
             // ??
             //console.log("uncalled?")
