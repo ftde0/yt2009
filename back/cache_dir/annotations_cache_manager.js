@@ -5,25 +5,28 @@ const html = require("node-html-parser")
 
 module.exports = {
     "write": function(id, data) {
-        fs.writeFileSync(`./annotations/${id}.xml`, data)
+        fs.writeFile(`./annotations/${id}.xml`, data, () => {})
     },
 
     "read": function(id, fullUrl, callback) {
         // get locally saved if exists, otherwise get from web archive
-        if(fs.existsSync(`${__dirname}/annotations/${id.substring(0, 11)}.xml`)) {
-            callback(fs.readFileSync(`${__dirname}/annotations/${id.substring(0, 11)}.xml`).toString())
-        } else {
-            fetch(fullUrl, {
-                "headers": {
-                    "user-agent": "yt2009 / twt@ybnn670"
-                }
-            }).then(r => {
-                r.text().then(xml => {
-                    fs.writeFileSync(`${__dirname}/annotations/${id.substring(0, 11)}.xml`, xml)
-                    callback(xml)
-                })
-            }).catch(error => {callback("")})
-        }
+        fs.readFile(`${__dirname}/annotations/${id.substring(0, 11)}.xml`, (err, data) => {
+            if(!err) {
+                callback(data.toString())
+            } else {
+                fetch(fullUrl, {
+                    "headers": {
+                        "user-agent": "yt2009 / twt@ybnn670"
+                    }
+                }).then(r => {
+                    r.text().then(xml => {
+                        fs.writeFile(`${__dirname}/annotations/${id.substring(0, 11)}.xml`, xml, () => {
+                            callback(xml)
+                        })
+                    })
+                }).catch(error => {callback("")})
+            }
+        })
     },
 
     "parse": function(xml) {

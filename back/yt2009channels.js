@@ -502,33 +502,36 @@ module.exports = {
             data.bannerUrl = banner
 
             if(!data.bannerUrl) {
-                fs.writeFileSync(`../assets/${data.newBanner}`, "")
-                additionalFetchesCompleted++;
-                if(additionalFetchesCompleted >= fetchesRequired) {
-                    callback(data)
-                }
+                fs.writeFile(`../assets/${data.newBanner}`, "", () => {
+                    additionalFetchesCompleted++;
+                    if(additionalFetchesCompleted >= fetchesRequired) {
+                        callback(data)
+                    }
+                })
                 return;
             }
             fetch(banner, {
                 "headers": yt2009constants.headers
             }).then(r => {
                 r.buffer().then(buffer => {
-                    fs.writeFileSync(`../assets/${data.newBanner}`, buffer)
+                    fs.writeFile(`../assets/${data.newBanner}`, buffer, () => {
+                        additionalFetchesCompleted++;
+                        if(additionalFetchesCompleted >= fetchesRequired) {
+                            callback(data)
+                        }
+                    })
+                })
+            }).catch(e => {
+                fs.writeFile(`../assets/${data.newBanner}`, "", () => {
+                    delete data.banner;
+                    delete data.newBanner;
+                    delete data.bannerUrl;
                     additionalFetchesCompleted++;
                     if(additionalFetchesCompleted >= fetchesRequired) {
                         callback(data)
                     }
+                    return;
                 })
-            }).catch(e => {
-                fs.writeFileSync(`../assets/${data.newBanner}`, "")
-                delete data.banner;
-                delete data.newBanner;
-                delete data.bannerUrl;
-                additionalFetchesCompleted++;
-                if(additionalFetchesCompleted >= fetchesRequired) {
-                    callback(data)
-                }
-                return;
             })
         }
         catch(error) {
@@ -1488,9 +1491,10 @@ module.exports = {
                 },
                 "id": data.id
             })
-            fs.writeFileSync(
+            fs.writeFile(
                 "./cache_dir/public_channel_listing.json",
-                JSON.stringify(featured_channels)
+                JSON.stringify(featured_channels),
+                () => {}
             )
         }
 
@@ -2060,7 +2064,7 @@ module.exports = {
             let playlists = savedPlaylists
 
             // "all" scrollbox playlists
-            JSON.parse(JSON.stringify(playlists)).splice(0, 5).forEach(playlist => {
+            playlists.slice(0, 5).forEach(playlist => {
                 all_scrollbox_playlists_html += templates.playnavPlaylist(
                     playlist, req.protocol, true
                 )
@@ -2072,7 +2076,7 @@ module.exports = {
             )
 
             // playlists scrollbox
-            JSON.parse(JSON.stringify(playlists)).forEach(playlist => {
+            playlists.forEach(playlist => {
                 if(playlist.name == "Favorites") {
                     code = code.replace(`yt2009_favorites_remove_end-->`, "")
                     code = code.replace(
@@ -2534,22 +2538,25 @@ module.exports = {
                 }).then(r => {
                     if(r.status !== 404) {
                         r.buffer().then(buffer => {
-                            fs.writeFileSync(fname, buffer)
-                            channelAvatar = oldChannelIconPath
-                            setChannelIcon()
-                            markAsDone()
+                            fs.writeFile(fname, buffer, () => {
+                                channelAvatar = oldChannelIconPath
+                                setChannelIcon()
+                                markAsDone()
+                            })
                         })
                     } else {
                         // no old icon, use current
-                        fs.writeFileSync(fname, "")
-                        setChannelIcon()
-                        markAsDone()
+                        fs.writeFile(fname, "", () => {
+                            setChannelIcon()
+                            markAsDone()
+                        })
                     }
                 }).catch(e => {
                     // error pulling old icon, use current
-                    fs.writeFileSync(fname, "")
-                    setChannelIcon()
-                    markAsDone()
+                    fs.writeFile(fname, "", () => {
+                        setChannelIcon()
+                        markAsDone()
+                    })
                 })
             }
         }
@@ -2818,9 +2825,7 @@ module.exports = {
                 if(vcEntry
                 && !vcEntry.videoCount
                 && videoCount.length !== 0) {
-                    let newCache = JSON.parse(
-                        JSON.stringify(vcEntry)
-                    )
+                    let newCache = {...vcEntry}
                     newCache.videoCount = videoCount
                     n_impl_yt2009channelcache.write("main", id, newCache)
                 }
@@ -3239,12 +3244,13 @@ module.exports = {
                 }).then(r => {
                     if(r.status !== 404) {
                         r.buffer().then(buffer => {
-                            fs.writeFileSync(bgfile, buffer)
-                            data.oldBackgroundFile = bgfile
-                            if(devTimings) {
-                                console.log(`old bg downloaded`)
-                            }
-                            mc()
+                            fs.writeFile(bgfile, buffer, () => {
+                                data.oldBackgroundFile = bgfile
+                                if(devTimings) {
+                                    console.log(`old bg downloaded`)
+                                }
+                                mc()
+                            })
                         })
                     } else {
                         bgsTryIndex++
@@ -3295,14 +3301,15 @@ module.exports = {
                 if(r.status !== 404) {
                     // old banner exists, save
                     r.buffer().then(buffer => {
-                        fs.writeFileSync(b, buffer)
-                        data.oldBannerFile = b;
-                        
-                        mc()
+                        fs.writeFile(b, buffer, () => {
+                            data.oldBannerFile = b;
+                            
+                            mc()
 
-                        if(devTimings) {
-                            console.log(`old banner downloaded`)
-                        }
+                            if(devTimings) {
+                                console.log(`old banner downloaded`)
+                            }
+                        })
                     })
                 } else {
                     mc()

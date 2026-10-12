@@ -1392,7 +1392,7 @@ module.exports = {
 		&& data.superResolutions.length >= 1
 		&& useSabr
 		&& flags.includes("exp_sabr_enable_superresolution")) {
-			data = JSON.parse(JSON.stringify(data)) //detach data
+			data = {...data, "qualities": data.qualities.slice()} //detach qualities list
 			data.superResolutions.forEach(sr => {
 				if(!data.qualities.includes(sr[0])) {
 					data.qualities.push(sr[0])
@@ -4056,19 +4056,21 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }).then(r => {
                     if(r.status !== 404) {
                         r.buffer().then(buffer => {
-                            fs.writeFileSync(fname, buffer)
-                            channelIcon = oldChannelIconPath
-                            setChannelIcon()
-                            markAsDone()
+                            fs.writeFile(fname, buffer, () => {
+                                channelIcon = oldChannelIconPath
+                                setChannelIcon()
+                                markAsDone()
+                            })
                         })
                     } else {
                         // no old icon, use current
-                        fs.writeFileSync(fname, "")
-                        if(!fs.existsSync(`../${channelIcon}`)) {
-                            channelIcon = "/assets/site-assets/default.png"
-                        }
-                        setChannelIcon()
-                        markAsDone()
+                        fs.writeFile(fname, "", () => {
+                            if(!fs.existsSync(`../${channelIcon}`)) {
+                                channelIcon = "/assets/site-assets/default.png"
+                            }
+                            setChannelIcon()
+                            markAsDone()
+                        })
                     }
                 })
             }
@@ -4425,7 +4427,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
     "bulk_get_videos": function(ids, callback) {
         let processedVideos = 0;
 
-        let videos = JSON.parse(JSON.stringify(ids))
+        let videos = ids.slice()
         videos.forEach(video => {
             this.fetch_video_data(video, () => {
                 processedVideos++;
@@ -4542,7 +4544,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
     "hasComment": function(video, commentId) {
         let temp = []
         if(custom_comments[video]) {
-            temp = JSON.parse(JSON.stringify(custom_comments[video]))
+            temp = custom_comments[video]
                    .filter(s => s.id == commentId)
         }
         if(temp[0]) {
@@ -4632,20 +4634,22 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 }).then(r => {
                     if(r.status !== 404) {
                         r.buffer().then(buffer => {
-                            fs.writeFileSync(fname, buffer)
-                            bannerUrl = "/assets/" + id + "_header.jpg";
-                            dataSent = true
-                            callback(bannerUrl)
-                            if(devTimings) {
-                                console.log("using old banner; pulled")
-                            }
+                            fs.writeFile(fname, buffer, () => {
+                                bannerUrl = "/assets/" + id + "_header.jpg";
+                                dataSent = true
+                                callback(bannerUrl)
+                                if(devTimings) {
+                                    console.log("using old banner; pulled")
+                                }
+                            })
                         })
                     } else {
                         defaultBanner()
-                        fs.writeFileSync(fname, "")
-                        if(devTimings) {
-                            console.log("using default banner; old not found")
-                        }
+                        fs.writeFile(fname, "", () => {
+                            if(devTimings) {
+                                console.log("using default banner; old not found")
+                            }
+                        })
                         return;
                     }  
                 })
