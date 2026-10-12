@@ -274,12 +274,12 @@ module.exports = {
         && Math.floor(Date.now() / 1000) - saved_subscription_data[url].time <= 600) {
             if(sendRawData) {
                 res.send(
-                    JSON.parse(JSON.stringify(saved_subscription_data[url]))
+                    saved_subscription_data[url]
                 )
                 return;
             }
             res.send(this.parse_new_videos(
-                JSON.parse(JSON.stringify(saved_subscription_data[url])), flags
+                saved_subscription_data[url], flags
             ))
         } else {
             // clean fetch
@@ -436,7 +436,7 @@ module.exports = {
                     }
                 })
 
-                saved_subscription_data[url] = JSON.parse(JSON.stringify(data))
+                saved_subscription_data[url] = data
                 if(sendRawData) {
                     res.send(data)
                     return;
