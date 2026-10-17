@@ -6,6 +6,7 @@ const constants = require("./yt2009constants.json")
 const config = require("./config.json")
 const fs = require("fs")
 const FOUR_THREE = 4 / 3
+const sendfile = require("./yt2009sendfile")
 
 let processingStoryboards = []
 
@@ -29,21 +30,36 @@ module.exports = {
                 res.sendStatus(400)
                 return;
             }
-            id = id.substring(0,11)
+            id = id.substring(0,11).replace(/[^a-zA-Z0-9_-]/g, "")
+            if(!id) {
+                res.sendStatus(400)
+                return;
+            }
 
             let tempFilePrefix = `sbt-${id}-`
             let finalFile = `storyboard-${id}.jpg`
-            if(fs.existsSync("../assets/" + finalFile)) {
-                res.redirect("/assets/" + finalFile)
+            let finalUrl = "/assets/" + finalFile
+            function removeProcessing() {
+                let i = processingStoryboards.indexOf(id)
+                if(i !== -1) {
+                    processingStoryboards.splice(i, 1)
+                }
+            }
+            if(sendfile.isReady(sendfile.abs(finalUrl))) {
+                sendfile.send(res, finalUrl)
                 return;
             }
 
             if(processingStoryboards.includes(id)) {
                 // already processing, wait until complete and send
                 let x = setInterval(() => {
+                    if(res.writableEnded) {
+                        clearInterval(x)
+                        return;
+                    }
                     if(!processingStoryboards.includes(id)) {
                         clearInterval(x)
-                        res.redirect("/assets/" + finalFile)
+                        sendfile.send(res, finalUrl)
                         return;
                     }
                 }, 100)
@@ -59,6 +75,7 @@ module.exports = {
                 // get closest best match for 64x48 sizes
 
                 if(!storyboardLinks || !storyboardLinks[0]) {
+                    removeProcessing()
                     res.sendStatus(404)
                     return;
                 }
@@ -79,6 +96,7 @@ module.exports = {
                 })[0]
 
                 if(bestStoryboard.totalThumbs >= 500) {
+                    removeProcessing()
                     res.sendStatus(413)
                     return;
                 }
@@ -222,7 +240,8 @@ module.exports = {
 			
 			function finalize() {
 				fs.writeFileSync(`../assets/${finalFile}`, splitSb)
-				res.redirect(`/assets/${finalFile}`)
+				removeProcessing()
+				sendfile.send(res, finalUrl)
 				setTimeout(() => {
 					allCreatedFiles.forEach(s => {
 						fs.unlink(`../assets/${s}`, (e) => {})
