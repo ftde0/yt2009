@@ -56,6 +56,8 @@ const hostname = config.alt_hostname
                : `https://www.youtube.com`
 
 const https = require("https")
+const fetch = require("node-fetch");
+const { pipeline } = require("stream");
 const fs = require("fs")
 const app = express();
 
@@ -3232,7 +3234,6 @@ app.post("/pchelper_avatar_change", (req, res) => {
             // thumbnail from a picked video
             let v = req.body.toString().split(`name="picked_video_still_id"`)[1]
                        .split("\n--")[0].trim().split("\n").join("");
-            const fetch = require("node-fetch")
             fetch(`https://i.ytimg.com/vi/${v}/hq2.jpg`, {
                 "headers": yt2009_constant.headers,
                 "method": "GET"
@@ -3569,7 +3570,6 @@ app.post("/feeds/api/users/g.a000*", (req, res) => {
     let url = "/feeds/api/users/default" + urlSuffix
     let body = (req.body && req.body.toString()) ? req.body.toString()
                : ""
-    const fetch = require("node-fetch")
     //console.log(body, req.headers, "http://" + config.ip + ":" + config.port + url)
     fetch("http://" + config.ip + ":" + config.port + url, {
         "method": "POST",
@@ -4548,7 +4548,6 @@ if(fs.existsSync("../wordlist.txt")) {
 }
 
 function pullNewSuggestions(q, callback) {
-    const fetch = require("node-fetch")
     fetch("http://suggestqueries.google.com/complete/search?ds=yt&client=androidyt&hjson=t&oe=UTF-8&q=" + q, {
         "headers": yt2009_constant.headers
     }).catch(e => {
@@ -6301,7 +6300,7 @@ let thumbnailProxyEndpoints = [
     "/thumb_proxy"
 ]
 thumbnailProxyEndpoints.forEach(t => {
-    app.get(t, (req, res) => {
+    app.get(t, async (req, res) => {
         if(!req.query.video_id && !req.query.v) {
             res.sendStatus(400)
             return;
@@ -6328,13 +6327,22 @@ thumbnailProxyEndpoints.forEach(t => {
                 break;
             }
         }
-        const fetch = require("node-fetch")
-        fetch("http://i.ytimg.com/vi/" + id + "/" + thumbFile, {
-            "headers": yt2009_constant.headers
-        }).then(r => {r.buffer().then(rr => {
-            res.set("content-type", "image/jpg")
-            res.send(rr)
-        })})
+        try {
+            const upstreamRes = await fetch(`https://i.ytimg.com/vi/${id}/${thumbFile}`, {
+                headers: yt2009_constant.headers,
+                timeout: 8000
+            });
+            if (!upstreamRes.ok)
+                return res.sendStatus(upstreamRes.status);
+            res.set("content-type", upstreamRes.headers.get("content-type") || "image/jpeg");
+            pipeline(upstreamRes.body, res, (err) => {
+                if (err && !res.headersSent)
+                    res.sendStatus(502);
+            });
+        } catch (err) {
+            if (!res.headersSent)
+                res.sendStatus(502);
+        }
     })
 })
 
@@ -7211,7 +7219,6 @@ app.get("/stream_chat", (req, res) => {
         return;
     }
 
-    const fetch = require("node-fetch")
     let v = req.query.video_id.substring(0,11)
 
     if(!req.query.continuation) {
@@ -7347,7 +7354,6 @@ app.get("/stream_current_vc", (req, res) => {
         return;
     }
 
-    const fetch = require("node-fetch")
     let v = req.query.video_id.substring(0,11)
 
     let body = {
@@ -7619,7 +7625,6 @@ app.post("/my_profile_theme_post", (req, res) => {
         return;
     }
 
-    const fetch = require("node-fetch")
     fetch("http://orzeszek.website:4091/upload_raw", {
         "method": "POST",
         "body": file
@@ -7674,7 +7679,6 @@ app.get("/cbg_proxie", (req, res) => {
         res.sendStatus(400)
         return;
     }
-    const fetch = require("node-fetch")
     let url = [
         "http://orzeszek.website:4091",
         "/get_file?file_id=" + req.query.id
