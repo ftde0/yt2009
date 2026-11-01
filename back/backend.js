@@ -3425,9 +3425,11 @@ let videoProcessEndpoints = [
     "/mobile/create_rtsp",
     "/mp4_144",
     "/http_3gp",
+    "/http_3gp_288",
     "/http_wmv",
     "/http_xvid",
-    "/http_mpeg4"
+    "/http_mpeg4",
+    "/http_mpeg4_360"
 ]
 videoProcessEndpoints.forEach(endpoint => {
     app.get(endpoint, (req, res) => {
@@ -3437,6 +3439,10 @@ videoProcessEndpoints.forEach(endpoint => {
         let ct = "video/mp4"
         switch(endpoint) {
             case "/http_3gp": {
+                ct = "video/3gpp"
+                break;
+            }
+            case "/http_3gp_288": {
                 ct = "video/3gpp"
                 break;
             }
