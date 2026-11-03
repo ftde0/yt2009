@@ -1292,7 +1292,9 @@ module.exports = {
                         timeout = 350
                     }
                     setTimeout(() => {
-                        offsetSeconds += 5
+                        offsetSeconds += (
+                            !config.sabr_downloader_alt_offset ? 5 : 2.5
+                        )
                         downloadPart()
                     }, 150)
                 } else {
@@ -1406,7 +1408,6 @@ module.exports = {
     "callbackOngoingFetch": function(fetchId, data) {
         try {
             function canCallback() {
-                console.log("preload can callback")
                 ongoingFetchPfids[fetchId].forEach(c => {
                     c(data)
                 })

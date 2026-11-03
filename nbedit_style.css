@@ -384,3 +384,12 @@ a[href="/my_videos_upload"] span {
     width: 24px;
     height: 24px;
 }
+
+.watch-comment-attachment {
+    max-width: 150px;
+    width: 150px;
+    height: auto;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    padding: 5px;
+}

@@ -2393,6 +2393,21 @@ app.get("/get_more_comments", (req, res) => {
             catch(error){}
         }
 
+        let attachmentUrl = null;
+        if(comment.attachmentUrl
+        && flags.includes("comments_attachments_enable")) {
+            let url = yt2009_utils.saveAvatar(comment.attachmentUrl)
+            if(req.headers.cookie
+            && req.headers.cookie.includes("f_mode=on")) {
+                url = "/fmodecomunitab?i="
+                    + yt2009_utils.fmodeComunitab.assign(url)
+                return;
+            } else {
+                url = "/avatar_wait?av=" + url
+            }
+            attachmentUrl = url;
+        }
+
         let commentHTML = yt2009_templates.videoComment(
             comment.authorUrl,
             comment.authorName,
@@ -2408,7 +2423,9 @@ app.get("/get_more_comments", (req, res) => {
             (flags.includes("watch_modern_features")
             ? additionalContentHeader : ""),
             handleCommentAvatar(comment.authorAvatar),
-            trueDate
+            trueDate,
+            attachmentUrl,
+            comment.voiceReplyTranscript
         )
 
         if(customRating == 1) {
@@ -2524,8 +2541,19 @@ app.get("/comment_get_replies", (req, res) => {
                      .split("global_flags=")[1]
                      .split(";")[0]
         }
+        if(req.headers.cookie
+        && req.headers.cookie.includes("watch_flags=")) {
+            flags += req.headers.cookie
+                     .split("watch_flags=")[1]
+                     .split(";")[0]
+        }
     }
     catch(error) {}
+    let flash = (
+        req.headers.cookie
+     && req.headers.cookie.includes
+     && req.headers.cookie.includes("f_mode=on")
+    )
     if(!id || !req.headers.continuation
     || !req.headers["original-comment"]) {
         res.sendStatus(400)
@@ -2540,9 +2568,8 @@ app.get("/comment_get_replies", (req, res) => {
                     c.continuation, req.headers["original-comment"]
                 )
             } else {
-                commentsHTML += yt2009_templates.commentReply(c)
+                commentsHTML += yt2009_templates.commentReply(c, flags, flash)
             }
-            
         })
         res.send(yt2009_languages.apply_lang_to_code(commentsHTML, req))
     }, true)

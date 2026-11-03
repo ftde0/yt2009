@@ -888,21 +888,26 @@ module.exports = {
                         let creatorName = metadataParts[0]
                         let upload = metadataParts[2]
                         let time = "1:00"
+                        let timeSet = false;
                         try {
                             video.contentImage.thumbnailViewModel
                             .overlays.forEach(o => {
-                                if(o.thumbnailOverlayBadgeViewModel) {
+                                if(o.thumbnailOverlayBadgeViewModel
+                                && !timeSet) {
                                     time = o.thumbnailOverlayBadgeViewModel
                                             .thumbnailBadges[0]
                                             .thumbnailBadgeViewModel
                                             .text;
+                                    timeSet = true;
                                 }
                                 if(o.thumbnailBottomOverlayViewModel
-                                && o.thumbnailBottomOverlayViewModel.badges) {
+                                && o.thumbnailBottomOverlayViewModel.badges
+                                && !timeSet) {
                                     time = o.thumbnailBottomOverlayViewModel
                                             .badges[0]
                                             .thumbnailBadgeViewModel
                                             .text;
+                                    timeSet = true
                                 }
                             })
                         }
@@ -2723,6 +2728,21 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     catch(error){}
                 }
 
+                let attachmentUrl = null;
+                if(comment.attachmentUrl
+                && flags.includes("comments_attachments_enable")) {
+                    let url = yt2009utils.saveAvatar(comment.attachmentUrl)
+                    if(req.headers.cookie
+                    && req.headers.cookie.includes("f_mode=on")) {
+                        url = "/fmodecomunitab?i="
+                            + yt2009utils.fmodeComunitab.assign(url)
+                        return;
+                    } else {
+                        url = "/avatar_wait?av=" + url
+                    }
+                    attachmentUrl = url;
+                }
+
                 let commentHTML = yt2009templates.videoComment(
                     comment.authorUrl,
                     commentPoster,
@@ -2736,7 +2756,9 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     (flags.includes("watch_modern_features")
                     && additionalContentHeader),
                     handleCommentAvatar(comment.authorAvatar),
-                    trueDate
+                    trueDate,
+                    attachmentUrl,
+                    comment.voiceReplyTranscript
                 )
 
                 if(customRating == 1) {
@@ -5225,39 +5247,39 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             let av1Res = fmts.filter(s => {
                 return s.mimeType&&s.mimeType.includes("av01")
             })
-            if(vp8Res.length >= 1) {
-                vp8Res.forEach(function(res) {
-                    qualities.push(res)
-                    addedResolutions.push(res.qualityLabel)
-                })
-                h264Res.forEach(function(res) {
-                    if(addedResolutions.indexOf(res.qualityLabel) == -1
-                    || res.itag == 214 || res.itag == 216) {
-                        qualities.push(res)
-                        addedResolutions.push(res.qualityLabel)
+            let perCodecQualities = {
+                "vp8": vp8Res,
+                "h264": h264Res,
+                "vp9": vp9Res,
+                "av1": av1Res
+            }
+            let codecPreference = ["vp8", "h264", "vp9", "av1"]
+            if(cookie
+            && cookie.indexOf("sabr_codec_pref") !== -1) {
+                codecPreference = cookie.split("sabr_codec_pref")[1]
+                                .split(";")[0]
+                                .split(":")[0]
+                                .split(",")
+            }
+            function addQualitiesUsingPreference(pref) {
+                pref.forEach(function(c) {
+                    try {
+                        perCodecQualities[c].forEach(function(res) {
+                            if(addedResolutions.indexOf(res.qualityLabel) == -1
+                            || res.itag == 214 || res.itag == 216) {
+                                qualities.push(res)
+                                addedResolutions.push(res[1])
+                            }
+                        })
                     }
-                })
-            } else {
-                h264Res.forEach(function(res) {
-                    if(addedResolutions.indexOf(res.qualityLabel) == -1
-                    || res.itag == 214 || res.itag == 216) {
-                        qualities.push(res)
-                        addedResolutions.push(res.qualityLabel)
-                    }
+                    catch(error){}
                 })
             }
-            vp9Res.forEach(function(res) {
-                if(addedResolutions.indexOf(res.qualityLabel) == -1) {
-                    qualities.push(res)
-                    addedResolutions.push(res.qualityLabel)
-                }
-            })
-            av1Res.forEach(function(res) {
-                if(addedResolutions.indexOf(res.qualityLabel) == -1) {
-                    qualities.push(res)
-                    addedResolutions.push(res.qualityLabel)
-                }
-            })
+            addQualitiesUsingPreference(codecPreference)
+            if(qualities.length == 0 || addedResolutions.length == 0) {
+                // no qualities with selected codec pref, fallback to default
+                addQualitiesUsingPreference(["vp8","h264","vp9","av1"])
+            }
             qualities = qualities.sort(function(a,b) {
                 return b.height - a.height
             }).sort(function(a,b) {

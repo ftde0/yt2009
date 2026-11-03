@@ -133,6 +133,8 @@
 			<input type="checkbox" id="watch-annotation-gradients" title="dodaje wcześniej widoczne gradienty na adnotacjach w html5.">
 			<label for="watch-annotation-gradients">annotation_gradients</label><br>
 			<i id="leg_annot_notice">annotation_gradients nie jest celnym odwzorowaniem adnotacji z flash.<br>zostało dodane ze względu na poprzednią implementację adnotacji w html5.</i><br>
+			<input type="checkbox" id="watch-comments-attachments-enable" title="pokazuje obrazki dodawane do komentarzy. (2026-10)">
+			<label for="watch-comments-attachments-enable">comments_attachments_enable</label><br>
 			<input type="checkbox" id="watch-comments-remove-future" title="pokazuje stare komentarze na filmach">
 			<label for="watch-comments-remove-future">comments_remove_future</label><br>
 			<input type="checkbox" id="watch-default-avatar" title="domyślny awatar z 2009 zamiast awatara twórcy">
@@ -200,6 +202,13 @@
 			<label for="watch-realistic-view-count">realistic_view_count</label><br>
 			<input type="checkbox" id="watch-remove-username-space" title="usuwa spacje z nazw użytkowników">
 			<label for="watch-remove-username-space">remove_username_space</label><br>
+			<input type="checkbox" id="watch-sabr-codec-pref" title="ustawia preferencje kodeków odtwarzanych przez sabr. do używania z watch_modern_features.">
+			<label for="watch-sabr-codec-pref">sabr_codec_pref</label>
+			<input type="text" id="watch-sabr-codec-pref-input" autocomplete="off" spellcheck="false" placeholder="vp8,h264,vp9,av1">
+			<a id="watch-sabr-codec-expander" href="javascript:toggleExpander('watch-sabr-codec-pref-expander')">(możliwe wartości)</a><br>
+			<p id="watch-sabr-codec-pref-expander" class="hid">możliwe wartości (i domyślna kolejność): vp8,h264,vp9,av1<br>
+			wpisz kodeki po przecinkach, bez spacji między nimi. usunięcie kodeka z listy spowoduje, że nie będzie on odtwarzany w ogóle.<br>
+			jeśli żaden kodek z wybranych nie będzie dostępny, odtwarzanie będzie miało miejsce z domyślną kolejnością.</p>
 			<input type="checkbox" id="watch-share-behavior" title="ustawia zachowanie stron na które można udostępniać filmy">
 			<label for="watch-share-behavior">share_behavior</label>
 			<input type="text" id="watch-share-behavior-input" autocomplete="off" spellcheck="false" placeholder="tryb">

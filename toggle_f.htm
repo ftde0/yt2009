@@ -34,7 +34,8 @@
 	<div id="baseDiv" class="date-20091111 video-info ">
 		<!-- begin top section -->
 		 <noscript><span class="bold">ta strona (jak i duża część yt2009) wymagają włączonego javascript.</span></noscript>
-		<a href="/toggle_f_en.htm">[en]</a>
+		<a href="/toggle_f_en.htm">[en]</a><br>
+		<span id="autolang-prompt" style="display: none;">usunąć domyślne ustawienie języka tej strony? remove the current default language setting? <a href="javascript:unautolang('')">[y]</a> <a href="javascript:hideautolang()">[n]</a></span>
 
 		<h1>"f"</h1>
 
@@ -258,6 +259,26 @@
 				document.cookie = "f_ccc=a; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
 			}
 			alert("zmiany wprowadzone!")
+		}
+
+		// goto en
+		if(document.cookie
+		&& document.cookie.indexOf("f_lang=en") !== -1
+		&& window.location.href.indexOf("backswitch") == -1) {
+			location.href = "/toggle_f_en.htm#auto-switch"
+		} else if(document.cookie
+		&& document.cookie.indexOf("f_lang=") !== -1) {
+			document.getElementById("autolang-prompt").style.display = "block"
+		}
+
+		// autolang disable
+		function unautolang() {
+			document.cookie = "f_lang=z; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
+			hideautolang()
+		}
+		
+		function hideautolang() {
+			document.getElementById("autolang-prompt").style.display = "none"
 		}
 	</script>
 </body>

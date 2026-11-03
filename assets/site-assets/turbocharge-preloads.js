@@ -47,7 +47,7 @@ if((!document.cookie
     // generate turbocharge preload session
     var max = 51252509;
     var s = []
-    for (let i = 0; i < 2; i++) {
+    for (var i = 0; i < 2; i++) {
         s.push(Math.floor(Math.random() * max).toString(16))
     }
     s = s.join("")

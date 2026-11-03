@@ -4798,7 +4798,11 @@ function pullUserIdFromDevice(device, callback) {
                 "browseId": "FElibrary"
             })
         }).then(r => {r.json().then(r => {
-            //fs.writeFileSync("test.json", JSON.stringify(r))
+            if(config.temp_save_mh_userid) {
+                fs.writeFileSync(
+                    "../mh_userid_response.json", JSON.stringify(r)
+                )
+            }
             let uid = JSON.stringify(r).split(" ").join("")
             if(uid.includes(`"browseId":"UC`)) {
                 uid = uid.split(`"browseId":"UC`)[1].split("\"")[0]

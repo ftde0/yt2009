@@ -12,7 +12,9 @@ module.exports = {
         authorUrl, authorName, commentTime,
         content, flags, useLanguage, likes,
         id, replyData, additionalRenderHeader,
-        avatarData, trueCommentTime
+        avatarData, trueCommentTime,
+        commentAttachmentUrl,
+        commentVoiceTranscript
     ) {
         if(!additionalRenderHeader) {
             additionalRenderHeader = ""
@@ -30,6 +32,9 @@ module.exports = {
             likeColor = "red"
         }
         // check for timestamps/@s in contents
+        if(commentVoiceTranscript) {
+            content += "watch_comment_voice_reply_transcript_prefix" + commentVoiceTranscript
+        }
         content = utils.xss(content)
         content.split(" ").forEach(c => {
             if(c.includes(":")) {
@@ -76,6 +81,11 @@ module.exports = {
         let dislikeCode = `onclick="sendCmtRating('${id}', 'dislike');return false;"`
         let likeCode = `onclick="sendCmtRating('${id}', 'like');return false;"`
 
+        let attachmentCode = ""
+        if(commentAttachmentUrl) {
+            attachmentCode = `<br><img src="${commentAttachmentUrl}" class="watch-comment-attachment"/>`
+        }
+
         let avatarCode = ""
         let ap = 0;
         if(avatarData && avatarData.placement && avatarData.link) {
@@ -116,7 +126,7 @@ ${ap == 2 ? avatarCode : ""}
             <div>
                 <div class="watch-comment-body">
                     <div>
-                        ${content}
+                        ${content}${attachmentCode}
                     </div>
                 </div>
                 <div></div>
@@ -3825,9 +3835,27 @@ term='channel'/>
         return code;
     },
 
-    "commentReply": function(c) {
+    "commentReply": function(c, flags, flash) {
         let sanitizedContent = utils.xss(c.content).split("$").join("&#36;")
-        if(sanitizedContent.length == 0) return "";
+        if(sanitizedContent.length == 0
+        && !c.attachmentUrl
+        && !c.voiceReplyTranscript) return "";
+        let attachmentCode = ""
+        if(c.voiceReplyTranscript) {
+            sanitizedContent += utils.xss(c.voiceReplyTranscript)
+        }
+        if(c.attachmentUrl
+        && flags.includes("comments_attachments_enable")) {
+            let url = utils.saveAvatar(c.attachmentUrl)
+            if(flash) {
+                url = "/fmodecomunitab?i="
+                    + yt2009_utils.fmodeComunitab.assign(url)
+                return;
+            } else {
+                url = "/avatar_wait?av=" + url
+            }
+            attachmentCode = `<br><img src="${url}" class="watch-comment-attachment"/>`
+        }
         return `<div id="${c.commentId}" class="watch-comment-entry">
 	<div class="watch-comment-entry-reply">
 		<div class="watch-comment-head">
@@ -3844,7 +3872,7 @@ term='channel'/>
 		</div>
 		<div id="comment_body_${c.commentId}">
 			<div class="watch-comment-body">
-				<div>${sanitizedContent}</div>
+				<div>${sanitizedContent}${attachmentCode}</div>
 			</div>
 			<div id="div_comment_form_id_${c.commentId}"></div>
 		</div>

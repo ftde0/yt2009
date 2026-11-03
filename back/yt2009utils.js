@@ -214,6 +214,44 @@ module.exports = {
                         )
                     })
                     i++
+                } else if(m.payload
+                && m.payload.commentSurfaceEntityPayload) {
+                    m = m.payload.commentSurfaceEntityPayload
+                    let id = Buffer.from(this.base64FromUrl(m.key), "base64")
+                                   .toString().slice(2)
+                    let chars = []
+                    let i = 0;
+                    while(id.charCodeAt(i) > 32
+                    && id.charCodeAt(i) < 124
+                    && id.charAt(i) !== "/") {
+                        chars.push(id.charAt(i))
+                        i++
+                    }
+                    id = chars.join("").split("/")[0]
+                    let commentIndex = comments.indexOf(comments.filter(s => {
+                        return s.commentId == id
+                    })[0])
+                    if(commentIndex >= 0) {
+                        // this one
+                        if(m.imageAttachmentViewModel) {
+                            try {
+                                let a = m.imageAttachmentViewModel
+                                         .commentImageAttachmentViewModel;
+                                let url = a.image.sources[0].url
+                                comments[commentIndex].attachmentUrl = url
+                            }
+                            catch(error){console.log(error)}
+                        }
+                        if(m.voiceReplyContainerViewModel) {
+                            try {
+                                let v = m.voiceReplyContainerViewModel
+                                         .voiceReplyContainerViewModel
+                                         .transcriptText.content
+                                comments[commentIndex].voiceReplyTranscript = v
+                            }
+                            catch(error){console.log(error)}
+                        }
+                    }
                 }
             })
 
@@ -750,7 +788,7 @@ module.exports = {
         if(link.startsWith("//")) {
             link = link.replace("//", "https://")
         }
-        let fname = link.split("/")[link.split("/").length - 1]
+        let fname = link.split("/")[link.split("/").length - 1].split("?")[0]
         if(banner) {
             fname = banner + "_banner"
         }
@@ -1676,11 +1714,9 @@ module.exports = {
             potMsg.setToken(yt2009exports.read().potKey)
             let potWrap = new pb.wrapper()
             potWrap.setData(potMsg)
-            potBase64 = Buffer.from(potWrap.serializeBinary())
-                              .toString("base64")
-                              .split("+").join("-")
-                              .split("/").join("_")
-                              .split("=").join("");
+            potBase64 = this.base64toUrl(
+                Buffer.from(potWrap.serializeBinary()).toString("base64")
+            );
         }
         let client = {
             "hl": "en",
@@ -1785,7 +1821,7 @@ module.exports = {
                     pullId = extraSettings.turbochargeSession + "/" + id
                     if(turbochargeProcessPulls[pullId]) {
                         isBlocked = true;
-                        console.log("pull blocked callback waiting")
+                        devlog("pull blocked callback waiting")
                         turbochargeProcessPulls[pullId].push(function(d) {
                             processPlayerResponse(d)
                             return;
@@ -1840,7 +1876,7 @@ module.exports = {
                         function callbackToWaiters() {
                             if(waitCallback) return true;
                             if(pullId && turbochargeProcessPulls[pullId]) {
-                                console.log("callbacktowaiters success")
+                                devlog("callbacktowaiters success")
                                 turbochargeProcessPulls[pullId].forEach(c => {
                                     c(d)
                                 })
@@ -3440,11 +3476,9 @@ module.exports = {
             potMsg.setToken(yt2009exports.read().potKey)
             let potWrap = new pb.wrapper()
             potWrap.setData(potMsg)
-            potBase64 = Buffer.from(potWrap.serializeBinary())
-                              .toString("base64")
-                              .split("+").join("-")
-                              .split("/").join("_")
-                              .split("=").join("");
+            potBase64 = this.base64toUrl(
+                Buffer.from(potWrap.serializeBinary()).toString("base64")
+            );
         }
         let client = {
             "hl": "en",
@@ -3573,6 +3607,19 @@ module.exports = {
         }, 250)
     },
 
+    "getWyjeba": function(callback) {
+        if(wyjebaData
+        && wyjebaData.encryptedClientKey
+        && wyjebaData.appendUrl
+        && Date.now() > wyjebaData.expire) {
+            callback(wyjebaData)
+        } else {
+            this.initWyjeba(() => {
+                callback(wyjebaData)
+            })
+        }
+    },
+
     "passSyncComments": function(cmts) {
         syncComments = cmts;
     },
@@ -3582,6 +3629,13 @@ module.exports = {
         return s.split("+").join("-")
                 .split("/").join("_")
                 .split("=").join("")
+    },
+
+    "base64FromUrl": function(s) {
+        if(!s) return ""
+        return s.split("%3D").join("=")
+                .split("_").join("/")
+                .split("-").join("+")
     },
 
     "profanityFilter": function(i) {

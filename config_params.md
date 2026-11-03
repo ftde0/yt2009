@@ -43,3 +43,6 @@ other params you can set:
 - `alt_hostname` - allows using an alt API hostname, enabling hostsfile redirect to www.youtube.com.
 - `disable_ipv6_for_tcplayer` - explicitly disable ipv6 for turbocharge /player requests
 ONLY TO BE USED AFTER INITIAL SETUP. `true/false`
+- `sabr_downloader_alt_offset` - use a smaller offset value for sabr downloader. try if downloads end up broken.
+will use more data.
+- `temp_save_mh_userid` - save raw mobilehelper userid response to a json. **temporary, expect removal**

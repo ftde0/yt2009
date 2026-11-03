@@ -34,7 +34,8 @@
 	<div id="baseDiv" class="date-20091111 video-info ">
 		<!-- begin top section -->
 		<noscript><span class="bold">this site (along with a large chunk of yt2009) requires javascript to be enabled.</span></noscript>
-		<a href="/toggle_f.htm">[pl]</a>
+		<a href="/toggle_f.htm#backswitch">[pl]</a><br>
+		<span id="autolang-prompt">remember [en] language selection? <a href="javascript:addautolang('en')">[yes]</a> <a href="javascript:hideautolang()">[no]</a></span>
 
 		<h1>"f"</h1>
 
@@ -255,6 +256,21 @@
 				document.cookie = "f_ccc=a; Path=/; expires=Fri, 31 Dec 2008 23:59:59 GMT"
 			}
 			alert("changes made!")
+		}
+
+		// auto en
+		function addautolang(lang) {
+			document.cookie = "f_lang=" + lang + "; Path=/; expires=Fri, 31 Dec 2066 23:59:59 GMT"
+			hideautolang()
+		}
+		
+		function hideautolang() {
+			document.getElementById("autolang-prompt").style.display = "none"
+		}
+
+		if(document.cookie
+		&& document.cookie.indexOf("f_lang=en") !== -1) {
+			hideautolang()
 		}
 	</script>
 </body>

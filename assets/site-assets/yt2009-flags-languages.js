@@ -1,6 +1,7 @@
 var languageData_EN = {
     "tooltips": {
         "watch-annotation-gradients": "shows previously seen gradients on annotations in html5.",
+        "watch-comments-attachments-enable": "enable picture attachments in comments. (2026-10)",
         "watch-comments-remove-future": "show old comments on a video",
         "watch-default-avatar": "default 2009 avatar instead of the current creator's avatar",
         "watch-distill-description": "&quot;distills&quot; a description from signs of new descriptions while keeping the original text",
@@ -22,6 +23,7 @@ var languageData_EN = {
         "watch-old-match-exp-rel": "uses the date set for only_old as cutoff for exp_related.",
         "watch-realistic-view-count": "more realistic for 2009 view count and rating count",
         "watch-remove-username-space": "removes spaces from usernames",
+        "watch-sabr-codec-pref": "sets a codec preference list for html5 sabr. to be used with watch_modern_features.",
         "watch-share-behavior": "sets how the Share section should work",
         "watch-turn-down-lights": "shows a button to turn down the lights. was available for some videos in 2009.",
         "watch-username-asciify": "remove special characters from usernames",
@@ -166,7 +168,12 @@ var languageData_EN = {
         "#watch-cmt-avatars-content-expander": "enable_comment_avatars modes:<br>\
         - 1 - a 15x15 picture will be shown next to the author's username<br>\
         - 2 - a 24x24 picture will be shown to the right of the comment, below the rating buttons.<br>\
-        type <b>only a number</b> into the field to change the mode. default: 1."
+        type <b>only a number</b> into the field to change the mode. default: 1.",
+
+        "#watch-sabr-codec-expander": "(possible values)",
+        "#watch-sabr-codec-pref-expander": "possible values (and the default order): vp8,h264,vp9,av1<br>\
+        put the codec names followed by commas, with no spaces between them. removing a codec will cause it to not be used at all.<br>\
+        if none of the picked codecs are available, the playback will start with the default order."
     },
 
     "placeholders": {

@@ -2960,6 +2960,7 @@ function initAsLive() {
     $(".video_controls .timer").innerHTML = "LIVE"
     $(".progress_container").className += " hid"
 	initAsSabr()
+    window.sabrData.useBytesKeep = false;
 }
 
 
@@ -3207,7 +3208,8 @@ function requestSabr(offset, source, force) {
 					"itag": parseInt(partId.split("-")[0]),
 					"pn": parseInt(partId.split("-")[1]),
 					"data": pdata,
-					"type": ptype
+					"type": ptype,
+                    "plen": plen
 				}
 
 				addToSabrQueue(part)
@@ -3273,7 +3275,24 @@ function initAsSabr() {
         "lastRequestFailCount": 0,
         "readAhead": 45,
         "defaultLongReadaheadSet": false,
-        "concurrentRedirectCount": 0
+        "concurrentRedirectCount": 0,
+        "videoBufferBytes": 0,
+        "audioBufferBytes": 0,
+        "maxBytesKeepIfUsed": 80000000 //80MB
+    }
+
+    if(navigator.userAgent.indexOf("Firefox/") !== -1) {
+        var ffVersion = navigator.userAgent.split("Firefox/")[1].split(".")[0]
+        ffVersion = parseInt(ffVersion)
+        if(!isNaN(ffVersion) && ffVersion > 80) {
+            sabrData.useBytesKeep = true;
+        }
+    } else if(navigator.userAgent.indexOf("Chrome/") !== -1) {
+        var crVersion = navigator.userAgent.split("Firefox/")[1].split(".")[0]
+        crVersion = parseInt(crVersion)
+        if(!isNaN(crVersion) && crVersion > 80) {
+            sabrData.useBytesKeep = true;
+        }
     }
 	
 	
@@ -3344,40 +3363,40 @@ function initAsSabr() {
         var av1Res = window.sabrExactRes.filter(function(res) {
             return res[4].indexOf("av01") !== -1
         })
-        if(vp8Res.length >= 1) {
-            vp8Res.forEach(function(res) {
-                sabrResTemp.push(res)
-                addedResolutions.push(res[1])
-            })
-            h264Res.forEach(function(res) {
-                if(addedResolutions.indexOf(res[1]) == -1
-                || res[0] == 214 || res[0] == 216) {
-                    sabrResTemp.push(res)
-                    addedResolutions.push(res[1])
+        var perCodecQualities = {
+            "vp8": vp8Res,
+            "h264": h264Res,
+            "vp9": vp9Res,
+            "av1": av1Res
+        }
+        var codecPreference = ["vp8", "h264", "vp9", "av1"]
+        if(document.cookie
+        && document.cookie.indexOf("sabr_codec_pref") !== -1) {
+            codecPreference = document.cookie
+                              .split("sabr_codec_pref")[1]
+                              .split(";")[0]
+                              .split(":")[0]
+                              .split(",")
+        }
+        function addQualitiesUsingPreference(pref) {
+            pref.forEach(function(c) {
+                try {
+                    perCodecQualities[c].forEach(function(res) {
+                        if(addedResolutions.indexOf(res[1]) == -1
+                        || res[0] == 214 || res[0] == 216) {
+                            sabrResTemp.push(res)
+                            addedResolutions.push(res[1])
+                        }
+                    })
                 }
-            })
-        } else {
-            h264Res.forEach(function(res) {
-                if(addedResolutions.indexOf(res[1]) == -1
-                || res[0] == 214 || res[0] == 216) {
-                    sabrResTemp.push(res)
-                    addedResolutions.push(res[1])
-                }
+                catch(error){}
             })
         }
-        
-        vp9Res.forEach(function(res) {
-            if(addedResolutions.indexOf(res[1]) == -1) {
-                sabrResTemp.push(res)
-                addedResolutions.push(res[1])
-            }
-        })
-        av1Res.forEach(function(res) {
-            if(addedResolutions.indexOf(res[1]) == -1) {
-                sabrResTemp.push(res)
-                addedResolutions.push(res[1])
-            }
-        })
+        addQualitiesUsingPreference(codecPreference)
+        if(sabrResTemp.length == 0 || addedResolutions.length == 0) {
+            // no qualities with selected codec pref, fallback to default
+            addQualitiesUsingPreference(["vp8","h264","vp9","av1"])
+        }
 
         if(typeof(window.useTeneighty) == "undefined") {
             var useTeneighty = (
@@ -3681,6 +3700,7 @@ function initAsSabr() {
                     sabrData.audioBuffer.appendBuffer(
                         sabrData.appendQueue[0].data
                     )
+                    sabrData.audioBufferBytes += sabrData.appendQueue[0].plen
                 }
                 catch(error) {
                     sabrData.tempCt = video.currentTime
@@ -3699,6 +3719,7 @@ function initAsSabr() {
                     sabrData.videoBuffer.appendBuffer(
                         sabrData.appendQueue[0].data
                     )
+                    sabrData.videoBufferBytes += sabrData.appendQueue[0].plen
                 }
                 catch(error) {
                     sabrData.tempCt = video.currentTime
@@ -3734,13 +3755,33 @@ function initAsSabr() {
 
         if(video.currentTime > 120
         && !sabrData.videoBuffer.updating
-        && !sabrData.audioBuffer.updating) {
+        && !sabrData.audioBuffer.updating
+        && !sabrData.useBytesKeep) {
             // don't keep much backwards buffer to not overfill
             try {
                 sabrData.videoBuffer.remove(0, video.currentTime - 120)
                 sabrData.audioBuffer.remove(0, video.currentTime - 120)
             }
             catch(error){console.log(error)}
+        } else if(sabrData.useBytesKeep) {
+            var t = 2000000
+            if(sabrData.videoBufferBytes - t >= sabrData.maxBytesKeepIfUsed
+            && !sabrData.videoBuffer.updating
+            && video.currentTime > 150) {
+                // clear up buffer
+                try {
+                    sabrData.videoBuffer.remove(0, video.currentTime - 120)
+                }
+                catch(error){console.log(error)}
+            }
+            if(sabrData.audioBufferBytes - t >= sabrData.maxBytesKeepIfUsed
+            && !sabrData.audioBuffer.updating
+            && video.currentTime > 150) {
+                try {
+                    sabrData.audioBuffer.remove(0, video.currentTime - 120)
+                }
+                catch(error){console.log(error)}
+            }
         }
 
         if(sabrData.waitingSabrFetch || sabrData.timedCooldown) return;
@@ -3869,6 +3910,7 @@ function sabrQualityChanged(source) {
         sabrData.audioBuffer.remove(0,video.duration)
     }
     catch(error) {}
+    sabrData.videoBufferBytes = 0
     sabrData.waitingSabrFetch = false;
     sabrData.timedSabrFetchAborted = true;
     var c = video.currentTime
@@ -5061,13 +5103,17 @@ function attachContextmenuListener(element) {
             if(window.sabrData) {
                 var itag = sabrData.customVideoItag || "[auto]"
                 s.push("")
-                s.push("[sabr log below]")
+                s.push("[--sabr log--]")
                 s.push("segments added: " + sabrData.addedSegments.length)
                 s.push("lastRequestFailCount: "+sabrData.lastRequestFailCount)
                 s.push("ended: " + sabrData.fEnd)
                 s.push("user video itag: " + itag)
                 s.push("video mime: " + sabrData.videoMime)
                 s.push("pending fetch: " + sabrData.waitingSabrFetch)
+                if(sabrData.useBytesKeep) {
+                    s.push("total video bytes: " + sabrData.videoBufferBytes)
+                    s.push("total audio bytes: " + sabrData.audioBufferBytes)
+                }
             }
             s = s.map(function(e) {
                 return "<span>" + e + "</span>"

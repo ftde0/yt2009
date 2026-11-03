@@ -193,6 +193,16 @@ if(process.env.YT2009_DISABLE_IPV6_FOR_TCPLAYER) {
     cfg.disable_ipv6_for_tcplayer = true;
 }
 
+// set sabrdownloaderaltoffset
+if(process.env.YT2009_SABR_DOWNLOADER_ALT_OFFSET) {
+    cfg.sabr_downloader_alt_offset = true;
+}
+
+// set tempsavemhuserid
+if(process.env.YT2009_TEMP_SAVE_MH_USERID) {
+    cfg.temp_save_mh_userid = true;
+}
+
 // set ssl
 switch (process.env.YT2009_SSL) {
     case 'true':
