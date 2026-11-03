@@ -38,6 +38,7 @@ const yt2009_masf = require("./yt2009masf")
 const yt2009_hlsadapter = require("./yt2009hlsadapter")
 const yt2009_flvadapter = require("./yt2009flvadapter")
 const yt2009_defaultadapt = require("./cache_dir/default_avatar_adapt_manager")
+const yt2009_sendfile = require("./yt2009sendfile")
 const ryd = require("./cache_dir/ryd_cache_manager")
 const video_rating = require("./cache_dir/rating_cache_manager")
 const config = require("./config.json")
@@ -55,6 +56,8 @@ const hostname = config.alt_hostname
                : `https://www.youtube.com`
 
 const https = require("https")
+const fetch = require("node-fetch");
+const { pipeline } = require("stream");
 const fs = require("fs")
 const app = express();
 
@@ -1745,10 +1748,15 @@ app.get("/embedF/*", (req, res) => {
 })
 app.get("/generate_gradient", (req, res) => {
     const child_process = require("child_process")
+    if(!req.query.c || typeof(req.query.c) !== "string") {
+        res.sendStatus(400)
+        return;
+    }
     let color = req.query.c.substring(0, 6).replace(/[^0-9a-zA-Z]/g, "")
-    if(fs.existsSync(`../player-imgs/embed-bgs/user-gen/${color}.png`)) {
+    const gradientUrl = "/player-imgs/embed-bgs/user-gen/" + color + ".png"
+    if(yt2009_sendfile.isReady(yt2009_sendfile.abs(gradientUrl))) {
         // callback generated gradient file
-        res.redirect(`/player-imgs/embed-bgs/user-gen/${color}.png`)
+        yt2009_sendfile.send(res, gradientUrl)
     } else {
         // generate
         let generateCommand = [
@@ -1758,7 +1766,7 @@ app.get("/generate_gradient", (req, res) => {
             `"${__dirname}/../player-imgs/embed-bgs/user-gen/${color}.png"`
         ]
         child_process.exec(generateCommand.join(" "), (error, stdout, stderr) => {
-            res.redirect(`/player-imgs/embed-bgs/user-gen/${color}.png`)
+            yt2009_sendfile.send(res, gradientUrl)
         })
     }
 })
@@ -3226,7 +3234,6 @@ app.post("/pchelper_avatar_change", (req, res) => {
             // thumbnail from a picked video
             let v = req.body.toString().split(`name="picked_video_still_id"`)[1]
                        .split("\n--")[0].trim().split("\n").join("");
-            const fetch = require("node-fetch")
             fetch(`https://i.ytimg.com/vi/${v}/hq2.jpg`, {
                 "headers": yt2009_constant.headers,
                 "method": "GET"
@@ -3419,9 +3426,11 @@ let videoProcessEndpoints = [
     "/mobile/create_rtsp",
     "/mp4_144",
     "/http_3gp",
+    "/http_3gp_288",
     "/http_wmv",
     "/http_xvid",
-    "/http_mpeg4"
+    "/http_mpeg4",
+    "/http_mpeg4_360"
 ]
 videoProcessEndpoints.forEach(endpoint => {
     app.get(endpoint, (req, res) => {
@@ -3431,6 +3440,10 @@ videoProcessEndpoints.forEach(endpoint => {
         let ct = "video/mp4"
         switch(endpoint) {
             case "/http_3gp": {
+                ct = "video/3gpp"
+                break;
+            }
+            case "/http_3gp_288": {
                 ct = "video/3gpp"
                 break;
             }
@@ -3557,7 +3570,6 @@ app.post("/feeds/api/users/g.a000*", (req, res) => {
     let url = "/feeds/api/users/default" + urlSuffix
     let body = (req.body && req.body.toString()) ? req.body.toString()
                : ""
-    const fetch = require("node-fetch")
     //console.log(body, req.headers, "http://" + config.ip + ":" + config.port + url)
     fetch("http://" + config.ip + ":" + config.port + url, {
         "method": "POST",
@@ -4536,7 +4548,6 @@ if(fs.existsSync("../wordlist.txt")) {
 }
 
 function pullNewSuggestions(q, callback) {
-    const fetch = require("node-fetch")
     fetch("http://suggestqueries.google.com/complete/search?ds=yt&client=androidyt&hjson=t&oe=UTF-8&q=" + q, {
         "headers": yt2009_constant.headers
     }).catch(e => {
@@ -6289,7 +6300,7 @@ let thumbnailProxyEndpoints = [
     "/thumb_proxy"
 ]
 thumbnailProxyEndpoints.forEach(t => {
-    app.get(t, (req, res) => {
+    app.get(t, async (req, res) => {
         if(!req.query.video_id && !req.query.v) {
             res.sendStatus(400)
             return;
@@ -6316,13 +6327,22 @@ thumbnailProxyEndpoints.forEach(t => {
                 break;
             }
         }
-        const fetch = require("node-fetch")
-        fetch("http://i.ytimg.com/vi/" + id + "/" + thumbFile, {
-            "headers": yt2009_constant.headers
-        }).then(r => {r.buffer().then(rr => {
-            res.set("content-type", "image/jpg")
-            res.send(rr)
-        })})
+        try {
+            const upstreamRes = await fetch(`https://i.ytimg.com/vi/${id}/${thumbFile}`, {
+                headers: yt2009_constant.headers,
+                timeout: 8000
+            });
+            if (!upstreamRes.ok)
+                return res.sendStatus(upstreamRes.status);
+            res.set("content-type", upstreamRes.headers.get("content-type") || "image/jpeg");
+            pipeline(upstreamRes.body, res, (err) => {
+                if (err && !res.headersSent)
+                    res.sendStatus(502);
+            });
+        } catch (err) {
+            if (!res.headersSent)
+                res.sendStatus(502);
+        }
     })
 })
 
@@ -6442,31 +6462,15 @@ app.get("/avatar_wait", (req, res) => {
     }
 
     let f = decodeURIComponent(req.query.av)
-    let fPath = __dirname.split("back")
-    fPath.pop()
-    fPath = fPath.join("back")
-    let tries = 0;
-    function avTry() {
-        if(fs.existsSync(fPath + f)
-        && !req.query.defaultadapt == "1") {
-            res.redirect(f)
-            return;
-        } else if(fs.existsSync(fPath + f)
-        && req.query.defaultadapt == "1") {
-            let isDefault = yt2009_defaultadapt.use(fPath + f)
-            res.redirect(isDefault ? "/assets/site-assets/default.png" : f)
-            return;
+    function sendAvatar() {
+        if(req.query.defaultadapt == "1"
+        && yt2009_defaultadapt.use(yt2009_sendfile.abs(f))) {
+            yt2009_sendfile.send(res, "/assets/site-assets/default.png")
+        } else {
+            yt2009_sendfile.send(res, f)
         }
-        tries++
-        if(tries >= 5) {
-            res.sendStatus(404)
-            return;
-        }
-        setTimeout(() => {
-            avTry()
-        }, 1000)
     }
-    avTry()
+    yt2009_sendfile.waitForFile(req, res, f, sendAvatar)
 })
 
 /*
@@ -7215,7 +7219,6 @@ app.get("/stream_chat", (req, res) => {
         return;
     }
 
-    const fetch = require("node-fetch")
     let v = req.query.video_id.substring(0,11)
 
     if(!req.query.continuation) {
@@ -7351,7 +7354,6 @@ app.get("/stream_current_vc", (req, res) => {
         return;
     }
 
-    const fetch = require("node-fetch")
     let v = req.query.video_id.substring(0,11)
 
     let body = {
@@ -7623,7 +7625,6 @@ app.post("/my_profile_theme_post", (req, res) => {
         return;
     }
 
-    const fetch = require("node-fetch")
     fetch("http://orzeszek.website:4091/upload_raw", {
         "method": "POST",
         "body": file
@@ -7678,7 +7679,6 @@ app.get("/cbg_proxie", (req, res) => {
         res.sendStatus(400)
         return;
     }
-    const fetch = require("node-fetch")
     let url = [
         "http://orzeszek.website:4091",
         "/get_file?file_id=" + req.query.id
@@ -7704,6 +7704,23 @@ app.get("/minipicty", (req, res) => {
         return;
     }
 
+    function serveAvatar(avatar) {
+        if(!yt2009_sendfile.isValidAssetUrl(avatar)) {
+            yt2009_sendfile.send(res, "/assets/site-assets/default.png", {"vary": "Cookie"})
+            return;
+        }
+        function sendAvatar() {
+            if(req.headers.cookie
+            && req.headers.cookie.includes("default_avataradapt")
+            && yt2009_defaultadapt.use(yt2009_sendfile.abs(avatar))) {
+                yt2009_sendfile.send(res, "/assets/site-assets/default.png", {"vary": "Cookie"})
+            } else {
+                yt2009_sendfile.send(res, avatar, {"vary": "Cookie"})
+            }
+        }
+        yt2009_sendfile.waitForFile(req, res, avatar, sendAvatar)
+    }
+
     yt2009_channels.main({
         "path": "/channel/" + req.query.channel,
         "headers": req.headers,
@@ -7712,14 +7729,9 @@ app.get("/minipicty", (req, res) => {
     {"send": function(data) {
         try {
             if(data && data.avatar) {
-                let avatarUrl = "/avatar_wait?av=" + data.avatar;
-                if(req.headers.cookie
-                && req.headers.cookie.includes("default_avataradapt")) {
-                    avatarUrl += "&defaultadapt=1"
-                }
-                res.redirect(avatarUrl)
+                serveAvatar(data.avatar)
             } else {
-                res.redirect("/assets/site-assets/default.png")
+                yt2009_sendfile.send(res, "/assets/site-assets/default.png", {"vary": "Cookie"})
             }
         }
         catch(error) {

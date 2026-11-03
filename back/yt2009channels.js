@@ -98,8 +98,8 @@ module.exports = {
                 earlyProgressPulls.push(id)
             }
             writeTimingData("userid get")
-            let cached = n_impl_yt2009channelcache.read("main")[id]
-                      || n_impl_yt2009channelcache.read("main")[url]
+            let cached = n_impl_yt2009channelcache.read("main", id)
+                      || n_impl_yt2009channelcache.read("main", url)
             // read from cache
             if(cached
             && cached.oldTryoutComplete
@@ -120,8 +120,8 @@ module.exports = {
                 this.tryout_legacy_images(id, (tryout) => {
                     writeTimingData("tryout legacy images")
                     if(fetchesCompleted >= (fetchesRequired - 1)
-                    && n_impl_yt2009channelcache.read("main")[id]) {
-                        let fd = n_impl_yt2009channelcache.read("main")[id]
+                    && n_impl_yt2009channelcache.read("main", id)) {
+                        let fd = n_impl_yt2009channelcache.read("main", id)
                         for(let property in tryout) {
                             fd[property] = tryout[property]
                         }
@@ -502,33 +502,36 @@ module.exports = {
             data.bannerUrl = banner
 
             if(!data.bannerUrl) {
-                fs.writeFileSync(`../assets/${data.newBanner}`, "")
-                additionalFetchesCompleted++;
-                if(additionalFetchesCompleted >= fetchesRequired) {
-                    callback(data)
-                }
+                fs.writeFile(`../assets/${data.newBanner}`, "", () => {
+                    additionalFetchesCompleted++;
+                    if(additionalFetchesCompleted >= fetchesRequired) {
+                        callback(data)
+                    }
+                })
                 return;
             }
             fetch(banner, {
                 "headers": yt2009constants.headers
             }).then(r => {
                 r.buffer().then(buffer => {
-                    fs.writeFileSync(`../assets/${data.newBanner}`, buffer)
+                    fs.writeFile(`../assets/${data.newBanner}`, buffer, () => {
+                        additionalFetchesCompleted++;
+                        if(additionalFetchesCompleted >= fetchesRequired) {
+                            callback(data)
+                        }
+                    })
+                })
+            }).catch(e => {
+                fs.writeFile(`../assets/${data.newBanner}`, "", () => {
+                    delete data.banner;
+                    delete data.newBanner;
+                    delete data.bannerUrl;
                     additionalFetchesCompleted++;
                     if(additionalFetchesCompleted >= fetchesRequired) {
                         callback(data)
                     }
+                    return;
                 })
-            }).catch(e => {
-                fs.writeFileSync(`../assets/${data.newBanner}`, "")
-                delete data.banner;
-                delete data.newBanner;
-                delete data.bannerUrl;
-                additionalFetchesCompleted++;
-                if(additionalFetchesCompleted >= fetchesRequired) {
-                    callback(data)
-                }
-                return;
             })
         }
         catch(error) {
@@ -583,7 +586,7 @@ module.exports = {
 
        // playlists
        let playlist_list = {}
-       if(n_impl_yt2009channelcache.read("playlist")[data.id]
+       if(n_impl_yt2009channelcache.read("playlist", data.id)
        || !data.tabParams
        || !data.tabParams["playlists"]) {
            markCompleteStep()
@@ -1488,9 +1491,10 @@ module.exports = {
                 },
                 "id": data.id
             })
-            fs.writeFileSync(
+            fs.writeFile(
                 "./cache_dir/public_channel_listing.json",
-                JSON.stringify(featured_channels)
+                JSON.stringify(featured_channels),
+                () => {}
             )
         }
 
@@ -2055,12 +2059,12 @@ module.exports = {
         */
         let all_scrollbox_playlists_html = templates.allScrollboxPlaylistHead
         let playlists_scrollbox_html = templates.playlistScrollboxHead
-        let savedPlaylists = n_impl_yt2009channelcache.read("playlist")[data.id]
+        let savedPlaylists = n_impl_yt2009channelcache.read("playlist", data.id)
         if(savedPlaylists && savedPlaylists.length > 0) {
-            let playlists = n_impl_yt2009channelcache.read("playlist")[data.id]
+            let playlists = savedPlaylists
 
             // "all" scrollbox playlists
-            JSON.parse(JSON.stringify(playlists)).splice(0, 5).forEach(playlist => {
+            playlists.slice(0, 5).forEach(playlist => {
                 all_scrollbox_playlists_html += templates.playnavPlaylist(
                     playlist, req.protocol, true
                 )
@@ -2072,7 +2076,7 @@ module.exports = {
             )
 
             // playlists scrollbox
-            JSON.parse(JSON.stringify(playlists)).forEach(playlist => {
+            playlists.forEach(playlist => {
                 if(playlist.name == "Favorites") {
                     code = code.replace(`yt2009_favorites_remove_end-->`, "")
                     code = code.replace(
@@ -2534,22 +2538,25 @@ module.exports = {
                 }).then(r => {
                     if(r.status !== 404) {
                         r.buffer().then(buffer => {
-                            fs.writeFileSync(fname, buffer)
-                            channelAvatar = oldChannelIconPath
-                            setChannelIcon()
-                            markAsDone()
+                            fs.writeFile(fname, buffer, () => {
+                                channelAvatar = oldChannelIconPath
+                                setChannelIcon()
+                                markAsDone()
+                            })
                         })
                     } else {
                         // no old icon, use current
-                        fs.writeFileSync(fname, "")
-                        setChannelIcon()
-                        markAsDone()
+                        fs.writeFile(fname, "", () => {
+                            setChannelIcon()
+                            markAsDone()
+                        })
                     }
                 }).catch(e => {
                     // error pulling old icon, use current
-                    fs.writeFileSync(fname, "")
-                    setChannelIcon()
-                    markAsDone()
+                    fs.writeFile(fname, "", () => {
+                        setChannelIcon()
+                        markAsDone()
+                    })
                 })
             }
         }
@@ -2566,10 +2573,15 @@ module.exports = {
         // wait for dominant color complete
         let dominantColor = []
         function waitDominantColor(callback) {
+            let polls = 0;
             let z = setInterval(() => {
-                let utd = n_impl_yt2009channelcache.read("main")[data.id]
-                if(utd.dominant_color) {
+                polls++;
+                let utd = n_impl_yt2009channelcache.read("main", data.id)
+                if(utd && utd.dominant_color) {
                     dominantColor = utd.dominant_color;
+                    clearInterval(z)
+                    callback()
+                } else if(polls >= 100) {
                     clearInterval(z)
                     callback()
                 }
@@ -2595,8 +2607,15 @@ module.exports = {
             ac()
         }
         if(!flags.includes("disable_old_banners")) {
+            let polls = 0;
             let y = setInterval(() => {
-                let utd = n_impl_yt2009channelcache.read("main")[data.id]
+                polls++;
+                if(polls >= 100) {
+                    setDefaults()
+                    clearInterval(y)
+                    return;
+                }
+                let utd = n_impl_yt2009channelcache.read("main", data.id)
 
                 if(!utd) {
                     setDefaults()
@@ -2802,12 +2821,11 @@ module.exports = {
                     }
                     catch(error) {} 
                 }
-                if(n_impl_yt2009channelcache.read("main")[id]
-                && !n_impl_yt2009channelcache.read("main")[id].videoCount
+                let vcEntry = n_impl_yt2009channelcache.read("main", id)
+                if(vcEntry
+                && !vcEntry.videoCount
                 && videoCount.length !== 0) {
-                    let newCache = JSON.parse(
-                        JSON.stringify(n_impl_yt2009channelcache.read("main")[id])
-                    )
+                    let newCache = {...vcEntry}
                     newCache.videoCount = videoCount
                     n_impl_yt2009channelcache.write("main", id, newCache)
                 }
@@ -2845,12 +2863,11 @@ module.exports = {
                 compare()
             } else {
                 // try to get handle from cache
-                if((n_impl_yt2009channelcache.read("main")[url]
-                &&  n_impl_yt2009channelcache.read("main")[url].handle)
-                || (n_impl_yt2009channelcache.read("main")[userId]
-                &&  n_impl_yt2009channelcache.read("main")[userId].handle)) {
-                    let cache = n_impl_yt2009channelcache.read("main")
-                    cache = cache[url] || cache[userId]
+                let urlEntry = n_impl_yt2009channelcache.read("main", url)
+                let userEntry = n_impl_yt2009channelcache.read("main", userId)
+                if((urlEntry && urlEntry.handle)
+                || (userEntry && userEntry.handle)) {
+                    let cache = urlEntry || userEntry
                     userHandle = cache.handle.replace("@", "")
                     compare()
                     return;
@@ -3227,12 +3244,13 @@ module.exports = {
                 }).then(r => {
                     if(r.status !== 404) {
                         r.buffer().then(buffer => {
-                            fs.writeFileSync(bgfile, buffer)
-                            data.oldBackgroundFile = bgfile
-                            if(devTimings) {
-                                console.log(`old bg downloaded`)
-                            }
-                            mc()
+                            fs.writeFile(bgfile, buffer, () => {
+                                data.oldBackgroundFile = bgfile
+                                if(devTimings) {
+                                    console.log(`old bg downloaded`)
+                                }
+                                mc()
+                            })
                         })
                     } else {
                         bgsTryIndex++
@@ -3283,14 +3301,15 @@ module.exports = {
                 if(r.status !== 404) {
                     // old banner exists, save
                     r.buffer().then(buffer => {
-                        fs.writeFileSync(b, buffer)
-                        data.oldBannerFile = b;
-                        
-                        mc()
+                        fs.writeFile(b, buffer, () => {
+                            data.oldBannerFile = b;
+                            
+                            mc()
 
-                        if(devTimings) {
-                            console.log(`old banner downloaded`)
-                        }
+                            if(devTimings) {
+                                console.log(`old banner downloaded`)
+                            }
+                        })
                     })
                 } else {
                     mc()
@@ -3354,11 +3373,11 @@ module.exports = {
     },
 
     "subCount": function(cId, callback) {
-        if(n_impl_yt2009channelcache.read("main")[cId]
-        && n_impl_yt2009channelcache.read("main")[cId].properties
-        && n_impl_yt2009channelcache.read("main")[cId].properties.subscribers) {
-            let subc = n_impl_yt2009channelcache.read("main")[cId]
-                       .properties.subscribers;
+        let subEntry = n_impl_yt2009channelcache.read("main", cId)
+        if(subEntry
+        && subEntry.properties
+        && subEntry.properties.subscribers) {
+            let subc = subEntry.properties.subscribers;
             callback(yt2009utils.approxSubcount(subc.split(" ")[0]))
         } else {
             fetch(`${hostname}/youtubei/v1/browse`, {
@@ -3400,7 +3419,7 @@ module.exports = {
                     successful = true;
                     //console.log("early reported done")
                     clearInterval(x)
-                    callback(n_impl_yt2009channelcache.read("main")[id])
+                    callback(n_impl_yt2009channelcache.read("main", id))
                 }
             }, 100)
             // timeout after 5s
@@ -3411,10 +3430,10 @@ module.exports = {
                     callback(false)
                 }
             }, 5000)
-        } else if(n_impl_yt2009channelcache.read("main")[id]) {
+        } else if(n_impl_yt2009channelcache.read("main", id)) {
             // already done, callback as is
             //console.log("called when done")
-            callback(n_impl_yt2009channelcache.read("main")[id])
+            callback(n_impl_yt2009channelcache.read("main", id))
         } else {
             // ??
             //console.log("uncalled?")
