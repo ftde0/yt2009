@@ -44,6 +44,7 @@ if(config.env == "prod"
     }
     config.tokens = tokens
     console.log("writing " + tokensCount + " usable tokens to config")
+    console.log("tokens: " + tokens.join(", "))
     fs.writeFileSync("./back/config.json", JSON.stringify(config))
 }
 
@@ -92,7 +93,7 @@ generate innertube data
 =======
 */
 console.log("== generating innertube data")
-let ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+let ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
 if(!config.userAgent) {
     console.log("useragent not found in config, using \"" + ua + "\"")
     console.log("if you wish to use your own user agent,"
@@ -101,39 +102,35 @@ if(!config.userAgent) {
 } else {
     ua = config.userAgent;
 }
-fetch("https://www.youtube.com/", {
+fetch("https://youtubei.googleapis.com/youtubei/v1/visitor_id", {
     "headers": {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "accept-language": "en-US,en;q=0.9",
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "none",
-        "sec-fetch-user": "?1",
-        "sec-gpc": "1",
-        "upgrade-insecure-requests": "1",
         "user-agent": ua
     },
-    "referrerPolicy": "strict-origin-when-cross-origin",
-    "body": null,
-    "method": "GET",
+    "method": "POST",
+    "body": JSON.stringify({
+        "context": {
+            "client": {"clientName": "WEB", "clientVersion": "2.20261111"}
+        }
+    }),
     "mode": "cors"
 }).then(r => {
-    // set cookies
-    let cookie = r.headers.get("set-cookie").split(",")
-    let cookieString = ""
-    cookie.forEach(part => {
-        if(part.split(";")[0].includes("=")) {
-            cookieString += part.trimStart().split(";")[0] + "; "
+    r.json().then(r => {
+        let context = {
+            "client": {
+                "clientName": "WEB",
+                "clientVersion": "2.20261111",
+                "hl": "en",
+                "gl": "US",
+                "originalUrl": "https://www.youtube.com/",
+                "osName": "Windows",
+                "osVersion": "10.0",
+                "platform": "DESKTOP",
+                "userAgent": ua,
+                "visitorData": r.responseContext.visitorData
+            }
         }
-    })
-    constants.headers.cookie = cookieString
-
-    // set innertube context
-    r.text().then(res => {
-        let context = res.split(`"INNERTUBE_CONTEXT":`)[1]
-                         .split(`,"user":{"lockedSafetyMode":`)[0] + "}"
-        constants.cached_innertube_context = JSON.parse(context)
-
+        constants.headers.cookie = ""
+        constants.cached_innertube_context = context;
         console.log("writing to constants")
         fs.writeFileSync("./back/yt2009constants.json",
                         JSON.stringify(constants))

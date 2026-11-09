@@ -3288,7 +3288,7 @@ function initAsSabr() {
             sabrData.useBytesKeep = true;
         }
     } else if(navigator.userAgent.indexOf("Chrome/") !== -1) {
-        var crVersion = navigator.userAgent.split("Firefox/")[1].split(".")[0]
+        var crVersion = navigator.userAgent.split("Chrome/")[1].split(".")[0]
         crVersion = parseInt(crVersion)
         if(!isNaN(crVersion) && crVersion > 80) {
             sabrData.useBytesKeep = true;
