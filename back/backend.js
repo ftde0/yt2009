@@ -3421,7 +3421,8 @@ let videoProcessEndpoints = [
     "/http_3gp",
     "/http_wmv",
     "/http_xvid",
-    "/http_mpeg4"
+    "/http_mpeg4",
+    "/http_dpg"
 ]
 videoProcessEndpoints.forEach(endpoint => {
     app.get(endpoint, (req, res) => {
@@ -3440,6 +3441,10 @@ videoProcessEndpoints.forEach(endpoint => {
             }
             case "/http_xvid": {
                 ct = "video/avi"
+                break;
+            }
+            case "/http_dpg": {
+                ct = "application/octet-stream"
                 break;
             }
         }

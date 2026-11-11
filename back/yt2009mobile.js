@@ -16,6 +16,7 @@ const yt2009jsongdata = require("./yt2009jsongdata")
 const yt2009hype = require("./yt2009hype")
 const yt2009sabr = require("./yt2009sabr")
 const yt2009subscriptions = require("./yt2009subscriptions")
+const yt2009dpg = require("./yt2009dpg")
 const rtsp_server = `rtsp://${config.ip}:${config.port + 2}/`
 const ffmpeg_process_144 = [
     "ffmpeg",
@@ -349,7 +350,8 @@ module.exports = {
                 case "http_wmv":
                 case "http_mp4_144":
                 case "http_xvid":
-                case "http_mpeg4": {
+                case "http_mpeg4":
+                case "http_dpg": {
                     playback = method;
                 }
             }
@@ -365,7 +367,8 @@ module.exports = {
             "http_3gp": [ffmpeg_process_3gp, "id.3gp"],
             "http_wmv": [ffmpeg_process_wmv, "id.wmv"],
             "http_xvid": [ffmpeg_process_xvid, "id.avi"],
-            "http_mpeg4": [ffmpeg_process_mpeg4, "id-mpeg4.mp4"]
+            "http_mpeg4": [ffmpeg_process_mpeg4, "id-mpeg4.mp4"],
+            "http_dpg": [yt2009dpg.convert, "id.dpg"]
         }
 
         let tasks = taskLookup[playback]
@@ -410,6 +413,30 @@ module.exports = {
                     onCanPerformTask()
                 })
             }
+        }
+        if(typeof(task) == "function") {
+            if(fs.existsSync(output)) {
+                this.processTask(id, tasks, index + 1, res, callback)
+                return;
+            }
+            let t = this;
+            function onCanPerformTask() {
+                task(baseFile, output, (error) => {
+                    if(error) {
+                        res.sendStatus(500)
+                        return;
+                    }
+                    t.processTask(id, tasks, index + 1, res, callback)
+                })
+            }
+            if(fs.existsSync(baseFile)) {
+                onCanPerformTask()
+            } else {
+                utils.saveMp4(id, () => {
+                    onCanPerformTask()
+                })
+            }
+            taskFilled = true
         }
         if(task == "rtsp") {
             // rtsp setup task
@@ -558,6 +585,7 @@ module.exports = {
             "http_wmv": "/http_wmv?v=" + id,
             "http_xvid": "/http_xvid?v=" + id,
             "http_mpeg4": "/http_mpeg4?v=" + id,
+            "http_dpg": "/http_dpg?v=" + id,
             "http_flash_flv": "/mobile/watch?v=" + id,
             "http_flash_mp4": "/mobile/watch?v=" + id
         }
