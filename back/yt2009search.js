@@ -272,12 +272,12 @@ module.exports = {
                         )
                     }
                     
-                    callback(JSON.parse(JSON.stringify(resultsToCallback)))
+                    callback(resultsToCallback)
                 }
 
                 if(config.data_api_key) {
                     // un-autotranslate video data with data api
-                    let videos = JSON.parse(JSON.stringify(resultsToCallback))
+                    let videos = resultsToCallback
                                  .filter(s => {
                                     return s.type == "video"
                                         || s.type == "live-video"
@@ -828,7 +828,7 @@ module.exports = {
             }
             let related_html = ``
             let rawData = []
-            JSON.parse(JSON.stringify(data)).forEach(result => {
+            data.forEach(result => {
                 if(result.type == "video"
                 && result.id !== sourceId
                 && !shouldFilter(
