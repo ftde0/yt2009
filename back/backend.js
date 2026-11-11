@@ -57,7 +57,6 @@ const hostname = config.alt_hostname
 
 const https = require("https")
 const fetch = require("node-fetch");
-const { pipeline } = require("stream");
 const fs = require("fs")
 const app = express();
 
@@ -6295,56 +6294,64 @@ if(config.auto_maintain) {
 thumbnail proxy
 ======
 */
-let thumbnailProxyEndpoints = [
-    "/get_still.php",
-    "/thumb_proxy"
-]
-thumbnailProxyEndpoints.forEach(t => {
-    app.get(t, async (req, res) => {
-        if(!req.query.video_id && !req.query.v) {
-            res.sendStatus(400)
+app.get(["/get_still.php", "/thumb_proxy"], function (req, res) {
+    let id = req.query.video_id || req.query.v;
+    if (!id) return res.sendStatus(400);
+    id = id.substring(0, 11).replace(/[^a-zA-Z0-9_-]/g, "");
+    let thumbFile = "hqdefault.jpg";
+    if (["1", "2", "3"].includes(req.query.alt)) {
+        thumbFile = req.query.alt + ".jpg";
+    } else if (req.headers.cookie && req.headers.cookie.includes("autogen_thumbnails")) {
+        thumbFile = "1.jpg";
+    }
+    let proxyReq = https.get({
+        hostname: "i.ytimg.com",
+        port: 443,
+        path: "/vi/" + id + "/" + thumbFile,
+        headers: Object.assign({}, yt2009_constant.headers, {
+            host: "i.ytimg.com"
+        })
+    }, function (upstreamRes) {
+        if (upstreamRes.statusCode < 200 || upstreamRes.statusCode >= 300) {
+            upstreamRes.resume();
+            if (!res.headersSent) {
+                res.sendStatus(upstreamRes.statusCode);
+            }
             return;
         }
-        let id = req.query.video_id || req.query.v;
-        id = id.substring(0, 11)
-               .replace(/[^a-zA-Z0-9+\-+_]/g, "");
-        let thumbFile = "hqdefault.jpg"
-        if(req.headers.cookie
-        && req.headers.cookie.includes("autogen_thumbnails")) {
-            thumbFile = "1.jpg"
-        }
-        switch(req.query.alt) {
-            case "1": {
-                thumbFile = "1.jpg"
-                break;
-            }
-            case "2": {
-                thumbFile = "2.jpg"
-                break;
-            }
-            case "3": {
-                thumbFile = "3.jpg"
-                break;
+        if (!res.headersSent) {
+            res.status(upstreamRes.statusCode);
+            res.set("content-type", upstreamRes.headers["content-type"] || "image/jpeg");
+            if (upstreamRes.headers["content-length"]) {
+                res.set("content-length", upstreamRes.headers["content-length"]);
             }
         }
-        try {
-            const upstreamRes = await fetch(`https://i.ytimg.com/vi/${id}/${thumbFile}`, {
-                headers: yt2009_constant.headers,
-                timeout: 8000
-            });
-            if (!upstreamRes.ok)
-                return res.sendStatus(upstreamRes.status);
-            res.set("content-type", upstreamRes.headers.get("content-type") || "image/jpeg");
-            pipeline(upstreamRes.body, res, (err) => {
-                if (err && !res.headersSent)
-                    res.sendStatus(502);
-            });
-        } catch (err) {
-            if (!res.headersSent)
+        upstreamRes.pipe(res);
+        upstreamRes.on("error", function () {
+            if (!res.headersSent) {
                 res.sendStatus(502);
+            } else {
+                res.end();
+            }
+        });
+    });
+    proxyReq.setTimeout(8000, function () {
+        proxyReq.abort();
+        if (!res.headersSent) {
+            res.sendStatus(504);
         }
-    })
-})
+    });
+    proxyReq.on("error", function () {
+        if (!res.headersSent && !res.finished) {
+            res.sendStatus(502);
+        }
+    });
+    res.on("close", function () {
+        if (!res.finished) {
+            proxyReq.abort();
+        }
+    });
+});
 
 /*
 ======

@@ -2825,7 +2825,7 @@ module.exports = {
                 if(vcEntry
                 && !vcEntry.videoCount
                 && videoCount.length !== 0) {
-                    let newCache = {...vcEntry}
+                    let newCache = Object.assign({}, vcEntry)
                     newCache.videoCount = videoCount
                     n_impl_yt2009channelcache.write("main", id, newCache)
                 }

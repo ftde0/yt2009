@@ -1392,7 +1392,7 @@ module.exports = {
 		&& data.superResolutions.length >= 1
 		&& useSabr
 		&& flags.includes("exp_sabr_enable_superresolution")) {
-			data = {...data, "qualities": data.qualities.slice()} //detach qualities list
+			data = Object.assign({}, data, { qualities: data.qualities.slice() }); //detach qualities list
 			data.superResolutions.forEach(sr => {
 				if(!data.qualities.includes(sr[0])) {
 					data.qualities.push(sr[0])
