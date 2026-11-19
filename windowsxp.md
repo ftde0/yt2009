@@ -40,6 +40,9 @@ node strictifier.js
 node convertify.js
 ```
 **[!] these commands make significant code changes which will most likely mess with git, if you cloned the repository that way.**
+- un-git package.json (if not using git):
+    - open package.json in a text editor
+    - change `git+https://github.com/ftde0/node-maxmind-db.git` to `latest`
 - install dependencies (old versions supported on xp):
 ```
 npm install express@4.17.1 google-protobuf@3.21.2 maxmind-db-reader node-fetch@2.0.0 node-html-parser@5.3.3 readline-sync ws@1.1.1

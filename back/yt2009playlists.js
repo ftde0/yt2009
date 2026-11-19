@@ -759,9 +759,18 @@ function viewmodelParse(video) {
             })
         }
     })
+    if(metadataRows.length == 3) {
+        metadataRows.shift()
+    }
     let viewCount = metadataRows.filter(s => {
         return !(s.includes(" ago"))
     })[0] || ""
+    if(viewCount) {
+        let tl = viewCount.toLowerCase()
+        if(tl.includes("k") || tl.includes("m") || tl.includes("b")) {
+            viewCount = utils.approxSubcount(viewCount)
+        }
+    }
     let time = ""
     try {
         let os = video.contentImage.thumbnailViewModel

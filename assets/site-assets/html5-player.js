@@ -396,7 +396,8 @@ function non_css_anim_add(element, cssProperty, from, to) {
     var ffInconsistent = false;
     if(navigator.userAgent.indexOf("Firefox") !== -1) {
         var ffVersion = 3;
-        if(navigator.userAgent.indexOf("Firefox/") !== -1) {
+        if(navigator.userAgent.indexOf("Firefox/") !== -1
+        && navigator.userAgent.indexOf("Goanna") == -1) {
             ffVersion = navigator.userAgent.split("Firefox/")[1].split(".")[0]
             ffVersion = parseInt(ffVersion)
             if(!isNaN(ffVersion) && ffVersion < 140) {

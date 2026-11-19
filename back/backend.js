@@ -785,8 +785,10 @@ app.get("/watch", (req, res) => {
                     "supportsRedirectInMain": true
                 })
                 data.sabrBase = sabrBase
-                sabrPfid = yt2009.prestartSabr(req, data)
-                if(devTimings) {console.log("prestarting sabr", sabrPfid)}
+                if(data && data.streamingData && !data.streamingData.isD) {
+                    sabrPfid = yt2009.prestartSabr(req, data)
+                    if(devTimings) {console.log("prestarting sabr", sabrPfid)}
+                }
             }
             data = yt2009.miniParse(data)
             data.sabrBase = sabrBase

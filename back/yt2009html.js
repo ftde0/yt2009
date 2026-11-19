@@ -4823,6 +4823,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
             && videoFilters.channels.includes(creatorUrl)))
         }
         let response = {}
+        let resetCache = (req.query.resetcache == "1")
         this.fetch_video_data(id, (data) => {
             if(data.commentsDisabled) {
                 response.commentBox = yt2009languages.apply_lang_to_code(
@@ -4919,7 +4920,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                     }, true)
                 }
             }
-        }, "", token, false, false, true, false, existingPlayer)
+        }, "", token, false, resetCache, true, false, existingPlayer)
     },
         
     "parseHeatmap": function(frameworkUpdates, videoLengthMs) {
@@ -5200,6 +5201,7 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
         let userPref = false;
         let enableSr = cookie.includes("exp_sabr_enable_superresolution")
         let hdDefault1080 = cookie.includes("hd_1080")
+        let useQualityPicker = cookie.includes("watch_modern_features")
         if(cookie.includes("server_encoded_sabr_pref=")) {
             try {
                 userPref = cookie.split("server_encoded_sabr_pref=")[1]
@@ -5344,6 +5346,11 @@ https://web.archive.org/web/20091111/http://www.youtube.com/watch?v=${data.id}`
                 "headers": req.headers,
                 "offset": "0"
             }
+        }
+
+        if(!useQualityPicker) {
+            fReq.query.user_video_itag = null;
+            delete fReq.query.user_video_itag;
         }
 
         let pfid = ""

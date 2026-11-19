@@ -1746,6 +1746,17 @@ module.exports = {
             if(receivedPlayerResponse) return;
             receivedPlayerResponse = true;
             try {
+                if(r.playabilityStatus
+                && r.playabilityStatus.status == "LOGIN_REQUIRED"
+                && r.playabilityStatus.reason
+                && r.playabilityStatus.reason.includes("inappropriate")
+                && client.clientName !== "105") {
+                    client.clientName = "105"
+                    client.clientVersion = "17.22"
+                    receivedPlayerResponse = false;
+                    requestPlayer()
+                    return;
+                }
                 if(r.responseContext && r.responseContext.visitorData) {
                     let visitor = r.responseContext.visitorData
                     devlog("received upgraded ANDROID visitor: " + visitor)
@@ -1763,10 +1774,14 @@ module.exports = {
                     }
                 }
                 if(r.streamingData
-                && r.streamingData.serverAbrStreamingUrl
-                && yt2009exports.read().d) {
+                && (yt2009exports.read().d
+                || client.clientName == "105")) {
                     r.streamingData.serverAbrStreamingUrl = null;
                     r.streamingData.isD = true;
+                }
+                if(!r.streamingData || !r.streamingData.adaptiveFormats) {
+                    callback(r)
+                    return;
                 }
                 let checkedFmts = r.streamingData.adaptiveFormats.map(s => {
                     if(s.itag == 140 || s.itag == 139) {
@@ -2129,7 +2144,7 @@ module.exports = {
 		let w1 = relativeTime.split(" ")[0]
 		let timeValue = parseInt(w1)
 		if(timeValue.toString() !== w1) {
-			timeType = w1.replace(/[0-9]/g, "")
+			let timeType = w1.replace(/[0-9]/g, "")
 			switch(timeType) {
                 case "s": {
                     timeText = "seconds"
@@ -3797,7 +3812,19 @@ module.exports = {
                     "user-agent": "yt2009+https://github.com/ftde0/yt2009"
                 },
                 "agent": createFetchAgent()
-            }).then(r => {r.json().then(r => {
+            }).catch(e => {
+                if(e) {
+                    devlog("doh fail, falling back to static entries")
+                    if(enablesIpv6) {
+                        yt2009exports.writeData(
+                            "youtubeIp", "2001:4860:482c:400::1"
+                        )
+                    } else {
+                        yt2009exports.writeData("youtubeIp", "142.251.154.4")
+                    }
+                    return;
+                }
+            }).then(r => {if(!r) return;r.json().then(r => {
                 if(!r || !r.Answer || r.Answer.length == 0) {
                     devlog("youtube.com dns query returned no results(!?)")
                     return;
