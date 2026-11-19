@@ -21,8 +21,12 @@ module.exports = {
         cacheList[cacheType + "Cache"][id] = data
     },
 
-    "read": function(cacheType) {
-        return JSON.parse(JSON.stringify(cacheList[cacheType + "Cache"]))
+    "read": function(cacheType, id) {
+        const c = cacheList[cacheType + "Cache"]
+        if(id !== undefined) {
+            return c[id]
+        }
+        return c
     },
 
     "clean": function() {
@@ -35,6 +39,10 @@ module.exports = {
 // update plików cache co 1h
 let cacheWrite = setInterval(() => {
     if(config.fallbackMode) return;
-    fs.writeFileSync(`${__dirname}/channel_main_cache.json`, JSON.stringify(cacheList.mainCache))
-    fs.writeFileSync(`${__dirname}/channel_playlist_cache.json`, JSON.stringify(cacheList.playlistCache))
+    try {
+        fs.writeFile(`${__dirname}/channel_main_cache.json`, JSON.stringify(cacheList.mainCache), () => {})
+    } catch(error) {}
+    try {
+        fs.writeFile(`${__dirname}/channel_playlist_cache.json`, JSON.stringify(cacheList.playlistCache), () => {})
+    } catch(error) {}
 }, 3600000)

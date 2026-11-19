@@ -127,10 +127,18 @@ module.exports = {
                 return;
             }
             let fName = "./cache_dir/subtitles/" + id + "-" + language + ".xml"
-            if(fs.existsSync(fName) && !resetCache) {
-                // file exists, send
-                callback(fs.readFileSync(fName).toString())
+            if(!resetCache) {
+                fs.readFile(fName, (err, data) => {
+                    if(!err) {
+                        callback(data.toString())
+                    } else {
+                        downloadFile()
+                    }
+                })
             } else {
+                downloadFile()
+            }
+            function downloadFile() {
                 // doesn't exist, get the url and download
                 getLanguages(id, (data) => {for(let langName in data) {
                     if(langName == language) {try {
@@ -149,7 +157,7 @@ module.exports = {
                             }
 
                             callback(r)
-                            fs.writeFileSync(fName, r)
+                            fs.writeFile(fName, r, () => {})
                         })
                     }catch(error) {
                         retryCount++;

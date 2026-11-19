@@ -44,6 +44,18 @@ const ffmpeg_process_3gp = [
     "-movflags +faststart",
     "\"$2\""
 ]
+const ffmpeg_process_3gp_288 = [
+    "ffmpeg",
+    "-i \"$1\"",
+    "-c:v h263",
+    "-b:v 350k",
+    "-vf \"yadif,scale=352:288:force_original_aspect_ratio=decrease,pad=352:288:(ow-iw)/2:(oh-ih)/2,format=yuv420p\"",
+    "-movflags +faststart",
+    "-g 30",
+    "-c:a copy",
+    "-f 3gp",
+    "\"$2\""
+];
 const ffmpeg_process_wmv = [
     "ffmpeg",
     "-i \"$1\"",
@@ -67,13 +79,28 @@ const ffmpeg_process_mpeg4 = [
     "-i \"$1\"",
     "-c:v mpeg4",
     "-vtag mp4v",
-    "-b:v 501k",
+    "-vf \"scale=480:270:force_original_aspect_ratio=decrease:force_divisible_by=2\"",
+    "-b:v 400k",
     "-brand isom",
     "-pix_fmt yuv420p",
+    "-movflags +faststart",
     "-c:a copy",
     "-f mp4",
     "\"$2\""
-]
+];
+const ffmpeg_process_mpeg4_360 = [
+    "ffmpeg",
+    "-i \"$1\"",
+    "-c:v mpeg4",
+    "-vtag mp4v",
+    "-b:v 650k",
+    "-brand isom",
+    "-pix_fmt yuv420p",
+    "-movflags +faststart",
+    "-c:a copy",
+    "-f mp4",
+    "\"$2\""
+];
 const ffmpeg_stream_mp4 = [
     "ffmpeg",
     "-re -i",
@@ -346,10 +373,12 @@ module.exports = {
                             .split("?")[0].split("#")[0]
             switch(method) {
                 case "http_3gp":
+                case "http_3gp_288":
                 case "http_wmv":
                 case "http_mp4_144":
                 case "http_xvid":
-                case "http_mpeg4": {
+                case "http_mpeg4":
+                case "http_mpeg4_360": {
                     playback = method;
                 }
             }
@@ -363,9 +392,11 @@ module.exports = {
             "http_mp4": ["id.mp4"],
             "http_mp4_144": [ffmpeg_process_144, "id-144.mp4"],
             "http_3gp": [ffmpeg_process_3gp, "id.3gp"],
+            "http_3gp_288": [ffmpeg_process_3gp_288, "id-288.3gp"],
             "http_wmv": [ffmpeg_process_wmv, "id.wmv"],
             "http_xvid": [ffmpeg_process_xvid, "id.avi"],
-            "http_mpeg4": [ffmpeg_process_mpeg4, "id-mpeg4.mp4"]
+            "http_mpeg4": [ffmpeg_process_mpeg4, "id-mpeg4.mp4"],
+            "http_mpeg4_360": [ffmpeg_process_mpeg4_360, "id-mpeg4-360.mp4"]
         }
 
         let tasks = taskLookup[playback]
@@ -555,9 +586,11 @@ module.exports = {
             "http_mp4": "/get_video?video_id=" + id + "/mp4",
             "http_mp4_144": "/mp4_144?v=" + id,
             "http_3gp": "/http_3gp?v=" + id,
+            "http_3gp_288": "/http_3gp_288?v=" + id,
             "http_wmv": "/http_wmv?v=" + id,
             "http_xvid": "/http_xvid?v=" + id,
             "http_mpeg4": "/http_mpeg4?v=" + id,
+            "http_mpeg4_360": "/http_mpeg4_360?v=" + id,
             "http_flash_flv": "/mobile/watch?v=" + id,
             "http_flash_mp4": "/mobile/watch?v=" + id
         }

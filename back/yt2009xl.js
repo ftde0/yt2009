@@ -482,7 +482,7 @@ module.exports = {
             "send": function(data) {
                 channels.get_additional_sections(
                 data, "exp_playlists", () => {
-                    let p = channels.get_cache.read("playlist")[data.id]
+                    let p = channels.get_cache.read("playlist", data.id) || []
                     p.forEach(playlist => {
                         vlist.push({
                             "title": playlist.name,

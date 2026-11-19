@@ -27,5 +27,5 @@ module.exports = {
 // update pliku cache co 1h
 let cacheWrite = setInterval(() => {
     if(config.fallbackMode) return;
-    fs.writeFileSync(`${__dirname}/default_avatar_adapt.json`, JSON.stringify(cache))
+    fs.writeFile(`${__dirname}/default_avatar_adapt.json`, JSON.stringify(cache), () => {})
 }, 3600000)

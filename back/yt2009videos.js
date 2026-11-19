@@ -345,7 +345,7 @@ module.exports = {
             })
         } else {
             // sort by most popular, then add
-            let baseVideos = JSON.parse(JSON.stringify(yt2009html.featured()))
+            let baseVideos = yt2009html.featured().slice()
 
             // sort and filter videos for correct category etc
             let sortedVideos = baseVideos.sort((a, b) => {
